@@ -103,7 +103,19 @@ def make_call(number):
         "connection_id": connection_id,
         "to": number,
         "from": from_number,
-        "answering_machine_detection": "detect_beep",
+        "answering_machine_detection": "detect_words",
+        "answering_machine_detection_config": {
+            "after_greeting_silence_millis": 800,
+            "between_words_silence_millis": 50,
+            "greeting_duration_millis": 3500,
+            "greeting_silence_duration_millis": 2000,
+            "greeting_total_analysis_time_millis": 50000,
+            "initial_silence_millis": 3500,
+            "maximum_number_of_words": 5,
+            "maximum_word_length_millis": 3500,
+            "silence_threshold": 256,
+            "total_analysis_time_millis": 5000,
+        },
         "webhook_url": webhook_url,
     }
 

@@ -7,6 +7,7 @@ import os
 import csv
 import io
 import logging
+import threading
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
@@ -21,10 +22,12 @@ from storage import (
     mark_transferred,
     mark_voicemail_dropped,
     reset_campaign,
+    create_call_state,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id
 from call_manager import start_dialer
-from storage import create_call_state
+
+_amd_timers = {}
 
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
@@ -192,19 +195,52 @@ def webhook():
 
     logger.info(f"Webhook received: {event_type} for call {call_control_id}")
 
+    to_number = payload.get("to", "")
+    from_number = payload.get("from", "")
+    call_number = to_number or from_number
+
+    state = get_call_state(call_control_id)
+    if not state and call_control_id and call_number:
+        create_call_state(call_control_id, call_number)
+        logger.info(f"Auto-created call state for {call_number} (webhook arrived before state)")
+
     # ---- call.initiated ----
     if event_type == "call.initiated":
         update_call_state(call_control_id, status="ringing")
 
     # ---- call.answered ----
     elif event_type == "call.answered":
-        update_call_state(call_control_id, status="answered")
-        logger.info(f"Call answered: {call_control_id}")
+        update_call_state(call_control_id, status="answered", amd_received=False)
+        logger.info(f"Call answered: {call_control_id}, waiting for AMD result...")
+
+        def _amd_fallback(ccid):
+            """If AMD event never arrives, treat as human and transfer."""
+            state = get_call_state(ccid)
+            if state and not state.get("amd_received") and state.get("status") == "answered":
+                logger.warning(f"AMD timeout on {ccid}, treating as HUMAN and transferring")
+                update_call_state(ccid, machine_detected=False, status="human_detected", amd_received=True)
+                camp = get_campaign()
+                transfer_num = camp.get("transfer_number", "")
+                if transfer_num and mark_transferred(ccid):
+                    logger.info(f"Fallback transfer {ccid} to {transfer_num}")
+                    transfer_call(ccid, transfer_num)
+            _amd_timers.pop(ccid, None)
+
+        timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
+        timer.daemon = True
+        _amd_timers[call_control_id] = timer
+        timer.start()
 
     # ---- call.machine.detection.ended ----
     elif event_type == "call.machine.detection.ended":
         result = payload.get("result", "unknown")
-        logger.info(f"Machine detection result: {result} for {call_control_id}")
+        logger.info(f"AMD result: {result} for {call_control_id}")
+
+        timer = _amd_timers.pop(call_control_id, None)
+        if timer:
+            timer.cancel()
+
+        update_call_state(call_control_id, amd_received=True)
 
         state = get_call_state(call_control_id)
         if not state:
@@ -215,20 +251,20 @@ def webhook():
             camp = get_campaign()
             transfer_num = camp.get("transfer_number", "")
             if transfer_num and mark_transferred(call_control_id):
-                logger.info(f"Transferring call {call_control_id} to {transfer_num}")
+                logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
                 transfer_call(call_control_id, transfer_num)
 
         elif result in ("machine", "fax"):
             update_call_state(call_control_id, machine_detected=True, status="machine_detected")
-            logger.info(f"Machine detected on {call_control_id}, waiting for beep...")
+            logger.info(f"MACHINE detected on {call_control_id}, waiting for beep to drop voicemail...")
 
         elif result == "not_sure":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected")
-            logger.info(f"Detection unsure on {call_control_id}, treating as machine")
+            logger.info(f"AMD unsure on {call_control_id}, treating as machine, waiting for beep...")
 
         else:
             update_call_state(call_control_id, status="no_answer")
-            logger.info(f"No answer / unknown on {call_control_id}, hanging up")
+            logger.info(f"AMD unknown result on {call_control_id}, hanging up")
             hangup_call(call_control_id)
 
     # ---- call.machine.greeting.ended (beep detected) ----
@@ -237,13 +273,13 @@ def webhook():
         if not state:
             return "", 200
 
-        logger.info(f"Beep detected on {call_control_id}")
+        logger.info(f"Voicemail BEEP detected on {call_control_id}")
 
         if mark_voicemail_dropped(call_control_id):
             camp = get_campaign()
             audio_url = camp.get("audio_url", "")
             if audio_url:
-                logger.info(f"Playing voicemail on {call_control_id}")
+                logger.info(f"Dropping voicemail on {call_control_id}: {audio_url}")
                 play_audio(call_control_id, audio_url)
             else:
                 logger.error(f"No audio URL for voicemail on {call_control_id}")
@@ -254,11 +290,15 @@ def webhook():
         state = get_call_state(call_control_id)
         if state and state.get("voicemail_dropped"):
             update_call_state(call_control_id, status="voicemail_complete")
-            logger.info(f"Voicemail complete on {call_control_id}, hanging up")
+            logger.info(f"Voicemail playback complete on {call_control_id}, hanging up")
             hangup_call(call_control_id)
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":
+        timer = _amd_timers.pop(call_control_id, None)
+        if timer:
+            timer.cancel()
+
         state = get_call_state(call_control_id)
         if state:
             current_status = state.get("status", "")
