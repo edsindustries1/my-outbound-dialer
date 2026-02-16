@@ -22,7 +22,7 @@ from storage import (
     mark_voicemail_dropped,
     reset_campaign,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call, make_call
+from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id
 from call_manager import start_dialer
 from storage import create_call_state
 
@@ -276,6 +276,10 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"  Dashboard: http://0.0.0.0:5000")
     print(f"  Webhook URL: <PUBLIC_BASE_URL>/webhook")
+    print("=" * 60)
+
+    conn_id = validate_connection_id()
+    print(f"  Using Connection ID: {conn_id}")
     print("=" * 60)
 
     app.run(host="0.0.0.0", port=5000, debug=False)

@@ -11,6 +11,8 @@ logger = logging.getLogger("voicemail_app")
 
 TELNYX_API_BASE = "https://api.telnyx.com/v2"
 
+_resolved_connection_id = None
+
 
 def _headers():
     """Build authorization headers for Telnyx API."""
@@ -21,12 +23,79 @@ def _headers():
     }
 
 
+def _get_connection_id():
+    """
+    Get the correct connection ID. First tries the env var,
+    then auto-detects from the Telnyx account if it fails.
+    """
+    global _resolved_connection_id
+    if _resolved_connection_id:
+        return _resolved_connection_id
+
+    env_id = os.environ.get("TELNYX_CONNECTION_ID", "")
+    if env_id:
+        _resolved_connection_id = env_id
+        return env_id
+
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/call_control_applications",
+            headers=_headers(),
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            apps = resp.json().get("data", [])
+            if apps:
+                auto_id = apps[0].get("id", "")
+                logger.info(f"Auto-detected connection_id: {auto_id}")
+                _resolved_connection_id = auto_id
+                return auto_id
+    except Exception as e:
+        logger.error(f"Failed to auto-detect connection_id: {e}")
+
+    return env_id
+
+
+def validate_connection_id():
+    """
+    Check if the stored connection_id is valid by comparing
+    with what Telnyx actually has. Auto-corrects if needed.
+    """
+    global _resolved_connection_id
+    env_id = os.environ.get("TELNYX_CONNECTION_ID", "")
+
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/call_control_applications",
+            headers=_headers(),
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            apps = resp.json().get("data", [])
+            valid_ids = [app.get("id", "") for app in apps]
+
+            if env_id in valid_ids:
+                _resolved_connection_id = env_id
+                logger.info(f"Connection ID {env_id} is valid")
+                return env_id
+
+            if valid_ids:
+                correct_id = valid_ids[0]
+                logger.warning(f"Connection ID {env_id} invalid, using {correct_id}")
+                _resolved_connection_id = correct_id
+                return correct_id
+    except Exception as e:
+        logger.error(f"Could not validate connection_id: {e}")
+
+    return env_id
+
+
 def make_call(number):
     """
     Place an outbound call with answering machine detection enabled.
     Returns the call_control_id on success, or None on failure.
     """
-    connection_id = os.environ.get("TELNYX_CONNECTION_ID", "")
+    connection_id = _get_connection_id()
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
     webhook_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") + "/webhook"
 
@@ -45,6 +114,18 @@ def make_call(number):
             headers=_headers(),
             timeout=15,
         )
+        if resp.status_code == 422 and "connection_id" in resp.text:
+            logger.warning("Connection ID rejected, auto-correcting...")
+            _resolved_connection_id_reset()
+            correct_id = validate_connection_id()
+            if correct_id and correct_id != connection_id:
+                payload["connection_id"] = correct_id
+                resp = requests.post(
+                    f"{TELNYX_API_BASE}/calls",
+                    json=payload,
+                    headers=_headers(),
+                    timeout=15,
+                )
         if resp.status_code != 200:
             logger.error(f"Telnyx API error {resp.status_code}: {resp.text}")
         resp.raise_for_status()
@@ -55,6 +136,12 @@ def make_call(number):
     except Exception as e:
         logger.error(f"Failed to place call to {number}: {e}")
         return None
+
+
+def _resolved_connection_id_reset():
+    """Reset the cached connection ID so it gets re-fetched."""
+    global _resolved_connection_id
+    _resolved_connection_id = None
 
 
 def transfer_call(call_control_id, to_number):
