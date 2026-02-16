@@ -45,6 +45,8 @@ def make_call(number):
             headers=_headers(),
             timeout=15,
         )
+        if resp.status_code != 200:
+            logger.error(f"Telnyx API error {resp.status_code}: {resp.text}")
         resp.raise_for_status()
         data = resp.json().get("data", {})
         call_control_id = data.get("call_control_id")
