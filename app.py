@@ -254,47 +254,19 @@ def webhook():
                 logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
                 transfer_call(call_control_id, transfer_num)
 
-        elif result in ("machine", "fax"):
+        elif result in ("machine", "fax", "not_sure"):
             update_call_state(call_control_id, machine_detected=True, status="machine_detected")
-            logger.info(f"MACHINE detected on {call_control_id}, waiting for beep to drop voicemail...")
+            logger.info(f"MACHINE detected on {call_control_id}, playing voicemail immediately")
 
-            def _beep_fallback(ccid):
-                """If beep event never arrives, play voicemail anyway."""
-                state = get_call_state(ccid)
-                if state and state.get("machine_detected") and not state.get("voicemail_dropped"):
-                    logger.warning(f"Beep timeout on {ccid}, playing voicemail without beep")
-                    if mark_voicemail_dropped(ccid):
-                        camp = get_campaign()
-                        audio_url = camp.get("audio_url", "")
-                        if audio_url:
-                            logger.info(f"Fallback voicemail drop on {ccid}: {audio_url}")
-                            play_audio(ccid, audio_url)
-                _amd_timers.pop(f"beep_{ccid}", None)
-
-            beep_timer = threading.Timer(18.0, _beep_fallback, args=[call_control_id])
-            beep_timer.daemon = True
-            _amd_timers[f"beep_{call_control_id}"] = beep_timer
-            beep_timer.start()
-
-        elif result == "not_sure":
-            update_call_state(call_control_id, machine_detected=True, status="machine_detected")
-            logger.info(f"AMD unsure on {call_control_id}, treating as machine, waiting for beep...")
-
-            def _beep_fallback_unsure(ccid):
-                state = get_call_state(ccid)
-                if state and state.get("machine_detected") and not state.get("voicemail_dropped"):
-                    logger.warning(f"Beep timeout on {ccid}, playing voicemail without beep")
-                    if mark_voicemail_dropped(ccid):
-                        camp = get_campaign()
-                        audio_url = camp.get("audio_url", "")
-                        if audio_url:
-                            play_audio(ccid, audio_url)
-                _amd_timers.pop(f"beep_{ccid}", None)
-
-            beep_timer = threading.Timer(18.0, _beep_fallback_unsure, args=[call_control_id])
-            beep_timer.daemon = True
-            _amd_timers[f"beep_{call_control_id}"] = beep_timer
-            beep_timer.start()
+            if mark_voicemail_dropped(call_control_id):
+                camp = get_campaign()
+                audio_url = camp.get("audio_url", "")
+                if audio_url:
+                    logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
+                    play_audio(call_control_id, audio_url)
+                else:
+                    logger.error(f"No audio URL configured for voicemail on {call_control_id}")
+                    hangup_call(call_control_id)
 
         else:
             update_call_state(call_control_id, status="no_answer")
@@ -303,10 +275,6 @@ def webhook():
 
     # ---- call.machine.greeting.ended (beep detected) ----
     elif event_type in ("call.machine.greeting.ended", "call.machine.premium.greeting.ended"):
-        beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
-        if beep_timer:
-            beep_timer.cancel()
-
         state = get_call_state(call_control_id)
         if not state:
             return "", 200
@@ -314,15 +282,14 @@ def webhook():
         beep_result = payload.get("result", "unknown")
         logger.info(f"Voicemail greeting ended on {call_control_id}, result: {beep_result}")
 
-        if mark_voicemail_dropped(call_control_id):
+        if state.get("voicemail_dropped"):
             camp = get_campaign()
             audio_url = camp.get("audio_url", "")
-            if audio_url:
-                logger.info(f"Dropping voicemail on {call_control_id}: {audio_url}")
+            if audio_url and beep_result == "beep_detected":
+                logger.info(f"Beep detected! Restarting voicemail from beginning on {call_control_id}")
                 play_audio(call_control_id, audio_url)
             else:
-                logger.error(f"No audio URL for voicemail on {call_control_id}")
-                hangup_call(call_control_id)
+                logger.info(f"Greeting ended on {call_control_id}, audio already playing")
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
