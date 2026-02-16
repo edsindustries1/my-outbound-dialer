@@ -116,6 +116,7 @@ def make_call(number):
             "silence_threshold": 256,
             "total_analysis_time_millis": 5000,
         },
+        "timeout_secs": 60,
         "webhook_url": webhook_url,
     }
 
