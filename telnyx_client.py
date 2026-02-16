@@ -160,7 +160,14 @@ def _resolved_connection_id_reset():
 
 def transfer_call(call_control_id, to_number):
     """Transfer an active call to the specified number."""
-    payload = {"to": to_number}
+    from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
+    webhook_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") + "/webhook"
+    payload = {
+        "to": to_number,
+        "from": from_number,
+        "timeout_secs": 30,
+        "webhook_url": webhook_url,
+    }
     try:
         resp = requests.post(
             f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/transfer",
@@ -168,6 +175,7 @@ def transfer_call(call_control_id, to_number):
             headers=_headers(),
             timeout=15,
         )
+        logger.info(f"Transfer API response {resp.status_code}: {resp.text[:500]}")
         resp.raise_for_status()
         logger.info(f"Call {call_control_id} transferred to {to_number}")
         return True

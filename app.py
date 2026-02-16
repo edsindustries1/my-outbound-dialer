@@ -223,7 +223,11 @@ def webhook():
                 transfer_num = camp.get("transfer_number", "")
                 if transfer_num and mark_transferred(ccid):
                     logger.info(f"Fallback transfer {ccid} to {transfer_num}")
-                    transfer_call(ccid, transfer_num)
+                    success = transfer_call(ccid, transfer_num)
+                    if not success:
+                        logger.error(f"Fallback transfer failed for {ccid}, hanging up")
+                        update_call_state(ccid, status="transfer_failed")
+                        hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
         timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
@@ -252,7 +256,14 @@ def webhook():
             transfer_num = camp.get("transfer_number", "")
             if transfer_num and mark_transferred(call_control_id):
                 logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
-                transfer_call(call_control_id, transfer_num)
+                success = transfer_call(call_control_id, transfer_num)
+                if not success:
+                    logger.error(f"Transfer failed for {call_control_id}, hanging up")
+                    update_call_state(call_control_id, status="transfer_failed")
+                    hangup_call(call_control_id)
+            elif not transfer_num:
+                logger.warning(f"HUMAN detected on {call_control_id} but no transfer number configured")
+                update_call_state(call_control_id, status="human_detected")
 
         elif result in ("machine", "fax", "not_sure"):
             update_call_state(call_control_id, machine_detected=True, status="machine_detected")
