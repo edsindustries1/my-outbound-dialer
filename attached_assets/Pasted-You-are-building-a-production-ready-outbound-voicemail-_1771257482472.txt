@@ -1,0 +1,186 @@
+You are building a production-ready outbound voicemail drop web application using Python + Flask and Telnyx Call Control API.
+
+GOAL:
+Create a very simple web panel where a user uploads a voicemail audio and a list of phone numbers. The system automatically dials numbers and either transfers to a human or drops voicemail after beep detection.
+
+IMPORTANT:
+The app must be event-driven using Telnyx webhooks and must maintain call state to avoid duplicate actions.
+
+---
+
+## PROJECT STRUCTURE
+
+Create this exact file structure:
+
+/app.py
+/telnyx_client.py
+/call_manager.py
+/storage.py
+/templates/index.html
+/static/style.css
+/uploads/
+/logs/
+/README.md
+/requirements.txt
+
+---
+
+## ENVIRONMENT VARIABLES
+
+TELNYX_API_KEY=
+TELNYX_CONNECTION_ID=
+TELNYX_FROM_NUMBER=
+PUBLIC_BASE_URL=
+
+---
+
+## FEATURES
+
+WEB DASHBOARD (single page)
+
+* Upload CSV OR paste numbers (one per line)
+* Upload MP3/WAV OR provide public URL
+* Input transfer phone number
+* Button: Start Campaign
+* Button: Stop Campaign
+* Real-time call log window
+
+CALL BEHAVIOR
+For each number:
+
+1. Place outbound call using Call Control API
+2. Enable answering machine detection
+3. Wait for webhook events before doing anything
+
+WEBHOOK EVENTS TO HANDLE
+
+* call.initiated
+* call.answered
+* call.machine.detection.ended
+* call.machine.greeting.ended OR beep detection
+* call.playback.ended
+* call.hangup
+
+## CALL LOGIC
+
+If HUMAN detected:
+→ Immediately transfer call to transfer_number
+
+If MACHINE detected:
+→ Wait for greeting/beep event
+→ Play voicemail audio
+→ Hang up after playback
+
+If NO ANSWER:
+→ Hangup and mark status
+
+DO NOT PLAY AUDIO UNTIL BEEP EVENT OCCURS.
+
+---
+
+## STATE MANAGEMENT
+
+Create in-memory call state dictionary:
+
+call_id → {
+number,
+status,
+machine_detected,
+transferred,
+voicemail_dropped,
+playback_started
+}
+
+Prevent duplicate actions:
+
+* Never transfer twice
+* Never drop voicemail twice
+* Ignore repeated webhooks
+
+---
+
+## DIALER CONTROL
+
+Create queue-based dialing system:
+
+* Max 1 active call every 2 seconds (rate limiting)
+* Background worker thread processes numbers
+* Stop button stops new calls but lets active calls finish
+
+---
+
+## AUDIO HANDLING
+
+Allow two modes:
+
+1. Uploaded file → save in /uploads
+2. Public URL
+
+Telnyx playback must always receive a public URL.
+If uploaded locally, serve file through Flask route:
+/audio/<filename>
+
+---
+
+## TELNYX CLIENT
+
+Implement wrapper functions:
+
+make_call(number)
+transfer_call(call_control_id, to_number)
+play_audio(call_control_id, audio_url)
+hangup_call(call_control_id)
+
+---
+
+## LOGGING
+
+Log everything:
+
+* Each webhook event
+* Each action taken
+  Save into /logs/calls.log
+
+---
+
+## UI REQUIREMENTS
+
+Very simple HTML:
+
+* Clean table of call statuses
+* Auto refresh via JavaScript polling /status endpoint every 2 seconds
+  No React or frameworks.
+
+---
+
+## README
+
+Include step-by-step instructions:
+
+1. Where to paste Telnyx webhook URL
+2. How to deploy on Replit
+3. How to upload audio
+4. How to start campaign
+5. Troubleshooting machine detection
+
+---
+
+## REQUIREMENTS.TXT
+
+flask
+requests
+python-dotenv
+
+---
+
+## IMPORTANT IMPLEMENTATION RULES
+
+* Use Telnyx Call Control API only (NOT SIP)
+* All decisions come from webhook events
+* Do not block webhook route
+* Always return HTTP 200 quickly
+* Use background threads for processing
+* Code must be readable for beginners
+* Comment every major section
+
+At the end, print clear console messages so the user understands what the system is doing.
