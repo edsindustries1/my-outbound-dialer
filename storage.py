@@ -55,6 +55,18 @@ def stop_campaign():
         campaign["active"] = False
 
 
+def mark_campaign_complete():
+    """Mark campaign as finished after all numbers are dialed."""
+    with lock:
+        campaign["active"] = False
+
+
+def increment_dialed():
+    """Increment the dialed count."""
+    with lock:
+        campaign["dialed_count"] += 1
+
+
 def is_campaign_active():
     """Check if campaign is still running."""
     with lock:

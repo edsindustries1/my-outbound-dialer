@@ -10,6 +10,8 @@ from storage import (
     get_campaign,
     is_campaign_active,
     create_call_state,
+    mark_campaign_complete,
+    increment_dialed,
 )
 from telnyx_client import make_call
 
@@ -61,6 +63,8 @@ def _dial_worker():
         else:
             logger.error(f"Could not dial {number}, skipping")
 
+        increment_dialed()
         time.sleep(2)
 
+    mark_campaign_complete()
     logger.info("Dialer finished processing all numbers")
