@@ -117,6 +117,7 @@ def make_call(number):
             "total_analysis_time_millis": 5000,
         },
         "timeout_secs": 60,
+        "time_limit_secs": 180,
         "webhook_url": webhook_url,
     }
 
