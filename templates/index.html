@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voicemail Drop System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Voicemail Drop System</h1>
+
+        <div class="status-bar" id="campaignStatus">
+            <span class="dot dot-inactive"></span> No active campaign
+        </div>
+
+        <form id="campaignForm" class="campaign-form">
+            <div class="form-section">
+                <h2>Phone Numbers</h2>
+                <label>Upload CSV file:</label>
+                <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt">
+                <label>Or paste numbers (one per line):</label>
+                <textarea name="numbers" id="numbersInput" rows="5" placeholder="+15551234567&#10;+15559876543"></textarea>
+            </div>
+
+            <div class="form-section">
+                <h2>Voicemail Audio</h2>
+                <label>Upload MP3/WAV:</label>
+                <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
+                <label>Or provide public audio URL:</label>
+                <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
+            </div>
+
+            <div class="form-section">
+                <h2>Transfer Number</h2>
+                <label>If a human answers, transfer to:</label>
+                <input type="text" name="transfer_number" id="transferNumber" placeholder="+15551112222" required>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn btn-start" id="startBtn">Start Campaign</button>
+                <button type="button" class="btn btn-stop" id="stopBtn" disabled>Stop Campaign</button>
+            </div>
+        </form>
+
+        <div class="log-section">
+            <h2>Call Log <span id="callCount" class="call-count"></span></h2>
+            <table id="callTable">
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Status</th>
+                        <th>Machine?</th>
+                        <th>Transferred</th>
+                        <th>Voicemail</th>
+                    </tr>
+                </thead>
+                <tbody id="callBody">
+                    <tr><td colspan="5" class="empty-row">No calls yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("campaignForm");
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const callBody = document.getElementById("callBody");
+        const callCount = document.getElementById("callCount");
+        const campaignStatus = document.getElementById("campaignStatus");
+
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            startBtn.disabled = true;
+            startBtn.textContent = "Starting...";
+
+            fetch("/start", { method: "POST", body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error: " + data.error);
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Start Campaign";
+                    } else {
+                        stopBtn.disabled = false;
+                        startBtn.textContent = "Campaign Running...";
+                    }
+                })
+                .catch(err => {
+                    alert("Failed to start campaign");
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Start Campaign";
+                });
+        });
+
+        stopBtn.addEventListener("click", function() {
+            fetch("/stop", { method: "POST" })
+                .then(r => r.json())
+                .then(data => {
+                    stopBtn.disabled = true;
+                    startBtn.disabled = false;
+                    startBtn.textContent = "Start Campaign";
+                });
+        });
+
+        function getStatusClass(status) {
+            switch(status) {
+                case "transferred": return "status-success";
+                case "voicemail_complete": return "status-success";
+                case "voicemail_playing": return "status-active";
+                case "ringing": return "status-active";
+                case "answered": return "status-active";
+                case "human_detected": return "status-active";
+                case "machine_detected": return "status-warning";
+                case "hangup": return "status-neutral";
+                case "no_answer": return "status-error";
+                default: return "";
+            }
+        }
+
+        function pollStatus() {
+            fetch("/status")
+                .then(r => r.json())
+                .then(data => {
+                    if (data.active) {
+                        campaignStatus.innerHTML = '<span class="dot dot-active"></span> Campaign active (' + data.total + ' numbers)';
+                    } else if (data.stop_requested) {
+                        campaignStatus.innerHTML = '<span class="dot dot-stopping"></span> Campaign stopping...';
+                    } else {
+                        campaignStatus.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
+                        if (data.calls && data.calls.length > 0) {
+                            startBtn.disabled = false;
+                            startBtn.textContent = "Start Campaign";
+                            stopBtn.disabled = true;
+                        }
+                    }
+
+                    callCount.textContent = data.calls ? "(" + data.calls.length + " calls)" : "";
+
+                    if (data.calls && data.calls.length > 0) {
+                        let html = "";
+                        data.calls.forEach(function(c) {
+                            let statusClass = getStatusClass(c.status);
+                            html += "<tr>";
+                            html += "<td>" + c.number + "</td>";
+                            html += '<td><span class="status-badge ' + statusClass + '">' + c.status + "</span></td>";
+                            html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
+                            html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
+                            html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
+                            html += "</tr>";
+                        });
+                        callBody.innerHTML = html;
+                    }
+                })
+                .catch(function() {});
+        }
+
+        setInterval(pollStatus, 2000);
+    </script>
+</body>
+</html>

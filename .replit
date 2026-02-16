@@ -1,0 +1,40 @@
+modules = ["python-3.11"]
+
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+PUBLIC_BASE_URL = "https://834e69c3-ce81-4671-9cff-dd80311d9cf9-00-2bzqsr5oa8s0k.riker.replit.dev"
