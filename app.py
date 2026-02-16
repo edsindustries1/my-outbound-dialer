@@ -22,8 +22,9 @@ from storage import (
     mark_voicemail_dropped,
     reset_campaign,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call
+from telnyx_client import transfer_call, play_audio, hangup_call, make_call
 from call_manager import start_dialer
+from storage import create_call_state
 
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
@@ -127,6 +128,27 @@ def start():
     start_dialer()
 
     return jsonify({"message": f"Campaign started with {len(numbers)} numbers"})
+
+
+# ---- Test Call ----
+@app.route("/test_call", methods=["POST"])
+def test_call():
+    """Place a single test call to verify everything is working."""
+    number = request.form.get("test_number", "").strip()
+    if not number:
+        return jsonify({"error": "No phone number provided"}), 400
+
+    logger.info(f"Placing test call to {number}")
+    call_control_id = make_call(number)
+
+    if call_control_id:
+        create_call_state(call_control_id, number)
+        update_call_state(call_control_id, status="test_call_ringing")
+        logger.info(f"Test call placed successfully to {number}")
+        return jsonify({"message": f"Test call placed to {number}"})
+    else:
+        logger.error(f"Test call failed to {number}")
+        return jsonify({"error": "Failed to place call. Check your Telnyx credentials."}), 500
 
 
 # ---- Stop Campaign ----

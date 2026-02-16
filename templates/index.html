@@ -14,6 +14,18 @@
             <span class="dot dot-inactive"></span> No active campaign
         </div>
 
+        <div class="campaign-form" style="margin-bottom: 24px;">
+            <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                <h2>Test Call</h2>
+                <label>Enter a number to place a quick test call:</label>
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <input type="text" id="testNumber" placeholder="+15551234567" style="flex: 1;">
+                    <button type="button" class="btn btn-start" id="testCallBtn">Call</button>
+                </div>
+                <div id="testResult" style="margin-top: 10px; font-size: 13px;"></div>
+            </div>
+        </div>
+
         <form id="campaignForm" class="campaign-form">
             <div class="form-section">
                 <h2>Phone Numbers</h2>
@@ -70,6 +82,39 @@
         const callCount = document.getElementById("callCount");
         const campaignStatus = document.getElementById("campaignStatus");
 
+        const testCallBtn = document.getElementById("testCallBtn");
+        const testNumber = document.getElementById("testNumber");
+        const testResult = document.getElementById("testResult");
+
+        testCallBtn.addEventListener("click", function() {
+            const number = testNumber.value.trim();
+            if (!number) { alert("Enter a phone number"); return; }
+
+            testCallBtn.disabled = true;
+            testCallBtn.textContent = "Calling...";
+            testResult.textContent = "";
+
+            const formData = new FormData();
+            formData.append("test_number", number);
+
+            fetch("/test_call", { method: "POST", body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    testCallBtn.disabled = false;
+                    testCallBtn.textContent = "Call";
+                    if (data.error) {
+                        testResult.innerHTML = '<span style="color: #f85149;">' + data.error + '</span>';
+                    } else {
+                        testResult.innerHTML = '<span style="color: #3fb950;">' + data.message + '</span>';
+                    }
+                })
+                .catch(() => {
+                    testCallBtn.disabled = false;
+                    testCallBtn.textContent = "Call";
+                    testResult.innerHTML = '<span style="color: #f85149;">Request failed</span>';
+                });
+        });
+
         form.addEventListener("submit", function(e) {
             e.preventDefault();
 
@@ -111,6 +156,7 @@
                 case "transferred": return "status-success";
                 case "voicemail_complete": return "status-success";
                 case "voicemail_playing": return "status-active";
+                case "test_call_ringing": return "status-active";
                 case "ringing": return "status-active";
                 case "answered": return "status-active";
                 case "human_detected": return "status-active";
