@@ -926,6 +926,94 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     50% { opacity: 0.6; }
 }
 
+/* ============ DIAL MODE TOGGLE ============ */
+.dial-mode-toggle {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.dial-mode-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.dial-mode-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.dial-mode-btn.active {
+    background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.15));
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(6,182,212,0.15);
+}
+
+.batch-size-wrap {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    animation: fadeSlide 0.25s ease;
+}
+
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.batch-size-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.input-batch {
+    width: 80px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.25s;
+    text-align: center;
+}
+
+.input-batch:focus {
+    border-color: var(--accent);
+}
+
+.batch-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.dial-mode-desc {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    line-height: 1.4;
+}
+
 /* ============ GRID LAYOUT ============ */
 .form-grid {
     display: grid;
@@ -953,6 +1041,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 .stagger-4 { animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards; }
 .stagger-5 { animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards; }
 .stagger-6 { animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s backwards; }
+.stagger-7 { animation: sectionIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.6s backwards; }
 
 @keyframes sectionIn {
     from { opacity: 0; transform: translateY(20px); }

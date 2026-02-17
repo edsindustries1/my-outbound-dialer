@@ -157,15 +157,43 @@
                     </div>
                 </div>
 
+                <!-- Dial Mode -->
+                <div class="card stagger-5">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+                        Dial Mode
+                    </div>
+                    <label>Choose how calls are placed</label>
+                    <div class="dial-mode-toggle">
+                        <button type="button" class="dial-mode-btn active" data-mode="sequential" id="modeSeq">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                            Sequential
+                        </button>
+                        <button type="button" class="dial-mode-btn" data-mode="simultaneous" id="modeSimul">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            Simultaneous
+                        </button>
+                    </div>
+                    <input type="hidden" name="dial_mode" id="dialModeInput" value="sequential">
+                    <div class="batch-size-wrap" id="batchSizeWrap" style="display:none;">
+                        <label>Calls per batch</label>
+                        <div class="batch-size-row">
+                            <input type="number" name="batch_size" id="batchSize" class="input-batch" value="5" min="2" max="50">
+                            <span class="batch-hint">2–50 calls fired at once per batch</span>
+                        </div>
+                    </div>
+                    <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time, each waiting 2 seconds before the next.</div>
+                </div>
+
                 <!-- Buttons -->
-                <div class="button-group stagger-5">
+                <div class="button-group stagger-6">
                     <button type="submit" class="btn btn-start" id="startBtn">Start Campaign</button>
                     <button type="button" class="btn btn-stop" id="stopBtn" disabled>Stop Campaign</button>
                 </div>
             </form>
 
             <!-- Call Log -->
-            <div class="log-section stagger-6">
+            <div class="log-section stagger-7">
                 <div class="log-header">
                     <h2>
                         <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -318,6 +346,29 @@
                     saveTransferBtn.style.color = "";
                 }, 1500);
             });
+
+            // ---- Dial Mode Toggle ----
+            var modeSeq = document.getElementById("modeSeq");
+            var modeSimul = document.getElementById("modeSimul");
+            var dialModeInput = document.getElementById("dialModeInput");
+            var batchSizeWrap = document.getElementById("batchSizeWrap");
+            var dialModeDesc = document.getElementById("dialModeDesc");
+
+            function setDialMode(mode) {
+                dialModeInput.value = mode;
+                modeSeq.classList.toggle("active", mode === "sequential");
+                modeSimul.classList.toggle("active", mode === "simultaneous");
+                if (mode === "simultaneous") {
+                    batchSizeWrap.style.display = "";
+                    dialModeDesc.textContent = "Multiple calls are fired at the same time in batches for faster dialing.";
+                } else {
+                    batchSizeWrap.style.display = "none";
+                    dialModeDesc.textContent = "Calls are placed one at a time, each waiting 2 seconds before the next.";
+                }
+            }
+
+            modeSeq.addEventListener("click", function() { setDialMode("sequential"); });
+            modeSimul.addEventListener("click", function() { setDialMode("simultaneous"); });
 
             // ---- Clear Call Logs ----
             clearLogsBtn.addEventListener("click", function() {

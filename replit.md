@@ -18,7 +18,7 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 ## Key Decisions
 - Event-driven architecture using Telnyx webhooks
 - In-memory state management (no database needed)
-- Background thread for rate-limited dialing (1 call per 2 seconds)
+- Background thread for rate-limited dialing with two modes: Sequential (1 call per 2 seconds) and Simultaneous (configurable batch size, 2–50 calls at once)
 - Webhook handler returns 200 immediately, processes asynchronously
 - AMD uses detect_words mode; voicemail audio plays immediately after machine detection
 - Deployment target: VM (always-on) since webhooks need constant availability

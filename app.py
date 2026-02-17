@@ -191,9 +191,18 @@ def start():
     if not transfer_number:
         return jsonify({"error": "Transfer number is required"}), 400
 
+    dial_mode = request.form.get("dial_mode", "sequential").strip()
+    if dial_mode not in ("sequential", "simultaneous"):
+        dial_mode = "sequential"
+    batch_size = 5
+    try:
+        batch_size = int(request.form.get("batch_size", "5"))
+    except (ValueError, TypeError):
+        batch_size = 5
+
     # ---- Start the campaign ----
-    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}")
-    set_campaign(audio_url, transfer_number, numbers)
+    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}")
+    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size)
     start_dialer()
 
     return jsonify({"message": f"Campaign started with {len(numbers)} numbers"})
