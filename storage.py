@@ -1,15 +1,104 @@
 """
 storage.py - In-memory storage for call states and campaign data.
 Manages call tracking, campaign configuration, and status reporting.
+Persists completed call logs to JSON file for historical reporting.
 """
 
 import os
+import json
 import threading
 from datetime import datetime
 
 lock = threading.Lock()
 
 call_states = {}
+
+LOGS_DIR = "logs"
+CALL_LOG_FILE = os.path.join(LOGS_DIR, "call_history.json")
+
+
+def _load_call_history():
+    try:
+        if os.path.exists(CALL_LOG_FILE):
+            with open(CALL_LOG_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+
+def _save_call_history(history):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(CALL_LOG_FILE, "w") as f:
+            json.dump(history, f, indent=2)
+    except Exception:
+        pass
+
+
+_file_lock = threading.Lock()
+
+
+def persist_call_log(call_control_id):
+    with lock:
+        state = call_states.get(call_control_id)
+        if not state:
+            return
+        now = datetime.utcnow()
+        ring_duration = None
+        if state.get("ring_start"):
+            end = state.get("ring_end") or now.timestamp()
+            ring_duration = round(end - state["ring_start"])
+        entry = {
+            "timestamp": state.get("created_at", now.isoformat()),
+            "number": state["number"],
+            "from_number": state.get("from_number", ""),
+            "status": state["status"],
+            "machine_detected": state["machine_detected"],
+            "transferred": state["transferred"],
+            "voicemail_dropped": state["voicemail_dropped"],
+            "ring_duration": ring_duration,
+        }
+    with _file_lock:
+        history = _load_call_history()
+        history.append(entry)
+        _save_call_history(history)
+
+
+def clear_call_history():
+    with _file_lock:
+        _save_call_history([])
+
+
+def _parse_ts(ts_str):
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(ts_str, fmt)
+        except (ValueError, TypeError):
+            continue
+    return None
+
+
+def get_call_history(start_date=None, end_date=None):
+    with _file_lock:
+        history = _load_call_history()
+    if not start_date and not end_date:
+        return history
+
+    start_dt = _parse_ts(start_date) if start_date else None
+    end_dt = _parse_ts(end_date) if end_date else None
+
+    filtered = []
+    for entry in history:
+        ts_dt = _parse_ts(entry.get("timestamp", ""))
+        if ts_dt is None:
+            continue
+        if start_dt and ts_dt < start_dt:
+            continue
+        if end_dt and ts_dt > end_dt:
+            continue
+        filtered.append(entry)
+    return filtered
 
 campaign = {
     "active": False,

@@ -225,6 +225,36 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="download-section">
+                    <div class="download-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Report
+                    </div>
+                    <div class="download-filters">
+                        <div class="download-preset-row">
+                            <button type="button" class="download-preset active" data-range="all">All Time</button>
+                            <button type="button" class="download-preset" data-range="today">Today</button>
+                            <button type="button" class="download-preset" data-range="week">This Week</button>
+                            <button type="button" class="download-preset" data-range="month">This Month</button>
+                            <button type="button" class="download-preset" data-range="custom">Custom</button>
+                        </div>
+                        <div class="download-custom-row" id="customDateRow" style="display:none;">
+                            <div class="date-field">
+                                <label>From</label>
+                                <input type="datetime-local" id="reportStart" class="input-date">
+                            </div>
+                            <div class="date-field">
+                                <label>To</label>
+                                <input type="datetime-local" id="reportEnd" class="input-date">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-download" id="downloadReportBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download CSV
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -369,6 +399,50 @@
 
             modeSeq.addEventListener("click", function() { setDialMode("sequential"); });
             modeSimul.addEventListener("click", function() { setDialMode("simultaneous"); });
+
+            // ---- Download Report ----
+            var downloadBtn = document.getElementById("downloadReportBtn");
+            var customDateRow = document.getElementById("customDateRow");
+            var reportStart = document.getElementById("reportStart");
+            var reportEnd = document.getElementById("reportEnd");
+            var presetBtns = document.querySelectorAll(".download-preset");
+            var selectedRange = "all";
+
+            presetBtns.forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    presetBtns.forEach(function(b) { b.classList.remove("active"); });
+                    btn.classList.add("active");
+                    selectedRange = btn.getAttribute("data-range");
+                    customDateRow.style.display = selectedRange === "custom" ? "" : "none";
+                });
+            });
+
+            function getDateRange() {
+                var now = new Date();
+                var start = "", end = "";
+                if (selectedRange === "today") {
+                    start = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0") + "T00:00:00";
+                } else if (selectedRange === "week") {
+                    var d = new Date(now);
+                    d.setDate(d.getDate() - d.getDay());
+                    start = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0") + "T00:00:00";
+                } else if (selectedRange === "month") {
+                    start = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-01T00:00:00";
+                } else if (selectedRange === "custom") {
+                    start = reportStart.value ? reportStart.value + ":00" : "";
+                    end = reportEnd.value ? reportEnd.value + ":59" : "";
+                }
+                return { start: start, end: end };
+            }
+
+            downloadBtn.addEventListener("click", function() {
+                var range = getDateRange();
+                var params = new URLSearchParams();
+                if (range.start) params.set("start", range.start);
+                if (range.end) params.set("end", range.end);
+                var url = "/download_report" + (params.toString() ? "?" + params.toString() : "");
+                window.location.href = url;
+            });
 
             // ---- Clear Call Logs ----
             clearLogsBtn.addEventListener("click", function() {

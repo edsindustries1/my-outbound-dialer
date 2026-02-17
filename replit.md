@@ -7,7 +7,7 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - **app.py** - Main Flask application with routes, webhooks, campaign control
 - **telnyx_client.py** - Wrapper around Telnyx Call Control REST API
 - **call_manager.py** - Queue-based dialing system with rate limiting
-- **storage.py** - In-memory call state management and campaign config
+- **storage.py** - In-memory call state management, campaign config, and persistent call history (JSON)
 - **templates/index.html** - Dashboard UI with animated splash screen and polling
 - **templates/login.html** - Password-protected login page
 - **static/style.css** - Dual-theme CSS with cyan/teal gradient branding
@@ -39,6 +39,8 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Realistic fiber optic video background
 - 3D interactive mouse-tracking tilt on cards
 - Clear Call Logs button (blocked during active campaigns)
+- Download Report section with date presets (All Time, Today, This Week, This Month, Custom) and CSV export
+- Persistent call history saved to logs/call_history.json for historical reporting across sessions
 - Password protection using Flask sessions with APP_PASSWORD env var
 - Responsive design with grid layout
 

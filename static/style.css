@@ -1014,6 +1014,123 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     line-height: 1.4;
 }
 
+/* ============ DOWNLOAD REPORT ============ */
+.download-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.download-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.download-title svg {
+    color: var(--accent);
+}
+
+.download-filters {
+    margin-bottom: 12px;
+}
+
+.download-preset-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.download-preset {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.download-preset:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.download-preset.active {
+    background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.15));
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.download-custom-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    animation: fadeSlide 0.25s ease;
+}
+
+.date-field {
+    flex: 1;
+}
+
+.date-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.input-date {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.25s;
+    box-sizing: border-box;
+}
+
+.input-date:focus {
+    border-color: var(--accent);
+}
+
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #06B6D4, #3B82F6);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.btn-download:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(6,182,212,0.3);
+}
+
 /* ============ GRID LAYOUT ============ */
 .form-grid {
     display: grid;

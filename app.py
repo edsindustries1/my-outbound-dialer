@@ -25,6 +25,9 @@ from storage import (
     reset_campaign,
     create_call_state,
     signal_call_complete,
+    persist_call_log,
+    get_call_history,
+    clear_call_history,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
 from call_manager import start_dialer
@@ -265,8 +268,53 @@ def clear_logs():
     if camp.get("active"):
         return jsonify({"error": "Cannot clear logs while campaign is active"}), 400
     clear_call_states()
+    clear_call_history()
     logger.info("Call logs cleared by user")
     return jsonify({"message": "Call logs cleared"})
+
+
+# ---- Download Call Report ----
+@app.route("/download_report")
+@login_required
+def download_report():
+    """Download call history as CSV with optional date filtering."""
+    start_date = request.args.get("start", "")
+    end_date = request.args.get("end", "")
+
+    history = get_call_history(start_date=start_date or None, end_date=end_date or None)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date/Time", "Destination", "Caller ID", "Status", "Ring Duration (s)", "Machine Detected", "Transferred", "Voicemail Dropped"])
+
+    for entry in history:
+        ts = entry.get("timestamp", "")
+        try:
+            dt_obj = datetime.fromisoformat(ts)
+            ts_formatted = dt_obj.strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            ts_formatted = ts
+
+        machine = "Yes" if entry.get("machine_detected") else ("No" if entry.get("machine_detected") is False else "-")
+        transferred = "Yes" if entry.get("transferred") else "No"
+        voicemail = "Yes" if entry.get("voicemail_dropped") else "No"
+        ring = entry.get("ring_duration", "-")
+        status = entry.get("status", "").replace("_", " ").title()
+
+        writer.writerow([ts_formatted, entry.get("number", ""), entry.get("from_number", ""), status, ring, machine, transferred, voicemail])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    now_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    filename = f"voice_blast_report_{now_str}.csv"
+
+    from flask import Response
+    return Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 # ---- Telnyx Webhook Handler ----
@@ -457,6 +505,7 @@ def webhook():
             if updates:
                 update_call_state(call_control_id, **updates)
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
+        persist_call_log(call_control_id)
         signal_call_complete(call_control_id)
 
     return "", 200
