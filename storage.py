@@ -134,6 +134,24 @@ def clear_call_states():
         call_states.clear()
 
 
+_call_complete_events = {}
+_call_complete_lock = threading.Lock()
+
+
+def register_call_complete_event(call_control_id):
+    with _call_complete_lock:
+        event = threading.Event()
+        _call_complete_events[call_control_id] = event
+        return event
+
+
+def signal_call_complete(call_control_id):
+    with _call_complete_lock:
+        event = _call_complete_events.pop(call_control_id, None)
+        if event:
+            event.set()
+
+
 def get_all_statuses():
     now = datetime.utcnow().timestamp()
     with lock:

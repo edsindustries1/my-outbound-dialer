@@ -24,6 +24,7 @@ from storage import (
     mark_voicemail_dropped,
     reset_campaign,
     create_call_state,
+    signal_call_complete,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
 from call_manager import start_dialer
@@ -456,6 +457,7 @@ def webhook():
             if updates:
                 update_call_state(call_control_id, **updates)
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
+        signal_call_complete(call_control_id)
 
     return "", 200
 

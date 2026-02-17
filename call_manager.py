@@ -13,6 +13,7 @@ from storage import (
     create_call_state,
     mark_campaign_complete,
     increment_dialed,
+    register_call_complete_event,
 )
 from telnyx_client import make_call
 
@@ -56,7 +57,7 @@ def _dial_worker():
 
 
 def _dial_sequential(numbers):
-    """Dial numbers one at a time with 2 second delay between each."""
+    """Dial numbers one at a time, waiting for each call to fully complete before the next."""
     for i, number in enumerate(numbers):
         if not is_campaign_active():
             logger.info("Campaign stopped, dialer exiting")
@@ -67,9 +68,19 @@ def _dial_sequential(numbers):
             continue
 
         logger.info(f"Dialing [{i+1}/{len(numbers)}]: {number}")
-        _place_single_call(number)
+        call_control_id = make_call(number)
+
+        if call_control_id:
+            complete_event = register_call_complete_event(call_control_id)
+            create_call_state(call_control_id, number)
+            logger.info(f"Call state created for {number}, waiting for call to complete...")
+            complete_event.wait(timeout=120)
+            logger.info(f"Call to {number} completed, moving to next")
+        else:
+            logger.error(f"Could not dial {number}, skipping")
+
         increment_dialed()
-        time.sleep(2)
+        time.sleep(1)
 
 
 def _dial_simultaneous(numbers, batch_size):
