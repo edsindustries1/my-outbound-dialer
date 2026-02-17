@@ -1,0 +1,23 @@
+Do not change any functionality, backend logic, or existing features of this application. Only make the following visual and UX improvements:
+1. Branding & Logo
+Create a professional logo for the application called "Voice Blast". The logo should look modern and polished — something like a sound wave combined with a microphone or blast/signal icon. Use a bold, clean font for the name. Display this logo prominently on the app header/navbar. The overall brand feel should look like it was built by a large, well-funded agency with a full design team.
+2. Landing / Load Animation
+When the application first opens, add a smooth, professional intro animation — such as a fade-in with a subtle slide-up effect for the main elements, or a branded splash screen that transitions into the app. It should feel premium and polished, not flashy or overdone.
+3. Click Animations (Global)
+Add a subtle but satisfying click/tap animation to every clickable element across the entire app — buttons, tabs, cards, inputs, links, icons. Use effects like ripple effects, micro-scale animations, subtle glow pulses, or press-down transitions. Keep them smooth and quick (under 300ms). This should feel like a high-end SaaS product.
+4. Test Call Feature – Input Field Width
+The phone number input field in the Test Call section is too wide. Shorten it so it only fits one phone number (roughly 10–12 digit format). Adjust the width to match the expected input length — no wider than necessary.
+5. Transfer Option Tab – Input Field Width
+The transfer number input field/tab in the Transfer Option section is too large. Resize it to only fit one phone number, similar to the Test Call fix above.
+6. Save Transfer Number (Persistent)
+Add a "Save for future use" option next to the transfer number input field. When the user saves a number, it should be stored (localStorage or database) and auto-filled every time they open or create a new campaign. The user should only have to enter the transfer number once. Also add a small "Edit" or "Change" button so they can update it when needed.
+7. Call Logs – Enhanced Detail View
+In the Call Logs section, add the following data columns or details for each log entry:
+
+Destination Number – the number being called / currently ringing
+Caller ID / From Number – the phone number the call is going out from
+Ring Duration – how many seconds the call has been ringing or rang before it was answered, dropped, or went to voicemail
+
+Make sure these fields display in real time if the logs are live, or pull from the existing call data if they are already being captured. Do not remove any existing log columns — only add these new ones.
+8. General Polish
+Add a little more visual detail and depth throughout the UI — subtle shadows, refined spacing, hover states, and micro-interactions — so the overall product feels more complete and premium. Do not add new sections, pages, or features. Just elevate what's already there visually.

@@ -206,11 +206,13 @@ def webhook():
 
     # ---- call.initiated ----
     if event_type == "call.initiated":
-        update_call_state(call_control_id, status="ringing")
+        from datetime import datetime as dt
+        update_call_state(call_control_id, status="ringing", ring_start=dt.utcnow().timestamp(), from_number=from_number)
 
     # ---- call.answered ----
     elif event_type == "call.answered":
-        update_call_state(call_control_id, status="answered", amd_received=False)
+        from datetime import datetime as dt
+        update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp())
         logger.info(f"Call answered: {call_control_id}, waiting for AMD result...")
 
         def _amd_fallback(ccid):
@@ -326,8 +328,14 @@ def webhook():
         state = get_call_state(call_control_id)
         if state:
             current_status = state.get("status", "")
+            updates = {}
             if current_status not in ("transferred", "voicemail_complete"):
-                update_call_state(call_control_id, status="hangup")
+                updates["status"] = "hangup"
+            if not state.get("ring_end"):
+                from datetime import datetime as dt
+                updates["ring_end"] = dt.utcnow().timestamp()
+            if updates:
+                update_call_state(call_control_id, **updates)
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
 
     return "", 200

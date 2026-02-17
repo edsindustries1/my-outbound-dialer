@@ -22,14 +22,19 @@
                     <defs>
                         <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
                             <stop offset="0%" stop-color="#6c5ce7"/>
+                            <stop offset="50%" stop-color="#8b7cf6"/>
                             <stop offset="100%" stop-color="#a29bfe"/>
                         </linearGradient>
+                        <filter id="glow1">
+                            <feGaussianBlur stdDeviation="2" result="blur"/>
+                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
                     </defs>
-                    <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#g1)"/>
-                    <path d="M22 24v16l12 8V16l-12 8z" fill="#fff"/>
+                    <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g1)" filter="url(#glow1)"/>
+                    <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
                     <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
                     <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-                    <path d="M46 17a22 22 0 010 30" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+                    <path d="M46 17a22 22 0 010 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
                 </svg>
             </div>
             <div class="splash-title">Voice Blast</div>
@@ -44,26 +49,36 @@
     <div id="app">
         <div class="bg-glow bg-glow-1"></div>
         <div class="bg-glow bg-glow-2"></div>
+        <div class="bg-glow bg-glow-3"></div>
 
         <div class="container">
             <!-- Header -->
             <div class="header">
-                <div class="header-icon">
-                    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="g2" x1="0" y1="0" x2="64" y2="64">
-                                <stop offset="0%" stop-color="#6c5ce7"/>
-                                <stop offset="100%" stop-color="#a29bfe"/>
-                            </linearGradient>
-                        </defs>
-                        <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#g2)"/>
-                        <path d="M22 24v16l12 8V16l-12 8z" fill="#fff"/>
-                        <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                        <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-                    </svg>
+                <div class="header-logo">
+                    <div class="header-icon">
+                        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="g2" x1="0" y1="0" x2="64" y2="64">
+                                    <stop offset="0%" stop-color="#6c5ce7"/>
+                                    <stop offset="50%" stop-color="#8b7cf6"/>
+                                    <stop offset="100%" stop-color="#a29bfe"/>
+                                </linearGradient>
+                            </defs>
+                            <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g2)"/>
+                            <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
+                            <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+                        </svg>
+                    </div>
+                    <div class="header-text">
+                        <h1>Voice Blast</h1>
+                        <div class="header-tagline">Voicemail Drop System</div>
+                    </div>
                 </div>
-                <h1>Voice Blast</h1>
-                <span class="header-version">v1.0</span>
+                <div class="header-badge">
+                    <span class="header-status-dot"></span>
+                    <span class="header-version">v1.0</span>
+                </div>
             </div>
 
             <!-- Status Bar -->
@@ -75,11 +90,11 @@
             <div class="card">
                 <div class="card-title">
                     <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    Test Call
+                    Quick Test
                 </div>
-                <label>Enter a number to place a quick test call:</label>
+                <label>Enter a number to place a test call</label>
                 <div class="test-call-row">
-                    <input type="text" id="testNumber" placeholder="+15551234567">
+                    <input type="text" id="testNumber" class="input-phone" placeholder="+15551234567" maxlength="16">
                     <button type="button" class="btn btn-test" id="testCallBtn">Call</button>
                 </div>
                 <div id="testResult"></div>
@@ -94,9 +109,9 @@
                             <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                             Phone Numbers
                         </div>
-                        <label>Upload CSV file:</label>
+                        <label>Upload CSV file</label>
                         <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt">
-                        <label>Or paste numbers (one per line):</label>
+                        <label>Or paste numbers (one per line)</label>
                         <textarea name="numbers" id="numbersInput" rows="4" placeholder="+15551234567&#10;+15559876543"></textarea>
                     </div>
 
@@ -106,9 +121,9 @@
                             <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
                             Voicemail Audio
                         </div>
-                        <label>Upload MP3/WAV:</label>
+                        <label>Upload MP3/WAV</label>
                         <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
-                        <label>Or provide public audio URL:</label>
+                        <label>Or provide public audio URL</label>
                         <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
                     </div>
                 </div>
@@ -119,8 +134,17 @@
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
                         Transfer Number
                     </div>
-                    <label>If a human answers, transfer the call to:</label>
-                    <input type="text" name="transfer_number" id="transferNumber" placeholder="+15551112222" required>
+                    <label>If a human answers, transfer the call to</label>
+                    <div class="transfer-row">
+                        <div class="transfer-input-wrap">
+                            <input type="text" name="transfer_number" id="transferNumber" class="input-phone" placeholder="+15551112222" maxlength="16" required>
+                        </div>
+                        <button type="button" class="btn-save-transfer" id="saveTransferBtn">Save for future</button>
+                    </div>
+                    <div class="saved-indicator" id="savedIndicator">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Saved &mdash; auto-fills next time
+                    </div>
                 </div>
 
                 <!-- Buttons -->
@@ -133,177 +157,243 @@
             <!-- Call Log -->
             <div class="log-section">
                 <div class="log-header">
-                    <h2>Call Log</h2>
+                    <h2>
+                        <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Call Log
+                    </h2>
                     <span id="callCount" class="call-count">0 calls</span>
                 </div>
-                <table id="callTable">
-                    <thead>
-                        <tr>
-                            <th>Number</th>
-                            <th>Status</th>
-                            <th>Machine?</th>
-                            <th>Transferred</th>
-                            <th>Voicemail</th>
-                        </tr>
-                    </thead>
-                    <tbody id="callBody">
-                        <tr><td colspan="5" class="empty-row">No calls yet</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-wrap">
+                    <table id="callTable">
+                        <thead>
+                            <tr>
+                                <th>Destination</th>
+                                <th>Caller ID</th>
+                                <th>Status</th>
+                                <th>Ring</th>
+                                <th>Machine?</th>
+                                <th>Transferred</th>
+                                <th>Voicemail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="callBody">
+                            <tr><td colspan="7" class="empty-row">No calls yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ---- Splash Screen ----
-        setTimeout(function() {
-            document.getElementById("splash").classList.add("hide");
-            document.getElementById("app").classList.add("show");
-        }, 2800);
+        (function() {
+            // ---- Splash Screen ----
+            setTimeout(function() {
+                document.getElementById("splash").classList.add("hide");
+                document.getElementById("app").classList.add("show");
+            }, 2900);
 
-        // ---- Elements ----
-        const form = document.getElementById("campaignForm");
-        const startBtn = document.getElementById("startBtn");
-        const stopBtn = document.getElementById("stopBtn");
-        const callBody = document.getElementById("callBody");
-        const callCount = document.getElementById("callCount");
-        const campaignStatus = document.getElementById("campaignStatus");
-        const testCallBtn = document.getElementById("testCallBtn");
-        const testNumber = document.getElementById("testNumber");
-        const testResult = document.getElementById("testResult");
+            // ---- Ripple Effect on Buttons ----
+            document.addEventListener("click", function(e) {
+                var btn = e.target.closest(".btn, .btn-save-transfer");
+                if (!btn || btn.disabled) return;
+                var rect = btn.getBoundingClientRect();
+                var ripple = document.createElement("span");
+                ripple.className = "ripple";
+                var size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + "px";
+                ripple.style.left = (e.clientX - rect.left - size / 2) + "px";
+                ripple.style.top = (e.clientY - rect.top - size / 2) + "px";
+                btn.style.position = "relative";
+                btn.style.overflow = "hidden";
+                btn.appendChild(ripple);
+                setTimeout(function() { ripple.remove(); }, 500);
+            });
 
-        // ---- Test Call ----
-        testCallBtn.addEventListener("click", function() {
-            const number = testNumber.value.trim();
-            if (!number) { alert("Enter a phone number"); return; }
+            // ---- Elements ----
+            var form = document.getElementById("campaignForm");
+            var startBtn = document.getElementById("startBtn");
+            var stopBtn = document.getElementById("stopBtn");
+            var callBody = document.getElementById("callBody");
+            var callCount = document.getElementById("callCount");
+            var campaignStatus = document.getElementById("campaignStatus");
+            var testCallBtn = document.getElementById("testCallBtn");
+            var testNumber = document.getElementById("testNumber");
+            var testResult = document.getElementById("testResult");
+            var transferNumber = document.getElementById("transferNumber");
+            var saveTransferBtn = document.getElementById("saveTransferBtn");
+            var savedIndicator = document.getElementById("savedIndicator");
 
-            testCallBtn.disabled = true;
-            testCallBtn.textContent = "Calling...";
-            testResult.textContent = "";
-
-            const formData = new FormData();
-            formData.append("test_number", number);
-
-            fetch("/test_call", { method: "POST", body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    testCallBtn.disabled = false;
-                    testCallBtn.textContent = "Call";
-                    if (data.error) {
-                        testResult.innerHTML = '<span style="color: var(--danger);">' + data.error + '</span>';
-                    } else {
-                        testResult.innerHTML = '<span style="color: var(--success);">' + data.message + '</span>';
-                    }
-                })
-                .catch(() => {
-                    testCallBtn.disabled = false;
-                    testCallBtn.textContent = "Call";
-                    testResult.innerHTML = '<span style="color: var(--danger);">Request failed</span>';
-                });
-        });
-
-        // ---- Start Campaign ----
-        form.addEventListener("submit", function(e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-            startBtn.disabled = true;
-            startBtn.textContent = "Starting...";
-
-            fetch("/start", { method: "POST", body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.error) {
-                        alert("Error: " + data.error);
-                        startBtn.disabled = false;
-                        startBtn.textContent = "Start Campaign";
-                    } else {
-                        stopBtn.disabled = false;
-                        startBtn.textContent = "Campaign Running...";
-                    }
-                })
-                .catch(err => {
-                    alert("Failed to start campaign");
-                    startBtn.disabled = false;
-                    startBtn.textContent = "Start Campaign";
-                });
-        });
-
-        // ---- Stop Campaign ----
-        stopBtn.addEventListener("click", function() {
-            fetch("/stop", { method: "POST" })
-                .then(r => r.json())
-                .then(data => {
-                    stopBtn.disabled = true;
-                    startBtn.disabled = false;
-                    startBtn.textContent = "Start Campaign";
-                });
-        });
-
-        // ---- Status Helpers ----
-        function getStatusClass(status) {
-            switch(status) {
-                case "transferred":
-                case "voicemail_complete": return "status-success";
-                case "voicemail_playing":
-                case "test_call_ringing":
-                case "ringing":
-                case "answered":
-                case "human_detected": return "status-active";
-                case "machine_detected": return "status-warning";
-                case "hangup": return "status-neutral";
-                case "no_answer": return "status-error";
-                default: return "";
+            // ---- Load Saved Transfer Number ----
+            var saved = localStorage.getItem("vb_transfer_number");
+            if (saved) {
+                transferNumber.value = saved;
+                savedIndicator.classList.add("show");
+                saveTransferBtn.textContent = "Update";
             }
-        }
 
-        function formatStatus(s) {
-            return s.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
+            // ---- Save Transfer Number ----
+            saveTransferBtn.addEventListener("click", function() {
+                var num = transferNumber.value.trim();
+                if (!num) return;
+                localStorage.setItem("vb_transfer_number", num);
+                savedIndicator.classList.add("show");
+                saveTransferBtn.textContent = "Update";
+                saveTransferBtn.style.borderColor = "var(--success)";
+                saveTransferBtn.style.color = "var(--success)";
+                setTimeout(function() {
+                    saveTransferBtn.style.borderColor = "";
+                    saveTransferBtn.style.color = "";
+                }, 1500);
+            });
 
-        // ---- Polling ----
-        function pollStatus() {
-            fetch("/status")
-                .then(r => r.json())
-                .then(data => {
-                    const bar = document.getElementById("campaignStatus");
-                    if (data.active) {
-                        bar.className = "status-bar active";
-                        bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
-                    } else if (data.stop_requested) {
-                        bar.className = "status-bar";
-                        bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign stopping...';
-                    } else {
-                        bar.className = "status-bar";
-                        bar.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
-                        if (data.calls && data.calls.length > 0) {
+            // ---- Test Call ----
+            testCallBtn.addEventListener("click", function() {
+                var number = testNumber.value.trim();
+                if (!number) { alert("Enter a phone number"); return; }
+
+                testCallBtn.disabled = true;
+                testCallBtn.textContent = "Calling...";
+                testResult.textContent = "";
+
+                var formData = new FormData();
+                formData.append("test_number", number);
+
+                fetch("/test_call", { method: "POST", body: formData })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        testCallBtn.disabled = false;
+                        testCallBtn.textContent = "Call";
+                        if (data.error) {
+                            testResult.innerHTML = '<span style="color: var(--danger);">' + data.error + '</span>';
+                        } else {
+                            testResult.innerHTML = '<span style="color: var(--success);">' + data.message + '</span>';
+                        }
+                    })
+                    .catch(function() {
+                        testCallBtn.disabled = false;
+                        testCallBtn.textContent = "Call";
+                        testResult.innerHTML = '<span style="color: var(--danger);">Request failed</span>';
+                    });
+            });
+
+            // ---- Start Campaign ----
+            form.addEventListener("submit", function(e) {
+                e.preventDefault();
+                var formData = new FormData(form);
+                startBtn.disabled = true;
+                startBtn.textContent = "Starting...";
+
+                fetch("/start", { method: "POST", body: formData })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.error) {
+                            alert("Error: " + data.error);
                             startBtn.disabled = false;
                             startBtn.textContent = "Start Campaign";
-                            stopBtn.disabled = true;
+                        } else {
+                            stopBtn.disabled = false;
+                            startBtn.textContent = "Campaign Running...";
                         }
-                    }
+                    })
+                    .catch(function() {
+                        alert("Failed to start campaign");
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Start Campaign";
+                    });
+            });
 
-                    const count = data.calls ? data.calls.length : 0;
-                    callCount.textContent = count + " call" + (count !== 1 ? "s" : "");
+            // ---- Stop Campaign ----
+            stopBtn.addEventListener("click", function() {
+                fetch("/stop", { method: "POST" })
+                    .then(function(r) { return r.json(); })
+                    .then(function() {
+                        stopBtn.disabled = true;
+                        startBtn.disabled = false;
+                        startBtn.textContent = "Start Campaign";
+                    });
+            });
 
-                    if (data.calls && data.calls.length > 0) {
-                        let html = "";
-                        data.calls.forEach(function(c) {
-                            let cls = getStatusClass(c.status);
-                            html += "<tr>";
-                            html += "<td>" + c.number + "</td>";
-                            html += '<td><span class="status-badge ' + cls + '">' + formatStatus(c.status) + "</span></td>";
-                            html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
-                            html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
-                            html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
-                            html += "</tr>";
-                        });
-                        callBody.innerHTML = html;
-                    }
-                })
-                .catch(function() {});
-        }
+            // ---- Status Helpers ----
+            function getStatusClass(status) {
+                switch(status) {
+                    case "transferred":
+                    case "voicemail_complete": return "status-success";
+                    case "voicemail_playing":
+                    case "test_call_ringing":
+                    case "ringing":
+                    case "answered":
+                    case "human_detected": return "status-active";
+                    case "machine_detected": return "status-warning";
+                    case "hangup": return "status-neutral";
+                    case "no_answer":
+                    case "transfer_failed": return "status-error";
+                    default: return "";
+                }
+            }
 
-        setInterval(pollStatus, 2000);
+            function formatStatus(s) {
+                return s.replace(/_/g, " ").replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+            }
+
+            function formatRing(secs) {
+                if (secs === null || secs === undefined) return "-";
+                if (secs < 60) return secs + "s";
+                return Math.floor(secs / 60) + "m " + (secs % 60) + "s";
+            }
+
+            function maskNumber(n) {
+                if (!n || n.length < 5) return n || "-";
+                return n;
+            }
+
+            // ---- Polling ----
+            function pollStatus() {
+                fetch("/status")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var bar = document.getElementById("campaignStatus");
+                        if (data.active) {
+                            bar.className = "status-bar active";
+                            bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
+                        } else if (data.stop_requested) {
+                            bar.className = "status-bar";
+                            bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign stopping...';
+                        } else {
+                            bar.className = "status-bar";
+                            bar.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
+                            if (data.calls && data.calls.length > 0) {
+                                startBtn.disabled = false;
+                                startBtn.textContent = "Start Campaign";
+                                stopBtn.disabled = true;
+                            }
+                        }
+
+                        var count = data.calls ? data.calls.length : 0;
+                        callCount.textContent = count + " call" + (count !== 1 ? "s" : "");
+
+                        if (data.calls && data.calls.length > 0) {
+                            var html = "";
+                            data.calls.forEach(function(c) {
+                                var cls = getStatusClass(c.status);
+                                html += "<tr>";
+                                html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
+                                html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
+                                html += '<td><span class="status-badge ' + cls + '">' + formatStatus(c.status) + "</span></td>";
+                                html += "<td>" + formatRing(c.ring_duration) + "</td>";
+                                html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
+                                html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
+                                html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
+                                html += "</tr>";
+                            });
+                            callBody.innerHTML = html;
+                        }
+                    })
+                    .catch(function() {});
+            }
+
+            setInterval(pollStatus, 2000);
+        })();
     </script>
 </body>
 </html>
