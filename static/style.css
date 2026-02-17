@@ -320,6 +320,37 @@ body {
     transform: translateY(0);
 }
 
+/* ============ VIDEO BACKGROUND ============ */
+.video-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.video-bg video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 15, 26, 0.7);
+    transition: background 0.35s ease;
+}
+
+[data-theme="light"] .video-overlay {
+    background: rgba(248, 250, 252, 0.82);
+}
+
+[data-theme="light"] .video-bg {
+    opacity: 0.6;
+}
+
 .bg-glow {
     position: fixed;
     width: 600px;
