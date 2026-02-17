@@ -25,10 +25,11 @@ from storage import (
     reset_campaign,
     create_call_state,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id
+from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
 from call_manager import start_dialer
 
 _amd_timers = {}
+_detected_base_url = None
 
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
@@ -71,6 +72,7 @@ def login_required(f):
 # ---- Login Route ----
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    _detect_and_set_base_url()
     if not APP_PASSWORD:
         return redirect(url_for("index"))
     if session.get("authenticated"):
@@ -91,11 +93,33 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _detect_and_set_base_url():
+    global _detected_base_url
+    if _detected_base_url:
+        return
+    try:
+        host = request.headers.get("X-Forwarded-Host") or request.headers.get("Host") or request.host
+        proto = request.headers.get("X-Forwarded-Proto", "https")
+        if host and "localhost" not in host and "127.0.0.1" not in host:
+            detected = f"{proto}://{host}"
+            _detected_base_url = detected
+            set_webhook_base_url(detected)
+            logger.info(f"Auto-detected public base URL from request: {detected}")
+        else:
+            env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+            if env_url:
+                _detected_base_url = env_url
+                set_webhook_base_url(env_url)
+    except Exception:
+        pass
+
+
 # ---- Dashboard Route ----
 @app.route("/")
 @login_required
 def index():
     """Serve the main dashboard page."""
+    _detect_and_set_base_url()
     return render_template("index.html")
 
 
@@ -116,6 +140,7 @@ def start():
     Start a new calling campaign.
     Accepts: phone numbers (pasted or CSV), audio (file or URL), transfer number.
     """
+    _detect_and_set_base_url()
     transfer_number = request.form.get("transfer_number", "").strip()
     pasted_numbers = request.form.get("numbers", "").strip()
     audio_url_input = request.form.get("audio_url", "").strip()
@@ -179,6 +204,7 @@ def start():
 @login_required
 def test_call():
     """Place a single test call to verify everything is working."""
+    _detect_and_set_base_url()
     number = request.form.get("test_number", "").strip()
     if not number:
         return jsonify({"error": "No phone number provided"}), 400
@@ -230,6 +256,7 @@ def webhook():
     """
     body = request.json
     if not body:
+        logger.warning("Webhook received with empty body")
         return "", 200
 
     data = body.get("data", {})
@@ -237,7 +264,7 @@ def webhook():
     payload = data.get("payload", {})
     call_control_id = payload.get("call_control_id", "")
 
-    logger.info(f"Webhook received: {event_type} for call {call_control_id}")
+    logger.info(f">>> WEBHOOK received: {event_type} for call {call_control_id}")
 
     to_number = payload.get("to", "")
     from_number = payload.get("from", "")

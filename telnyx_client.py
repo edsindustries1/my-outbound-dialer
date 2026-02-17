@@ -12,6 +12,19 @@ logger = logging.getLogger("voicemail_app")
 TELNYX_API_BASE = "https://api.telnyx.com/v2"
 
 _resolved_connection_id = None
+_webhook_base_url = None
+
+
+def set_webhook_base_url(url):
+    global _webhook_base_url
+    _webhook_base_url = url.rstrip("/")
+    logger.info(f"Webhook base URL set to: {_webhook_base_url}")
+
+
+def _get_webhook_url():
+    if _webhook_base_url:
+        return _webhook_base_url + "/webhook"
+    return os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") + "/webhook"
 
 
 def _headers():
@@ -97,7 +110,9 @@ def make_call(number):
     """
     connection_id = _get_connection_id()
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
-    webhook_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") + "/webhook"
+    webhook_url = _get_webhook_url()
+
+    logger.info(f"Placing call to {number} with webhook_url: {webhook_url}")
 
     payload = {
         "connection_id": connection_id,
@@ -161,7 +176,7 @@ def _resolved_connection_id_reset():
 def transfer_call(call_control_id, to_number):
     """Transfer an active call to the specified number."""
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
-    webhook_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") + "/webhook"
+    webhook_url = _get_webhook_url()
     payload = {
         "to": to_number,
         "from": from_number,
