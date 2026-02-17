@@ -21,20 +21,15 @@
                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
-                            <stop offset="0%" stop-color="#6c5ce7"/>
-                            <stop offset="50%" stop-color="#8b7cf6"/>
-                            <stop offset="100%" stop-color="#a29bfe"/>
+                            <stop offset="0%" stop-color="#7C3AED"/>
+                            <stop offset="100%" stop-color="#A855F7"/>
                         </linearGradient>
-                        <filter id="glow1">
-                            <feGaussianBlur stdDeviation="2" result="blur"/>
-                            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
                     </defs>
-                    <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g1)" filter="url(#glow1)"/>
-                    <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
-                    <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                    <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-                    <path d="M46 17a22 22 0 010 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+                    <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g1)"/>
+                    <path d="M20 24v16l14 9V15l-14 9z" fill="#F1F0FF" opacity="0.95"/>
+                    <path d="M38 25a10 10 0 010 14" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                    <path d="M42 21a16 16 0 010 22" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+                    <path d="M46 17a22 22 0 010 30" stroke="#F1F0FF" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
                 </svg>
             </div>
             <div class="splash-title">Voice Blast</div>
@@ -52,22 +47,21 @@
         <div class="bg-glow bg-glow-3"></div>
 
         <div class="container">
-            <!-- Header -->
+            <!-- Header (Frosted Glass) -->
             <div class="header">
                 <div class="header-logo">
                     <div class="header-icon">
                         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="g2" x1="0" y1="0" x2="64" y2="64">
-                                    <stop offset="0%" stop-color="#6c5ce7"/>
-                                    <stop offset="50%" stop-color="#8b7cf6"/>
-                                    <stop offset="100%" stop-color="#a29bfe"/>
+                                    <stop offset="0%" stop-color="#7C3AED"/>
+                                    <stop offset="100%" stop-color="#A855F7"/>
                                 </linearGradient>
                             </defs>
                             <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g2)"/>
-                            <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
-                            <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                            <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+                            <path d="M20 24v16l14 9V15l-14 9z" fill="#F1F0FF" opacity="0.95"/>
+                            <path d="M38 25a10 10 0 010 14" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M42 21a16 16 0 010 22" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
                         </svg>
                     </div>
                     <div class="header-text">
@@ -82,12 +76,12 @@
             </div>
 
             <!-- Status Bar -->
-            <div class="status-bar" id="campaignStatus">
+            <div class="status-bar stagger-1" id="campaignStatus">
                 <span class="dot dot-inactive"></span> No active campaign
             </div>
 
             <!-- Test Call -->
-            <div class="card">
+            <div class="card stagger-2">
                 <div class="card-title">
                     <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                     Quick Test
@@ -102,9 +96,9 @@
 
             <!-- Campaign Form -->
             <form id="campaignForm">
-                <div class="form-grid">
+                <div class="form-grid stagger-3">
                     <!-- Phone Numbers -->
-                    <div class="card">
+                    <div class="card card-accent">
                         <div class="card-title">
                             <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                             Phone Numbers
@@ -116,7 +110,7 @@
                     </div>
 
                     <!-- Audio -->
-                    <div class="card">
+                    <div class="card card-accent">
                         <div class="card-title">
                             <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
                             Voicemail Audio
@@ -129,7 +123,7 @@
                 </div>
 
                 <!-- Transfer Number -->
-                <div class="card">
+                <div class="card stagger-4">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
                         Transfer Number
@@ -148,14 +142,14 @@
                 </div>
 
                 <!-- Buttons -->
-                <div class="button-group">
+                <div class="button-group stagger-5">
                     <button type="submit" class="btn btn-start" id="startBtn">Start Campaign</button>
                     <button type="button" class="btn btn-stop" id="stopBtn" disabled>Stop Campaign</button>
                 </div>
             </form>
 
             <!-- Call Log -->
-            <div class="log-section">
+            <div class="log-section stagger-6">
                 <div class="log-header">
                     <h2>
                         <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -193,7 +187,7 @@
                 document.getElementById("app").classList.add("show");
             }, 2900);
 
-            // ---- Ripple Effect on Buttons ----
+            // ---- Ripple Effect (Violet Accent) ----
             document.addEventListener("click", function(e) {
                 var btn = e.target.closest(".btn, .btn-save-transfer");
                 if (!btn || btn.disabled) return;
@@ -354,13 +348,13 @@
                     .then(function(data) {
                         var bar = document.getElementById("campaignStatus");
                         if (data.active) {
-                            bar.className = "status-bar active";
+                            bar.className = "status-bar stagger-1 active";
                             bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
                         } else if (data.stop_requested) {
-                            bar.className = "status-bar";
+                            bar.className = "status-bar stagger-1";
                             bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign stopping...';
                         } else {
-                            bar.className = "status-bar";
+                            bar.className = "status-bar stagger-1";
                             bar.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
                             if (data.calls && data.calls.length > 0) {
                                 startBtn.disabled = false;
