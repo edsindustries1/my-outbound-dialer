@@ -220,8 +220,9 @@ body {
     width: 88px;
     height: 88px;
     position: relative;
-    animation: pulseIn 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: pulseIn 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, float3d 4s ease-in-out 1.5s infinite;
     opacity: 0;
+    transform-style: preserve-3d;
 }
 
 .splash-icon svg {
@@ -305,6 +306,13 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes float3d {
+    0%, 100% { transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1); }
+    25% { transform: translateY(-8px) rotateX(3deg) rotateY(-3deg) scale(1.02); }
+    50% { transform: translateY(-4px) rotateX(-2deg) rotateY(4deg) scale(1.01); }
+    75% { transform: translateY(-10px) rotateX(4deg) rotateY(-2deg) scale(1.03); }
+}
+
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes loadBar { to { width: 100%; } }
 
@@ -373,6 +381,7 @@ body {
     padding: 0 24px 64px;
     position: relative;
     z-index: 1;
+    perspective: 1200px;
 }
 
 /* ============ HEADER (FROSTED GLASS) ============ */
@@ -512,15 +521,30 @@ body {
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 20px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
     box-shadow: var(--shadow-card);
     position: relative;
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
 .card:hover {
     border-color: var(--border-hover);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-card-hover);
+}
+
+.card.tilt-3d {
+    transition: transform 0.08s linear, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card .card-title,
+.card label,
+.card input,
+.card textarea,
+.card .test-call-row,
+.card .transfer-row,
+.card .saved-indicator {
+    transform: translateZ(20px);
 }
 
 .card-title {
@@ -656,10 +680,15 @@ textarea:focus {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
     position: relative;
     overflow: hidden;
+    transform: translateZ(0);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
 }
 
 .btn:disabled {
@@ -728,11 +757,18 @@ textarea:focus {
     padding: 24px;
     margin-top: 24px;
     box-shadow: var(--shadow-card);
-    transition: all 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
 .log-section:hover {
     border-color: var(--border-hover);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.log-section.tilt-3d {
+    transition: transform 0.08s linear, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .log-header {
