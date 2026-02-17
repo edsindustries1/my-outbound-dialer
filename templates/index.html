@@ -425,7 +425,8 @@
                     case "hangup": return "status-neutral";
                     case "initiated": return "status-pending";
                     case "no_answer":
-                    case "transfer_failed": return "status-error";
+                    case "transfer_failed":
+                    case "human_no_transfer": return "status-error";
                     default: return "";
                 }
             }
@@ -433,6 +434,8 @@
             function formatStatus(s) {
                 if (s === "initiated") return "Dialing...";
                 if (s === "test_call_ringing") return "Ringing";
+                if (s === "human_no_transfer") return "Human (No Transfer #)";
+                if (s === "transfer_failed") return "Transfer Failed";
                 return s.replace(/_/g, " ").replace(/\b\w/g, function(l) { return l.toUpperCase(); });
             }
 

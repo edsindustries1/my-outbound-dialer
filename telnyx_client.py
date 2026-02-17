@@ -112,6 +112,7 @@ def make_call(number):
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
     webhook_url = _get_webhook_url()
 
+    number = _normalize_number(number)
     logger.info(f"Placing call to {number} with webhook_url: {webhook_url}")
 
     payload = {
@@ -173,10 +174,21 @@ def _resolved_connection_id_reset():
     _resolved_connection_id = None
 
 
+def _normalize_number(number):
+    """Ensure phone number is in E.164 format with + prefix."""
+    number = number.strip()
+    has_plus = number.startswith("+")
+    digits = "".join(c for c in number if c.isdigit())
+    if has_plus:
+        return "+" + digits
+    return "+" + digits
+
+
 def transfer_call(call_control_id, to_number):
     """Transfer an active call to the specified number."""
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
     webhook_url = _get_webhook_url()
+    to_number = _normalize_number(to_number)
     payload = {
         "to": to_number,
         "from": from_number,

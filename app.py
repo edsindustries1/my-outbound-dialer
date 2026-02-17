@@ -310,10 +310,16 @@ def webhook():
                 if transfer_num and mark_transferred(ccid):
                     logger.info(f"Fallback transfer {ccid} to {transfer_num}")
                     success = transfer_call(ccid, transfer_num)
-                    if not success:
+                    if success:
+                        update_call_state(ccid, status="transferred")
+                    else:
                         logger.error(f"Fallback transfer failed for {ccid}, hanging up")
                         update_call_state(ccid, status="transfer_failed")
                         hangup_call(ccid)
+                else:
+                    logger.warning(f"AMD timeout on {ccid}, no transfer number configured, hanging up")
+                    update_call_state(ccid, status="human_no_transfer")
+                    hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
         timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
@@ -343,15 +349,18 @@ def webhook():
             if transfer_num and mark_transferred(call_control_id):
                 logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
                 success = transfer_call(call_control_id, transfer_num)
-                if not success:
+                if success:
+                    update_call_state(call_control_id, status="transferred")
+                else:
                     logger.error(f"Transfer failed for {call_control_id}, hanging up")
                     update_call_state(call_control_id, status="transfer_failed")
                     hangup_call(call_control_id)
             elif not transfer_num:
                 logger.warning(f"HUMAN detected on {call_control_id} but no transfer number configured")
-                update_call_state(call_control_id, status="human_detected")
+                update_call_state(call_control_id, status="human_no_transfer")
+                hangup_call(call_control_id)
 
-        elif result in ("machine", "fax", "not_sure"):
+        elif result in ("machine", "fax"):
             update_call_state(call_control_id, machine_detected=True, status="machine_detected")
             logger.info(f"MACHINE detected on {call_control_id}, playing voicemail immediately")
 
@@ -365,9 +374,26 @@ def webhook():
                     logger.error(f"No audio URL configured for voicemail on {call_control_id}")
                     hangup_call(call_control_id)
 
+        elif result == "not_sure":
+            update_call_state(call_control_id, machine_detected=False, status="human_detected")
+            camp = get_campaign()
+            transfer_num = camp.get("transfer_number", "")
+            if transfer_num and mark_transferred(call_control_id):
+                logger.info(f"AMD not_sure on {call_control_id}, treating as HUMAN - transferring to {transfer_num}")
+                success = transfer_call(call_control_id, transfer_num)
+                if success:
+                    update_call_state(call_control_id, status="transferred")
+                else:
+                    logger.error(f"Transfer failed for {call_control_id} (not_sure), hanging up")
+                    update_call_state(call_control_id, status="transfer_failed")
+                    hangup_call(call_control_id)
+            else:
+                logger.warning(f"AMD not_sure on {call_control_id}, no transfer number, hanging up")
+                hangup_call(call_control_id)
+
         else:
             update_call_state(call_control_id, status="no_answer")
-            logger.info(f"AMD unknown result on {call_control_id}, hanging up")
+            logger.info(f"AMD unknown result '{result}' on {call_control_id}, hanging up")
             hangup_call(call_control_id)
 
     # ---- call.machine.greeting.ended (beep detected) ----
