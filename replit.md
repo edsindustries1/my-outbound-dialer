@@ -22,9 +22,14 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Deployment target: VM (always-on) since webhooks need constant availability
 
 ## UI/UX
+- Dual-theme system: Dark and Light modes with toggle button in header
+- Theme persisted in localStorage ("vb_theme") with inline head script to prevent flash
+- Cyan/teal (#06B6D4) + blue (#3B82F6) gradient accent palette replacing old purple
+- Dark theme: deep navy backgrounds (#0B0F1A), subtle background glows
+- Light theme: clean white/gray surfaces (#F8FAFC), no glows, adjusted contrast
+- Smooth 0.35s transitions between themes on all elements
 - Animated Voice Blast logo splash screen on page load with pulsing rings
-- Dark purple gradient theme with card-based layout
-- Real-time call status polling every 2 seconds
+- Card-based layout with real-time call status polling every 2 seconds
 - Responsive design with grid layout
 
 ## Environment Variables
