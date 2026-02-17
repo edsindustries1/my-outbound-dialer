@@ -246,6 +246,19 @@ def status():
     })
 
 
+# ---- Clear Call Logs ----
+@app.route("/clear_logs", methods=["POST"])
+@login_required
+def clear_logs():
+    from storage import clear_call_states
+    camp = get_campaign()
+    if camp.get("active"):
+        return jsonify({"error": "Cannot clear logs while campaign is active"}), 400
+    clear_call_states()
+    logger.info("Call logs cleared by user")
+    return jsonify({"message": "Call logs cleared"})
+
+
 # ---- Telnyx Webhook Handler ----
 @app.route("/webhook", methods=["POST"])
 def webhook():

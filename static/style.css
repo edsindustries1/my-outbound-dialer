@@ -800,6 +800,39 @@ textarea:focus {
     color: var(--accent);
 }
 
+.log-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-clear-logs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+}
+
+.btn-clear-logs:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.btn-clear-logs:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .call-count {
     font-weight: 500;
     font-size: 12px;
@@ -886,6 +919,12 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 .status-warning { background: var(--warning-bg); color: var(--warning); }
 .status-error { background: var(--danger-bg); color: var(--danger); }
 .status-neutral { background: var(--neutral-bg); color: var(--text-secondary); }
+.status-pending { background: var(--info-bg); color: var(--accent); animation: statusPulse 1.5s ease-in-out infinite; }
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
 
 /* ============ GRID LAYOUT ============ */
 .form-grid {

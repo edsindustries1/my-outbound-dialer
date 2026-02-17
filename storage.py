@@ -123,6 +123,11 @@ def mark_voicemail_dropped(call_control_id):
         return False
 
 
+def clear_call_states():
+    with lock:
+        call_states.clear()
+
+
 def get_all_statuses():
     now = datetime.utcnow().timestamp()
     with lock:

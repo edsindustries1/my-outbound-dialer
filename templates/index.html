@@ -171,7 +171,13 @@
                         <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         Call Log
                     </h2>
-                    <span id="callCount" class="call-count">0 calls</span>
+                    <div class="log-header-actions">
+                        <span id="callCount" class="call-count">0 calls</span>
+                        <button type="button" class="btn-clear-logs" id="clearLogsBtn" title="Clear all call logs">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            Clear
+                        </button>
+                    </div>
                 </div>
                 <div class="table-wrap">
                     <table id="callTable">
@@ -197,6 +203,25 @@
 
     <script>
         (function() {
+            function apiFetch(url, opts) {
+                var defaults = { credentials: "include", headers: {} };
+                var merged = Object.assign({}, defaults, opts || {});
+                if (!merged.body || !(merged.body instanceof FormData)) {
+                    merged.headers["X-Requested-With"] = "XMLHttpRequest";
+                } else {
+                    var h = new Headers(merged.headers || {});
+                    h.set("X-Requested-With", "XMLHttpRequest");
+                    merged.headers = h;
+                }
+                return fetch(url, merged).then(function(r) {
+                    if (r.status === 401) {
+                        window.location.href = "/login";
+                        throw new Error("auth");
+                    }
+                    return r;
+                });
+            }
+
             // ---- Splash Screen ----
             setTimeout(function() {
                 document.getElementById("splash").classList.add("hide");
@@ -241,7 +266,7 @@
 
             // ---- Ripple Effect ----
             document.addEventListener("click", function(e) {
-                var btn = e.target.closest(".btn, .btn-save-transfer");
+                var btn = e.target.closest(".btn, .btn-save-transfer, .btn-clear-logs");
                 if (!btn || btn.disabled) return;
                 var rect = btn.getBoundingClientRect();
                 var ripple = document.createElement("span");
@@ -269,6 +294,7 @@
             var transferNumber = document.getElementById("transferNumber");
             var saveTransferBtn = document.getElementById("saveTransferBtn");
             var savedIndicator = document.getElementById("savedIndicator");
+            var clearLogsBtn = document.getElementById("clearLogsBtn");
 
             // ---- Load Saved Transfer Number ----
             var saved = localStorage.getItem("vb_transfer_number");
@@ -293,6 +319,27 @@
                 }, 1500);
             });
 
+            // ---- Clear Call Logs ----
+            clearLogsBtn.addEventListener("click", function() {
+                if (!confirm("Clear all call logs?")) return;
+                clearLogsBtn.disabled = true;
+                apiFetch("/clear_logs", { method: "POST" })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        clearLogsBtn.disabled = false;
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+                        callBody.innerHTML = '<tr><td colspan="7" class="empty-row">No calls yet</td></tr>';
+                        callCount.textContent = "0 calls";
+                    })
+                    .catch(function(e) {
+                        clearLogsBtn.disabled = false;
+                        if (e.message !== "auth") alert("Failed to clear logs");
+                    });
+            });
+
             // ---- Test Call ----
             testCallBtn.addEventListener("click", function() {
                 var number = testNumber.value.trim();
@@ -305,7 +352,7 @@
                 var formData = new FormData();
                 formData.append("test_number", number);
 
-                fetch("/test_call", { method: "POST", body: formData })
+                apiFetch("/test_call", { method: "POST", body: formData })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         testCallBtn.disabled = false;
@@ -314,9 +361,11 @@
                             testResult.innerHTML = '<span style="color: var(--danger);">' + data.error + '</span>';
                         } else {
                             testResult.innerHTML = '<span style="color: var(--success);">' + data.message + '</span>';
+                            pollStatus();
                         }
                     })
-                    .catch(function() {
+                    .catch(function(e) {
+                        if (e.message === "auth") return;
                         testCallBtn.disabled = false;
                         testCallBtn.textContent = "Call";
                         testResult.innerHTML = '<span style="color: var(--danger);">Request failed</span>';
@@ -330,7 +379,7 @@
                 startBtn.disabled = true;
                 startBtn.textContent = "Starting...";
 
-                fetch("/start", { method: "POST", body: formData })
+                apiFetch("/start", { method: "POST", body: formData })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (data.error) {
@@ -340,9 +389,11 @@
                         } else {
                             stopBtn.disabled = false;
                             startBtn.textContent = "Campaign Running...";
+                            pollStatus();
                         }
                     })
-                    .catch(function() {
+                    .catch(function(e) {
+                        if (e.message === "auth") return;
                         alert("Failed to start campaign");
                         startBtn.disabled = false;
                         startBtn.textContent = "Start Campaign";
@@ -351,7 +402,7 @@
 
             // ---- Stop Campaign ----
             stopBtn.addEventListener("click", function() {
-                fetch("/stop", { method: "POST" })
+                apiFetch("/stop", { method: "POST" })
                     .then(function(r) { return r.json(); })
                     .then(function() {
                         stopBtn.disabled = true;
@@ -372,6 +423,7 @@
                     case "human_detected": return "status-active";
                     case "machine_detected": return "status-warning";
                     case "hangup": return "status-neutral";
+                    case "initiated": return "status-pending";
                     case "no_answer":
                     case "transfer_failed": return "status-error";
                     default: return "";
@@ -379,6 +431,8 @@
             }
 
             function formatStatus(s) {
+                if (s === "initiated") return "Dialing...";
+                if (s === "test_call_ringing") return "Ringing";
                 return s.replace(/_/g, " ").replace(/\b\w/g, function(l) { return l.toUpperCase(); });
             }
 
@@ -394,11 +448,18 @@
             }
 
             // ---- Polling ----
+            var pollInterval = 2000;
+            var pollTimer = null;
+            var isActive = false;
+
             function pollStatus() {
-                fetch("/status")
+                apiFetch("/status")
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         var bar = document.getElementById("campaignStatus");
+                        var wasActive = isActive;
+                        isActive = data.active;
+
                         if (data.active) {
                             bar.className = "status-bar stagger-1 active";
                             bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
@@ -415,6 +476,7 @@
                             }
                         }
 
+                        var hasLiveCalls = false;
                         var count = data.calls ? data.calls.length : 0;
                         callCount.textContent = count + " call" + (count !== 1 ? "s" : "");
 
@@ -422,6 +484,8 @@
                             var html = "";
                             data.calls.forEach(function(c) {
                                 var cls = getStatusClass(c.status);
+                                var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing"];
+                                if (liveStatuses.indexOf(c.status) !== -1) hasLiveCalls = true;
                                 html += "<tr>";
                                 html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
                                 html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
@@ -433,12 +497,28 @@
                                 html += "</tr>";
                             });
                             callBody.innerHTML = html;
+                        } else if (count === 0) {
+                            callBody.innerHTML = '<tr><td colspan="7" class="empty-row">No calls yet</td></tr>';
                         }
+
+                        adjustPollSpeed(data.active || hasLiveCalls);
                     })
-                    .catch(function() {});
+                    .catch(function(e) {
+                        if (e.message === "auth") return;
+                    });
             }
 
-            setInterval(pollStatus, 2000);
+            function adjustPollSpeed(fast) {
+                var newInterval = fast ? 1000 : 3000;
+                if (newInterval !== pollInterval) {
+                    pollInterval = newInterval;
+                    clearInterval(pollTimer);
+                    pollTimer = setInterval(pollStatus, pollInterval);
+                }
+            }
+
+            pollTimer = setInterval(pollStatus, pollInterval);
+            pollStatus();
         })();
     </script>
 </body>
