@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Blast</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔊</text></svg>">
+    <script>
+        (function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);})();
+    </script>
 </head>
 <body>
 
@@ -21,15 +24,15 @@
                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
-                            <stop offset="0%" stop-color="#7C3AED"/>
-                            <stop offset="100%" stop-color="#A855F7"/>
+                            <stop offset="0%" stop-color="#06B6D4"/>
+                            <stop offset="100%" stop-color="#3B82F6"/>
                         </linearGradient>
                     </defs>
                     <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g1)"/>
-                    <path d="M20 24v16l14 9V15l-14 9z" fill="#F1F0FF" opacity="0.95"/>
-                    <path d="M38 25a10 10 0 010 14" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                    <path d="M42 21a16 16 0 010 22" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
-                    <path d="M46 17a22 22 0 010 30" stroke="#F1F0FF" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
+                    <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
+                    <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                    <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+                    <path d="M46 17a22 22 0 010 30" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.25"/>
                 </svg>
             </div>
             <div class="splash-title">Voice Blast</div>
@@ -47,21 +50,21 @@
         <div class="bg-glow bg-glow-3"></div>
 
         <div class="container">
-            <!-- Header (Frosted Glass) -->
+            <!-- Header -->
             <div class="header">
                 <div class="header-logo">
                     <div class="header-icon">
                         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="g2" x1="0" y1="0" x2="64" y2="64">
-                                    <stop offset="0%" stop-color="#7C3AED"/>
-                                    <stop offset="100%" stop-color="#A855F7"/>
+                                    <stop offset="0%" stop-color="#06B6D4"/>
+                                    <stop offset="100%" stop-color="#3B82F6"/>
                                 </linearGradient>
                             </defs>
                             <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#g2)"/>
-                            <path d="M20 24v16l14 9V15l-14 9z" fill="#F1F0FF" opacity="0.95"/>
-                            <path d="M38 25a10 10 0 010 14" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
-                            <path d="M42 21a16 16 0 010 22" stroke="#F1F0FF" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+                            <path d="M20 24v16l14 9V15l-14 9z" fill="#fff" opacity="0.95"/>
+                            <path d="M38 25a10 10 0 010 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                            <path d="M42 21a16 16 0 010 22" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
                         </svg>
                     </div>
                     <div class="header-text">
@@ -69,9 +72,13 @@
                         <div class="header-tagline">Voicemail Drop System</div>
                     </div>
                 </div>
-                <div class="header-badge">
+                <div class="header-right">
                     <span class="header-status-dot"></span>
                     <span class="header-version">v1.0</span>
+                    <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    </button>
                 </div>
             </div>
 
@@ -187,7 +194,18 @@
                 document.getElementById("app").classList.add("show");
             }, 2900);
 
-            // ---- Ripple Effect (Violet Accent) ----
+            // ---- Theme Toggle ----
+            var themeToggle = document.getElementById("themeToggle");
+            function getCurrentTheme() {
+                return document.documentElement.getAttribute("data-theme") || "dark";
+            }
+            themeToggle.addEventListener("click", function() {
+                var next = getCurrentTheme() === "dark" ? "light" : "dark";
+                document.documentElement.setAttribute("data-theme", next);
+                localStorage.setItem("vb_theme", next);
+            });
+
+            // ---- Ripple Effect ----
             document.addEventListener("click", function(e) {
                 var btn = e.target.closest(".btn, .btn-save-transfer");
                 if (!btn || btn.disabled) return;
