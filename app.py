@@ -8,8 +8,9 @@ import csv
 import io
 import logging
 import threading
+import functools
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for
 from werkzeug.utils import secure_filename
 
 from storage import (
@@ -51,9 +52,48 @@ UPLOAD_FOLDER = "uploads"
 ALLOWED_AUDIO = {"mp3", "wav"}
 ALLOWED_CSV = {"csv", "txt"}
 
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+
+
+def login_required(f):
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if not APP_PASSWORD:
+            return f(*args, **kwargs)
+        if not session.get("authenticated"):
+            if request.is_json or request.headers.get("X-Requested-With"):
+                return jsonify({"error": "Not authenticated"}), 401
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ---- Login Route ----
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not APP_PASSWORD:
+        return redirect(url_for("index"))
+    if session.get("authenticated"):
+        return redirect(url_for("index"))
+    error = None
+    if request.method == "POST":
+        pw = request.form.get("password", "")
+        if pw == APP_PASSWORD:
+            session["authenticated"] = True
+            return redirect(url_for("index"))
+        error = "Incorrect password"
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout")
+def logout():
+    session.pop("authenticated", None)
+    return redirect(url_for("login"))
+
 
 # ---- Dashboard Route ----
 @app.route("/")
+@login_required
 def index():
     """Serve the main dashboard page."""
     return render_template("index.html")
@@ -62,7 +102,7 @@ def index():
 # ---- Audio File Serving ----
 @app.route("/audio/<filename>")
 def serve_audio(filename):
-    """Serve uploaded audio files so Telnyx can access them."""
+    """Serve uploaded audio files so Telnyx can access them (no auth - Telnyx needs direct access)."""
     response = send_from_directory(UPLOAD_FOLDER, filename)
     response.headers["Cache-Control"] = "no-cache"
     return response
@@ -70,6 +110,7 @@ def serve_audio(filename):
 
 # ---- Start Campaign ----
 @app.route("/start", methods=["POST"])
+@login_required
 def start():
     """
     Start a new calling campaign.
@@ -135,6 +176,7 @@ def start():
 
 # ---- Test Call ----
 @app.route("/test_call", methods=["POST"])
+@login_required
 def test_call():
     """Place a single test call to verify everything is working."""
     number = request.form.get("test_number", "").strip()
@@ -156,6 +198,7 @@ def test_call():
 
 # ---- Stop Campaign ----
 @app.route("/stop", methods=["POST"])
+@login_required
 def stop():
     """Stop the current campaign. Active calls will finish but no new calls are placed."""
     stop_campaign()
@@ -165,6 +208,7 @@ def stop():
 
 # ---- Status Endpoint (polled by frontend) ----
 @app.route("/status")
+@login_required
 def status():
     """Return current call statuses and campaign info for the dashboard."""
     camp = get_campaign()
