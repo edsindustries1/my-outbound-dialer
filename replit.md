@@ -37,7 +37,9 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Card-based layout with real-time call status polling
 - Full-width frosted glass header with inner content wrapper
 - Realistic fiber optic video background
-- 3D interactive mouse-tracking tilt on cards
+- Scroll-reveal animation on cards with staggered entrance
+- Mouse-following glow effect on card hover
+- Parallax scrolling on background video
 - Clear Call Logs button (blocked during active campaigns)
 - Download Report section with date presets (All Time, Today, This Week, This Month, Custom) and CSV export
 - Persistent call history saved to logs/call_history.json for historical reporting across sessions

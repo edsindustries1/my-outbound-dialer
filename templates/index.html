@@ -297,29 +297,50 @@
                 localStorage.setItem("vb_theme", next);
             });
 
-            // ---- 3D Tilt Effect on Cards ----
+            // ---- Scroll Reveal + Mouse Glow Effect on Cards ----
             (function() {
-                var tiltEls = document.querySelectorAll(".card, .log-section");
-                var maxTilt = 4;
-                tiltEls.forEach(function(el) {
-                    el.addEventListener("mouseenter", function() {
-                        el.classList.add("tilt-3d");
+                document.documentElement.classList.add("js-scroll-ready");
+                var animEls = document.querySelectorAll(".card, .log-section");
+
+                if ("IntersectionObserver" in window) {
+                    var observer = new IntersectionObserver(function(entries) {
+                        entries.forEach(function(entry) {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add("scroll-visible");
+                                observer.unobserve(entry.target);
+                            }
+                        });
+                    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+                    animEls.forEach(function(el, i) {
+                        el.classList.add("scroll-reveal");
+                        el.style.transitionDelay = (i * 0.07) + "s";
+                        observer.observe(el);
                     });
+                }
+
+                animEls.forEach(function(el) {
                     el.addEventListener("mousemove", function(e) {
                         var rect = el.getBoundingClientRect();
                         var x = e.clientX - rect.left;
                         var y = e.clientY - rect.top;
-                        var midX = rect.width / 2;
-                        var midY = rect.height / 2;
-                        var rotY = ((x - midX) / midX) * maxTilt;
-                        var rotX = -((y - midY) / midY) * maxTilt;
-                        el.style.transform = "perspective(800px) rotateX(" + rotX + "deg) rotateY(" + rotY + "deg) translateZ(8px)";
+                        el.style.setProperty("--glow-x", x + "px");
+                        el.style.setProperty("--glow-y", y + "px");
+                        el.classList.add("card-glow-active");
                     });
                     el.addEventListener("mouseleave", function() {
-                        el.classList.remove("tilt-3d");
-                        el.style.transform = "";
+                        el.classList.remove("card-glow-active");
                     });
                 });
+
+                var videoBg = document.querySelector(".video-bg video");
+                var maxShift = 150;
+                window.addEventListener("scroll", function() {
+                    if (videoBg) {
+                        var shift = Math.min(window.pageYOffset * 0.25, maxShift);
+                        videoBg.style.transform = "translateY(" + shift + "px) scale(1.1)";
+                    }
+                }, { passive: true });
             })();
 
             // ---- Ripple Effect ----
