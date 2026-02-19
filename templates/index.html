@@ -211,6 +211,7 @@
                     <table id="callTable">
                         <thead>
                             <tr>
+                                <th>Date/Time</th>
                                 <th>Destination</th>
                                 <th>Caller ID</th>
                                 <th>Status</th>
@@ -221,7 +222,7 @@
                             </tr>
                         </thead>
                         <tbody id="callBody">
-                            <tr><td colspan="7" class="empty-row">No calls yet</td></tr>
+                            <tr><td colspan="8" class="empty-row">No calls yet</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -477,7 +478,7 @@
                             alert(data.error);
                             return;
                         }
-                        callBody.innerHTML = '<tr><td colspan="7" class="empty-row">No calls yet</td></tr>';
+                        callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No calls yet</td></tr>';
                         callCount.textContent = "0 calls";
                     })
                     .catch(function(e) {
@@ -635,7 +636,17 @@
                                 var cls = getStatusClass(c.status);
                                 var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing"];
                                 if (liveStatuses.indexOf(c.status) !== -1) hasLiveCalls = true;
+                                var tsDisplay = "-";
+                                if (c.timestamp) {
+                                    try {
+                                        var d = new Date(c.timestamp);
+                                        if (!isNaN(d.getTime())) {
+                                            tsDisplay = d.toLocaleDateString(undefined, {month:"short", day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"});
+                                        }
+                                    } catch(e) {}
+                                }
                                 html += "<tr>";
+                                html += '<td class="td-ts">' + tsDisplay + "</td>";
                                 html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
                                 html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
                                 html += '<td><span class="status-badge ' + cls + '">' + formatStatus(c.status) + "</span></td>";
@@ -647,7 +658,7 @@
                             });
                             callBody.innerHTML = html;
                         } else if (count === 0) {
-                            callBody.innerHTML = '<tr><td colspan="7" class="empty-row">No calls yet</td></tr>';
+                            callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No calls yet</td></tr>';
                         }
 
                         adjustPollSpeed(data.active || hasLiveCalls);

@@ -7,7 +7,7 @@ Persists completed call logs to JSON file for historical reporting.
 import os
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 lock = threading.Lock()
 
@@ -49,8 +49,10 @@ def persist_call_log(call_control_id):
         if state.get("ring_start"):
             end = state.get("ring_end") or now.timestamp()
             ring_duration = round(end - state["ring_start"])
+        ts = state.get("created_at", now.strftime("%Y-%m-%dT%H:%M:%S"))
         entry = {
-            "timestamp": state.get("created_at", now.isoformat()),
+            "call_id": call_control_id,
+            "timestamp": ts,
             "number": state["number"],
             "from_number": state.get("from_number", ""),
             "status": state["status"],
@@ -59,10 +61,16 @@ def persist_call_log(call_control_id):
             "voicemail_dropped": state["voicemail_dropped"],
             "ring_duration": ring_duration,
         }
+    cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
         history = _load_call_history()
         history.append(entry)
-        _save_call_history(history)
+        cleaned = []
+        for h in history:
+            h_dt = _parse_ts(h.get("timestamp", ""))
+            if h_dt and h_dt >= cutoff_dt:
+                cleaned.append(h)
+        _save_call_history(cleaned)
 
 
 def clear_call_history():
@@ -242,15 +250,18 @@ def signal_call_complete(call_control_id):
 
 
 def get_all_statuses():
-    now = datetime.utcnow().timestamp()
+    now = datetime.utcnow()
+    now_ts = now.timestamp()
+
     with lock:
-        results = []
+        live_results = []
+        live_cids = set()
         for cid, state in call_states.items():
             ring_duration = None
             if state.get("ring_start"):
-                end = state.get("ring_end") or now
+                end = state.get("ring_end") or now_ts
                 ring_duration = round(end - state["ring_start"])
-            results.append({
+            live_results.append({
                 "call_id": cid[:12] + "...",
                 "number": state["number"],
                 "from_number": state.get("from_number", ""),
@@ -259,5 +270,36 @@ def get_all_statuses():
                 "transferred": state["transferred"],
                 "voicemail_dropped": state["voicemail_dropped"],
                 "ring_duration": ring_duration,
+                "timestamp": state.get("created_at", ""),
+                "is_live": True,
             })
-        return results
+            live_cids.add(cid)
+
+    cutoff = (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
+    history = get_call_history(start_date=cutoff)
+
+    history_results = []
+    for entry in history:
+        if entry.get("call_id", "") in live_cids:
+            continue
+        history_results.append({
+            "call_id": "hist",
+            "number": entry.get("number", ""),
+            "from_number": entry.get("from_number", ""),
+            "status": entry.get("status", "unknown"),
+            "machine_detected": entry.get("machine_detected"),
+            "transferred": entry.get("transferred", False),
+            "voicemail_dropped": entry.get("voicemail_dropped", False),
+            "ring_duration": entry.get("ring_duration"),
+            "timestamp": entry.get("timestamp", ""),
+            "is_live": False,
+        })
+
+    combined = live_results + history_results
+
+    def _sort_key(x):
+        dt = _parse_ts(x.get("timestamp", ""))
+        return dt if dt else datetime.min
+
+    combined.sort(key=_sort_key, reverse=True)
+    return combined
