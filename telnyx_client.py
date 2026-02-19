@@ -184,14 +184,19 @@ def _normalize_number(number):
     return "+" + digits
 
 
-def transfer_call(call_control_id, to_number):
-    """Transfer an active call to the specified number."""
-    from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
+def transfer_call(call_control_id, to_number, customer_number=None):
+    """Transfer an active call to the specified number.
+    If customer_number is provided, it will be shown as the caller ID
+    so the transfer recipient can see the customer's number."""
+    if customer_number:
+        from_display = _normalize_number(customer_number)
+    else:
+        from_display = os.environ.get("TELNYX_FROM_NUMBER", "")
     webhook_url = _get_webhook_url()
     to_number = _normalize_number(to_number)
     payload = {
         "to": to_number,
-        "from": from_number,
+        "from": from_display,
         "timeout_secs": 30,
         "webhook_url": webhook_url,
     }
