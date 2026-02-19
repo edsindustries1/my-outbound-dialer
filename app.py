@@ -448,9 +448,10 @@ def webhook():
                                   amd_result="timeout", status_description="AMD detection timeout", status_color="yellow")
                 camp = get_campaign()
                 transfer_num = camp.get("transfer_number", "")
+                customer_num = state.get("number", "")
                 if transfer_num and mark_transferred(ccid):
-                    logger.info(f"Fallback transfer {ccid} to {transfer_num}")
-                    success = transfer_call(ccid, transfer_num)
+                    logger.info(f"Fallback transfer {ccid} to {transfer_num} (caller ID: {customer_num})")
+                    success = transfer_call(ccid, transfer_num, customer_number=customer_num)
                     if success:
                         pause_for_transfer(ccid)
                         logger.info(f"Campaign paused for transfer on {ccid}")
@@ -498,9 +499,10 @@ def webhook():
                               amd_result="human", status_description="Human detected", status_color="blue")
             camp = get_campaign()
             transfer_num = camp.get("transfer_number", "")
+            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
             if transfer_num and mark_transferred(call_control_id):
-                logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
-                success = transfer_call(call_control_id, transfer_num)
+                logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num} (caller ID: {customer_num})")
+                success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
                 if success:
                     pause_for_transfer(call_control_id)
                     logger.info(f"Campaign paused for transfer on {call_control_id}")
@@ -545,9 +547,10 @@ def webhook():
                               amd_result="not_sure", status_description="Detection unclear - treating as human", status_color="yellow")
             camp = get_campaign()
             transfer_num = camp.get("transfer_number", "")
+            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
             if transfer_num and mark_transferred(call_control_id):
-                logger.info(f"AMD not_sure on {call_control_id}, treating as HUMAN - transferring to {transfer_num}")
-                success = transfer_call(call_control_id, transfer_num)
+                logger.info(f"AMD not_sure on {call_control_id}, treating as HUMAN - transferring to {transfer_num} (caller ID: {customer_num})")
+                success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
                 if success:
                     pause_for_transfer(call_control_id)
                     logger.info(f"Campaign paused for transfer on {call_control_id}")
