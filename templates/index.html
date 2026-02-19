@@ -867,5 +867,222 @@
             pollStatus();
         })();
     </script>
+
+    <!-- FLOATING NOTEPAD -->
+    <button class="notepad-fab" id="notepadFab" title="Open Notepad">N</button>
+    <div class="notepad-window" id="notepadWindow">
+        <div class="notepad-header" id="notepadHeader">
+            <div class="notepad-header-left">
+                <div class="notepad-header-logo">N</div>
+                <span class="notepad-header-title">Notepad</span>
+            </div>
+            <div class="notepad-header-actions">
+                <button id="notepadClear" title="Clear All">&#128465;</button>
+                <button id="notepadMin" title="Minimize">&minus;</button>
+            </div>
+        </div>
+        <div class="notepad-toolbar" id="notepadToolbar">
+            <button data-cmd="bold" title="Bold"><b>B</b></button>
+            <button data-cmd="italic" title="Italic"><i>I</i></button>
+            <button data-cmd="underline" title="Underline"><u>U</u></button>
+            <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+            <div class="sep"></div>
+            <select id="npFontSize" title="Font Size">
+                <option value="1">Small</option>
+                <option value="3" selected>Normal</option>
+                <option value="5">Large</option>
+                <option value="7">Huge</option>
+            </select>
+            <div class="sep"></div>
+            <input type="color" id="npTextColor" value="#06B6D4" title="Text Color">
+            <input type="color" id="npHighlight" value="#FFFF00" title="Highlight Color">
+            <button data-cmd="removeFormat" title="Remove Formatting">&#10006;</button>
+            <div class="sep"></div>
+            <button data-cmd="insertUnorderedList" title="Bullet List">&#8226;</button>
+            <button data-cmd="insertOrderedList" title="Numbered List">1.</button>
+            <div class="sep"></div>
+            <button data-cmd="justifyLeft" title="Align Left">&#8676;</button>
+            <button data-cmd="justifyCenter" title="Align Center">&#8596;</button>
+            <button data-cmd="justifyRight" title="Align Right">&#8677;</button>
+        </div>
+        <div class="notepad-body">
+            <div class="notepad-editor" id="notepadEditor" contenteditable="true" spellcheck="true"></div>
+        </div>
+        <div class="notepad-footer">
+            <span id="notepadCharCount">0 characters</span>
+            <button id="notepadDownload" title="Download as text file">Download</button>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var fab = document.getElementById("notepadFab");
+        var win = document.getElementById("notepadWindow");
+        var header = document.getElementById("notepadHeader");
+        var editor = document.getElementById("notepadEditor");
+        var minBtn = document.getElementById("notepadMin");
+        var clearBtn = document.getElementById("notepadClear");
+        var charCount = document.getElementById("notepadCharCount");
+        var downloadBtn = document.getElementById("notepadDownload");
+        var fontSel = document.getElementById("npFontSize");
+        var colorPick = document.getElementById("npTextColor");
+        var hlPick = document.getElementById("npHighlight");
+        var storageKey = "vb_notepad_content";
+        var posKey = "vb_notepad_pos";
+        var defaultBottom = 28, defaultRight = 28;
+        var isDragging = false, dragX = 0, dragY = 0;
+
+        var saved = localStorage.getItem(storageKey);
+        if (saved) editor.innerHTML = saved;
+
+        function updateCharCount() {
+            var t = editor.innerText || "";
+            var len = t.replace(/\n$/,"").length;
+            charCount.textContent = len + " character" + (len !== 1 ? "s" : "");
+        }
+        updateCharCount();
+
+        function saveContent() {
+            localStorage.setItem(storageKey, editor.innerHTML);
+            updateCharCount();
+        }
+
+        editor.addEventListener("input", saveContent);
+
+        fab.addEventListener("click", function(){
+            fab.classList.add("hidden");
+            win.classList.add("open");
+            var pos = localStorage.getItem(posKey);
+            if (pos) {
+                try {
+                    var p = JSON.parse(pos);
+                    win.style.bottom = "auto";
+                    win.style.right = "auto";
+                    win.style.left = p.left + "px";
+                    win.style.top = p.top + "px";
+                } catch(e) {}
+            }
+            editor.focus();
+        });
+
+        function closeNotepad() {
+            win.classList.remove("open");
+            fab.classList.remove("hidden");
+            win.style.bottom = defaultBottom + "px";
+            win.style.right = defaultRight + "px";
+            win.style.left = "";
+            win.style.top = "";
+        }
+
+        minBtn.addEventListener("click", closeNotepad);
+
+        clearBtn.addEventListener("click", function(){
+            if (confirm("Clear all notes?")) {
+                editor.innerHTML = "";
+                saveContent();
+            }
+        });
+
+        header.addEventListener("mousedown", function(e){
+            if (e.target.tagName === "BUTTON") return;
+            isDragging = true;
+            var rect = win.getBoundingClientRect();
+            dragX = e.clientX - rect.left;
+            dragY = e.clientY - rect.top;
+            e.preventDefault();
+        });
+
+        document.addEventListener("mousemove", function(e){
+            if (!isDragging) return;
+            var nx = e.clientX - dragX;
+            var ny = e.clientY - dragY;
+            nx = Math.max(0, Math.min(nx, window.innerWidth - 100));
+            ny = Math.max(0, Math.min(ny, window.innerHeight - 50));
+            win.style.left = nx + "px";
+            win.style.top = ny + "px";
+            win.style.bottom = "auto";
+            win.style.right = "auto";
+            localStorage.setItem(posKey, JSON.stringify({left: nx, top: ny}));
+        });
+
+        document.addEventListener("mouseup", function(){
+            isDragging = false;
+        });
+
+        header.addEventListener("touchstart", function(e){
+            if (e.target.tagName === "BUTTON") return;
+            isDragging = true;
+            var rect = win.getBoundingClientRect();
+            var t = e.touches[0];
+            dragX = t.clientX - rect.left;
+            dragY = t.clientY - rect.top;
+        }, {passive: true});
+
+        document.addEventListener("touchmove", function(e){
+            if (!isDragging) return;
+            var t = e.touches[0];
+            var nx = t.clientX - dragX;
+            var ny = t.clientY - dragY;
+            nx = Math.max(0, Math.min(nx, window.innerWidth - 100));
+            ny = Math.max(0, Math.min(ny, window.innerHeight - 50));
+            win.style.left = nx + "px";
+            win.style.top = ny + "px";
+            win.style.bottom = "auto";
+            win.style.right = "auto";
+            localStorage.setItem(posKey, JSON.stringify({left: nx, top: ny}));
+        }, {passive: true});
+
+        document.addEventListener("touchend", function(){
+            isDragging = false;
+        });
+
+        var toolbarBtns = document.querySelectorAll(".notepad-toolbar button[data-cmd]");
+        toolbarBtns.forEach(function(btn){
+            btn.addEventListener("mousedown", function(e){
+                e.preventDefault();
+            });
+            btn.addEventListener("click", function(){
+                var cmd = this.getAttribute("data-cmd");
+                document.execCommand(cmd, false, null);
+                editor.focus();
+                saveContent();
+            });
+        });
+
+        fontSel.addEventListener("change", function(){
+            document.execCommand("fontSize", false, this.value);
+            editor.focus();
+            saveContent();
+        });
+
+        colorPick.addEventListener("input", function(){
+            document.execCommand("foreColor", false, this.value);
+            editor.focus();
+            saveContent();
+        });
+
+        hlPick.addEventListener("input", function(){
+            document.execCommand("hiliteColor", false, this.value);
+            editor.focus();
+            saveContent();
+        });
+
+        downloadBtn.addEventListener("click", function(){
+            var text = editor.innerText || "";
+            var blob = new Blob([text], {type: "text/plain"});
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "voiceblast-notes.txt";
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+
+        document.addEventListener("keydown", function(e){
+            if (e.key === "Escape" && win.classList.contains("open")) {
+                closeNotepad();
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
