@@ -265,6 +265,10 @@ def mark_voicemail_dropped(call_control_id):
         return False
 
 
+def call_states_snapshot():
+    with lock:
+        return dict(call_states)
+
 def clear_call_states():
     with lock:
         call_states.clear()

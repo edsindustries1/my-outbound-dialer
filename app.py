@@ -34,6 +34,7 @@ from storage import (
     resume_after_transfer,
     is_transfer_paused,
     is_active_transfer,
+    call_states_snapshot,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
 from call_manager import start_dialer
@@ -385,9 +386,38 @@ def webhook():
     call_number = to_number or from_number
 
     state = get_call_state(call_control_id)
+
+    camp = get_campaign()
+    transfer_num = camp.get("transfer_number", "")
+    is_transfer_leg = False
     if not state and call_control_id and call_number:
-        create_call_state(call_control_id, call_number)
-        logger.info(f"Auto-created call state for {call_number} (webhook arrived before state)")
+        normalized_to = to_number.lstrip("+").replace("-", "").replace(" ", "")
+        normalized_transfer = transfer_num.lstrip("+").replace("-", "").replace(" ", "")
+        if transfer_num and normalized_transfer and normalized_to and (normalized_transfer in normalized_to or normalized_to in normalized_transfer):
+            is_transfer_leg = True
+            logger.info(f"Transfer leg detected: {call_control_id} to {to_number} (transfer number: {transfer_num})")
+        else:
+            create_call_state(call_control_id, call_number)
+            logger.info(f"Auto-created call state for {call_number} (webhook arrived before state)")
+
+    if is_transfer_leg or (state and state.get("is_transfer_leg")):
+        if event_type == "call.answered":
+            logger.info(f"Transfer leg {call_control_id} answered - human connected, speaking now")
+            for cid_key, cid_state in list(call_states_snapshot().items()):
+                if cid_state.get("transferred") and is_active_transfer(cid_key):
+                    update_call_state(cid_key, status="transferred",
+                                      status_description="Connected to a human, speaking now", status_color="green")
+                    logger.info(f"Updated parent call {cid_key} status to 'Connected to a human, speaking now'")
+        elif event_type == "call.hangup":
+            logger.info(f"Transfer leg {call_control_id} hung up - call ended, resuming campaign")
+            for cid_key, cid_state in list(call_states_snapshot().items()):
+                if cid_state.get("transferred") and is_active_transfer(cid_key):
+                    update_call_state(cid_key, status="transferred",
+                                      status_description="Transfer call ended", status_color="green")
+                    resume_after_transfer(cid_key)
+                    signal_call_complete(cid_key)
+                    logger.info(f"Resumed campaign after transfer leg hangup for {cid_key}")
+        return "", 200
 
     # ---- call.initiated ----
     if event_type == "call.initiated":
@@ -399,10 +429,9 @@ def webhook():
     elif event_type == "call.answered":
         state = get_call_state(call_control_id)
         if state and state.get("transferred"):
-            logger.info(f"Ignoring call.answered for already-transferred call {call_control_id} - call connected to human")
+            logger.info(f"Ignoring call.answered for already-transferred call {call_control_id}")
             update_call_state(call_control_id, status="transferred",
-                              status_description="Call connected to human", status_color="green")
-            resume_after_transfer(call_control_id)
+                              status_description="Connected to a human, speaking now", status_color="green")
             return "", 200
 
         from datetime import datetime as dt

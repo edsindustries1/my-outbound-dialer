@@ -20,6 +20,7 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - In-memory state management (no database needed)
 - Background thread for rate-limited dialing with two modes: Sequential (1 call per 2 seconds) and Simultaneous (configurable batch size, 2–50 calls at once)
 - Campaign auto-pause on transfer: When a human-answered call is transferred, the campaign pauses (no new calls dialed) until the transfer target answers (call connected to human), then resumes automatically. Supports multiple concurrent transfers in simultaneous mode. Once transferred, duplicate call.answered/AMD events from Telnyx are ignored to prevent re-transfer loops.
+- Transfer leg detection: Webhook events for the transfer leg (new call to transfer number) are identified by matching the destination number against the campaign's transfer number. Transfer legs are fully ignored for AMD/transfer processing to prevent re-transfer loops. Transfer leg answered → status shows "Connected to a human, speaking now". Transfer leg hangup → campaign resumes next number.
 - Webhook handler returns 200 immediately, processes asynchronously
 - AMD uses detect_words mode; voicemail audio plays immediately after machine detection
 - Transfer caller ID uses Telnyx number (customer numbers require Telnyx account verification)
