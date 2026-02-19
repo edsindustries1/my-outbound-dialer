@@ -905,6 +905,90 @@ td {
     white-space: nowrap;
 }
 
+/* ============ FILTER ROW ============ */
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-select {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
+
+.filter-select:focus {
+    border-color: var(--accent);
+}
+
+/* ============ STATUS DESCRIPTION BADGES ============ */
+.status-desc-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.status-desc-badge.status-green {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+}
+
+.status-desc-badge.status-yellow {
+    background: rgba(245, 158, 11, 0.15);
+    color: #F59E0B;
+}
+
+.status-desc-badge.status-red {
+    background: rgba(239, 68, 68, 0.15);
+    color: #EF4444;
+}
+
+.status-desc-badge.status-blue {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06B6D4;
+}
+
+[data-theme="light"] .status-desc-badge.status-green {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+[data-theme="light"] .status-desc-badge.status-yellow {
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706;
+}
+
+[data-theme="light"] .status-desc-badge.status-red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+}
+
+[data-theme="light"] .status-desc-badge.status-blue {
+    background: rgba(6, 182, 212, 0.12);
+    color: #0891B2;
+}
+
 td.td-ts {
     font-size: 11px;
     color: var(--text-secondary);

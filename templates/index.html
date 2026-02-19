@@ -207,6 +207,16 @@
                         </button>
                     </div>
                 </div>
+                <div class="filter-row">
+                    <label class="filter-label">Filter:</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="all">All Calls</option>
+                        <option value="success">Successful (VM Dropped / Transferred)</option>
+                        <option value="failed">Failed / Disconnected</option>
+                        <option value="issues">Warnings / Issues</option>
+                        <option value="progress">In Progress</option>
+                    </select>
+                </div>
                 <div class="table-wrap">
                     <table id="callTable">
                         <thead>
@@ -214,7 +224,7 @@
                                 <th>Date/Time</th>
                                 <th>Destination</th>
                                 <th>Caller ID</th>
-                                <th>Status</th>
+                                <th>Status Description</th>
                                 <th>Ring</th>
                                 <th>Machine?</th>
                                 <th>Transferred</th>
@@ -367,6 +377,8 @@
             var stopBtn = document.getElementById("stopBtn");
             var callBody = document.getElementById("callBody");
             var callCount = document.getElementById("callCount");
+            var statusFilter = document.getElementById("statusFilter");
+            statusFilter.addEventListener("change", function() { pollStatus(); });
             var campaignStatus = document.getElementById("campaignStatus");
             var testCallBtn = document.getElementById("testCallBtn");
             var testNumber = document.getElementById("testNumber");
@@ -630,11 +642,23 @@
                         var count = data.calls ? data.calls.length : 0;
                         callCount.textContent = count + " call" + (count !== 1 ? "s" : "");
 
+                        var filterVal = statusFilter.value;
+
                         if (data.calls && data.calls.length > 0) {
+                            var filtered = data.calls.filter(function(c) {
+                                if (filterVal === "all") return true;
+                                var col = c.status_color || "";
+                                if (filterVal === "success") return col === "green";
+                                if (filterVal === "failed") return col === "red";
+                                if (filterVal === "issues") return col === "yellow";
+                                if (filterVal === "progress") return col === "blue";
+                                return true;
+                            });
+
+                            var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing"];
+
                             var html = "";
-                            data.calls.forEach(function(c) {
-                                var cls = getStatusClass(c.status);
-                                var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing"];
+                            filtered.forEach(function(c) {
                                 if (liveStatuses.indexOf(c.status) !== -1) hasLiveCalls = true;
                                 var tsDisplay = "-";
                                 if (c.timestamp) {
@@ -645,18 +669,25 @@
                                         }
                                     } catch(e) {}
                                 }
+                                var descText = c.status_description || formatStatus(c.status);
+                                var colorCls = "status-" + (c.status_color || "blue");
+
                                 html += "<tr>";
                                 html += '<td class="td-ts">' + tsDisplay + "</td>";
                                 html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
                                 html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
-                                html += '<td><span class="status-badge ' + cls + '">' + formatStatus(c.status) + "</span></td>";
+                                html += '<td><span class="status-desc-badge ' + colorCls + '">' + descText + "</span></td>";
                                 html += "<td>" + formatRing(c.ring_duration) + "</td>";
                                 html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
                                 html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
                                 html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
                                 html += "</tr>";
                             });
-                            callBody.innerHTML = html;
+                            if (filtered.length > 0) {
+                                callBody.innerHTML = html;
+                            } else {
+                                callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No matching calls</td></tr>';
+                            }
                         } else if (count === 0) {
                             callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No calls yet</td></tr>';
                         }

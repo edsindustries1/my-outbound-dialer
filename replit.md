@@ -45,6 +45,11 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Persistent call history saved to logs/call_history.json for historical reporting across sessions
 - Password protection using Flask sessions with APP_PASSWORD env var
 - Responsive design with grid layout
+- Detailed call status descriptions with color-coded badges (green=success, blue=in progress, yellow=warning, red=error)
+- Status filter dropdown: All Calls, Successful, Failed, Warnings, In Progress
+- Enhanced AMD result tracking: human, machine, fax, not_sure, timeout with distinct descriptions
+- Comprehensive hangup cause mapping: busy, no answer, invalid number, rejected, network errors, etc.
+- CSV export includes Status Description, AMD Result, and Hangup Cause columns
 
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key

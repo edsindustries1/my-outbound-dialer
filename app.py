@@ -285,7 +285,7 @@ def download_report():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Date/Time", "Destination", "Caller ID", "Status", "Ring Duration (s)", "Machine Detected", "Transferred", "Voicemail Dropped"])
+    writer.writerow(["Date/Time", "Destination", "Caller ID", "Status Description", "Ring Duration (s)", "Machine Detected", "Transferred", "Voicemail Dropped", "AMD Result", "Hangup Cause"])
 
     for entry in history:
         ts = entry.get("timestamp", "")
@@ -299,9 +299,11 @@ def download_report():
         transferred = "Yes" if entry.get("transferred") else "No"
         voicemail = "Yes" if entry.get("voicemail_dropped") else "No"
         ring = entry.get("ring_duration", "-")
-        status = entry.get("status", "").replace("_", " ").title()
+        status_desc = entry.get("status_description", "") or entry.get("status", "").replace("_", " ").title()
+        amd_result = entry.get("amd_result", "") or ""
+        hangup_cause = entry.get("hangup_cause", "") or ""
 
-        writer.writerow([ts_formatted, entry.get("number", ""), entry.get("from_number", ""), status, ring, machine, transferred, voicemail])
+        writer.writerow([ts_formatted, entry.get("number", ""), entry.get("from_number", ""), status_desc, ring, machine, transferred, voicemail, amd_result, hangup_cause])
 
     csv_content = output.getvalue()
     output.close()
@@ -349,12 +351,14 @@ def webhook():
     # ---- call.initiated ----
     if event_type == "call.initiated":
         from datetime import datetime as dt
-        update_call_state(call_control_id, status="ringing", ring_start=dt.utcnow().timestamp(), from_number=from_number)
+        update_call_state(call_control_id, status="ringing", ring_start=dt.utcnow().timestamp(), from_number=from_number,
+                          status_description="Ringing", status_color="blue")
 
     # ---- call.answered ----
     elif event_type == "call.answered":
         from datetime import datetime as dt
-        update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp())
+        update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp(),
+                          status_description="Answered - detecting...", status_color="blue")
         logger.info(f"Call answered: {call_control_id}, waiting for AMD result...")
 
         def _amd_fallback(ccid):
@@ -362,21 +366,25 @@ def webhook():
             state = get_call_state(ccid)
             if state and not state.get("amd_received") and state.get("status") == "answered":
                 logger.warning(f"AMD timeout on {ccid}, treating as HUMAN and transferring")
-                update_call_state(ccid, machine_detected=False, status="human_detected", amd_received=True)
+                update_call_state(ccid, machine_detected=False, status="human_detected", amd_received=True,
+                                  amd_result="timeout", status_description="AMD detection timeout", status_color="yellow")
                 camp = get_campaign()
                 transfer_num = camp.get("transfer_number", "")
                 if transfer_num and mark_transferred(ccid):
                     logger.info(f"Fallback transfer {ccid} to {transfer_num}")
                     success = transfer_call(ccid, transfer_num)
                     if success:
-                        update_call_state(ccid, status="transferred")
+                        update_call_state(ccid, status="transferred",
+                                          status_description="Answered by human - transferred", status_color="green")
                     else:
                         logger.error(f"Fallback transfer failed for {ccid}, hanging up")
-                        update_call_state(ccid, status="transfer_failed")
+                        update_call_state(ccid, status="transfer_failed",
+                                          status_description="Transfer failed", status_color="red")
                         hangup_call(ccid)
                 else:
                     logger.warning(f"AMD timeout on {ccid}, no transfer number configured, hanging up")
-                    update_call_state(ccid, status="human_no_transfer")
+                    update_call_state(ccid, status="human_no_transfer",
+                                      status_description="Human answered - no transfer number", status_color="yellow")
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
@@ -401,28 +409,40 @@ def webhook():
             return "", 200
 
         if result == "human":
-            update_call_state(call_control_id, machine_detected=False, status="human_detected")
+            update_call_state(call_control_id, machine_detected=False, status="human_detected",
+                              amd_result="human", status_description="Human detected", status_color="blue")
             camp = get_campaign()
             transfer_num = camp.get("transfer_number", "")
             if transfer_num and mark_transferred(call_control_id):
                 logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num}")
                 success = transfer_call(call_control_id, transfer_num)
                 if success:
-                    update_call_state(call_control_id, status="transferred")
+                    update_call_state(call_control_id, status="transferred",
+                                      status_description="Answered by human - transferred", status_color="green")
                 else:
                     logger.error(f"Transfer failed for {call_control_id}, hanging up")
-                    update_call_state(call_control_id, status="transfer_failed")
+                    update_call_state(call_control_id, status="transfer_failed",
+                                      status_description="Transfer failed", status_color="red")
                     hangup_call(call_control_id)
             elif not transfer_num:
                 logger.warning(f"HUMAN detected on {call_control_id} but no transfer number configured")
-                update_call_state(call_control_id, status="human_no_transfer")
+                update_call_state(call_control_id, status="human_no_transfer",
+                                  status_description="Human answered - no transfer number", status_color="yellow")
                 hangup_call(call_control_id)
 
-        elif result in ("machine", "fax"):
-            update_call_state(call_control_id, machine_detected=True, status="machine_detected")
+        elif result == "fax":
+            update_call_state(call_control_id, machine_detected=True, status="machine_detected",
+                              amd_result="fax", status_description="Fax machine detected", status_color="red")
+            logger.info(f"FAX detected on {call_control_id}, hanging up")
+            hangup_call(call_control_id)
+
+        elif result == "machine":
+            update_call_state(call_control_id, machine_detected=True, status="machine_detected",
+                              amd_result="machine", status_description="Machine detected - dropping voicemail", status_color="blue")
             logger.info(f"MACHINE detected on {call_control_id}, playing voicemail immediately")
 
             if mark_voicemail_dropped(call_control_id):
+                update_call_state(call_control_id, status_description="Dropping voicemail...", status_color="blue")
                 camp = get_campaign()
                 audio_url = camp.get("audio_url", "")
                 if audio_url:
@@ -430,27 +450,33 @@ def webhook():
                     play_audio(call_control_id, audio_url)
                 else:
                     logger.error(f"No audio URL configured for voicemail on {call_control_id}")
+                    update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
                     hangup_call(call_control_id)
 
         elif result == "not_sure":
-            update_call_state(call_control_id, machine_detected=False, status="human_detected")
+            update_call_state(call_control_id, machine_detected=False, status="human_detected",
+                              amd_result="not_sure", status_description="Detection unclear - treating as human", status_color="yellow")
             camp = get_campaign()
             transfer_num = camp.get("transfer_number", "")
             if transfer_num and mark_transferred(call_control_id):
                 logger.info(f"AMD not_sure on {call_control_id}, treating as HUMAN - transferring to {transfer_num}")
                 success = transfer_call(call_control_id, transfer_num)
                 if success:
-                    update_call_state(call_control_id, status="transferred")
+                    update_call_state(call_control_id, status="transferred",
+                                      status_description="Answered by human - transferred", status_color="green")
                 else:
                     logger.error(f"Transfer failed for {call_control_id} (not_sure), hanging up")
-                    update_call_state(call_control_id, status="transfer_failed")
+                    update_call_state(call_control_id, status="transfer_failed",
+                                      status_description="Transfer failed", status_color="red")
                     hangup_call(call_control_id)
             else:
                 logger.warning(f"AMD not_sure on {call_control_id}, no transfer number, hanging up")
+                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
                 hangup_call(call_control_id)
 
         else:
-            update_call_state(call_control_id, status="no_answer")
+            update_call_state(call_control_id, status="no_answer",
+                              amd_result=result, status_description=f"Unknown AMD result: {result}", status_color="yellow")
             logger.info(f"AMD unknown result '{result}' on {call_control_id}, hanging up")
             hangup_call(call_control_id)
 
@@ -476,7 +502,8 @@ def webhook():
     elif event_type == "call.playback.ended":
         state = get_call_state(call_control_id)
         if state and state.get("voicemail_dropped"):
-            update_call_state(call_control_id, status="voicemail_complete")
+            update_call_state(call_control_id, status="voicemail_complete",
+                              status_description="Voicemail dropped successfully", status_color="green")
             logger.info(f"Voicemail playback complete on {call_control_id}, hanging up")
             hangup_call(call_control_id)
 
@@ -496,14 +523,48 @@ def webhook():
         state = get_call_state(call_control_id)
         if state:
             current_status = state.get("status", "")
-            updates = {}
+            updates = {"hangup_cause": hangup_cause}
+
             if current_status not in ("transferred", "voicemail_complete"):
                 updates["status"] = "hangup"
+                ring_dur = ""
+                if state.get("ring_start"):
+                    from datetime import datetime as dt
+                    end_ts = state.get("ring_end") or dt.utcnow().timestamp()
+                    ring_dur = f" - rang {round(end_ts - state['ring_start'])}s"
+
+                normal_clearing_desc = "Disconnected by recipient" if hangup_source == "callee" else "Call disconnected"
+                hangup_desc_map = {
+                    "BUSY": ("Line busy", "red"),
+                    "USER_BUSY": ("Line busy", "red"),
+                    "NO_ANSWER": (f"No answer{ring_dur}", "red"),
+                    "ORIGINATOR_CANCEL": (f"No answer{ring_dur}", "red"),
+                    "INVALID_NUMBER": ("Invalid or disconnected number", "red"),
+                    "UNALLOCATED_NUMBER": ("Invalid or disconnected number", "red"),
+                    "NUMBER_CHANGED": ("Number no longer in service", "red"),
+                    "CALL_REJECTED": ("Call rejected", "red"),
+                    "NORMAL_TEMPORARY_FAILURE": ("Call failed - network error", "red"),
+                    "SERVICE_UNAVAILABLE": ("Call failed - service unavailable", "red"),
+                    "NETWORK_OUT_OF_ORDER": ("Call failed - network error", "red"),
+                    "RECOVERY_ON_TIMER_EXPIRE": (f"No voicemail system detected{ring_dur}", "yellow"),
+                    "NORMAL_CLEARING": (normal_clearing_desc, "yellow"),
+                }
+
+                if hangup_cause in hangup_desc_map:
+                    desc, color = hangup_desc_map[hangup_cause]
+                    updates["status_description"] = desc
+                    updates["status_color"] = color
+                elif current_status in ("ringing", "initiated"):
+                    updates["status_description"] = f"Call failed ({hangup_cause})"
+                    updates["status_color"] = "red"
+                elif not state.get("status_description") or state.get("status_color") == "blue":
+                    updates["status_description"] = f"Call ended ({hangup_cause})"
+                    updates["status_color"] = "yellow"
+
             if not state.get("ring_end"):
                 from datetime import datetime as dt
                 updates["ring_end"] = dt.utcnow().timestamp()
-            if updates:
-                update_call_state(call_control_id, **updates)
+            update_call_state(call_control_id, **updates)
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
         persist_call_log(call_control_id)
         signal_call_complete(call_control_id)

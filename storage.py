@@ -60,6 +60,10 @@ def persist_call_log(call_control_id):
             "transferred": state["transferred"],
             "voicemail_dropped": state["voicemail_dropped"],
             "ring_duration": ring_duration,
+            "status_description": state.get("status_description", ""),
+            "status_color": state.get("status_color", "blue"),
+            "amd_result": state.get("amd_result"),
+            "hangup_cause": state.get("hangup_cause"),
         }
     cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
@@ -186,6 +190,10 @@ def create_call_state(call_control_id, number):
             "created_at": datetime.utcnow().isoformat(),
             "ring_start": datetime.utcnow().timestamp(),
             "ring_end": None,
+            "status_description": "Call initiated",
+            "status_color": "blue",
+            "amd_result": None,
+            "hangup_cause": None,
         }
 
 
@@ -272,6 +280,10 @@ def get_all_statuses():
                 "ring_duration": ring_duration,
                 "timestamp": state.get("created_at", ""),
                 "is_live": True,
+                "status_description": state.get("status_description", ""),
+                "status_color": state.get("status_color", "blue"),
+                "amd_result": state.get("amd_result"),
+                "hangup_cause": state.get("hangup_cause"),
             })
             live_cids.add(cid)
 
@@ -293,6 +305,10 @@ def get_all_statuses():
             "ring_duration": entry.get("ring_duration"),
             "timestamp": entry.get("timestamp", ""),
             "is_live": False,
+            "status_description": entry.get("status_description", ""),
+            "status_color": entry.get("status_color", ""),
+            "amd_result": entry.get("amd_result"),
+            "hangup_cause": entry.get("hangup_cause"),
         })
 
     combined = live_results + history_results
