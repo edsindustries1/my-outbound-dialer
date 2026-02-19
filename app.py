@@ -28,6 +28,8 @@ from storage import (
     persist_call_log,
     get_call_history,
     clear_call_history,
+    get_voicemail_url,
+    save_voicemail_url,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
 from call_manager import start_dialer
@@ -190,7 +192,8 @@ def start():
         audio_url = audio_url_input
         logger.info(f"Using provided audio URL: {audio_url}")
     else:
-        return jsonify({"error": "No audio file or URL provided"}), 400
+        audio_url = get_voicemail_url()
+        logger.info(f"Using stored voicemail URL: {audio_url}")
 
     if not transfer_number:
         return jsonify({"error": "Transfer number is required"}), 400
@@ -222,14 +225,21 @@ def test_call():
     if not number:
         return jsonify({"error": "No phone number provided"}), 400
 
+    camp = get_campaign()
+    if not camp.get("audio_url"):
+        vm_url = get_voicemail_url()
+        transfer_num = camp.get("transfer_number") or ""
+        set_campaign(vm_url, transfer_num, [number], dial_mode="sequential", batch_size=1)
+
     logger.info(f"Placing test call to {number}")
     call_control_id = make_call(number)
 
     if call_control_id:
         create_call_state(call_control_id, number)
-        update_call_state(call_control_id, status="test_call_ringing")
+        update_call_state(call_control_id, status="test_call_ringing",
+                          status_description="Ringing", status_color="blue")
         logger.info(f"Test call placed successfully to {number}")
-        return jsonify({"message": f"Test call placed to {number}"})
+        return jsonify({"message": f"Test call placed to {number}", "call_control_id": call_control_id})
     else:
         logger.error(f"Test call failed to {number}")
         return jsonify({"error": "Failed to place call. Check your Telnyx credentials."}), 500
@@ -257,6 +267,28 @@ def status():
         "total": len(camp["numbers"]),
         "calls": get_all_statuses(),
     })
+
+
+# ---- Voicemail Settings API ----
+@app.route("/api/voicemail_settings", methods=["GET"])
+@login_required
+def get_vm_settings():
+    url = get_voicemail_url()
+    return jsonify({"voicemail_url": url})
+
+
+@app.route("/api/voicemail_settings", methods=["POST"])
+@login_required
+def save_vm_settings():
+    data = request.get_json() or {}
+    url = data.get("voicemail_url", "").strip()
+    if not url:
+        return jsonify({"error": "Voicemail URL is required"}), 400
+    if not url.startswith(("http://", "https://")):
+        return jsonify({"error": "URL must start with http:// or https://"}), 400
+    save_voicemail_url(url)
+    logger.info(f"Voicemail URL updated: {url}")
+    return jsonify({"message": "Voicemail URL saved", "voicemail_url": url})
 
 
 # ---- Clear Call Logs ----
@@ -444,7 +476,7 @@ def webhook():
             if mark_voicemail_dropped(call_control_id):
                 update_call_state(call_control_id, status_description="Dropping voicemail...", status_color="blue")
                 camp = get_campaign()
-                audio_url = camp.get("audio_url", "")
+                audio_url = camp.get("audio_url", "") or get_voicemail_url()
                 if audio_url:
                     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
                     play_audio(call_control_id, audio_url)
@@ -491,7 +523,7 @@ def webhook():
 
         if state.get("voicemail_dropped"):
             camp = get_campaign()
-            audio_url = camp.get("audio_url", "")
+            audio_url = camp.get("audio_url", "") or get_voicemail_url()
             if audio_url and beep_result == "beep_detected":
                 logger.info(f"Beep detected! Restarting voicemail from beginning on {call_control_id}")
                 play_audio(call_control_id, audio_url)

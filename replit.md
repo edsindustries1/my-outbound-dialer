@@ -26,6 +26,14 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Adaptive polling: 1s during active calls, 3s when idle
 - All API fetch calls use credentials: "include" and X-Requested-With header for proper auth on published URL
 
+## Voicemail Settings
+- Default voicemail URL pre-loaded from Cloudinary
+- Stored in logs/app_settings.json (file-based, consistent with existing architecture)
+- Audio preview with built-in HTML5 player and duration display
+- Campaign form audio is optional - falls back to stored voicemail URL automatically
+- Test calls also use stored voicemail URL when no campaign is active
+- Voicemail drop is always automatic for all machine-detected calls (no toggle)
+
 ## UI/UX
 - Dual-theme system: Dark and Light modes with toggle button in header
 - Theme persisted in localStorage ("vb_theme") with inline head script to prevent flash

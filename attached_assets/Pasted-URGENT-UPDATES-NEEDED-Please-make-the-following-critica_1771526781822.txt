@@ -1,0 +1,216 @@
+URGENT UPDATES NEEDED - Please make the following critical changes to the AI Dialer application:
+
+=== ISSUE 1: MISSING VOICEMAIL UPLOAD FEATURE ===
+
+PROBLEM: There is no way to upload or configure the voicemail audio file in the current application.
+
+SOLUTION REQUIRED:
+1. Add a "Voicemail Settings" section in the SETTINGS PAGE
+2. Create a voicemail configuration area with:
+   - Text input field labeled "Voicemail Audio URL"
+   - Placeholder text: "https://example.com/voicemail.mp3 or .wav"
+   - "Save Voicemail URL" button
+   - Audio preview player that shows/plays the voicemail after URL is entered
+   - Display current voicemail duration after URL is validated
+
+3. Set DEFAULT voicemail URL to:
+   https://res.cloudinary.com/doaojtas6/video/upload/v1770290941/ElevenLabs_2026-01-28T19_39_03_Greg_-_Driving_Tours_App__pvc_sp100_s50_sb75_v3_njgmqy.wav
+
+4. Store this voicemail URL in the database in a "settings" table:
+   - Create table: app_settings
+   - Columns: id, voicemail_url, created_at, updated_at
+   - Pre-populate with the default URL above
+
+5. When creating campaigns, automatically use the voicemail URL from app_settings table
+6. Allow users to update this URL anytime from Settings page
+
+VISUAL LAYOUT FOR SETTINGS PAGE:
+┌─────────────────────────────────────────┐
+│  Voicemail Settings                     │
+├─────────────────────────────────────────┤
+│                                         │
+│  Voicemail Audio URL *                  │
+│  ┌─────────────────────────────────┐   │
+│  │ https://res.cloudinary.com/...  │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  🔊 Audio Preview:                      │
+│  ┌─────────────────────────────────┐   │
+│  │  ▶️  ━━━━━━━━━━━━━━━  56s       │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  Duration: 56 seconds                   │
+│                                         │
+│  [💾 Save Voicemail URL]                │
+│                                         │
+└─────────────────────────────────────────┘
+
+=== ISSUE 2: AUTOMATIC VOICEMAIL DROP NOT CONFIGURED ===
+
+PROBLEM: System doesn't automatically drop voicemail when call goes unanswered.
+
+SOLUTION REQUIRED:
+Make voicemail drop work automatically for ALL unanswered calls:
+
+1. In the handleTelnyxWebhook function, update the logic:
+
+When event = "call.machine.premium.detection.ended":
+- If detect_result = "machine" OR "voicemail" OR "no-answer":
+  * Get voicemail_url from app_settings table
+  * Execute dropVoicemail function AUTOMATICALLY (no user intervention)
+  * Use this Telnyx API call:
+  
+  POST https://api.telnyx.com/v2/calls/{call_control_id}/actions/playback_start
+  Headers: 
+    Authorization: Bearer {telnyx_api_key}
+    Content-Type: application/json
+  Body:
+  {
+    "audio_url": "https://res.cloudinary.com/doaojtas6/video/upload/v1770290941/ElevenLabs_2026-01-28T19_39_03_Greg_-_Driving_Tours_App__pvc_sp100_s50_sb75_v3_njgmqy.wav"
+  }
+
+2. After voicemail plays completely (call.playback.ended event):
+- Hangup the call automatically
+- Mark in database: voicemail_dropped = true
+
+3. This should happen for EVERY call that doesn't get answered by a human - NO exceptions, NO toggles to disable.
+
+=== ISSUE 3: MISSING TEST BUTTON ===
+
+PROBLEM: There's no way to test if the dialer is working before running a full campaign.
+
+SOLUTION REQUIRED:
+Add a "Test Dialer" section on the DASHBOARD PAGE or SETTINGS PAGE:
+
+CREATE A TEST PANEL:
+┌─────────────────────────────────────────┐
+│  🧪 Test Your Dialer                    │
+├─────────────────────────────────────────┤
+│                                         │
+│  Test Phone Number *                    │
+│  ┌─────────────────────────────────┐   │
+│  │ +1 555 123 4567                 │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  [📞 Start Test Call]                   │
+│                                         │
+│  Test Results:                          │
+│  ┌─────────────────────────────────┐   │
+│  │ Status: Idle                    │   │
+│  │                                 │   │
+│  └─────────────────────────────────┘   │
+└─────────────────────────────────────────┘
+
+TEST BUTTON FUNCTIONALITY:
+When user clicks "Start Test Call":
+
+1. Validate the phone number is entered
+2. Get Telnyx credentials from database
+3. Get voicemail URL from app_settings
+4. Make a test call using Telnyx API:
+
+POST https://api.telnyx.com/v2/calls
+Headers:
+  Authorization: Bearer {telnyx_api_key}
+  Content-Type: application/json
+Body:
+{
+  "connection_id": "{stored_connection_id}",
+  "to": "{test_phone_number_from_input}",
+  "from": "{first_available_telnyx_number}",
+  "webhook_url": "{your_webhook_url}",
+  "answering_machine_detection": "premium",
+  "answering_machine_detection_config": {
+    "total_analysis_time_millis": 5000,
+    "after_greeting_silence_millis": 1000,
+    "greeting_duration_millis": 4000
+  }
+}
+
+5. Show real-time status updates in the "Test Results" box:
+   - "Dialing..."
+   - "Ringing..."
+   - "Answered - Detecting if human or voicemail..."
+   - "Human detected - Call transferring..." OR "Voicemail detected - Dropping message..."
+   - "Voicemail dropped successfully!" OR "Call transferred successfully!"
+   - "Test completed ✅"
+
+6. Log the test call in call_logs table with campaign_id = null (or create special "test" campaign)
+
+7. If call goes to voicemail:
+   - Wait for beep
+   - Drop the voicemail from the stored URL automatically
+   - Show success message: "✅ Voicemail dropped! Check your phone to hear the message."
+
+8. If human answers:
+   - Show message: "✅ Human detected! In a real campaign, this would transfer to your destination number."
+   - Hangup the test call
+
+=== SUMMARY OF CHANGES ===
+
+1. ✅ Add voicemail URL input field in Settings
+2. ✅ Set default voicemail URL to the Cloudinary link provided
+3. ✅ Make voicemail drop AUTOMATIC for all unanswered calls (no toggle, always ON)
+4. ✅ Add "Test Dialer" button with phone number input
+5. ✅ Test button should make a real call and drop voicemail if unanswered
+6. ✅ Show real-time test results to user
+
+=== DATABASE CHANGES ===
+
+Add new table:
+```sql
+CREATE TABLE app_settings (
+  id INTEGER PRIMARY KEY,
+  voicemail_url TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO app_settings (voicemail_url) VALUES 
+('https://res.cloudinary.com/doaojtas6/video/upload/v1770290941/ElevenLabs_2026-01-28T19_39_03_Greg_-_Driving_Tours_App__pvc_sp100_s50_sb75_v3_njgmqy.wav');
+```
+
+=== VOICEMAIL DROP FLOW ===
+
+CURRENT WRONG BEHAVIOR:
+Call → Voicemail → Nothing happens ❌
+
+REQUIRED CORRECT BEHAVIOR:
+Call → Voicemail Detected → Wait for Beep → Drop Voicemail Automatically → Hangup ✅
+
+Every single call that reaches voicemail MUST get the voicemail dropped. No exceptions.
+
+=== USER EXPERIENCE IMPROVEMENTS ===
+
+1. On Settings page, show:
+   - "Current Voicemail: [play button] 56 seconds"
+   - "Last Updated: [timestamp]"
+
+2. On Test panel, show:
+   - Clear instructions: "Enter a phone number to test. If it goes to voicemail, we'll drop your message automatically."
+   - Real-time status updates
+   - Success/failure messages
+
+3. In Campaign Monitor, show:
+   - "Voicemails Dropped: X" counter
+   - For each call in the feed, show icon: 📞 for transferred, 📧 for voicemail dropped
+
+=== CRITICAL REQUIREMENTS ===
+
+- Voicemail URL must be configurable but have the default URL pre-loaded
+- Voicemail drop must be AUTOMATIC - not optional, not toggleable
+- Test button must work exactly like a real campaign call
+- Test should use the actual Telnyx integration (not a mock)
+- All webhook events must be handled properly during test
+- Show user clear feedback on what's happening during test
+
+Implement all these changes immediately. The application cannot be used without these features working correctly.
+
+📋 WHAT THIS PROMPT DOES:
+
+✅ Adds voicemail URL input in Settings
+✅ Pre-loads your Cloudinary voicemail URL as default
+✅ Makes voicemail drop automatic for ALL unanswered calls
+✅ Adds a Test Button where you enter a number and hit test
+✅ Test will actually call that number and drop voicemail if unanswered
+✅ Shows real-time status of the test call

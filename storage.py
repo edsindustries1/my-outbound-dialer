@@ -15,6 +15,36 @@ call_states = {}
 
 LOGS_DIR = "logs"
 CALL_LOG_FILE = os.path.join(LOGS_DIR, "call_history.json")
+SETTINGS_FILE = os.path.join(LOGS_DIR, "app_settings.json")
+
+DEFAULT_VOICEMAIL_URL = "https://res.cloudinary.com/doaojtas6/video/upload/v1770290941/ElevenLabs_2026-01-28T19_39_03_Greg_-_Driving_Tours_App__pvc_sp100_s50_sb75_v3_njgmqy.wav"
+
+
+def get_voicemail_url():
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                settings = json.load(f)
+                return settings.get("voicemail_url", DEFAULT_VOICEMAIL_URL)
+    except Exception:
+        pass
+    return DEFAULT_VOICEMAIL_URL
+
+
+def save_voicemail_url(url):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    settings = {}
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                settings = json.load(f)
+    except Exception:
+        pass
+    settings["voicemail_url"] = url
+    settings["updated_at"] = datetime.utcnow().isoformat()
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(settings, f, indent=2)
+    return settings
 
 
 def _load_call_history():

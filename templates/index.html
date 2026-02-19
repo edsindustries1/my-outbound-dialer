@@ -96,23 +96,45 @@
                 <span class="dot dot-inactive"></span> No active campaign
             </div>
 
-            <!-- Test Call -->
+            <!-- Voicemail Settings -->
             <div class="card stagger-2">
                 <div class="card-title">
-                    <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    Quick Test
+                    <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                    Voicemail Settings
                 </div>
-                <label>Enter a number to place a test call</label>
+                <label>Voicemail Audio URL</label>
+                <div class="vm-settings-row">
+                    <input type="text" id="vmUrlInput" class="input-full" placeholder="https://example.com/voicemail.mp3 or .wav">
+                    <button type="button" class="btn btn-save-vm" id="saveVmBtn">Save</button>
+                </div>
+                <div class="vm-preview" id="vmPreview" style="display:none;">
+                    <label>Audio Preview</label>
+                    <audio id="vmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:4px;"></audio>
+                    <div class="vm-duration" id="vmDuration"></div>
+                </div>
+                <div id="vmSaveResult"></div>
+            </div>
+
+            <!-- Test Call -->
+            <div class="card stagger-3">
+                <div class="card-title">
+                    <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    Test Your Dialer
+                </div>
+                <label>Enter a phone number to test. If it goes to voicemail, we'll drop your message automatically.</label>
                 <div class="test-call-row">
                     <input type="text" id="testNumber" class="input-phone" placeholder="+15551234567" maxlength="16">
-                    <button type="button" class="btn btn-test" id="testCallBtn">Call</button>
+                    <button type="button" class="btn btn-test" id="testCallBtn">Start Test Call</button>
                 </div>
-                <div id="testResult"></div>
+                <div class="test-results-box" id="testResultsBox" style="display:none;">
+                    <div class="test-results-title">Test Results</div>
+                    <div id="testResult" class="test-result-status">Status: Idle</div>
+                </div>
             </div>
 
             <!-- Campaign Form -->
             <form id="campaignForm">
-                <div class="form-grid stagger-3">
+                <div class="form-grid stagger-4">
                     <!-- Phone Numbers -->
                     <div class="card card-accent">
                         <div class="card-title">
@@ -129,17 +151,17 @@
                     <div class="card card-accent">
                         <div class="card-title">
                             <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                            Voicemail Audio
+                            Voicemail Audio <span style="font-weight:400;font-size:11px;color:var(--text-secondary);">(optional - uses saved URL if empty)</span>
                         </div>
-                        <label>Upload MP3/WAV</label>
+                        <label>Upload MP3/WAV to override saved voicemail</label>
                         <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
-                        <label>Or provide public audio URL</label>
+                        <label>Or provide a different public audio URL</label>
                         <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
                     </div>
                 </div>
 
                 <!-- Transfer Number -->
-                <div class="card stagger-4">
+                <div class="card stagger-5">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
                         Transfer Number
@@ -158,7 +180,7 @@
                 </div>
 
                 <!-- Dial Mode -->
-                <div class="card stagger-5">
+                <div class="card stagger-6">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
                         Dial Mode
@@ -186,14 +208,14 @@
                 </div>
 
                 <!-- Buttons -->
-                <div class="button-group stagger-6">
+                <div class="button-group stagger-7">
                     <button type="submit" class="btn btn-start" id="startBtn">Start Campaign</button>
                     <button type="button" class="btn btn-stop" id="stopBtn" disabled>Stop Campaign</button>
                 </div>
             </form>
 
             <!-- Call Log -->
-            <div class="log-section stagger-7">
+            <div class="log-section stagger-8">
                 <div class="log-header">
                     <h2>
                         <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -383,10 +405,76 @@
             var testCallBtn = document.getElementById("testCallBtn");
             var testNumber = document.getElementById("testNumber");
             var testResult = document.getElementById("testResult");
+            var testResultsBox = document.getElementById("testResultsBox");
             var transferNumber = document.getElementById("transferNumber");
             var saveTransferBtn = document.getElementById("saveTransferBtn");
             var savedIndicator = document.getElementById("savedIndicator");
             var clearLogsBtn = document.getElementById("clearLogsBtn");
+
+            // ---- Voicemail Settings ----
+            var vmUrlInput = document.getElementById("vmUrlInput");
+            var saveVmBtn = document.getElementById("saveVmBtn");
+            var vmPreview = document.getElementById("vmPreview");
+            var vmAudioPlayer = document.getElementById("vmAudioPlayer");
+            var vmDuration = document.getElementById("vmDuration");
+            var vmSaveResult = document.getElementById("vmSaveResult");
+
+            function loadVmSettings() {
+                apiFetch("/api/voicemail_settings")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.voicemail_url) {
+                            vmUrlInput.value = data.voicemail_url;
+                            showVmPreview(data.voicemail_url);
+                        }
+                    })
+                    .catch(function() {});
+            }
+
+            function showVmPreview(url) {
+                if (!url) { vmPreview.style.display = "none"; return; }
+                vmAudioPlayer.src = url;
+                vmPreview.style.display = "";
+                vmAudioPlayer.addEventListener("loadedmetadata", function() {
+                    var dur = Math.round(vmAudioPlayer.duration);
+                    vmDuration.textContent = "Duration: " + dur + " seconds";
+                });
+                vmAudioPlayer.addEventListener("error", function() {
+                    vmDuration.textContent = "Could not load audio preview";
+                });
+            }
+
+            saveVmBtn.addEventListener("click", function() {
+                var url = vmUrlInput.value.trim();
+                if (!url) { alert("Enter a voicemail URL"); return; }
+                saveVmBtn.disabled = true;
+                saveVmBtn.textContent = "Saving...";
+                apiFetch("/api/voicemail_settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ voicemail_url: url })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    saveVmBtn.disabled = false;
+                    saveVmBtn.textContent = "Save";
+                    if (data.error) {
+                        vmSaveResult.innerHTML = '<span style="color:var(--danger);">' + data.error + '</span>';
+                    } else {
+                        vmSaveResult.innerHTML = '<span style="color:var(--success);">Voicemail URL saved</span>';
+                        showVmPreview(url);
+                        setTimeout(function() { vmSaveResult.textContent = ""; }, 3000);
+                    }
+                })
+                .catch(function(e) {
+                    if (e.message === "auth") return;
+                    saveVmBtn.disabled = false;
+                    saveVmBtn.textContent = "Save";
+                    vmSaveResult.innerHTML = '<span style="color:var(--danger);">Failed to save</span>';
+                });
+            });
+
+            loadVmSettings();
 
             // ---- Load Saved Transfer Number ----
             var saved = localStorage.getItem("vb_transfer_number");
@@ -500,13 +588,69 @@
             });
 
             // ---- Test Call ----
+            var _testCallId = null;
+            var _testCallNumber = null;
+            var _testCallActive = false;
+
+            function updateTestStatus(msg, color) {
+                testResult.innerHTML = '<span style="color:' + (color || 'var(--text-secondary)') + ';">' + msg + '</span>';
+            }
+
+            function trackTestCallStatus() {
+                if (!_testCallActive) return;
+                apiFetch("/status")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data.calls || !_testCallActive) return;
+                        var found = null;
+                        for (var i = 0; i < data.calls.length; i++) {
+                            var c = data.calls[i];
+                            if (_testCallId && c.call_id && c.call_id.indexOf(_testCallId.substring(0, 12)) === 0) {
+                                found = c;
+                                break;
+                            }
+                            if (!found && c.number === _testCallNumber && c.is_live) {
+                                found = c;
+                            }
+                        }
+                        if (!found) return;
+
+                        var desc = found.status_description || found.status;
+                        var colorMap = { green: "var(--success)", red: "var(--danger)", yellow: "#F59E0B", blue: "var(--accent)" };
+                        var col = colorMap[found.status_color] || "var(--text-secondary)";
+                        updateTestStatus(desc, col);
+
+                        var doneStatuses = ["voicemail_complete","transferred","hangup","transfer_failed","human_no_transfer","no_answer"];
+                        if (doneStatuses.indexOf(found.status) !== -1) {
+                            _testCallActive = false;
+                            testCallBtn.disabled = false;
+                            testCallBtn.textContent = "Start Test Call";
+                            if (found.voicemail_dropped) {
+                                updateTestStatus("Voicemail dropped! Check your phone to hear the message.", "var(--success)");
+                            } else if (found.transferred) {
+                                updateTestStatus("Human detected! In a real campaign, this would transfer to your destination number.", "var(--success)");
+                            }
+                        } else {
+                            setTimeout(trackTestCallStatus, 1000);
+                        }
+                    })
+                    .catch(function() {
+                        if (_testCallActive) setTimeout(trackTestCallStatus, 2000);
+                    });
+            }
+
             testCallBtn.addEventListener("click", function() {
                 var number = testNumber.value.trim();
                 if (!number) { alert("Enter a phone number"); return; }
 
                 testCallBtn.disabled = true;
                 testCallBtn.textContent = "Calling...";
-                testResult.textContent = "";
+                testResultsBox.style.display = "";
+                updateTestStatus("Dialing...", "var(--accent)");
+
+                _testCallNumber = number;
+                _testCallId = null;
+                _testCallActive = true;
 
                 var formData = new FormData();
                 formData.append("test_number", number);
@@ -514,20 +658,24 @@
                 apiFetch("/test_call", { method: "POST", body: formData })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        testCallBtn.disabled = false;
-                        testCallBtn.textContent = "Call";
                         if (data.error) {
-                            testResult.innerHTML = '<span style="color: var(--danger);">' + data.error + '</span>';
+                            _testCallActive = false;
+                            testCallBtn.disabled = false;
+                            testCallBtn.textContent = "Start Test Call";
+                            updateTestStatus(data.error, "var(--danger)");
                         } else {
-                            testResult.innerHTML = '<span style="color: var(--success);">' + data.message + '</span>';
+                            _testCallId = data.call_control_id || null;
+                            updateTestStatus("Ringing...", "var(--accent)");
                             pollStatus();
+                            setTimeout(trackTestCallStatus, 1500);
                         }
                     })
                     .catch(function(e) {
                         if (e.message === "auth") return;
+                        _testCallActive = false;
                         testCallBtn.disabled = false;
-                        testCallBtn.textContent = "Call";
-                        testResult.innerHTML = '<span style="color: var(--danger);">Request failed</span>';
+                        testCallBtn.textContent = "Start Test Call";
+                        updateTestStatus("Request failed", "var(--danger)");
                     });
             });
 
