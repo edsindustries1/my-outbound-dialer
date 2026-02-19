@@ -351,7 +351,7 @@ def download_report():
     output.close()
 
     now_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    filename = f"voice_blast_report_{now_str}.csv"
+    filename = f"open_human_report_{now_str}.csv"
 
     from flask import Response
     return Response(

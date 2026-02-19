@@ -1,7 +1,7 @@
-# Voice Blast - Voicemail Drop System
+# Open Human - Intelligent Communication at Scale
 
 ## Overview
-A production-ready outbound voicemail drop web application branded as "Voice Blast". Built with Python + Flask and Telnyx Call Control API. Users upload voicemail audio and phone number lists via a modern dashboard. The system automatically dials numbers, detects answering machines, transfers human-answered calls, and drops voicemail messages.
+A production-ready outbound voicemail drop web application branded as "Open Human". Built with Python + Flask and Telnyx Call Control API. Users upload voicemail audio and phone number lists via a modern dashboard. The system automatically dials numbers, detects answering machines, transfers human-answered calls, and drops voicemail messages.
 
 ## Project Architecture
 - **app.py** - Main Flask application with routes, webhooks, campaign control
@@ -10,7 +10,7 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - **storage.py** - In-memory call state management, campaign config, and persistent call history (JSON)
 - **templates/index.html** - Dashboard UI with animated splash screen and polling
 - **templates/login.html** - Password-protected login page
-- **static/style.css** - Dual-theme CSS with cyan/teal gradient branding
+- **static/style.css** - Dual-theme CSS with purple/cyan gradient branding
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
 - **uploads/** - Uploaded audio files
 - **logs/** - Call logs
@@ -18,9 +18,9 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 ## Key Decisions
 - Event-driven architecture using Telnyx webhooks
 - In-memory state management (no database needed)
-- Background thread for rate-limited dialing with two modes: Sequential (1 call per 2 seconds) and Simultaneous (configurable batch size, 2–50 calls at once)
+- Background thread for rate-limited dialing with two modes: Sequential (1 call per 2 seconds) and Simultaneous (configurable batch size, 2-50 calls at once)
 - Campaign auto-pause on transfer: When a human-answered call is transferred, the campaign pauses (no new calls dialed) until the transfer target answers (call connected to human), then resumes automatically. Supports multiple concurrent transfers in simultaneous mode. Once transferred, duplicate call.answered/AMD events from Telnyx are ignored to prevent re-transfer loops.
-- Transfer leg detection: Webhook events for the transfer leg (new call to transfer number) are identified by matching the destination number against the campaign's transfer number. Transfer legs are fully ignored for AMD/transfer processing to prevent re-transfer loops. Transfer leg answered → status shows "Connected to a human, speaking now". Transfer leg hangup → campaign resumes next number.
+- Transfer leg detection: Webhook events for the transfer leg (new call to transfer number) are identified by matching the destination number against the campaign's transfer number. Transfer legs are fully ignored for AMD/transfer processing to prevent re-transfer loops. Transfer leg answered -> status shows "Connected to a human, speaking now". Transfer leg hangup -> campaign resumes next number.
 - Webhook handler returns 200 immediately, processes asynchronously
 - AMD uses detect_words mode; voicemail audio plays immediately after machine detection
 - Transfer caller ID uses Telnyx number (customer numbers require Telnyx account verification)
@@ -37,14 +37,24 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Test calls also use stored voicemail URL when no campaign is active
 - Voicemail drop is always automatic for all machine-detected calls (no toggle)
 
+## Branding & Design
+- **Brand**: Open Human
+- **Tagline**: Intelligent Communication at Scale
+- **Logo**: Human silhouette (head + shoulders) with signal waves, purple-to-cyan gradient background, rounded square icon
+- **Primary color**: Purple (#7C3AED) - represents human + AI fusion
+- **Secondary color**: Cyan (#06B6D4) - represents communication
+- **Accent gradient**: 135deg from #7C3AED to #06B6D4
+- **Fonts**: Inter (UI), JetBrains Mono (monospace/data)
+- **Favicon**: Brain emoji
+
 ## UI/UX
 - Dual-theme system: Dark and Light modes with toggle button in header
 - Theme persisted in localStorage ("vb_theme") with inline head script to prevent flash
-- Cyan/teal (#06B6D4) + blue (#3B82F6) gradient accent palette
+- Purple (#7C3AED) + cyan (#06B6D4) gradient accent palette
 - Dark theme: deep navy backgrounds (#0B0F1A), subtle background glows
 - Light theme: clean white/gray surfaces (#F8FAFC), no glows, adjusted contrast
 - Smooth 0.35s transitions between themes on all elements
-- Animated Voice Blast logo splash screen on page load with pulsing rings
+- Animated Open Human logo splash screen on page load with pulsing rings
 - Card-based layout with real-time call status polling
 - Full-width frosted glass header with inner content wrapper
 - Realistic fiber optic video background
@@ -61,6 +71,8 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Enhanced AMD result tracking: human, machine, fax, not_sure, timeout with distinct descriptions
 - Comprehensive hangup cause mapping: busy, no answer, invalid number, rejected, network errors, etc.
 - CSV export includes Status Description, AMD Result, and Hangup Cause columns
+- Footer with brand info, product/company/legal links, social icons
+- "Powered by Open Human" floating badge with pulse indicator
 - Floating Notepad widget: chatbot-style FAB button ("N" logo) at bottom-right, expands to draggable/resizable rich text editor with toolbar (bold, italic, underline, strikethrough, font size, text color, highlight color, remove formatting, bullet/numbered lists, text alignment), content persisted in localStorage, character counter, download as text, clear all, minimize snaps back to bottom-right corner, touch drag support, Escape to close
 
 ## Environment Variables
