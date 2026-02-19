@@ -936,6 +936,7 @@
                 <span class="notepad-header-title">Notepad</span>
             </div>
             <div class="notepad-header-actions">
+                <button class="notepad-float-toggle active" id="notepadFloatToggle" title="Toggle float/stick">Float</button>
                 <button id="notepadClear" title="Clear All">&#128465;</button>
                 <button id="notepadMin" title="Minimize">&minus;</button>
             </div>
@@ -983,13 +984,84 @@
         var clearBtn = document.getElementById("notepadClear");
         var charCount = document.getElementById("notepadCharCount");
         var downloadBtn = document.getElementById("notepadDownload");
+        var floatToggle = document.getElementById("notepadFloatToggle");
         var fontSel = document.getElementById("npFontSize");
         var colorPick = document.getElementById("npTextColor");
         var hlPick = document.getElementById("npHighlight");
         var storageKey = "vb_notepad_content";
         var posKey = "vb_notepad_pos";
+        var floatKey = "vb_notepad_float";
         var defaultBottom = 28, defaultRight = 28;
         var isDragging = false, dragX = 0, dragY = 0;
+
+        var isFloating = localStorage.getItem(floatKey) !== "false";
+        var fabX, fabY, fabVX, fabVY, fabAnim;
+        var fabSize = 56;
+
+        function initFabFloat() {
+            var rect = fab.getBoundingClientRect();
+            fabX = rect.left;
+            fabY = rect.top;
+            var angle = Math.random() * 2 * Math.PI;
+            var speed = 0.3 + Math.random() * 0.3;
+            fabVX = Math.cos(angle) * speed;
+            fabVY = Math.sin(angle) * speed;
+        }
+
+        function animateFab() {
+            if (!isFloating || fab.classList.contains("hidden")) {
+                fabAnim = requestAnimationFrame(animateFab);
+                return;
+            }
+            fabX += fabVX;
+            fabY += fabVY;
+            var maxX = window.innerWidth - fabSize;
+            var maxY = window.innerHeight - fabSize;
+            if (fabX <= 0) { fabX = 0; fabVX = Math.abs(fabVX); }
+            if (fabX >= maxX) { fabX = maxX; fabVX = -Math.abs(fabVX); }
+            if (fabY <= 0) { fabY = 0; fabVY = Math.abs(fabVY); }
+            if (fabY >= maxY) { fabY = maxY; fabVY = -Math.abs(fabVY); }
+            fab.style.left = fabX + "px";
+            fab.style.top = fabY + "px";
+            fab.style.bottom = "auto";
+            fab.style.right = "auto";
+            fabAnim = requestAnimationFrame(animateFab);
+        }
+
+        function startFloat() {
+            isFloating = true;
+            fab.classList.add("floating");
+            floatToggle.classList.add("active");
+            floatToggle.textContent = "Float";
+            localStorage.setItem(floatKey, "true");
+            initFabFloat();
+            if (!fabAnim) animateFab();
+        }
+
+        function stopFloat() {
+            isFloating = false;
+            fab.classList.remove("floating");
+            floatToggle.classList.remove("active");
+            floatToggle.textContent = "Stick";
+            localStorage.setItem(floatKey, "false");
+            fab.style.left = "";
+            fab.style.top = "";
+            fab.style.bottom = defaultBottom + "px";
+            fab.style.right = defaultRight + "px";
+        }
+
+        if (isFloating) {
+            fab.classList.add("floating");
+            setTimeout(function() { initFabFloat(); animateFab(); }, 600);
+        } else {
+            floatToggle.classList.remove("active");
+            floatToggle.textContent = "Stick";
+        }
+
+        floatToggle.addEventListener("click", function(e) {
+            e.preventDefault();
+            if (isFloating) { stopFloat(); } else { startFloat(); }
+        });
 
         var saved = localStorage.getItem(storageKey);
         if (saved) editor.innerHTML = saved;
@@ -1031,6 +1103,7 @@
             win.style.right = defaultRight + "px";
             win.style.left = "";
             win.style.top = "";
+            if (isFloating) { initFabFloat(); }
         }
 
         minBtn.addEventListener("click", closeNotepad);

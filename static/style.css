@@ -1405,7 +1405,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     justify-content: center;
     box-shadow: 0 4px 20px rgba(var(--accent-rgb), 0.45);
     z-index: 9998;
-    transition: transform 0.25s, box-shadow 0.25s;
+    transition: box-shadow 0.25s;
     font-family: 'Inter', sans-serif;
     font-weight: 800;
     font-size: 26px;
@@ -1413,10 +1413,39 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     letter-spacing: -1px;
 }
 .notepad-fab:hover {
-    transform: scale(1.12);
     box-shadow: 0 6px 28px rgba(var(--accent-rgb), 0.6);
 }
+.notepad-fab.floating {
+    animation: fabBreathe 3s ease-in-out infinite;
+}
+@keyframes fabBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
 .notepad-fab.hidden { display: none; }
+
+.notepad-float-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.notepad-float-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.notepad-float-toggle.active {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #fff;
+}
 
 .notepad-window {
     position: fixed;
