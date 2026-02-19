@@ -197,6 +197,13 @@
                         </button>
                     </div>
                     <input type="hidden" name="dial_mode" id="dialModeInput" value="sequential">
+                    <div class="batch-size-wrap" id="dialDelayWrap">
+                        <label>Delay between calls</label>
+                        <div class="batch-size-row">
+                            <input type="number" name="dial_delay" id="dialDelay" class="input-batch" value="2" min="1" max="10">
+                            <span class="batch-hint">1–10 minutes between each call</span>
+                        </div>
+                    </div>
                     <div class="batch-size-wrap" id="batchSizeWrap" style="display:none;">
                         <label>Calls per batch</label>
                         <div class="batch-size-row">
@@ -204,7 +211,7 @@
                             <span class="batch-hint">2–50 calls fired at once per batch</span>
                         </div>
                     </div>
-                    <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time, each waiting 2 seconds before the next.</div>
+                    <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time with a configurable delay between each call.</div>
                 </div>
 
                 <!-- Buttons -->
@@ -547,6 +554,7 @@
             var modeSimul = document.getElementById("modeSimul");
             var dialModeInput = document.getElementById("dialModeInput");
             var batchSizeWrap = document.getElementById("batchSizeWrap");
+            var dialDelayWrap = document.getElementById("dialDelayWrap");
             var dialModeDesc = document.getElementById("dialModeDesc");
 
             function setDialMode(mode) {
@@ -555,10 +563,12 @@
                 modeSimul.classList.toggle("active", mode === "simultaneous");
                 if (mode === "simultaneous") {
                     batchSizeWrap.style.display = "";
+                    dialDelayWrap.style.display = "none";
                     dialModeDesc.textContent = "Multiple calls are fired at the same time in batches for faster dialing.";
                 } else {
                     batchSizeWrap.style.display = "none";
-                    dialModeDesc.textContent = "Calls are placed one at a time, each waiting 2 seconds before the next.";
+                    dialDelayWrap.style.display = "";
+                    dialModeDesc.textContent = "Calls are placed one at a time with a configurable delay between each call.";
                 }
             }
 

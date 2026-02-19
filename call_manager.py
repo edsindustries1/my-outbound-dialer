@@ -39,27 +39,32 @@ def start_dialer():
 def _dial_worker():
     """
     Background worker that dials numbers based on campaign dial_mode.
-    Sequential: one call every 2 seconds.
+    Sequential: one call at a time with configurable delay (1-10 minutes).
     Simultaneous: fires batch_size calls at once, waits, then next batch.
     """
     campaign = get_campaign()
     numbers = campaign.get("numbers", [])
     dial_mode = campaign.get("dial_mode", "sequential")
     batch_size = campaign.get("batch_size", 5)
+    dial_delay = campaign.get("dial_delay", 2)
 
-    logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}")
+    logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}, delay={dial_delay}min")
 
     if dial_mode == "simultaneous":
         _dial_simultaneous(numbers, batch_size)
     else:
-        _dial_sequential(numbers)
+        _dial_sequential(numbers, dial_delay)
 
     mark_campaign_complete()
     logger.info("Dialer finished processing all numbers")
 
 
-def _dial_sequential(numbers):
-    """Dial numbers one at a time, waiting for each call to fully complete before the next."""
+def _dial_sequential(numbers, dial_delay=2):
+    """Dial numbers one at a time, waiting for each call to complete then delay before the next.
+    
+    dial_delay: minutes to wait between calls (1-10).
+    """
+    delay_seconds = max(1, min(10, dial_delay)) * 60
     for i, number in enumerate(numbers):
         if not is_campaign_active():
             logger.info("Campaign stopped, dialer exiting")
@@ -90,7 +95,12 @@ def _dial_sequential(numbers):
             logger.error(f"Could not dial {number}, skipping")
 
         increment_dialed()
-        time.sleep(1)
+        if i < len(numbers) - 1:
+            logger.info(f"Waiting {dial_delay} minute(s) before next call...")
+            for _ in range(delay_seconds):
+                if not is_campaign_active():
+                    break
+                time.sleep(1)
 
 
 def _dial_simultaneous(numbers, batch_size):

@@ -211,10 +211,16 @@ def start():
         batch_size = int(request.form.get("batch_size", "5"))
     except (ValueError, TypeError):
         batch_size = 5
+    dial_delay = 2
+    try:
+        dial_delay = int(request.form.get("dial_delay", "2"))
+        dial_delay = max(1, min(10, dial_delay))
+    except (ValueError, TypeError):
+        dial_delay = 2
 
     # ---- Start the campaign ----
-    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}")
-    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size)
+    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min")
+    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay)
     start_dialer()
 
     return jsonify({"message": f"Campaign started with {len(numbers)} numbers"})
