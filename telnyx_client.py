@@ -186,12 +186,13 @@ def _normalize_number(number):
 
 def transfer_call(call_control_id, to_number, customer_number=None):
     """Transfer an active call to the specified number.
-    If customer_number is provided, it will be shown as the caller ID
-    so the transfer recipient can see the customer's number."""
+    If customer_number is provided, tries it as caller ID first.
+    Falls back to the Telnyx number if Telnyx rejects the customer number."""
+    telnyx_number = os.environ.get("TELNYX_FROM_NUMBER", "")
     if customer_number:
         from_display = _normalize_number(customer_number)
     else:
-        from_display = os.environ.get("TELNYX_FROM_NUMBER", "")
+        from_display = telnyx_number
     webhook_url = _get_webhook_url()
     to_number = _normalize_number(to_number)
     payload = {
@@ -208,6 +209,16 @@ def transfer_call(call_control_id, to_number, customer_number=None):
             timeout=15,
         )
         logger.info(f"Transfer API response {resp.status_code}: {resp.text[:500]}")
+        if resp.status_code == 403 and customer_number and from_display != telnyx_number:
+            logger.warning(f"Customer number {from_display} rejected by Telnyx, retrying with Telnyx number {telnyx_number}")
+            payload["from"] = telnyx_number
+            resp = requests.post(
+                f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/transfer",
+                json=payload,
+                headers=_headers(),
+                timeout=15,
+            )
+            logger.info(f"Transfer retry response {resp.status_code}: {resp.text[:500]}")
         resp.raise_for_status()
         logger.info(f"Call {call_control_id} transferred to {to_number}")
         return True
