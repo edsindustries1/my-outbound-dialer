@@ -849,9 +849,12 @@ textarea:focus {
     display: flex;
     gap: 10px;
     align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .test-call-row input {
+    flex: 1;
+    min-width: 160px;
     max-width: 220px;
 }
 

@@ -225,11 +225,14 @@ def test_call():
     if not number:
         return jsonify({"error": "No phone number provided"}), 400
 
+    transfer_number = request.form.get("transfer_number", "").strip()
+    vm_url = get_voicemail_url()
     camp = get_campaign()
-    if not camp.get("audio_url"):
-        vm_url = get_voicemail_url()
-        transfer_num = camp.get("transfer_number") or ""
-        set_campaign(vm_url, transfer_num, [number], dial_mode="sequential", batch_size=1)
+    transfer_num = transfer_number or camp.get("transfer_number") or ""
+    if not transfer_num:
+        return jsonify({"error": "Transfer number is required for test calls"}), 400
+    audio = camp.get("audio_url") or vm_url
+    set_campaign(audio, transfer_num, [number], dial_mode="sequential", batch_size=1)
 
     logger.info(f"Placing test call to {number}")
     call_control_id = make_call(number)
