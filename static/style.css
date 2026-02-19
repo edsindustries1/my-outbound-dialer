@@ -1416,11 +1416,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     box-shadow: 0 6px 28px rgba(var(--accent-rgb), 0.6);
 }
 .notepad-fab.floating {
-    animation: fabBreathe 3s ease-in-out infinite;
-}
-@keyframes fabBreathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+    cursor: grab;
 }
 .notepad-fab.hidden { display: none; }
 

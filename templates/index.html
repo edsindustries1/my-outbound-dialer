@@ -995,37 +995,76 @@
         var isDragging = false, dragX = 0, dragY = 0;
 
         var isFloating = localStorage.getItem(floatKey) !== "false";
-        var fabX, fabY, fabVX, fabVY, fabAnim;
         var fabSize = 56;
+        var fabDragging = false, fabClicked = false;
+        var fabX, fabY, fabVX = 0, fabVY = 0;
+        var fabDragOffX = 0, fabDragOffY = 0;
+        var fabLastMX = 0, fabLastMY = 0, fabLastTime = 0;
+        var fabTrailX = [], fabTrailY = [], fabTrailT = [];
+        var fabAnim = null;
 
-        function initFabFloat() {
+        var gravity = 0.15;
+        var friction = 0.995;
+        var bounceDamp = 0.65;
+        var restThreshold = 0.08;
+        var idleDriftSpeed = 0.25;
+
+        function initFabPos() {
             var rect = fab.getBoundingClientRect();
             fabX = rect.left;
             fabY = rect.top;
-            var angle = Math.random() * 2 * Math.PI;
-            var speed = 0.3 + Math.random() * 0.3;
-            fabVX = Math.cos(angle) * speed;
-            fabVY = Math.sin(angle) * speed;
         }
 
-        function animateFab() {
-            if (!isFloating || fab.classList.contains("hidden")) {
-                fabAnim = requestAnimationFrame(animateFab);
-                return;
-            }
-            fabX += fabVX;
-            fabY += fabVY;
-            var maxX = window.innerWidth - fabSize;
-            var maxY = window.innerHeight - fabSize;
-            if (fabX <= 0) { fabX = 0; fabVX = Math.abs(fabVX); }
-            if (fabX >= maxX) { fabX = maxX; fabVX = -Math.abs(fabVX); }
-            if (fabY <= 0) { fabY = 0; fabVY = Math.abs(fabVY); }
-            if (fabY >= maxY) { fabY = maxY; fabVY = -Math.abs(fabVY); }
+        function applyFabPos() {
             fab.style.left = fabX + "px";
             fab.style.top = fabY + "px";
             fab.style.bottom = "auto";
             fab.style.right = "auto";
-            fabAnim = requestAnimationFrame(animateFab);
+        }
+
+        function physicsTick() {
+            if (!isFloating || fab.classList.contains("hidden") || fabDragging) {
+                fabAnim = requestAnimationFrame(physicsTick);
+                return;
+            }
+
+            fabVX *= friction;
+            fabVY *= friction;
+            fabVY += gravity;
+
+            fabX += fabVX;
+            fabY += fabVY;
+
+            var maxX = window.innerWidth - fabSize;
+            var maxY = window.innerHeight - fabSize;
+
+            if (fabY >= maxY) {
+                fabY = maxY;
+                fabVY = -Math.abs(fabVY) * bounceDamp;
+                fabVX *= 0.98;
+                if (Math.abs(fabVY) < 1.5) {
+                    fabVY = 0;
+                    if (Math.abs(fabVX) < restThreshold) {
+                        fabVX = (Math.random() > 0.5 ? 1 : -1) * idleDriftSpeed;
+                        fabVY = -(1 + Math.random() * 2);
+                    }
+                }
+            }
+            if (fabY <= 0) {
+                fabY = 0;
+                fabVY = Math.abs(fabVY) * bounceDamp;
+            }
+            if (fabX <= 0) {
+                fabX = 0;
+                fabVX = Math.abs(fabVX) * bounceDamp;
+            }
+            if (fabX >= maxX) {
+                fabX = maxX;
+                fabVX = -Math.abs(fabVX) * bounceDamp;
+            }
+
+            applyFabPos();
+            fabAnim = requestAnimationFrame(physicsTick);
         }
 
         function startFloat() {
@@ -1034,8 +1073,10 @@
             floatToggle.classList.add("active");
             floatToggle.textContent = "Float";
             localStorage.setItem(floatKey, "true");
-            initFabFloat();
-            if (!fabAnim) animateFab();
+            initFabPos();
+            fabVX = (Math.random() - 0.5) * 3;
+            fabVY = -(2 + Math.random() * 3);
+            if (!fabAnim) physicsTick();
         }
 
         function stopFloat() {
@@ -1044,15 +1085,96 @@
             floatToggle.classList.remove("active");
             floatToggle.textContent = "Stick";
             localStorage.setItem(floatKey, "false");
+            if (fabAnim) { cancelAnimationFrame(fabAnim); fabAnim = null; }
             fab.style.left = "";
             fab.style.top = "";
             fab.style.bottom = defaultBottom + "px";
             fab.style.right = defaultRight + "px";
         }
 
+        function fabStartDrag(cx, cy) {
+            if (!isFloating) return;
+            fabDragging = true;
+            fabClicked = true;
+            var rect = fab.getBoundingClientRect();
+            fabDragOffX = cx - rect.left;
+            fabDragOffY = cy - rect.top;
+            fabVX = 0;
+            fabVY = 0;
+            fabTrailX = [cx]; fabTrailY = [cy]; fabTrailT = [Date.now()];
+            fab.style.cursor = "grabbing";
+        }
+
+        function fabMoveDrag(cx, cy) {
+            if (!fabDragging) return;
+            fabClicked = false;
+            fabX = cx - fabDragOffX;
+            fabY = cy - fabDragOffY;
+            fabX = Math.max(0, Math.min(fabX, window.innerWidth - fabSize));
+            fabY = Math.max(0, Math.min(fabY, window.innerHeight - fabSize));
+            applyFabPos();
+            var now = Date.now();
+            fabTrailX.push(cx); fabTrailY.push(cy); fabTrailT.push(now);
+            if (fabTrailX.length > 6) {
+                fabTrailX.shift(); fabTrailY.shift(); fabTrailT.shift();
+            }
+        }
+
+        function fabEndDrag() {
+            if (!fabDragging) return;
+            fabDragging = false;
+            fab.style.cursor = "";
+            var now = Date.now();
+            var throwVX = 0, throwVY = 0;
+            if (fabTrailX.length >= 2) {
+                var idx = 0;
+                for (var k = fabTrailT.length - 1; k >= 0; k--) {
+                    if (now - fabTrailT[k] > 120) break;
+                    idx = k;
+                }
+                var dt = (now - fabTrailT[idx]) || 1;
+                throwVX = (fabTrailX[fabTrailX.length - 1] - fabTrailX[idx]) / dt * 16;
+                throwVY = (fabTrailY[fabTrailY.length - 1] - fabTrailY[idx]) / dt * 16;
+                var maxThrow = 30;
+                throwVX = Math.max(-maxThrow, Math.min(maxThrow, throwVX));
+                throwVY = Math.max(-maxThrow, Math.min(maxThrow, throwVY));
+            }
+            fabVX = throwVX;
+            fabVY = throwVY;
+        }
+
+        fab.addEventListener("mousedown", function(e) {
+            if (!isFloating) return;
+            e.preventDefault();
+            fabStartDrag(e.clientX, e.clientY);
+        });
+        document.addEventListener("mousemove", function(e) {
+            if (fabDragging) { e.preventDefault(); fabMoveDrag(e.clientX, e.clientY); }
+        });
+        document.addEventListener("mouseup", function() {
+            if (fabDragging) fabEndDrag();
+        });
+
+        fab.addEventListener("touchstart", function(e) {
+            if (!isFloating) return;
+            var t = e.touches[0];
+            fabStartDrag(t.clientX, t.clientY);
+        }, {passive: true});
+        document.addEventListener("touchmove", function(e) {
+            if (fabDragging) { var t = e.touches[0]; fabMoveDrag(t.clientX, t.clientY); }
+        }, {passive: true});
+        document.addEventListener("touchend", function() {
+            if (fabDragging) fabEndDrag();
+        });
+
         if (isFloating) {
             fab.classList.add("floating");
-            setTimeout(function() { initFabFloat(); animateFab(); }, 600);
+            setTimeout(function() {
+                initFabPos();
+                fabVX = (Math.random() - 0.5) * 2;
+                fabVY = -(1 + Math.random() * 2);
+                physicsTick();
+            }, 600);
         } else {
             floatToggle.classList.remove("active");
             floatToggle.textContent = "Stick";
@@ -1080,7 +1202,8 @@
 
         editor.addEventListener("input", saveContent);
 
-        fab.addEventListener("click", function(){
+        fab.addEventListener("click", function(e){
+            if (isFloating && !fabClicked) return;
             fab.classList.add("hidden");
             win.classList.add("open");
             var pos = localStorage.getItem(posKey);
@@ -1091,7 +1214,7 @@
                     win.style.right = "auto";
                     win.style.left = p.left + "px";
                     win.style.top = p.top + "px";
-                } catch(e) {}
+                } catch(e2) {}
             }
             editor.focus();
         });
