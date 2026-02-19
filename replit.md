@@ -61,6 +61,7 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Enhanced AMD result tracking: human, machine, fax, not_sure, timeout with distinct descriptions
 - Comprehensive hangup cause mapping: busy, no answer, invalid number, rejected, network errors, etc.
 - CSV export includes Status Description, AMD Result, and Hangup Cause columns
+- Floating Notepad widget: chatbot-style FAB button ("N" logo) at bottom-right, expands to draggable/resizable rich text editor with toolbar (bold, italic, underline, strikethrough, font size, text color, highlight color, remove formatting, bullet/numbered lists, text alignment), content persisted in localStorage, character counter, download as text, clear all, minimize snaps back to bottom-right corner, touch drag support, Escape to close
 
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key
