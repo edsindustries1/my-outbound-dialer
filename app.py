@@ -397,6 +397,14 @@ def webhook():
 
     # ---- call.answered ----
     elif event_type == "call.answered":
+        state = get_call_state(call_control_id)
+        if state and state.get("transferred"):
+            logger.info(f"Ignoring call.answered for already-transferred call {call_control_id} - call connected to human")
+            update_call_state(call_control_id, status="transferred",
+                              status_description="Call connected to human", status_color="green")
+            resume_after_transfer(call_control_id)
+            return "", 200
+
         from datetime import datetime as dt
         update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp(),
                           status_description="Answered - detecting...", status_color="blue")
@@ -438,6 +446,11 @@ def webhook():
 
     # ---- call.machine.detection.ended ----
     elif event_type == "call.machine.detection.ended":
+        state = get_call_state(call_control_id)
+        if state and state.get("transferred"):
+            logger.info(f"Ignoring AMD event for already-transferred call {call_control_id}")
+            return "", 200
+
         result = payload.get("result", "unknown")
         logger.info(f"AMD result: {result} for {call_control_id}")
 
