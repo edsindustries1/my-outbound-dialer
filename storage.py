@@ -155,6 +155,7 @@ campaign = {
 
 
 def reset_campaign():
+    resume_after_transfer()
     with lock:
         campaign["active"] = False
         campaign["audio_url"] = None
@@ -268,6 +269,35 @@ def clear_call_states():
     with lock:
         call_states.clear()
 
+
+_transfer_pause_event = threading.Event()
+_transfer_pause_event.set()
+_active_transfer_cids = set()
+
+def pause_for_transfer(call_control_id):
+    with lock:
+        _active_transfer_cids.add(call_control_id)
+    _transfer_pause_event.clear()
+
+def resume_after_transfer(call_control_id=None):
+    with lock:
+        if call_control_id:
+            _active_transfer_cids.discard(call_control_id)
+        else:
+            _active_transfer_cids.clear()
+        if not _active_transfer_cids:
+            _transfer_pause_event.set()
+
+def is_transfer_paused():
+    with lock:
+        return len(_active_transfer_cids) > 0
+
+def is_active_transfer(call_control_id):
+    with lock:
+        return call_control_id in _active_transfer_cids
+
+def wait_if_transfer_paused(timeout=None):
+    _transfer_pause_event.wait(timeout=timeout)
 
 _call_complete_events = {}
 _call_complete_lock = threading.Lock()

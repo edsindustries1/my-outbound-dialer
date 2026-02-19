@@ -19,9 +19,10 @@ A production-ready outbound voicemail drop web application branded as "Voice Bla
 - Event-driven architecture using Telnyx webhooks
 - In-memory state management (no database needed)
 - Background thread for rate-limited dialing with two modes: Sequential (1 call per 2 seconds) and Simultaneous (configurable batch size, 2–50 calls at once)
+- Campaign auto-pause on transfer: When a human-answered call is transferred, the campaign pauses (no new calls dialed) until all active transfers hang up, then resumes automatically. Supports multiple concurrent transfers in simultaneous mode.
 - Webhook handler returns 200 immediately, processes asynchronously
 - AMD uses detect_words mode; voicemail audio plays immediately after machine detection
-- Transfer caller ID shows the customer's actual phone number (not the Telnyx number)
+- Transfer caller ID uses Telnyx number (customer numbers require Telnyx account verification)
 - Deployment target: VM (always-on) since webhooks need constant availability
 - Auto-detection of webhook base URL from request headers (X-Forwarded-Host/Proto) for correct webhook delivery on both dev and published URLs
 - Adaptive polling: 1s during active calls, 3s when idle

@@ -14,6 +14,8 @@ from storage import (
     mark_campaign_complete,
     increment_dialed,
     register_call_complete_event,
+    is_transfer_paused,
+    wait_if_transfer_paused,
 )
 from telnyx_client import make_call
 
@@ -63,6 +65,14 @@ def _dial_sequential(numbers):
             logger.info("Campaign stopped, dialer exiting")
             break
 
+        if is_transfer_paused():
+            logger.info("Campaign paused - live transfer in progress, waiting...")
+            wait_if_transfer_paused(timeout=3600)
+            logger.info("Transfer completed, campaign resuming")
+            if not is_campaign_active():
+                logger.info("Campaign stopped during transfer pause, exiting")
+                break
+
         number = number.strip()
         if not number:
             continue
@@ -92,6 +102,14 @@ def _dial_simultaneous(numbers, batch_size):
         if not is_campaign_active():
             logger.info("Campaign stopped, dialer exiting")
             break
+
+        if is_transfer_paused():
+            logger.info("Campaign paused - live transfer in progress, waiting...")
+            wait_if_transfer_paused(timeout=3600)
+            logger.info("Transfer completed, campaign resuming")
+            if not is_campaign_active():
+                logger.info("Campaign stopped during transfer pause, exiting")
+                break
 
         batch_end = min(i + batch_size, total)
         batch = numbers[i:batch_end]

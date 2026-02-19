@@ -774,7 +774,10 @@
                         var wasActive = isActive;
                         isActive = data.active;
 
-                        if (data.active) {
+                        if (data.active && data.transfer_paused) {
+                            bar.className = "status-bar stagger-1 active";
+                            bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign paused &mdash; live transfer in progress';
+                        } else if (data.active) {
                             bar.className = "status-bar stagger-1 active";
                             bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
                         } else if (data.stop_requested) {
