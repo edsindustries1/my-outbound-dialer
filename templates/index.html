@@ -494,14 +494,18 @@
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            Upload Customer CSV
+                            Step 1: Upload Customer CSV
                         </div>
-                        <p class="pvm-hint">Upload a CSV with columns: name, phone, email, address, payment_date, amount</p>
+                        <p class="pvm-hint">Upload a CSV with columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
                         <div class="pvm-upload-area">
                             <input type="file" id="pvmCsvFile" accept=".csv,.txt" style="display:none" onchange="pvmParseCSV()">
                             <button type="button" class="btn btn-secondary" onclick="document.getElementById('pvmCsvFile').click()">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 Upload CSV File
+                            </button>
+                            <button type="button" class="btn btn-small" onclick="pvmDownloadSample()" title="Download sample CSV">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Sample CSV
                             </button>
                             <span class="pvm-file-name" id="pvmFileName">No file selected</span>
                         </div>
@@ -514,31 +518,42 @@
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Voicemail Script
+                            Step 2: Write Voicemail Script
                         </div>
-                        <p class="pvm-hint">Paste your voicemail script below. Use placeholders like <code>{name}</code>, <code>{first_name}</code>, <code>{amount}</code>, <code>{payment_date}</code> to personalize each message.</p>
+                        <p class="pvm-hint">Write your voicemail script below. Click any placeholder tag to insert it at the cursor position. Each contact gets a unique personalized message.</p>
                         <div class="pvm-placeholders" id="pvmPlaceholders">
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('name')">{name}</span>
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('first_name')">{first_name}</span>
+                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('last_name')">{last_name}</span>
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('amount')">{amount}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('payment_date')">{payment_date}</span>
+                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('date')">{date}</span>
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('email')">{email}</span>
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('address')">{address}</span>
                         </div>
-                        <textarea id="pvmTemplate" class="pvm-template-input" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account. Your last payment of {amount} was on {payment_date}. Please call us back at your earliest convenience. Thank you!"></textarea>
-                        <button type="button" class="btn btn-secondary" onclick="pvmPreview()" style="margin-top:4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            Preview First Contact
-                        </button>
+                        <textarea id="pvmTemplate" class="pvm-template-input" rows="6" oninput="pvmUpdateCharCount()" placeholder="Hi {first_name}, this is a friendly reminder about your account. Your balance of {amount} was due on {date}. Please call us back at your earliest convenience. Thank you!"></textarea>
+                        <div class="pvm-script-meta">
+                            <span class="pvm-char-count" id="pvmCharCount">0 characters</span>
+                            <span class="pvm-est-duration" id="pvmEstDuration">~0s audio</span>
+                        </div>
+
+                        <div class="pvm-preview-actions">
+                            <div class="pvm-contact-selector" id="pvmContactSelector" style="display:none;">
+                                <label class="pvm-small-label">Preview as:</label>
+                                <select id="pvmPreviewContact" class="pvm-voice-select" style="flex:1;"></select>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="pvmPreview()" style="margin-top:4px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                Preview Text
+                            </button>
+                        </div>
                         <div id="pvmPreviewResult" class="pvm-preview-box" style="display:none;"></div>
                     </div>
 
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                            Select Cloned Voice
+                            Step 3: Select Voice
                         </div>
-                        <p class="pvm-hint">Choose from your ElevenLabs cloned voices to use for the personalized voicemails.</p>
+                        <p class="pvm-hint">Choose from your ElevenLabs voices. This is the voice that will speak your personalized messages.</p>
                         <div class="pvm-voice-row">
                             <select id="pvmVoiceSelect" class="pvm-voice-select">
                                 <option value="">Loading voices...</option>
@@ -549,10 +564,39 @@
                         </div>
                     </div>
 
+                    <div class="pvm-section" id="pvmLivePreviewSection" style="display:none;">
+                        <div class="pvm-section-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Live Voice Preview
+                        </div>
+                        <p class="pvm-hint">Hear exactly how the voicemail will sound for a specific contact before generating all of them. Uses your selected voice and script.</p>
+                        <div class="pvm-live-preview-row">
+                            <select id="pvmLivePreviewContact" class="pvm-voice-select" style="flex:1;"></select>
+                            <button type="button" class="btn btn-gradient" id="pvmLivePreviewBtn" onclick="pvmLivePreview()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Generate Preview
+                            </button>
+                        </div>
+                        <div id="pvmLivePreviewStatus" class="pvm-live-status" style="display:none;">
+                            <svg class="pvm-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                            <span>Generating voice preview...</span>
+                        </div>
+                        <div id="pvmLivePreviewPlayer" style="display:none;">
+                            <div class="pvm-audio-player-wrap">
+                                <audio id="pvmPreviewAudio" controls style="width:100%;border-radius:8px;"></audio>
+                            </div>
+                            <div class="pvm-preview-script-text" id="pvmPreviewScriptText"></div>
+                        </div>
+                    </div>
+
                     <div class="pvm-section pvm-actions-section">
+                        <div class="pvm-cost-estimate" id="pvmCostEstimate" style="display:none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                            <span id="pvmCostText">Estimated cost: ~$0.00</span>
+                        </div>
                         <button type="button" class="btn btn-gradient pvm-generate-btn" id="pvmGenerateBtn" onclick="pvmGenerate()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            Generate Personalized Voicemails
+                            Generate All Personalized Voicemails
                         </button>
                         <div id="pvmProgress" style="display:none;">
                             <div class="pvm-progress-bar">
@@ -3180,7 +3224,7 @@
                         document.getElementById("pvmCsvStats").innerHTML = statsHtml;
 
                         var previewHtml = '<table class="pvm-preview-table"><tr>';
-                        var showFields = pvmFields.slice(0, 6);
+                        var showFields = pvmFields.slice(0, 7);
                         showFields.forEach(function(f) { previewHtml += '<th>' + f + '</th>'; });
                         previewHtml += '</tr>';
                         pvmContacts.slice(0, 3).forEach(function(c) {
@@ -3199,7 +3243,101 @@
                             placeholderHtml += '<span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder(\'' + f + '\')">{' + f + '}</span>';
                         });
                         document.getElementById("pvmPlaceholders").innerHTML = placeholderHtml;
+
+                        pvmPopulateContactSelectors();
+                        document.getElementById("pvmLivePreviewSection").style.display = "";
+                        document.getElementById("pvmContactSelector").style.display = "";
+                        pvmUpdateCostEstimate();
                     }).catch(function(e) { if (e.message === "auth") return; alert("Failed to parse CSV"); });
+            }
+
+            function pvmPopulateContactSelectors() {
+                var html = '';
+                pvmContacts.forEach(function(c, i) {
+                    var label = (c.first_name || c.name || '') + ' ' + (c.last_name || '');
+                    label = label.trim() || c.phone || ('Contact ' + (i + 1));
+                    html += '<option value="' + i + '">' + label + ' (' + (c.phone || '') + ')</option>';
+                });
+                document.getElementById("pvmPreviewContact").innerHTML = html;
+                document.getElementById("pvmLivePreviewContact").innerHTML = html;
+            }
+
+            function pvmUpdateCharCount() {
+                var text = document.getElementById("pvmTemplate").value;
+                var charCount = text.length;
+                document.getElementById("pvmCharCount").textContent = charCount + " characters";
+                var estSeconds = Math.ceil(charCount / 15);
+                document.getElementById("pvmEstDuration").textContent = "~" + estSeconds + "s audio";
+                pvmUpdateCostEstimate();
+            }
+
+            function pvmUpdateCostEstimate() {
+                var text = document.getElementById("pvmTemplate").value;
+                var charCount = text.length;
+                var costEl = document.getElementById("pvmCostEstimate");
+                if (pvmContacts.length > 0 && charCount > 0) {
+                    var charsPerContact = charCount;
+                    var totalChars = charsPerContact * pvmContacts.length;
+                    var cost = (totalChars / 1000) * 0.30;
+                    document.getElementById("pvmCostText").textContent = "Estimated cost: ~$" + cost.toFixed(2) + " for " + pvmContacts.length + " voicemails (" + totalChars.toLocaleString() + " chars)";
+                    costEl.style.display = "";
+                } else {
+                    costEl.style.display = "none";
+                }
+            }
+
+            function pvmDownloadSample() {
+                var csv = "First name,Last name,email,phone,address,amount,date\n";
+                csv += "John,Smith,john@example.com,+15551234567,123 Main St,$500.00,2026-01-15\n";
+                csv += "Jane,Doe,jane@example.com,+15559876543,456 Oak Ave,$750.00,2026-02-01\n";
+                csv += "Bob,Johnson,bob@example.com,+15551112222,789 Pine Rd,$1200.00,2026-01-28\n";
+                var blob = new Blob([csv], {type: "text/csv"});
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = "sample_contacts.csv";
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function pvmLivePreview() {
+                var template = document.getElementById("pvmTemplate").value;
+                var voiceId = document.getElementById("pvmVoiceSelect").value;
+                var contactIdx = parseInt(document.getElementById("pvmLivePreviewContact").value) || 0;
+                if (!template) { alert("Please write a voicemail script first"); return; }
+                if (!voiceId) { alert("Please select a voice first"); return; }
+                if (pvmContacts.length === 0) { alert("Please upload a CSV first"); return; }
+
+                var contact = pvmContacts[contactIdx];
+                document.getElementById("pvmLivePreviewBtn").disabled = true;
+                document.getElementById("pvmLivePreviewStatus").style.display = "";
+                document.getElementById("pvmLivePreviewPlayer").style.display = "none";
+
+                apiFetch("/api/pvm/preview-audio", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    document.getElementById("pvmLivePreviewBtn").disabled = false;
+                    document.getElementById("pvmLivePreviewStatus").style.display = "none";
+                    if (data.error) {
+                        alert("Preview failed: " + data.error);
+                        return;
+                    }
+                    var audio = document.getElementById("pvmPreviewAudio");
+                    audio.src = data.audio_url;
+                    document.getElementById("pvmPreviewScriptText").innerHTML = '<strong>Script:</strong> ' + (data.script || '').replace(/\n/g, '<br>');
+                    document.getElementById("pvmLivePreviewPlayer").style.display = "";
+                    audio.play();
+                    if (typeof showToast === 'function') showToast("Voice preview ready!", "success");
+                }).catch(function(e) {
+                    document.getElementById("pvmLivePreviewBtn").disabled = false;
+                    document.getElementById("pvmLivePreviewStatus").style.display = "none";
+                    if (e.message === "auth") return;
+                    alert("Failed to generate voice preview");
+                });
             }
 
             function pvmInsertPlaceholder(field) {
@@ -3218,16 +3356,21 @@
                 if (!template) { alert("Please write a template first"); return; }
                 if (pvmContacts.length === 0) { alert("Please upload a CSV first"); return; }
 
+                var contactIdx = parseInt(document.getElementById("pvmPreviewContact").value) || 0;
+                var contact = pvmContacts[contactIdx];
+                var contactName = (contact.first_name || contact.name || '') + ' ' + (contact.last_name || '');
+                contactName = contactName.trim() || 'Contact ' + (contactIdx + 1);
+
                 apiFetch("/api/pvm/preview", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ template: template, contact: pvmContacts[0] })
+                    body: JSON.stringify({ template: template, contact: contact })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     var box = document.getElementById("pvmPreviewResult");
                     box.style.display = "";
-                    box.innerHTML = '<strong>Preview for ' + (pvmContacts[0].name || pvmContacts[0].first_name || 'Contact 1') + ':</strong><p>' + (data.rendered || "").replace(/\n/g, '<br>') + '</p>';
+                    box.innerHTML = '<strong>Preview for ' + contactName + ':</strong><p>' + (data.rendered || "").replace(/\n/g, '<br>') + '</p>';
                 }).catch(function(e) { if (e.message === "auth") return; });
             }
 
@@ -3297,7 +3440,7 @@
                             alert("No personalized voicemails found. Generate them first.");
                             return;
                         }
-                        var numbersField = document.getElementById("numbers");
+                        var numbersField = document.getElementById("numbersInput");
                         if (numbersField) {
                             numbersField.value = phones.join("\n");
                         }

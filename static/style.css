@@ -3322,13 +3322,6 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     color: #06B6D4;
 }
 
-.pvm-upload-area {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
 .pvm-file-name {
     font-size: 12px;
     color: var(--text-secondary);
@@ -3571,6 +3564,111 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     background-clip: text;
     line-height: 1.2;
     margin-bottom: 4px;
+}
+
+.pvm-script-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+}
+
+.pvm-char-count {
+    opacity: 0.7;
+}
+
+.pvm-est-duration {
+    opacity: 0.7;
+}
+
+.pvm-preview-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pvm-contact-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.pvm-small-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.pvm-live-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pvm-live-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.pvm-spinner {
+    animation: pvmSpin 1s linear infinite;
+}
+
+@keyframes pvmSpin {
+    to { transform: rotate(360deg); }
+}
+
+.pvm-audio-player-wrap {
+    margin-bottom: 8px;
+}
+
+.pvm-preview-script-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    line-height: 1.5;
+}
+
+.pvm-preview-script-text strong {
+    color: var(--text-primary);
+}
+
+.pvm-cost-estimate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #F59E0B;
+    margin-bottom: 12px;
+}
+
+.pvm-upload-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 /* ---- iPhone 17 Pro Max Dialer Widget ---- */

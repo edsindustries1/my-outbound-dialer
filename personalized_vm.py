@@ -22,7 +22,7 @@ PVM_STATE_FILE = os.path.join("logs", "pvm_state.json")
 
 ALLOWED_PLACEHOLDERS = {
     "name", "first_name", "last_name", "phone", "email",
-    "address", "payment_date", "amount", "company"
+    "address", "payment_date", "amount", "company", "date"
 }
 
 ELEVENLABS_API_BASE = "https://api.elevenlabs.io/v1"
@@ -301,6 +301,46 @@ def get_personalized_audio_url(phone_number):
 def get_generation_status():
     with _state_lock:
         return dict(_generation_state)
+
+
+def generate_preview_audio(contact, template, voice_id):
+    try:
+        api_key = _get_elevenlabs_api_key()
+    except Exception as e:
+        return None, str(e)
+
+    script = render_template(template, contact)
+    filename = f"pvm_preview_{int(time.time())}.mp3"
+    filepath = os.path.join(PVM_DIR, filename)
+    os.makedirs(PVM_DIR, exist_ok=True)
+
+    try:
+        resp = requests.post(
+            f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}",
+            headers={
+                "xi-api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "audio/mpeg",
+            },
+            json={
+                "text": script,
+                "model_id": "eleven_multilingual_v2",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.75,
+                    "style": 0.0,
+                    "use_speaker_boost": True,
+                },
+            },
+            timeout=60,
+        )
+        resp.raise_for_status()
+        with open(filepath, "wb") as f:
+            f.write(resp.content)
+        return filename, script
+    except Exception as e:
+        logger.error(f"Preview TTS failed: {e}")
+        return None, str(e)
 
 
 def clear_personalized_audio():

@@ -67,6 +67,7 @@ from personalized_vm import (
     get_personalized_audio_url,
     get_audio_map as pvm_get_audio_map,
     clear_personalized_audio as pvm_clear,
+    generate_preview_audio as pvm_preview_audio,
 )
 
 _amd_timers = {}
@@ -741,6 +742,29 @@ def pvm_preview():
         return jsonify({"error": "No template provided"}), 400
     rendered = pvm_render_template(template, contact)
     return jsonify({"rendered": rendered})
+
+
+@app.route("/api/pvm/preview-audio", methods=["POST"])
+@login_required
+def pvm_preview_audio_endpoint():
+    data = request.get_json() or {}
+    template = data.get("template", "")
+    contact = data.get("contact", {})
+    voice_id = data.get("voice_id", "")
+    if not template:
+        return jsonify({"error": "No template provided"}), 400
+    if not voice_id:
+        return jsonify({"error": "No voice selected"}), 400
+
+    _detect_and_set_base_url()
+    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+
+    filename, result = pvm_preview_audio(contact, template, voice_id)
+    if filename:
+        audio_url = f"{base_url}/audio/personalized/{filename}"
+        return jsonify({"audio_url": audio_url, "script": result})
+    else:
+        return jsonify({"error": f"Failed to generate preview: {result}"}), 500
 
 
 @app.route("/api/pvm/generate", methods=["POST"])
