@@ -35,8 +35,9 @@ from storage import (
     is_transfer_paused,
     is_active_transfer,
     call_states_snapshot,
+    append_transcript,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url
+from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
 from call_manager import start_dialer
 
 _amd_timers = {}
@@ -333,7 +334,7 @@ def download_report():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Date/Time", "Destination", "Caller ID", "Status Description", "Ring Duration (s)", "Machine Detected", "Transferred", "Voicemail Dropped", "AMD Result", "Hangup Cause"])
+    writer.writerow(["Date/Time", "Destination", "Caller ID", "Status Description", "Ring Duration (s)", "Machine Detected", "Transferred", "Voicemail Dropped", "AMD Result", "Hangup Cause", "Transcript"])
 
     for entry in history:
         ts = entry.get("timestamp", "")
@@ -351,7 +352,10 @@ def download_report():
         amd_result = entry.get("amd_result", "") or ""
         hangup_cause = entry.get("hangup_cause", "") or ""
 
-        writer.writerow([ts_formatted, entry.get("number", ""), entry.get("from_number", ""), status_desc, ring, machine, transferred, voicemail, amd_result, hangup_cause])
+        transcript_parts = entry.get("transcript", [])
+        transcript_text = " | ".join([f"{t.get('track','')}: {t.get('text','')}" for t in transcript_parts]) if transcript_parts else ""
+
+        writer.writerow([ts_formatted, entry.get("number", ""), entry.get("from_number", ""), status_desc, ring, machine, transferred, voicemail, amd_result, hangup_cause, transcript_text])
 
     csv_content = output.getvalue()
     output.close()
@@ -444,6 +448,11 @@ def webhook():
         update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp(),
                           status_description="Answered - detecting...", status_color="blue")
         logger.info(f"Call answered: {call_control_id}, waiting for AMD result...")
+
+        try:
+            start_transcription(call_control_id)
+        except Exception as e:
+            logger.error(f"Failed to start transcription: {e}")
 
         def _amd_fallback(ccid):
             """If AMD event never arrives, treat as human and transfer."""
@@ -604,6 +613,15 @@ def webhook():
                               status_description="Voicemail dropped successfully", status_color="green")
             logger.info(f"Voicemail playback complete on {call_control_id}, hanging up")
             hangup_call(call_control_id)
+
+    # ---- call.transcription ----
+    elif event_type == "call.transcription":
+        transcript_text = payload.get("transcript", "")
+        is_final = payload.get("is_final", False)
+        track = payload.get("track", "inbound")
+        if transcript_text and is_final:
+            append_transcript(call_control_id, transcript_text, track)
+            logger.info(f"Transcript [{track}] for {call_control_id}: {transcript_text[:100]}")
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":

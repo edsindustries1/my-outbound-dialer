@@ -271,10 +271,11 @@
                                 <th>Machine?</th>
                                 <th>Transferred</th>
                                 <th>Voicemail</th>
+                                <th>Transcript</th>
                             </tr>
                         </thead>
                         <tbody id="callBody">
-                            <tr><td colspan="8" class="empty-row">No calls yet</td></tr>
+                            <tr><td colspan="9" class="empty-row">No calls yet</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -948,15 +949,34 @@
                                 html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
                                 html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
                                 html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
-                                html += "</tr>";
+
+                                var hasTranscript = c.transcript && c.transcript.length > 0;
+                                if (hasTranscript) {
+                                    var trId = "tr_" + i;
+                                    html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\')">';
+                                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+                                    html += ' View</button></td>';
+                                    html += '</tr>';
+                                    html += '<tr class="transcript-row" id="' + trId + '" style="display:none;"><td colspan="9"><div class="transcript-box">';
+                                    c.transcript.forEach(function(t) {
+                                        var speaker = t.track === "outbound" ? "Agent" : "Caller";
+                                        var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                                        var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                                        html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                                    });
+                                    html += '</div></td></tr>';
+                                } else {
+                                    html += "<td>-</td>";
+                                    html += "</tr>";
+                                }
                             });
                             if (filtered.length > 0) {
                                 callBody.innerHTML = html;
                             } else {
-                                callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No matching calls</td></tr>';
+                                callBody.innerHTML = '<tr><td colspan="9" class="empty-row">No matching calls</td></tr>';
                             }
                         } else if (count === 0) {
-                            callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No calls yet</td></tr>';
+                            callBody.innerHTML = '<tr><td colspan="9" class="empty-row">No calls yet</td></tr>';
                         }
 
                         adjustPollSpeed(data.active || hasLiveCalls);
@@ -965,6 +985,13 @@
                         if (e.message === "auth") return;
                     });
             }
+
+            window.toggleTranscript = function(id) {
+                var row = document.getElementById(id);
+                if (row) {
+                    row.style.display = row.style.display === "none" ? "table-row" : "none";
+                }
+            };
 
             function adjustPollSpeed(fast) {
                 var newInterval = fast ? 1000 : 3000;

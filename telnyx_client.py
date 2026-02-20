@@ -245,6 +245,28 @@ def play_audio(call_control_id, audio_url):
         return False
 
 
+def start_transcription(call_control_id):
+    """Start real-time transcription on an active call."""
+    payload = {
+        "language": "en",
+        "transcription_engine": "B",
+        "transcription_tracks": "both",
+    }
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/transcription_start",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Transcription started on call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to start transcription on call {call_control_id}: {e}")
+        return False
+
+
 def hangup_call(call_control_id):
     """Hang up an active call."""
     try:

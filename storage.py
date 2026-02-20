@@ -94,6 +94,7 @@ def persist_call_log(call_control_id):
             "status_color": state.get("status_color", "blue"),
             "amd_result": state.get("amd_result"),
             "hangup_cause": state.get("hangup_cause"),
+            "transcript": state.get("transcript", []),
         }
     cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
@@ -226,6 +227,7 @@ def create_call_state(call_control_id, number):
             "status_color": "blue",
             "amd_result": None,
             "hangup_cause": None,
+            "transcript": [],
         }
 
 
@@ -253,6 +255,17 @@ def mark_transferred(call_control_id):
             state["status"] = "transferred"
             return True
         return False
+
+
+def append_transcript(call_control_id, text, track="inbound"):
+    with lock:
+        state = call_states.get(call_control_id)
+        if state:
+            if "transcript" not in state:
+                state["transcript"] = []
+            state["transcript"].append({"text": text, "track": track})
+            return True
+    return False
 
 
 def mark_voicemail_dropped(call_control_id):
@@ -349,6 +362,7 @@ def get_all_statuses():
                 "status_color": state.get("status_color", "blue"),
                 "amd_result": state.get("amd_result"),
                 "hangup_cause": state.get("hangup_cause"),
+                "transcript": state.get("transcript", []),
             })
             live_cids.add(cid)
 
@@ -374,6 +388,7 @@ def get_all_statuses():
             "status_color": entry.get("status_color", ""),
             "amd_result": entry.get("amd_result"),
             "hangup_cause": entry.get("hangup_cause"),
+            "transcript": entry.get("transcript", []),
         })
 
     combined = live_results + history_results

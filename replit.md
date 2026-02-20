@@ -28,6 +28,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - Auto-detection of webhook base URL from request headers (X-Forwarded-Host/Proto) for correct webhook delivery on both dev and published URLs
 - Adaptive polling: 1s during active calls, 3s when idle
 - All API fetch calls use credentials: "include" and X-Requested-With header for proper auth on published URL
+- Real-time call transcription using Telnyx STT (Telnyx engine, $0.025/min), started on call.answered, stored per-call
 
 ## Voicemail Settings
 - Default voicemail URL pre-loaded from Cloudinary
