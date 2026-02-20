@@ -686,11 +686,11 @@
       });
     });
 
-    // Hero particle canvas
+    // Hero particle canvas (pauses when off-screen)
     const canvas = document.getElementById('heroCanvas');
     if (canvas) {
       const ctx = canvas.getContext('2d');
-      let w, h, particles = [];
+      let w, h, particles = [], heroAnimId = null, heroVisible = true;
       function resizeCanvas() {
         w = canvas.width = canvas.parentElement.offsetWidth;
         h = canvas.height = canvas.parentElement.offsetHeight;
@@ -722,14 +722,15 @@
           ctx.fill();
         }
       }
-      for (let i = 0; i < 60; i++) particles.push(new Particle());
+      for (let i = 0; i < 35; i++) particles.push(new Particle());
       function drawLines() {
         for (let i = 0; i < particles.length; i++) {
           for (let j = i + 1; j < particles.length; j++) {
             const dx = particles[i].x - particles[j].x;
             const dy = particles[i].y - particles[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 120) {
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 14400) {
+              const dist = Math.sqrt(distSq);
               ctx.beginPath();
               ctx.moveTo(particles[i].x, particles[i].y);
               ctx.lineTo(particles[j].x, particles[j].y);
@@ -741,11 +742,17 @@
         }
       }
       function animateParticles() {
+        if (!heroVisible) { heroAnimId = null; return; }
         ctx.clearRect(0, 0, w, h);
         particles.forEach(p => { p.update(); p.draw(); });
         drawLines();
-        requestAnimationFrame(animateParticles);
+        heroAnimId = requestAnimationFrame(animateParticles);
       }
+      const heroObs = new IntersectionObserver(entries => {
+        heroVisible = entries[0].isIntersecting;
+        if (heroVisible && !heroAnimId) animateParticles();
+      }, { threshold: 0 });
+      heroObs.observe(canvas.parentElement);
       animateParticles();
     }
 
@@ -846,11 +853,11 @@
       }, 5000);
     });
 
-    // CTA section floating particles
+    // CTA section floating particles (pauses when off-screen)
     const ctaCanvas = document.getElementById('ctaCanvas');
     if (ctaCanvas) {
       const ctxCta = ctaCanvas.getContext('2d');
-      let cw, ch, ctaParticles = [];
+      let cw, ch, ctaParticles = [], ctaAnimId = null, ctaVisible = false;
       function resizeCta() {
         cw = ctaCanvas.width = ctaCanvas.parentElement.offsetWidth;
         ch = ctaCanvas.height = ctaCanvas.parentElement.offsetHeight;
@@ -883,13 +890,18 @@
           ctxCta.fill();
         }
       }
-      for (let i = 0; i < 40; i++) ctaParticles.push(new CtaParticle());
+      for (let i = 0; i < 20; i++) ctaParticles.push(new CtaParticle());
       function animateCta() {
+        if (!ctaVisible) { ctaAnimId = null; return; }
         ctxCta.clearRect(0, 0, cw, ch);
         ctaParticles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animateCta);
+        ctaAnimId = requestAnimationFrame(animateCta);
       }
-      animateCta();
+      const ctaObs = new IntersectionObserver(entries => {
+        ctaVisible = entries[0].isIntersecting;
+        if (ctaVisible && !ctaAnimId) animateCta();
+      }, { threshold: 0 });
+      ctaObs.observe(ctaCanvas.parentElement);
     }
 
     // Lead form modal
