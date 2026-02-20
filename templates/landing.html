@@ -24,10 +24,11 @@
         <a href="#how-it-works">How It Works</a>
         <a href="#testimonials">Testimonials</a>
         <a href="#pricing">Pricing</a>
+        <a href="#blog">Resources</a>
       </div>
       <div class="nav-right">
         <a href="/login" class="nav-login">Log in</a>
-        <a href="#pricing" class="nav-cta">Start free trial</a>
+        <a href="#pricing" class="nav-cta">Get Started</a>
       </div>
       <button class="nav-mobile" id="navMobile" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -37,107 +38,172 @@
 
   <section class="hero">
     <div class="hero-glow"></div>
+    <div class="hero-particles" id="heroParticles"></div>
     <div class="hero-inner">
-      <p class="hero-eyebrow">AI-Powered Sales Dialer</p>
-      <h1 class="hero-title">Reach more prospects.<br>Close more deals.</h1>
-      <p class="hero-sub">Get 10x more connections with AI-powered dialing, personalized voicemail drops, and real-time transcription. Connect your leads to get started.</p>
-      <div class="hero-actions">
-        <a href="/login" class="btn-primary btn-lg">Request a demo</a>
-        <a href="#pricing" class="btn-outline btn-lg">Start free trial</a>
+      <div class="hero-badge anim-fade">
+        <span class="hero-badge-dot"></span>
+        AI-Powered Sales Dialer
       </div>
-      <p class="hero-trust">Trusted by sales teams across industries</p>
-      <div class="trust-logos">
-        <span>Real Estate</span>
-        <span>Insurance</span>
-        <span>Solar</span>
-        <span>Home Services</span>
-        <span>SaaS</span>
-        <span>Agencies</span>
+      <h1 class="hero-title anim-fade">Intelligent<br>Communication<br>at Scale</h1>
+      <p class="hero-sub anim-fade">The future of outbound sales at your fingertips — AI-powered dialing, personalized voicemail drops, and real-time transcription. Secure, smart, and seamless.</p>
+      <div class="hero-actions anim-fade">
+        <a href="/login" class="btn-primary btn-lg">
+          <span>Get Started Today</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#features" class="btn-ghost btn-lg">See How It Works</a>
+      </div>
+    </div>
+    <div class="hero-mockup anim-fade">
+      <div class="mockup-float">
+        <img src="/static/images/dashboard-preview.png" alt="Open Human dashboard preview" loading="eager">
+        <div class="mockup-glow"></div>
       </div>
     </div>
   </section>
 
-  <section class="stats">
-    <div class="stats-inner">
-      <div class="stat-card">
-        <span class="stat-value" data-target="10">0</span><span class="stat-unit">x</span>
-        <span class="stat-label">More connections</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-value" data-target="10">0</span><span class="stat-unit">hr</span>
-        <span class="stat-label">Saved per week</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-value" data-target="95">0</span><span class="stat-unit">%</span>
-        <span class="stat-label">Voicemail delivery rate</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="features" id="features">
+  <section class="services" id="features">
     <div class="section-inner">
+      <p class="section-eyebrow anim-up">Services</p>
+      <h2 class="section-title anim-up">Transforming Outbound Sales</h2>
 
-      <div class="feature-block">
-        <div class="feature-text">
-          <h2>Your campaigns,<br>run automatically</h2>
-          <p>Upload your contact list and launch a campaign in seconds. Open Human dials through your list automatically — sequential or simultaneous — detecting machines, dropping voicemails, and transferring live humans to your team. Just set it and sell.</p>
+      <div class="bento-grid">
+        <div class="bento-card bento-large anim-up">
+          <div class="bento-text">
+            <h3>Automated Campaign Dialer</h3>
+            <p>Upload your list, set your preferences, and launch. Open Human dials through hundreds of numbers automatically — sequential or simultaneous — while you focus on closing.</p>
+          </div>
+          <div class="bento-img">
+            <img src="/static/images/feature-dialer.png" alt="Campaign dialer" loading="lazy">
+          </div>
         </div>
-        <div class="feature-img">
-          <img src="/static/images/feature-dialer.png" alt="Campaign dialer interface" loading="lazy">
+
+        <div class="bento-card bento-medium anim-up">
+          <div class="bento-img bento-img-top">
+            <img src="/static/images/feature-ai-voicemail.png" alt="AI voicemail" loading="lazy">
+          </div>
+          <div class="bento-text">
+            <h3>AI Personalized Voicemails</h3>
+            <p>Every prospect hears their name, company, and details — generated by AI voice cloning that sounds exactly like you.</p>
+          </div>
+        </div>
+
+        <div class="bento-card bento-medium anim-up">
+          <div class="bento-text">
+            <h3>Live Call Transfer</h3>
+            <p>When a human picks up, get instantly notified and the call transfers to your team in real-time. Never miss a hot lead.</p>
+          </div>
+          <div class="bento-img bento-img-bottom">
+            <img src="/static/images/feature-hotlead.png" alt="Hot lead transfer" loading="lazy">
+          </div>
         </div>
       </div>
-
-      <div class="feature-block reverse">
-        <div class="feature-text">
-          <h2>Voicemails that<br>write themselves</h2>
-          <p>Every prospect hears a voicemail with their name, company, and personalized details — generated by AI voice cloning that sounds exactly like you. Create a script template once, and our AI crafts a unique message for every contact on your list.</p>
-        </div>
-        <div class="feature-img">
-          <img src="/static/images/feature-ai-voicemail.png" alt="AI personalized voicemail" loading="lazy">
-        </div>
-      </div>
-
-      <div class="feature-block">
-        <div class="feature-text">
-          <h2>Never miss a<br>hot lead again</h2>
-          <p>When a human picks up, you know instantly. Open Human detects live answers, triggers an instant transfer to your sales team, and transcribes the entire conversation in real-time. Every word, both sides, as it happens.</p>
-        </div>
-        <div class="feature-img">
-          <img src="/static/images/feature-live-calls.png" alt="Live call transcription" loading="lazy">
-        </div>
-      </div>
-
-      <div class="feature-block reverse">
-        <div class="feature-text">
-          <h2>Analytics that<br>drive decisions</h2>
-          <p>See what's working at a glance. Track call outcomes, answer rates, hourly patterns, and campaign performance in real-time. Get automated daily email reports with hot lead summaries and actionable insights delivered to your inbox.</p>
-        </div>
-        <div class="feature-img">
-          <img src="/static/images/feature-analytics.png" alt="Call analytics dashboard" loading="lazy">
-        </div>
-      </div>
-
     </div>
   </section>
 
-  <section class="how-it-works" id="how-it-works">
+  <section class="features-grid">
     <div class="section-inner">
-      <h2 class="section-title">How it works</h2>
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <h3>Upload your list</h3>
-          <p>Drop a CSV with your contacts. Our smart parser finds phone numbers automatically and pulls in names, companies, and custom fields for personalization.</p>
+      <p class="section-eyebrow anim-up">Features</p>
+      <h2 class="section-title anim-up">Cutting-edge tools designed for your success</h2>
+
+      <div class="bento-grid bento-features">
+        <div class="bento-card bento-feat-wide anim-up">
+          <div class="bento-feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3>Advanced Security</h3>
+          <p>Multi-layer encryption safeguards your data. TCPA compliant with automatic DNC list management.</p>
+          <div class="bento-img">
+            <img src="/static/images/feature-voicemail.png" alt="Security" loading="lazy">
+          </div>
         </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <h3>Configure & launch</h3>
-          <p>Pick your dialing mode, choose a voicemail (or let AI create personalized ones), set your transfer number, and hit launch. Takes under 60 seconds.</p>
+
+        <div class="bento-card bento-feat-wide anim-up">
+          <div class="bento-feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 1.2-4 6-9 6s-9-4.8-9-6c0-1.2 4-6 9-6s9 4.8 9 6z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Real-Time Analytics</h3>
+          <p>Gain instant insights into call outcomes, answer rates, hourly patterns, and campaign performance.</p>
+          <div class="bento-img">
+            <img src="/static/images/feature-analytics.png" alt="Analytics" loading="lazy">
+          </div>
         </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <h3>Close deals</h3>
-          <p>Watch calls happen in real-time. Get instant alerts when a human answers. Review transcripts, track results, and focus on what matters — selling.</p>
+
+        <div class="bento-card bento-feat-tall anim-up">
+          <div class="bento-feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </div>
+          <h3>Live Transcription</h3>
+          <p>Every conversation transcribed in real-time — both sides, as it happens. Review, search, and analyze every word.</p>
+          <div class="bento-img">
+            <img src="/static/images/feature-live-calls.png" alt="Live transcription" loading="lazy">
+          </div>
+        </div>
+
+        <div class="bento-card bento-feat-wide anim-up">
+          <div class="bento-feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          </div>
+          <h3>Simultaneous Dialing</h3>
+          <p>Dial up to 50 numbers at once. Reach more prospects in less time with intelligent batch calling.</p>
+        </div>
+
+        <div class="bento-card bento-feat-wide anim-up">
+          <div class="bento-feat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 003 3h14a3 3 0 003-3z"/><path d="M2 9l10 6 10-6"/><path d="M12 2L2 9h20L12 2z"/></svg>
+          </div>
+          <h3>Daily Email Reports</h3>
+          <p>Get automated summaries with hot lead alerts, call stats, and actionable insights delivered to your inbox.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="workflow" id="how-it-works">
+    <div class="section-inner">
+      <div class="workflow-header">
+        <div>
+          <p class="section-eyebrow anim-up">Workflow</p>
+          <h2 class="section-title section-title-left anim-up">A Smarter Way to<br>Reach Your Prospects</h2>
+          <p class="section-sub-left anim-up">Take control of your outbound with a smarter, more efficient approach. Upload, configure, launch, and close — all from one dashboard.</p>
+          <a href="/login" class="btn-primary anim-up" style="margin-top:24px;">
+            <span>Get Started Today</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="workflow-steps">
+        <div class="wf-step anim-up">
+          <div class="wf-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h4>Upload</h4>
+          <p>Drop a CSV with your contacts. Smart parser finds numbers and pulls names, companies, and custom fields.</p>
+        </div>
+        <div class="wf-connector"><svg width="40" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/></svg></div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </div>
+          <h4>Configure</h4>
+          <p>Pick your dialing mode, choose a voicemail or let AI personalize it, set your transfer number.</p>
+        </div>
+        <div class="wf-connector"><svg width="40" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/></svg></div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <h4>Launch</h4>
+          <p>Hit launch and watch calls happen live. Machines get voicemails, humans get transferred to you.</p>
+        </div>
+        <div class="wf-connector"><svg width="40" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/></svg></div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h4>Close</h4>
+          <p>Focus on selling. Review transcripts, track results, and get instant alerts for hot leads.</p>
         </div>
       </div>
     </div>
@@ -145,151 +211,219 @@
 
   <section class="testimonials" id="testimonials">
     <div class="section-inner">
-      <h2 class="section-title">What customers are saying...</h2>
-      <div class="testimonial-grid">
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">I used to spend 10 hours a day cold calling homeowners off tax delinquent lists. Out of 200 dials, maybe 15 people would actually pick up — the rest went straight to voicemail. Now I load my skip traced list into Open Human, hit launch, and it dials through 500 numbers while I'm out driving for dollars. I come back to 30+ voicemails dropped and 4-5 hot leads transferred directly to my phone. We closed 3 extra deals last month just from the callback rate on those AI voicemails. Homeowners literally call back saying "Hey, I got your message about my property on Elm Street." They think I personally called them.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-1.png" alt="Brandon Mercer" class="author-photo">
-            <div>
-              <span class="author-name">Brandon Mercer</span>
-              <span class="author-role">Owner, Keystone Property Solutions — Real Estate Wholesaling</span>
+      <p class="section-eyebrow anim-up">Testimonials</p>
+      <h2 class="section-title anim-up">Trusted by Thousands<br>of Sales Teams</h2>
+
+      <div class="testimonial-carousel" id="testimonialCarousel">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="t-card">
+            <p class="t-text">I used to spend 10 hours a day cold calling homeowners. Now I load my list into Open Human, hit launch, and it dials through 500 numbers while I'm out. I come back to 30+ voicemails dropped and 4-5 hot leads transferred directly to my phone. We closed 3 extra deals last month just from callback rate on those AI voicemails.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-1.png" alt="Brandon Mercer" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">Brandon Mercer</span>
+                <span class="t-role">Owner, Keystone Property Solutions</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-card">
+            <p class="t-text">In wholesaling, speed to the seller is everything. The personalized voicemails are the real magic — each homeowner hears their name and address. Our callback rate went from 2% to almost 11%. That's the difference between 4 deals a month and 12.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-4.png" alt="Tyler Westbrook" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">Tyler Westbrook</span>
+                <span class="t-role">Acquisitions Manager, Summit REI Group</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-card">
+            <p class="t-text">We sell final expense and Medicare plans. When a lead hears "Hi Margaret, this is about the life insurance information you requested" in a natural, warm voice — they call back. Our agents went from 3 appointments a week to 8-10. Trust is everything in insurance, and this tool builds it before we even have a conversation.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-2.png" alt="Maria Delgado" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">Maria Delgado</span>
+                <span class="t-role">Agency Director, Pinnacle Life & Health</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-card">
+            <p class="t-text">We started using Open Human's personalized voicemail system and saw a 340% increase in inbound callbacks. The seniors who call back are already warm — they're asking questions, not hanging up. It completely flipped our sales process.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-5.png" alt="Jennifer Nguyen" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">Jennifer Nguyen</span>
+                <span class="t-role">VP of Sales, HealthBridge Insurance</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-card">
+            <p class="t-text">Our right-party contact rate doubled, and payment arrangement callbacks went up 67% in the first month. Compliance loves it too — every call is transcribed and logged automatically.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-3.png" alt="Robert Atkins" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">Robert Atkins</span>
+                <span class="t-role">Director, Meridian Recovery Services</span>
+              </div>
+            </div>
+          </div>
+          <div class="t-card">
+            <p class="t-text">Our contact rate went from 12% to 31%, and our 90-day collection rate improved by 40%. The live transcription helps with compliance — our QA team can review every conversation. Best ROI on any tool we've adopted in 15 years.</p>
+            <div class="t-author">
+              <img src="/static/images/testimonial-6.png" alt="David Harmon" class="t-avatar" loading="lazy">
+              <div>
+                <span class="t-name">David Harmon</span>
+                <span class="t-role">CEO, Clearpath Revenue Solutions</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">In wholesaling, speed to the seller is everything. Before Open Human, my acquisitions team of 4 was manually dialing and leaving the same generic voicemail 200 times a day. They were burned out. Now we upload our absentee owner lists and the system handles it all — 2,000 dials a day across the whole team. The real magic is the personalized voicemails. Each homeowner hears their name and address in the message, so when they call back, they already feel like we know their situation. Our callback rate went from 2% to almost 11%. That's the difference between 4 deals a month and 12.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-4.png" alt="Tyler Westbrook" class="author-photo">
-            <div>
-              <span class="author-name">Tyler Westbrook</span>
-              <span class="author-role">Acquisitions Manager, Summit REI Group — Real Estate Wholesaling</span>
-            </div>
-          </div>
+        <div class="carousel-nav">
+          <button class="carousel-btn" id="carouselPrev" aria-label="Previous">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="carousel-btn" id="carouselNext" aria-label="Next">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">We sell final expense and Medicare supplement plans. Our agents were spending 6 hours a day dialing leads from mailers and internet forms — and 80% of the time nobody answered. Open Human changed our entire operation. We upload our aged lead lists, the system dials through them, and when someone actually picks up it transfers straight to an available agent. But what really sold us was the AI personalized voicemail. When a lead hears "Hi Margaret, this is about the life insurance information you requested" in a natural, warm voice — they call back. Our agents went from 3 appointments a week to 8-10. In insurance, trust is everything, and this tool builds it before we even have a conversation.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-2.png" alt="Maria Delgado" class="author-photo">
-            <div>
-              <span class="author-name">Maria Delgado</span>
-              <span class="author-role">Agency Director, Pinnacle Life & Health Insurance</span>
-            </div>
-          </div>
+      </div>
+
+      <div class="stats-bar anim-up">
+        <div class="stat-item">
+          <span class="stat-value" data-target="10">0</span><span class="stat-unit">x</span>
+          <span class="stat-label">More Connections</span>
         </div>
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">Our Medicare enrollment team used to dread AEP season. 60 days to reach thousands of seniors, and most of them don't answer unknown numbers. We started using Open Human's personalized voicemail system and the results were immediate. Each senior hears a message with their name, their current plan details, and a reason to call back — all in a voice that sounds like their local agent. We saw a 340% increase in inbound callbacks compared to last year's AEP. The seniors who call back are already warm — they're asking questions, not hanging up. It completely flipped our sales process from chasing people to fielding interested callers.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-5.png" alt="Jennifer Nguyen" class="author-photo">
-            <div>
-              <span class="author-name">Jennifer Nguyen</span>
-              <span class="author-role">VP of Sales, HealthBridge Insurance Solutions</span>
-            </div>
-          </div>
+        <div class="stat-item">
+          <span class="stat-prefix">$</span><span class="stat-value" data-target="12000">0</span><span class="stat-unit">+</span>
+          <span class="stat-label">Average User Savings</span>
         </div>
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">In collections, reaching the right person at the right time is 90% of the battle. We were burning through calling hours with manual dials and generic recorded messages that everyone ignores. Open Human's simultaneous dialing mode lets us push through 800+ accounts a day per collector — but the personalized voicemail is what actually gets people to call back and set up payment arrangements. When a debtor hears a message that references their specific account and speaks to them by name, they take it seriously. Our right-party contact rate doubled, and payment arrangement callbacks went up 67% in the first month. Compliance loves it too — every call is transcribed and logged automatically.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-3.png" alt="Robert Atkins" class="author-photo">
-            <div>
-              <span class="author-name">Robert Atkins</span>
-              <span class="author-role">Director of Operations, Meridian Recovery Services — Debt Collection</span>
-            </div>
-          </div>
+        <div class="stat-item">
+          <span class="stat-value" data-target="95">0</span><span class="stat-unit">%</span>
+          <span class="stat-label">Voicemail Delivery Rate</span>
         </div>
-        <div class="testimonial-card">
-          <div class="testimonial-quote">"</div>
-          <p class="testimonial-text">We manage receivables for medical practices and healthcare systems. The hardest part of patient collections is getting people to engage — nobody wants to talk about a medical bill. With Open Human, we send personalized voicemails that reference the patient's provider and outstanding balance range without violating HIPAA. The tone is empathetic, not aggressive, and people actually respond. Our contact rate went from 12% to 31%, and our 90-day collection rate improved by 40%. The live transcription also helps with compliance — our QA team can review every conversation without listening to hours of recordings. Best ROI on any tool we've adopted in 15 years.</p>
-          <div class="testimonial-author">
-            <img src="/static/images/testimonial-6.png" alt="David Harmon" class="author-photo">
-            <div>
-              <span class="author-name">David Harmon</span>
-              <span class="author-role">CEO, Clearpath Revenue Solutions — Healthcare Collections</span>
-            </div>
-          </div>
+        <div class="stat-item">
+          <span class="stat-value" data-target="50">0</span><span class="stat-unit">K+</span>
+          <span class="stat-label">Calls Made Monthly</span>
         </div>
       </div>
     </div>
   </section>
 
   <section class="pricing" id="pricing">
-    <div class="pricing-inner">
-      <div class="pricing-toggle-bar">
+    <div class="section-inner">
+      <p class="section-eyebrow anim-up">Pricing</p>
+      <h2 class="section-title anim-up">Plans That Scale With You</h2>
+
+      <div class="pricing-toggle anim-up">
         <div class="pricing-pill">
           <button class="pill-opt active" id="toggleMonthly">Monthly</button>
-          <button class="pill-opt" id="toggleAnnual">Annual</button>
+          <button class="pill-opt" id="toggleAnnual">Yearly</button>
         </div>
-        <span class="toggle-save-badge">Save 20%</span>
       </div>
+
       <div class="pricing-cards">
-        <div class="p-card">
+        <div class="p-card anim-up">
           <h3 class="p-name">Starter</h3>
           <div class="p-price">
-            <span class="p-dollar">$</span><span class="p-num" data-monthly="99" data-annual="79">99</span>
-            <span class="p-period">/ month</span>
+            <span class="p-dollar">$</span>
+            <span class="p-num" data-monthly="99" data-annual="79">99</span>
+            <span class="p-period">/month</span>
           </div>
-          <div class="p-actions">
-            <a href="#" class="p-cta p-cta-fill">Try free</a>
-            <a href="#" class="p-cta p-cta-link">Buy now <span class="p-arrow">&#8599;</span></a>
-          </div>
-          <p class="p-desc">Seamless outbound dialing with voicemail drops, hot lead alerts, and live transfer&mdash;perfect for solo operators and small teams ready to scale.</p>
           <ul class="p-list">
             <li>Dial up to 1,000 calls per month</li>
-            <li>Automatic voicemail drop on every machine-detected call</li>
-            <li>Get instant hot lead alerts with live call transfer</li>
+            <li>Automatic voicemail drop on machine-detected calls</li>
+            <li>Instant hot lead alerts with live call transfer</li>
+            <li>Standard customer support</li>
           </ul>
-          <a href="#" class="p-see-all">See all features <span class="p-arrow">&#8599;</span></a>
+          <a href="/login" class="p-cta p-cta-outline">Get Started</a>
         </div>
-        <div class="p-card">
+
+        <div class="p-card p-card-featured anim-up">
+          <div class="p-popular">Most Popular</div>
           <h3 class="p-name">Professional</h3>
           <div class="p-price">
-            <span class="p-dollar">$</span><span class="p-num" data-monthly="249" data-annual="199">249</span>
-            <span class="p-period">/ month</span>
+            <span class="p-dollar">$</span>
+            <span class="p-num" data-monthly="249" data-annual="199">249</span>
+            <span class="p-period">/month</span>
           </div>
-          <div class="p-actions">
-            <a href="#" class="p-cta p-cta-fill">Try free</a>
-            <a href="#" class="p-cta p-cta-link">Buy now <span class="p-arrow">&#8599;</span></a>
-          </div>
-          <p class="p-desc">Boost productivity with AI-personalized voicemails, simultaneous dialing, live transcription, and advanced analytics&mdash;ideal for growing teams needing more power.</p>
-          <p class="p-includes">Everything in Starter, plus:</p>
+          <div class="p-save-badge" style="display:none;">Save $600</div>
           <ul class="p-list">
-            <li>Unlock AI-personalized voicemail for every contact</li>
-            <li>Get real-time call transcription and summaries</li>
-            <li>Dial simultaneously with up to 10 parallel calls</li>
+            <li>Everything in Starter, plus:</li>
+            <li>AI-personalized voicemail for every contact</li>
+            <li>Real-time call transcription and summaries</li>
+            <li>Simultaneous dialing — up to 10 parallel calls</li>
+            <li>Priority customer support</li>
           </ul>
-          <a href="#" class="p-see-all">See all features <span class="p-arrow">&#8599;</span></a>
+          <a href="/login" class="p-cta p-cta-fill">Get Started</a>
         </div>
-        <div class="p-card">
+
+        <div class="p-card anim-up">
           <h3 class="p-name">Enterprise</h3>
-          <div class="p-price-text">Contact us for pricing</div>
-          <div class="p-actions">
-            <a href="#" class="p-cta p-cta-outline">Talk to sales</a>
-          </div>
-          <p class="p-desc">Enterprise-grade reliability with unlimited calls, up to 50 parallel dials, and dedicated support&mdash;built for agencies and organizations that need the best.</p>
-          <p class="p-includes">Everything in Professional, plus:</p>
+          <div class="p-price-custom">Contact us</div>
           <ul class="p-list">
-            <li>Scale with unlimited calls and up to 50 parallel dials</li>
-            <li>Get a dedicated account manager and onboarding</li>
-            <li>Access custom API integrations and compliance tools</li>
+            <li>Everything in Professional, plus:</li>
+            <li>Unlimited calls and up to 50 parallel dials</li>
+            <li>Dedicated account manager and onboarding</li>
+            <li>Custom API integrations and compliance tools</li>
+            <li>SLA and uptime guarantees</li>
           </ul>
-          <a href="#" class="p-see-all">See all features <span class="p-arrow">&#8599;</span></a>
+          <a href="/login" class="p-cta p-cta-outline">Talk to Sales</a>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="final-cta">
+  <section class="blog" id="blog">
     <div class="section-inner">
-      <h2>Sharper insights.<br>Remarkable outcomes.</h2>
-      <p class="cta-sub">See how Open Human can streamline your outbound sales and save your team 10+ hours every week.</p>
-      <div class="hero-actions">
-        <a href="/login" class="btn-primary btn-lg">Talk to sales</a>
-        <a href="#pricing" class="btn-outline btn-lg">Start free trial</a>
+      <p class="section-eyebrow anim-up">Resources</p>
+      <h2 class="section-title anim-up">Insights, tips, and news</h2>
+      <p class="section-sub anim-up">Stay informed with the latest insights, expert tips, and strategies for outbound sales success.</p>
+
+      <div class="blog-grid">
+        <a href="#" class="blog-card anim-up">
+          <div class="blog-img">
+            <img src="/static/images/feature-transcription.png" alt="AI Sales Trends" loading="lazy">
+          </div>
+          <div class="blog-meta">
+            <span class="blog-tag">AI & Sales</span>
+            <span class="blog-date">Jan 15, 2026</span>
+          </div>
+          <h3>The Future of AI-Powered Outbound Sales in 2026</h3>
+        </a>
+        <a href="#" class="blog-card anim-up">
+          <div class="blog-img">
+            <img src="/static/images/feature-voicemail.png" alt="Voicemail Tips" loading="lazy">
+          </div>
+          <div class="blog-meta">
+            <span class="blog-tag">Best Practices</span>
+            <span class="blog-date">Dec 28, 2025</span>
+          </div>
+          <h3>5 Voicemail Scripts That Actually Get Callbacks</h3>
+        </a>
+        <a href="#" class="blog-card anim-up">
+          <div class="blog-img">
+            <img src="/static/images/feature-analytics.png" alt="Compliance" loading="lazy">
+          </div>
+          <div class="blog-meta">
+            <span class="blog-tag">Compliance</span>
+            <span class="blog-date">Dec 12, 2025</span>
+          </div>
+          <h3>TCPA Compliance: Everything You Need to Know</h3>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <div class="cta-gradient"></div>
+    <div class="section-inner cta-inner">
+      <div class="cta-badge anim-up">AI-Powered Sales Dialer</div>
+      <h2 class="anim-up">Ready to 10x Your<br>Outbound Results?</h2>
+      <p class="anim-up">Sign up today and see how Open Human can transform your sales process.</p>
+      <div class="hero-actions anim-up">
+        <a href="/login" class="btn-primary btn-lg btn-white">
+          <span>Get Started Today</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
       </div>
     </div>
   </section>
@@ -297,29 +431,45 @@
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-top">
-        <div class="footer-brand">
-          <span class="brand-icon">🧠</span>
-          <span class="brand-name">Open Human</span>
+        <div class="footer-brand-col">
+          <a href="/" class="nav-brand">
+            <span class="brand-icon">🧠</span>
+            <span class="brand-name">Open Human</span>
+          </a>
+          <p class="footer-desc">AI-powered outbound sales platform. Reach more prospects, close more deals.</p>
         </div>
         <div class="footer-cols">
           <div class="footer-col">
-            <h4>Product</h4>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#how-it-works">How It Works</a>
+            <h4>Company</h4>
+            <a href="#features">About Us</a>
+            <a href="#blog">Blog</a>
           </div>
           <div class="footer-col">
-            <h4>Company</h4>
-            <a href="#">About</a>
-            <a href="#">Blog</a>
-            <a href="#">Careers</a>
+            <h4>Support</h4>
+            <a href="/login">Help Center</a>
+            <a href="#pricing">FAQs</a>
+            <a href="/login">Contact Support</a>
           </div>
           <div class="footer-col">
             <h4>Legal</h4>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">TCPA</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">TCPA Compliance</a>
           </div>
+        </div>
+        <div class="footer-newsletter">
+          <h4>Subscribe for Updates</h4>
+          <p>Get the latest news and tips directly in your inbox.</p>
+          <form class="newsletter-form" onsubmit="event.preventDefault();this.querySelector('.nl-msg').style.display='block';this.querySelector('input').value='';">
+            <div class="nl-input-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nl-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" placeholder="Enter your email" required>
+              <button type="submit" class="nl-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+            <span class="nl-msg" style="display:none;">Thanks for subscribing!</span>
+          </form>
         </div>
       </div>
       <div class="footer-bottom">
@@ -350,10 +500,15 @@
       });
     });
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }});
-    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-    document.querySelectorAll('.feature-block, .step, .testimonial-card, .p-card, .stat-card').forEach(el => io.observe(el));
+    const aio = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in-view');
+          aio.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.anim-up, .anim-fade, .bento-card, .p-card, .blog-card, .wf-step, .stat-item, .t-card').forEach(el => aio.observe(el));
 
     const sio = new IntersectionObserver((entries) => {
       entries.forEach(e => {
@@ -361,8 +516,16 @@
           const el = e.target;
           const target = +el.dataset.target;
           let cur = 0;
-          const step = target / 60;
-          const timer = setInterval(() => { cur += step; if (cur >= target) { cur = target; clearInterval(timer); } el.textContent = Math.round(cur); }, 16);
+          const duration = 1500;
+          const startTime = performance.now();
+          function animate(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            cur = Math.round(eased * target);
+            el.textContent = cur.toLocaleString();
+            if (progress < 1) requestAnimationFrame(animate);
+          }
+          requestAnimationFrame(animate);
           sio.unobserve(el);
         }
       });
@@ -374,14 +537,44 @@
     let isAnnual = false;
     function updatePricing() {
       document.querySelectorAll('.p-num').forEach(el => {
-        const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
-        el.textContent = val;
+        el.textContent = isAnnual ? el.dataset.annual : el.dataset.monthly;
+      });
+      document.querySelectorAll('.p-save-badge').forEach(el => {
+        el.style.display = isAnnual ? '' : 'none';
       });
       toggleMonthly.classList.toggle('active', !isAnnual);
       toggleAnnual.classList.toggle('active', isAnnual);
     }
     toggleMonthly.addEventListener('click', () => { isAnnual = false; updatePricing(); });
     toggleAnnual.addEventListener('click', () => { isAnnual = true; updatePricing(); });
+
+    let carouselIndex = 0;
+    const track = document.getElementById('carouselTrack');
+    const cards = track.querySelectorAll('.t-card');
+    const totalCards = cards.length;
+    function getVisibleCount() {
+      if (window.innerWidth > 1024) return 2;
+      return 1;
+    }
+    function updateCarousel() {
+      const visible = getVisibleCount();
+      const maxIndex = totalCards - visible;
+      if (carouselIndex > maxIndex) carouselIndex = maxIndex;
+      if (carouselIndex < 0) carouselIndex = 0;
+      const gap = 24;
+      const cardW = cards[0].offsetWidth + gap;
+      track.style.transform = 'translateX(-' + (carouselIndex * cardW) + 'px)';
+    }
+    document.getElementById('carouselPrev').addEventListener('click', () => { carouselIndex--; updateCarousel(); });
+    document.getElementById('carouselNext').addEventListener('click', () => { carouselIndex++; updateCarousel(); });
+    window.addEventListener('resize', updateCarousel);
+
+    let touchStartX = 0;
+    track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const diff = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) { diff > 0 ? carouselIndex++ : carouselIndex--; updateCarousel(); }
+    }, { passive: true });
   </script>
 </body>
 </html>
