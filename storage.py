@@ -47,6 +47,32 @@ def save_voicemail_url(url):
     return settings
 
 
+def get_voice_preset():
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                settings = json.load(f)
+                return settings.get("voice_preset", {})
+    except Exception:
+        pass
+    return {}
+
+def save_voice_preset(preset):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    settings = {}
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, "r") as f:
+                settings = json.load(f)
+    except Exception:
+        pass
+    settings["voice_preset"] = preset
+    settings["updated_at"] = datetime.utcnow().isoformat()
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(settings, f, indent=2)
+    return preset
+
+
 def _load_call_history():
     try:
         if os.path.exists(CALL_LOG_FILE):

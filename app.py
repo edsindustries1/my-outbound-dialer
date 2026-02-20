@@ -6,6 +6,7 @@ Handles web dashboard, file uploads, webhook processing, and campaign control.
 import os
 import csv
 import io
+import re
 import logging
 import threading
 import functools
@@ -30,6 +31,8 @@ from storage import (
     clear_call_history,
     get_voicemail_url,
     save_voicemail_url,
+    get_voice_preset,
+    save_voice_preset,
     pause_for_transfer,
     resume_after_transfer,
     is_transfer_paused,
@@ -271,12 +274,75 @@ def start():
     except (ValueError, TypeError):
         dial_delay = 2
 
-    # ---- Start the campaign ----
-    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min")
-    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay)
-    start_dialer()
+    voicemail_type = request.form.get("voicemail_type", "standard").strip()
 
-    return jsonify({"message": f"Campaign started with {len(numbers)} numbers"})
+    # ---- Start the campaign ----
+    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}")
+    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay)
+
+    if voicemail_type == "personalized":
+        pvm_template_id = request.form.get("pvm_template_id", "").strip()
+        pvm_voice_id = request.form.get("pvm_voice_id", "").strip()
+        pvm_model_id = request.form.get("pvm_model_id", "eleven_turbo_v2_5").strip()
+        pvm_script = ""
+
+        if pvm_template_id:
+            from storage import get_vm_templates as _gvt
+            templates = _gvt()
+            for t in templates:
+                if t.get("id") == pvm_template_id and t.get("type") == "script":
+                    pvm_script = t.get("content", "")
+                    mark_vm_template_used(pvm_template_id)
+                    break
+
+        if not pvm_script:
+            pvm_script = request.form.get("pvm_script", "").strip()
+
+        if not pvm_script:
+            return jsonify({"error": "No personalized voicemail script template selected"}), 400
+        if not pvm_voice_id:
+            preset = get_voice_preset()
+            pvm_voice_id = preset.get("voice_id", "")
+        if not pvm_voice_id:
+            return jsonify({"error": "No voice selected for personalized voicemail"}), 400
+
+        pvm_stability = int(request.form.get("pvm_stability", "35"))
+        pvm_similarity = int(request.form.get("pvm_similarity", "80"))
+        pvm_style = int(request.form.get("pvm_style", "15"))
+        pvm_speed = int(request.form.get("pvm_speed", "82"))
+        pvm_humanize = request.form.get("pvm_humanize", "true") == "true"
+
+        _detect_and_set_base_url()
+        base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+
+        csv_file = request.files.get("csv_file")
+        csv_content = ""
+        if csv_file and csv_file.filename:
+            csv_file.seek(0)
+            csv_content = csv_file.read().decode("utf-8")
+
+        contacts = []
+        if csv_content:
+            contacts = pvm_parse_csv(csv_content)
+        else:
+            for num in numbers:
+                contacts.append({"phone": num, "first_name": "", "last_name": ""})
+
+        if contacts:
+            voice_settings = {
+                "stability": pvm_stability / 100.0,
+                "similarity_boost": pvm_similarity / 100.0,
+                "style": pvm_style / 100.0,
+                "speed": pvm_speed / 100.0,
+                "use_speaker_boost": True,
+            }
+            ok, msg = pvm_start_generation(contacts, pvm_script, pvm_voice_id, base_url, voice_settings=voice_settings, humanize=pvm_humanize, model_id=pvm_model_id)
+            if not ok:
+                return jsonify({"error": f"Failed to start PVM generation: {msg}"}), 400
+            logger.info(f"PVM generation started for {len(contacts)} contacts during campaign launch")
+
+    start_dialer()
+    return jsonify({"message": f"Campaign started with {len(numbers)} numbers", "voicemail_type": voicemail_type})
 
 
 # ---- Test Call ----
@@ -359,6 +425,31 @@ def save_vm_settings():
     save_voicemail_url(url)
     logger.info(f"Voicemail URL updated: {url}")
     return jsonify({"message": "Voicemail URL saved", "voicemail_url": url})
+
+
+@app.route("/api/voice-preset", methods=["GET"])
+@login_required
+def get_voice_preset_api():
+    preset = get_voice_preset()
+    return jsonify({"preset": preset})
+
+@app.route("/api/voice-preset", methods=["POST"])
+@login_required
+def save_voice_preset_api():
+    data = request.get_json() or {}
+    preset = {
+        "voice_id": data.get("voice_id", ""),
+        "model_id": data.get("model_id", "eleven_turbo_v2_5"),
+        "stability": data.get("stability", 35),
+        "similarity": data.get("similarity", 80),
+        "style": data.get("style", 15),
+        "speed": data.get("speed", 82),
+        "humanize": data.get("humanize", True),
+        "speaker_boost": data.get("speaker_boost", True),
+    }
+    save_voice_preset(preset)
+    logger.info(f"Voice preset saved: {preset.get('voice_id')}")
+    return jsonify({"message": "Voice preset saved", "preset": preset})
 
 
 # ---- Clear Call Logs ----
@@ -582,6 +673,10 @@ def api_vm_template_create():
         return jsonify({"error": "Type must be 'audio_url' or 'script'"}), 400
     if not content:
         return jsonify({"error": "Content is required"}), 400
+    from storage import get_vm_templates as _get_vmt
+    existing = _get_vmt()
+    if len(existing) >= 5:
+        return jsonify({"error": "Maximum 5 templates allowed. Delete one to create a new one."}), 400
     template = save_vm_template({"name": name, "type": ttype, "content": content})
     logger.info(f"VM template created: {name} ({template['id']})")
     return jsonify({"template": template})
@@ -1073,6 +1168,18 @@ def webhook():
                 if audio_url:
                     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
                     play_audio(call_control_id, audio_url)
+                    pvm_script_text = None
+                    if personalized_url and customer_number:
+                        audio_map = pvm_get_audio_map()
+                        digits = re.sub(r'[^\d+]', '', customer_number)
+                        for key, val in audio_map.items():
+                            if key.lstrip("+") == digits.lstrip("+"):
+                                pvm_script_text = val.get("script", "")
+                                break
+                    if pvm_script_text:
+                        append_transcript(call_control_id, pvm_script_text, track="outbound", is_final=True)
+                    else:
+                        append_transcript(call_control_id, "[Voicemail audio playing]", track="outbound", is_final=True)
                 else:
                     logger.error(f"No audio URL configured for voicemail on {call_control_id}")
                     update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")

@@ -322,9 +322,53 @@
                                     <p class="wiz-vm-hint">Leave empty to use your saved default voicemail URL.</p>
                                 </div>
                                 <div id="wizVmPersonalized" style="display:none;">
-                                    <p class="wiz-vm-desc">AI-generated unique voicemail for each contact. Configure in the Voicemails page first, then come back here.</p>
-                                    <div class="wiz-pvm-status" id="wizPvmStatus">
-                                        <span>Checking personalized voicemails...</span>
+                                    <p class="wiz-vm-desc">AI-generated unique voicemail for each contact. Select a script template and voice - voicemails will be auto-generated when the campaign launches.</p>
+                                    <div class="pvm-section" style="margin-top:12px;">
+                                        <label>Select Script Template</label>
+                                        <select id="wizPvmTemplateDropdown" class="gads-select" onchange="wizPvmTemplateChanged()">
+                                            <option value="">-- Select a script template --</option>
+                                        </select>
+                                        <div id="wizPvmTemplatePreview" class="wiz-vm-template-preview" style="display:none;margin-top:8px;padding:10px;background:var(--gads-bg);border-radius:8px;font-size:13px;"></div>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:12px;">
+                                        <label>Select Voice</label>
+                                        <div class="pvm-voice-row">
+                                            <select id="wizPvmVoiceSelect" class="gads-select"><option value="">Loading voices...</option></select>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="wizPvmLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                                        </div>
+                                    </div>
+                                    <details class="pvm-voice-details" style="margin-top:8px;">
+                                        <summary style="cursor:pointer;font-size:13px;color:var(--gads-text-secondary);user-select:none;">Voice Controls</summary>
+                                        <div class="pvm-voice-controls" style="margin-top:8px;">
+                                            <div class="pvm-slider-group">
+                                                <div class="pvm-slider-header"><label>TTS Model</label></div>
+                                                <select id="wizPvmModel" class="gads-select">
+                                                    <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
+                                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                                    <option value="eleven_english_v1">English v1 (Classic)</option>
+                                                </select>
+                                            </div>
+                                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="wizPvmStabilityVal">0.35</span></div><input type="range" id="wizPvmStability" min="0" max="100" value="35" class="pvm-slider" oninput="wizPvmUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>Variable</span><span>Stable</span></div></div>
+                                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="wizPvmSimilarityVal">0.80</span></div><input type="range" id="wizPvmSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="wizPvmUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
+                                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Style</label><span class="pvm-slider-value" id="wizPvmStyleVal">0.15</span></div><input type="range" id="wizPvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="wizPvmUpdateSlider('Style')"><div class="pvm-slider-labels"><span>None</span><span>Expressive</span></div></div>
+                                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="wizPvmSpeedVal">0.82</span></div><input type="range" id="wizPvmSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="wizPvmUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
+                                            <div class="pvm-toggles-compact">
+                                                <div class="pvm-toggle-row"><label class="pvm-toggle-label"><input type="checkbox" id="wizPvmHumanize" checked><span class="pvm-toggle-switch"></span> Natural Speech</label></div>
+                                            </div>
+                                        </div>
+                                    </details>
+                                    <input type="hidden" name="voicemail_type" id="wizVoicemailType" value="standard">
+                                    <input type="hidden" name="pvm_template_id" id="wizPvmTemplateId" value="">
+                                    <input type="hidden" name="pvm_voice_id" id="wizPvmVoiceId" value="">
+                                    <input type="hidden" name="pvm_model_id" id="wizPvmModelId" value="">
+                                    <input type="hidden" name="pvm_stability" id="wizPvmStabilityHidden" value="35">
+                                    <input type="hidden" name="pvm_similarity" id="wizPvmSimilarityHidden" value="80">
+                                    <input type="hidden" name="pvm_style" id="wizPvmStyleHidden" value="15">
+                                    <input type="hidden" name="pvm_speed" id="wizPvmSpeedHidden" value="82">
+                                    <input type="hidden" name="pvm_humanize" id="wizPvmHumanizeHidden" value="true">
+                                    <div class="wiz-pvm-status" id="wizPvmStatus" style="margin-top:12px;">
+                                        <span style="font-size:13px;color:var(--gads-text-secondary);">Voicemails will be generated automatically when you launch the campaign.</span>
                                     </div>
                                 </div>
                             </div>
@@ -500,117 +544,9 @@
                         <div class="gads-card-header">
                             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Personalized Voicemail (AI)</h3>
                         </div>
-
-                        <div class="pvm-section">
-                            <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Customer CSV</div>
-                            <p class="pvm-hint">Columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
-                            <div class="pvm-upload-area">
-                                <input type="file" id="pvmCsvFile" accept=".csv,.txt" style="display:none" onchange="pvmParseCSV()">
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="document.getElementById('pvmCsvFile').click()">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                    Upload CSV
-                                </button>
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="pvmDownloadSample()" title="Download sample CSV">Sample CSV</button>
-                                <span class="pvm-file-name" id="pvmFileName">No file selected</span>
-                            </div>
-                            <div id="pvmCsvResult" style="display:none;">
-                                <div class="pvm-csv-stats" id="pvmCsvStats"></div>
-                                <div class="pvm-csv-preview" id="pvmCsvPreview"></div>
-                            </div>
-                        </div>
-
-                        <div class="pvm-section">
-                            <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Voicemail Script</div>
-                            <p class="pvm-hint">Click tags to insert placeholders into your script.</p>
-                            <div class="pvm-placeholders" id="pvmPlaceholders">
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('first_name')">{first_name}</span>
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('last_name')">{last_name}</span>
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('amount')">{amount}</span>
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('date')">{date}</span>
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('email')">{email}</span>
-                                <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('address')">{address}</span>
-                            </div>
-                            <textarea id="pvmTemplate" class="gads-textarea" rows="6" oninput="pvmUpdateCharCount()" placeholder="Hi {first_name}, this is a friendly reminder about your account..."></textarea>
-                            <div class="pvm-script-meta">
-                                <span id="pvmCharCount">0 characters</span>
-                                <span id="pvmEstDuration">~0s audio</span>
-                            </div>
-                            <div class="pvm-preview-actions">
-                                <div class="pvm-contact-selector" id="pvmContactSelector" style="display:none;">
-                                    <label class="pvm-small-label">Preview as:</label>
-                                    <select id="pvmPreviewContact" class="gads-select" style="flex:1;"></select>
-                                </div>
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="pvmPreview()" style="margin-top:4px;">Preview Text</button>
-                            </div>
-                            <div id="pvmPreviewResult" class="pvm-preview-box" style="display:none;"></div>
-                        </div>
-
-                        <div class="pvm-section">
-                            <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Select Voice</div>
-                            <div class="pvm-voice-row">
-                                <select id="pvmVoiceSelect" class="gads-select"><option value="">Loading voices...</option></select>
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="pvmLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
-                            </div>
-                        </div>
-
-                        <div class="pvm-section">
-                            <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg> Voice Controls</div>
-                            <div class="pvm-voice-controls">
-                                <div class="pvm-slider-group">
-                                    <div class="pvm-slider-header"><label>TTS Model</label></div>
-                                    <select id="pvmModel" class="gads-select">
-                                        <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
-                                        <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
-                                        <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
-                                        <option value="eleven_english_v1">English v1 (Classic)</option>
-                                    </select>
-                                </div>
-                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="pvmStabilityVal">0.35</span></div><input type="range" id="pvmStability" min="0" max="100" value="35" class="pvm-slider" oninput="pvmUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>Variable</span><span>Stable</span></div></div>
-                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="pvmSimilarityVal">0.80</span></div><input type="range" id="pvmSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
-                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Style</label><span class="pvm-slider-value" id="pvmStyleVal">0.15</span></div><input type="range" id="pvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="pvmUpdateSlider('Style')"><div class="pvm-slider-labels"><span>None</span><span>Expressive</span></div></div>
-                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="pvmSpeedVal">0.82</span></div><input type="range" id="pvmSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="pvmUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
-                                <div class="pvm-toggles-compact">
-                                    <div class="pvm-toggle-row"><label class="pvm-toggle-label"><input type="checkbox" id="pvmHumanize" checked><span class="pvm-toggle-switch"></span> Natural Speech</label></div>
-                                    <div class="pvm-toggle-row"><label class="pvm-toggle-label"><input type="checkbox" id="pvmSpeakerBoost" checked><span class="pvm-toggle-switch"></span> Speaker Boost</label></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="pvm-section" id="pvmLivePreviewSection" style="display:none;">
-                            <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Live Voice Preview</div>
-                            <p class="pvm-hint">Hear how it sounds for a specific contact before generating all.</p>
-                            <div class="pvm-live-preview-row">
-                                <select id="pvmLivePreviewContact" class="gads-select" style="flex:1;"></select>
-                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="pvmLivePreviewBtn" onclick="pvmLivePreview()">Generate Preview</button>
-                            </div>
-                            <div id="pvmLivePreviewStatus" class="pvm-live-status" style="display:none;">
-                                <svg class="pvm-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                                <span>Generating voice preview...</span>
-                            </div>
-                            <div id="pvmLivePreviewPlayer" style="display:none;">
-                                <div class="pvm-audio-player-wrap"><audio id="pvmPreviewAudio" controls style="width:100%;border-radius:8px;"></audio></div>
-                                <div class="pvm-preview-script-text" id="pvmPreviewScriptText"></div>
-                            </div>
-                        </div>
-
-                        <div class="pvm-section pvm-actions-section">
-                            <div class="pvm-cost-estimate" id="pvmCostEstimate" style="display:none;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                                <span id="pvmCostText">Estimated cost: ~$0.00</span>
-                            </div>
-                            <button type="button" class="gads-btn gads-btn-primary" id="pvmGenerateBtn" onclick="pvmGenerate()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate All Personalized Voicemails</button>
-                            <div id="pvmProgress" style="display:none;"><div class="pvm-progress-bar"><div class="pvm-progress-fill" id="pvmProgressFill"></div></div><div class="pvm-progress-text" id="pvmProgressText">Generating... 0/0</div></div>
-                            <div id="pvmErrors" class="pvm-errors" style="display:none;"></div>
-                        </div>
-
-                        <div class="pvm-section" id="pvmStep4" style="display:none;">
-                            <div class="pvm-section-label pvm-ready-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Ready to Dial</div>
-                            <div class="pvm-ready-stats" id="pvmReadyStats"></div>
-                            <div class="pvm-ready-actions">
-                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="pvmLoadToDialer()">Load Numbers into Dialer</button>
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="pvmClearAll()">Clear All</button>
-                            </div>
-                        </div>
+                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Create script templates here with placeholders. When you start a campaign, select "Personalized (AI)" voicemail and the system will auto-generate unique voicemails for each contact using your CSV data.</p>
+                        <p class="pvm-hint" style="margin-bottom:8px;">Available placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{amount}</code> <code>{date}</code> <code>{email}</code> <code>{address}</code></p>
+                        <p class="pvm-hint">Script templates are saved in the template library above. Use the "+ Create Template" button and select "Script Template" type.</p>
                     </div>
                 </div>
 
@@ -791,6 +727,39 @@
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Default Voice Preset</h3>
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoicePreset()">Refresh</button>
+                        </div>
+                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Save a default voice to auto-populate when creating personalized voicemail campaigns.</p>
+                        <div class="pvm-section">
+                            <label>Voice</label>
+                            <div class="pvm-voice-row">
+                                <select id="presetVoiceSelect" class="gads-select"><option value="">Loading voices...</option></select>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="presetLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                            </div>
+                        </div>
+                        <div class="pvm-section" style="margin-top:8px;">
+                            <label>TTS Model</label>
+                            <select id="presetModel" class="gads-select">
+                                <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
+                                <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                <option value="eleven_english_v1">English v1 (Classic)</option>
+                            </select>
+                        </div>
+                        <div class="pvm-voice-controls" style="margin-top:8px;">
+                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="presetStabilityVal">0.35</span></div><input type="range" id="presetStability" min="0" max="100" value="35" class="pvm-slider" oninput="presetUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>Variable</span><span>Stable</span></div></div>
+                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="presetSimilarityVal">0.80</span></div><input type="range" id="presetSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="presetUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
+                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="presetSpeedVal">0.82</span></div><input type="range" id="presetSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="presetUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveVoicePreset()">Save Voice Preset</button>
+                            <span id="presetSaveResult" style="margin-left:8px;font-size:13px;"></span>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
                             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Webhook Monitor</h3>
                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadWebhookStatus()">Refresh</button>
                         </div>
@@ -914,6 +883,7 @@
                 if (typeof loadSchedules === 'function') loadSchedules();
                 if (typeof loadTemplates === 'function') loadTemplates();
                 if (typeof loadWebhookStatus === 'function') loadWebhookStatus();
+                if (typeof presetLoadVoices === 'function') presetLoadVoices();
             }
             if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
@@ -1159,8 +1129,8 @@
                 document.getElementById("wizBackBtn").style.display = step > 1 ? "" : "none";
                 document.getElementById("wizNextBtn").style.display = step < wizTotalSteps ? "" : "none";
 
-                if (step === 5) wizPopulateReview();
-                if (step === 3 && wizVmType === "personalized") wizCheckPvm();
+                if (step === 5) { wizPopulateReview(); if (wizVmType === "personalized") wizPvmSyncHiddenFields(); }
+                if (step === 3 && wizVmType === "personalized") { wizPvmLoadScriptTemplates(); wizPvmLoadVoices(); }
             }
 
             function wizardNext() {
@@ -1214,6 +1184,7 @@
                 wizVmType = type;
                 var tabs = document.querySelectorAll(".wiz-vm-tab");
                 tabs.forEach(function(t) { t.classList.remove("active"); });
+                document.getElementById("wizVoicemailType").value = type;
                 if (type === "standard") {
                     tabs[0].classList.add("active");
                     document.getElementById("wizVmStandard").style.display = "";
@@ -1222,23 +1193,9 @@
                     tabs[1].classList.add("active");
                     document.getElementById("wizVmStandard").style.display = "none";
                     document.getElementById("wizVmPersonalized").style.display = "";
-                    wizCheckPvm();
+                    wizPvmLoadScriptTemplates();
+                    wizPvmLoadVoices();
                 }
-            }
-
-            function wizCheckPvm() {
-                var statusEl = document.getElementById("wizPvmStatus");
-                apiFetch("/api/pvm/audio-map")
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) {
-                        if (data.count > 0) {
-                            statusEl.innerHTML = '<span style="color:var(--gads-success);">&#10003; ' + data.count + ' personalized voicemails ready. Numbers will be auto-loaded at launch.</span>';
-                        } else {
-                            statusEl.innerHTML = '<span style="color:var(--gads-text-secondary);">No personalized voicemails generated yet. Go to Voicemails page to create them.</span>';
-                        }
-                    }).catch(function() {
-                        statusEl.innerHTML = '<span style="color:var(--gads-error);">Could not check PVM status.</span>';
-                    });
             }
 
             function wizPopulateReview() {
@@ -1259,6 +1216,11 @@
                     if (audioFile && audioFile.files && audioFile.files.length > 0) vmText += " - " + audioFile.files[0].name;
                     else if (audioUrl && audioUrl.value.trim()) vmText += " - URL";
                     else vmText += " - Saved default";
+                } else {
+                    var pvmTplSel = document.getElementById("wizPvmTemplateDropdown");
+                    if (pvmTplSel && pvmTplSel.selectedIndex > 0) vmText += " - " + pvmTplSel.options[pvmTplSel.selectedIndex].text;
+                    var pvmVoiceSel = document.getElementById("wizPvmVoiceSelect");
+                    if (pvmVoiceSel && pvmVoiceSel.selectedIndex > 0) vmText += " / " + pvmVoiceSel.options[pvmVoiceSel.selectedIndex].text;
                 }
                 document.getElementById("wizReviewVm").textContent = vmText;
                 var tf = document.getElementById("transferNumber");
@@ -1753,19 +1715,13 @@
             form.addEventListener("submit", function(e) {
                 e.preventDefault();
                 if (wizVmType === "personalized") {
-                    apiFetch("/api/pvm/audio-map")
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                            var phones = Object.keys(data.audio_map || {});
-                            if (phones.length > 0) {
-                                var numbersField = document.getElementById("numbersInput");
-                                if (numbersField) numbersField.value = phones.join("\n");
-                            }
-                            doStartCampaign();
-                        }).catch(function() { doStartCampaign(); });
-                } else {
-                    doStartCampaign();
+                    wizPvmSyncHiddenFields();
+                    var tplId = document.getElementById("wizPvmTemplateId").value;
+                    var voiceId = document.getElementById("wizPvmVoiceId").value;
+                    if (!tplId) { showToast("Please select a script template for personalized voicemail", "warning"); return; }
+                    if (!voiceId) { showToast("Please select a voice for personalized voicemail", "warning"); return; }
                 }
+                doStartCampaign();
             });
 
             function doStartCampaign() {
@@ -2461,25 +2417,121 @@
             function checkGmailStatus(){apiFetch("/api/gmail-status").then(function(r){return r.json();}).then(function(d){var dot=document.getElementById("gmailStatusDot");var txt=document.getElementById("gmailStatusText");if(d.connected){dot.style.background="#1e8e3e";txt.textContent="Gmail connected";}else{dot.style.background="#d93025";txt.textContent=d.message||"Gmail not connected";}}).catch(function(e){if(e.message==="auth")return;});}
 
             // ---- PVM ----
-            var pvmContacts=[];var pvmFields=[];var pvmGenInterval=null;
+            var pvmContacts=[];var pvmFields=[];var pvmGenInterval=null;var pvmVoicesCache=[];
             function pvmInit(){pvmLoadVoices();}
-            function pvmLoadVoices(){apiFetch("/api/pvm/voices").then(function(r){return r.json();}).then(function(data){var sel=document.getElementById("pvmVoiceSelect");var html='';(data.voices||[]).forEach(function(v){html+='<option value="'+v.voice_id+'">'+v.name+(v.category?' ('+v.category+')':'')+'</option>';});sel.innerHTML=html||'<option value="">No voices available</option>';}).catch(function(e){if(e.message==="auth")return;});}
-            function pvmParseCSV(){var fileInput=document.getElementById("pvmCsvFile");if(!fileInput.files.length)return;var file=fileInput.files[0];document.getElementById("pvmFileName").textContent=file.name;var formData=new FormData();formData.append("csv_file",file);apiFetch("/api/pvm/parse",{method:"POST",body:formData}).then(function(r){return r.json();}).then(function(data){if(data.error){alert(data.error);return;}pvmContacts=data.contacts||[];pvmFields=data.fields||[];var statsHtml='<div class="pvm-stat-row">';statsHtml+='<div class="pvm-stat"><span class="pvm-stat-num">'+data.total+'</span><span class="pvm-stat-lbl">Contacts</span></div>';statsHtml+='<div class="pvm-stat"><span class="pvm-stat-num">'+pvmFields.length+'</span><span class="pvm-stat-lbl">Fields</span></div>';if(data.errors.length>0){statsHtml+='<div class="pvm-stat pvm-stat-warn"><span class="pvm-stat-num">'+data.errors.length+'</span><span class="pvm-stat-lbl">Warnings</span></div>';}statsHtml+='</div>';document.getElementById("pvmCsvStats").innerHTML=statsHtml;var previewHtml='<table class="pvm-preview-table"><tr>';var showFields=pvmFields.slice(0,7);showFields.forEach(function(f){previewHtml+='<th>'+f+'</th>';});previewHtml+='</tr>';pvmContacts.slice(0,3).forEach(function(c){previewHtml+='<tr>';showFields.forEach(function(f){previewHtml+='<td>'+(c[f]||'-')+'</td>';});previewHtml+='</tr>';});if(pvmContacts.length>3)previewHtml+='<tr><td colspan="'+showFields.length+'" style="text-align:center;opacity:0.6;">... and '+(pvmContacts.length-3)+' more</td></tr>';previewHtml+='</table>';document.getElementById("pvmCsvPreview").innerHTML=previewHtml;document.getElementById("pvmCsvResult").style.display="";var placeholderHtml='';pvmFields.forEach(function(f){placeholderHtml+='<span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder(\''+f+'\')">{'+ f+'}</span>';});document.getElementById("pvmPlaceholders").innerHTML=placeholderHtml;pvmPopulateContactSelectors();document.getElementById("pvmLivePreviewSection").style.display="";document.getElementById("pvmContactSelector").style.display="";pvmUpdateCostEstimate();}).catch(function(e){if(e.message==="auth")return;alert("Failed to parse CSV");});}
-            function pvmPopulateContactSelectors(){var html='';pvmContacts.forEach(function(c,i){var label=(c.first_name||c.name||'')+' '+(c.last_name||'');label=label.trim()||c.phone||('Contact '+(i+1));html+='<option value="'+i+'">'+label+' ('+(c.phone||'')+')</option>';});document.getElementById("pvmPreviewContact").innerHTML=html;document.getElementById("pvmLivePreviewContact").innerHTML=html;}
-            function pvmUpdateSlider(name){var slider=document.getElementById("pvm"+name);var valEl=document.getElementById("pvm"+name+"Val");valEl.textContent=(slider.value/100).toFixed(2);}
-            function pvmGetVoiceSettings(){return{stability:parseInt(document.getElementById("pvmStability").value)/100,similarity_boost:parseInt(document.getElementById("pvmSimilarity").value)/100,style:parseInt(document.getElementById("pvmStyle").value)/100,speed:parseInt(document.getElementById("pvmSpeed").value)/100,use_speaker_boost:document.getElementById("pvmSpeakerBoost").checked};}
-            function pvmGetModelId(){return document.getElementById("pvmModel").value;}
-            function pvmGetHumanize(){return document.getElementById("pvmHumanize").checked;}
-            function pvmUpdateCharCount(){var text=document.getElementById("pvmTemplate").value;var charCount=text.length;document.getElementById("pvmCharCount").textContent=charCount+" characters";var estSeconds=Math.ceil(charCount/15);document.getElementById("pvmEstDuration").textContent="~"+estSeconds+"s audio";pvmUpdateCostEstimate();}
-            function pvmUpdateCostEstimate(){var text=document.getElementById("pvmTemplate").value;var charCount=text.length;var costEl=document.getElementById("pvmCostEstimate");if(pvmContacts.length>0&&charCount>0){var totalChars=charCount*pvmContacts.length;var cost=(totalChars/1000)*0.30;document.getElementById("pvmCostText").textContent="Estimated cost: ~$"+cost.toFixed(2)+" for "+pvmContacts.length+" voicemails ("+totalChars.toLocaleString()+" chars)";costEl.style.display="";}else{costEl.style.display="none";}}
-            function pvmDownloadSample(){var csv="First name,Last name,email,phone,address,amount,date\n";csv+="John,Smith,john@example.com,+15551234567,123 Main St,$500.00,2026-01-15\n";csv+="Jane,Doe,jane@example.com,+15559876543,456 Oak Ave,$750.00,2026-02-01\n";csv+="Bob,Johnson,bob@example.com,+15551112222,789 Pine Rd,$1200.00,2026-01-28\n";var blob=new Blob([csv],{type:"text/csv"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="sample_contacts.csv";a.click();URL.revokeObjectURL(url);}
-            function pvmLivePreview(){var template=document.getElementById("pvmTemplate").value;var voiceId=document.getElementById("pvmVoiceSelect").value;var contactIdx=parseInt(document.getElementById("pvmLivePreviewContact").value)||0;if(!template){alert("Please write a voicemail script first");return;}if(!voiceId){alert("Please select a voice first");return;}if(pvmContacts.length===0){alert("Please upload a CSV first");return;}var contact=pvmContacts[contactIdx];document.getElementById("pvmLivePreviewBtn").disabled=true;document.getElementById("pvmLivePreviewStatus").style.display="";document.getElementById("pvmLivePreviewPlayer").style.display="none";apiFetch("/api/pvm/preview-audio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({template:template,contact:contact,voice_id:voiceId,voice_settings:pvmGetVoiceSettings(),humanize:pvmGetHumanize(),model_id:pvmGetModelId()})}).then(function(r){return r.json();}).then(function(data){document.getElementById("pvmLivePreviewBtn").disabled=false;document.getElementById("pvmLivePreviewStatus").style.display="none";if(data.error){alert("Preview failed: "+data.error);return;}var audio=document.getElementById("pvmPreviewAudio");audio.src=data.audio_url;document.getElementById("pvmPreviewScriptText").innerHTML='<strong>Script:</strong> '+(data.script||'').replace(/\n/g,'<br>');document.getElementById("pvmLivePreviewPlayer").style.display="";audio.play();if(typeof showToast==='function')showToast("Voice preview ready!","success");}).catch(function(e){document.getElementById("pvmLivePreviewBtn").disabled=false;document.getElementById("pvmLivePreviewStatus").style.display="none";if(e.message==="auth")return;alert("Failed to generate voice preview");});}
-            function pvmInsertPlaceholder(field){var ta=document.getElementById("pvmTemplate");var start=ta.selectionStart;var end=ta.selectionEnd;var text=ta.value;var insert="{"+field+"}";ta.value=text.substring(0,start)+insert+text.substring(end);ta.focus();ta.selectionStart=ta.selectionEnd=start+insert.length;}
-            function pvmPreview(){var template=document.getElementById("pvmTemplate").value;if(!template){alert("Please write a template first");return;}if(pvmContacts.length===0){alert("Please upload a CSV first");return;}var contactIdx=parseInt(document.getElementById("pvmPreviewContact").value)||0;var contact=pvmContacts[contactIdx];var contactName=(contact.first_name||contact.name||'')+' '+(contact.last_name||'');contactName=contactName.trim()||'Contact '+(contactIdx+1);apiFetch("/api/pvm/preview",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({template:template,contact:contact,humanize:pvmGetHumanize()})}).then(function(r){return r.json();}).then(function(data){var box=document.getElementById("pvmPreviewResult");box.style.display="";box.innerHTML='<strong>Preview for '+contactName+':</strong><p>'+(data.rendered||"").replace(/\n/g,'<br>')+'</p>';}).catch(function(e){if(e.message==="auth")return;});}
-            function pvmGenerate(){var template=document.getElementById("pvmTemplate").value;var voiceId=document.getElementById("pvmVoiceSelect").value;if(!template){alert("Please write a template first");return;}if(!voiceId){alert("Please select a voice");return;}if(pvmContacts.length===0){alert("Please upload a CSV first");return;}document.getElementById("pvmGenerateBtn").disabled=true;document.getElementById("pvmProgress").style.display="";document.getElementById("pvmErrors").style.display="none";apiFetch("/api/pvm/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contacts:pvmContacts,template:template,voice_id:voiceId,voice_settings:pvmGetVoiceSettings(),humanize:pvmGetHumanize(),model_id:pvmGetModelId()})}).then(function(r){return r.json();}).then(function(data){if(data.error){alert(data.error);document.getElementById("pvmGenerateBtn").disabled=false;return;}pvmGenInterval=setInterval(pvmPollProgress,2000);}).catch(function(e){if(e.message==="auth")return;document.getElementById("pvmGenerateBtn").disabled=false;alert("Failed to start generation");});}
-            function pvmPollProgress(){apiFetch("/api/pvm/status").then(function(r){return r.json();}).then(function(data){var pct=data.total>0?Math.round((data.completed/data.total)*100):0;document.getElementById("pvmProgressFill").style.width=pct+"%";document.getElementById("pvmProgressText").textContent="Generating... "+data.completed+"/"+data.total;if(data.errors&&data.errors.length>0){var errDiv=document.getElementById("pvmErrors");errDiv.style.display="";errDiv.innerHTML='<strong>Errors:</strong><br>'+data.errors.map(function(e){return'<span class="pvm-error-item">'+e+'</span>';}).join('<br>');}if(data.status==="complete"||data.status==="error"){clearInterval(pvmGenInterval);document.getElementById("pvmGenerateBtn").disabled=false;if(data.status==="complete"){document.getElementById("pvmProgressText").textContent="Complete! "+data.completed+"/"+data.total+" voicemails generated";document.getElementById("pvmStep4").style.display="";document.getElementById("pvmReadyStats").innerHTML='<span class="pvm-ready-count">'+data.completed+'</span> personalized voicemails ready to go';}}}).catch(function(){});}
-            function pvmLoadToDialer(){apiFetch("/api/pvm/audio-map").then(function(r){return r.json();}).then(function(data){var phones=Object.keys(data.audio_map||{});if(phones.length===0){alert("No personalized voicemails found.");return;}var numbersField=document.getElementById("numbersInput");if(numbersField){numbersField.value=phones.join("\n");}alert(phones.length+" phone numbers loaded into the dialer!");}).catch(function(e){if(e.message==="auth")return;});}
-            function pvmClearAll(){if(!confirm("Delete all generated personalized voicemail audio files?"))return;apiFetch("/api/pvm/clear",{method:"POST"}).then(function(r){return r.json();}).then(function(){document.getElementById("pvmStep4").style.display="none";document.getElementById("pvmProgress").style.display="none";document.getElementById("pvmErrors").style.display="none";pvmContacts=[];pvmFields=[];alert("All personalized audio cleared");}).catch(function(e){if(e.message==="auth")return;});}
+            function pvmLoadVoices(){apiFetch("/api/pvm/voices").then(function(r){return r.json();}).then(function(data){pvmVoicesCache=data.voices||[];}).catch(function(e){if(e.message==="auth")return;});}
+
+            // ---- Voice Preset ----
+            function renderVoiceOptions(selectEl, voices, selectedId) {
+                var html = '<option value="">-- Select a voice --</option>';
+                (voices || []).forEach(function(v) {
+                    var sel = v.voice_id === selectedId ? ' selected' : '';
+                    html += '<option value="' + v.voice_id + '"' + sel + '>' + v.name + (v.category ? ' (' + v.category + ')' : '') + '</option>';
+                });
+                selectEl.innerHTML = html;
+            }
+            function presetLoadVoices() {
+                apiFetch("/api/pvm/voices").then(function(r){return r.json();}).then(function(data){
+                    pvmVoicesCache = data.voices || [];
+                    renderVoiceOptions(document.getElementById("presetVoiceSelect"), pvmVoicesCache, "");
+                    loadVoicePreset();
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+            function presetUpdateSlider(name) {
+                var slider = document.getElementById("preset" + name);
+                var valEl = document.getElementById("preset" + name + "Val");
+                if (name === "Speed") valEl.textContent = (slider.value / 100).toFixed(2);
+                else valEl.textContent = (slider.value / 100).toFixed(2);
+            }
+            function loadVoicePreset() {
+                apiFetch("/api/voice-preset").then(function(r){return r.json();}).then(function(data){
+                    var p = data.preset || {};
+                    if (p.voice_id && pvmVoicesCache.length > 0) {
+                        renderVoiceOptions(document.getElementById("presetVoiceSelect"), pvmVoicesCache, p.voice_id);
+                    }
+                    if (p.model_id) document.getElementById("presetModel").value = p.model_id;
+                    if (p.stability !== undefined) { document.getElementById("presetStability").value = p.stability; presetUpdateSlider("Stability"); }
+                    if (p.similarity !== undefined) { document.getElementById("presetSimilarity").value = p.similarity; presetUpdateSlider("Similarity"); }
+                    if (p.speed !== undefined) { document.getElementById("presetSpeed").value = p.speed; presetUpdateSlider("Speed"); }
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+            function saveVoicePreset() {
+                var data = {
+                    voice_id: document.getElementById("presetVoiceSelect").value,
+                    model_id: document.getElementById("presetModel").value,
+                    stability: parseInt(document.getElementById("presetStability").value),
+                    similarity: parseInt(document.getElementById("presetSimilarity").value),
+                    speed: parseInt(document.getElementById("presetSpeed").value),
+                };
+                if (!data.voice_id) { alert("Please select a voice"); return; }
+                apiFetch("/api/voice-preset", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(data) })
+                .then(function(r){return r.json();}).then(function(d) {
+                    document.getElementById("presetSaveResult").innerHTML = '<span style="color:var(--gads-success);">Preset saved!</span>';
+                    setTimeout(function(){ document.getElementById("presetSaveResult").textContent = ""; }, 3000);
+                    showToast("Voice preset saved", "success");
+                }).catch(function(e){ if(e.message==="auth") return; });
+            }
+
+            // ---- Wizard PVM Functions ----
+            function wizPvmLoadVoices() {
+                apiFetch("/api/pvm/voices").then(function(r){return r.json();}).then(function(data){
+                    pvmVoicesCache = data.voices || [];
+                    apiFetch("/api/voice-preset").then(function(r2){return r2.json();}).then(function(pd){
+                        var preset = pd.preset || {};
+                        renderVoiceOptions(document.getElementById("wizPvmVoiceSelect"), pvmVoicesCache, preset.voice_id || "");
+                        if (preset.model_id) document.getElementById("wizPvmModel").value = preset.model_id;
+                        if (preset.stability !== undefined) { document.getElementById("wizPvmStability").value = preset.stability; wizPvmUpdateSlider("Stability"); }
+                        if (preset.similarity !== undefined) { document.getElementById("wizPvmSimilarity").value = preset.similarity; wizPvmUpdateSlider("Similarity"); }
+                        if (preset.style !== undefined) { document.getElementById("wizPvmStyle").value = preset.style; wizPvmUpdateSlider("Style"); }
+                        if (preset.speed !== undefined) { document.getElementById("wizPvmSpeed").value = preset.speed; wizPvmUpdateSlider("Speed"); }
+                    }).catch(function(){});
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+            function wizPvmUpdateSlider(name) {
+                var slider = document.getElementById("wizPvm" + name);
+                var valEl = document.getElementById("wizPvm" + name + "Val");
+                valEl.textContent = (slider.value / 100).toFixed(2);
+            }
+            function wizPvmLoadScriptTemplates() {
+                apiFetch("/api/vm-templates").then(function(r){return r.json();}).then(function(data){
+                    var templates = (data.templates || []).filter(function(t){ return t.type === "script"; });
+                    var sel = document.getElementById("wizPvmTemplateDropdown");
+                    var html = '<option value="">-- Select a script template --</option>';
+                    templates.forEach(function(t){
+                        html += '<option value="' + t.id + '">' + (t.name || "Untitled").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</option>';
+                    });
+                    sel.innerHTML = html;
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+            var wizPvmScriptTemplates = {};
+            function wizPvmTemplateChanged() {
+                var sel = document.getElementById("wizPvmTemplateDropdown");
+                var id = sel.value;
+                document.getElementById("wizPvmTemplateId").value = id;
+                var preview = document.getElementById("wizPvmTemplatePreview");
+                if (!id) { preview.style.display = "none"; return; }
+                apiFetch("/api/vm-templates").then(function(r){return r.json();}).then(function(data){
+                    var templates = data.templates || [];
+                    for (var i = 0; i < templates.length; i++) {
+                        if (templates[i].id === id) {
+                            preview.style.display = "";
+                            preview.innerHTML = '<strong>Script:</strong><br>' + (templates[i].content || "").replace(/\{(\w+)\}/g, '<code>{$1}</code>').replace(/\n/g, '<br>');
+                            return;
+                        }
+                    }
+                    preview.style.display = "none";
+                }).catch(function(){});
+            }
+            function wizPvmSyncHiddenFields() {
+                document.getElementById("wizVoicemailType").value = wizVmType;
+                document.getElementById("wizPvmVoiceId").value = document.getElementById("wizPvmVoiceSelect").value;
+                document.getElementById("wizPvmModelId").value = document.getElementById("wizPvmModel").value;
+                document.getElementById("wizPvmStabilityHidden").value = document.getElementById("wizPvmStability").value;
+                document.getElementById("wizPvmSimilarityHidden").value = document.getElementById("wizPvmSimilarity").value;
+                document.getElementById("wizPvmStyleHidden").value = document.getElementById("wizPvmStyle").value;
+                document.getElementById("wizPvmSpeedHidden").value = document.getElementById("wizPvmSpeed").value;
+                document.getElementById("wizPvmHumanizeHidden").value = document.getElementById("wizPvmHumanize").checked ? "true" : "false";
+            }
 
             // ---- iPhone Live Dialer ----
             var iphoneDragging=false;var iphoneOffX=0,iphoneOffY=0;var iphoneCallTimerInterval=null;var iphoneCallStart=null;var iphoneLogHistory=[];var iphonePrevCallId=null;var iphoneRotating=false;var iphoneRotStartX=0;var iphoneRotCurrentY=0;var iphoneRotVelocity=0;var iphoneRotLastX=0;var iphoneRotLastTime=0;var iphoneRotMomentumId=null;
