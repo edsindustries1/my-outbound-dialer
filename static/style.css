@@ -4432,127 +4432,112 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 30%, #1a0a00 0%, #000 100%);
+    background: #1C1C1E;
     z-index: 20;
     overflow: hidden;
+    padding: 0 20px;
     animation: hotleadFadeIn 0.4s ease forwards;
 }
 @keyframes hotleadFadeIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
-.hotlead-glow {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 220px;
-    height: 220px;
+.hotlead-caller-name {
+    font-family: -apple-system, 'SF Pro Display', 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #FFFFFF;
+    margin-top: 28%;
+    letter-spacing: 0.3px;
+    text-align: center;
+}
+.hotlead-caller-location {
+    font-family: -apple-system, 'SF Pro Text', 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    margin-top: 6px;
+    text-align: center;
+    letter-spacing: 0.2px;
+}
+.hotlead-mid-actions {
+    display: flex;
+    gap: 60px;
+    margin-top: auto;
+    margin-bottom: 28px;
+}
+.hotlead-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.hotlead-action-btn span {
+    font-family: -apple-system, 'SF Pro Text', 'Inter', sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.1px;
+}
+.hotlead-action-icon {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,100,0,0.35) 0%, rgba(255,60,0,0.15) 40%, transparent 70%);
-    animation: hotleadGlowPulse 1.5s ease-in-out infinite;
-}
-@keyframes hotleadGlowPulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-    50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
-}
-.hotlead-icon-wrap {
-    position: relative;
-    width: 90px;
-    height: 90px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
-    z-index: 2;
 }
-.hotlead-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 100, 0, 0.4);
-    animation: hotleadRingExpand 2s ease-out infinite;
+.hotlead-remind {
+    background: rgba(255,255,255,0.12);
 }
-.hotlead-ring-1 { width: 60px; height: 60px; animation-delay: 0s; }
-.hotlead-ring-2 { width: 60px; height: 60px; animation-delay: 0.6s; }
-.hotlead-ring-3 { width: 60px; height: 60px; animation-delay: 1.2s; }
-@keyframes hotleadRingExpand {
-    0% { transform: scale(1); opacity: 0.7; }
-    100% { transform: scale(2.5); opacity: 0; }
+.hotlead-message {
+    background: rgba(255,255,255,0.12);
 }
-.hotlead-fire {
-    font-size: 48px;
-    z-index: 3;
-    animation: hotleadFireBounce 0.6s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 12px rgba(255,80,0,0.6));
-}
-@keyframes hotleadFireBounce {
-    from { transform: scale(1) translateY(0); }
-    to { transform: scale(1.12) translateY(-4px); }
-}
-.hotlead-title {
-    font-family: 'Sora', 'Inter', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: 4px;
-    color: #FF6B00;
-    text-shadow: 0 0 20px rgba(255,100,0,0.6), 0 0 40px rgba(255,60,0,0.3);
-    z-index: 2;
-    animation: hotleadTitleFlash 1s ease-in-out infinite alternate;
-}
-@keyframes hotleadTitleFlash {
-    from { color: #FF6B00; text-shadow: 0 0 20px rgba(255,100,0,0.6); }
-    to { color: #FFAA40; text-shadow: 0 0 30px rgba(255,150,0,0.8), 0 0 60px rgba(255,80,0,0.4); }
-}
-.hotlead-subtitle {
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-    margin-top: 6px;
-    z-index: 2;
-    animation: hotleadSubPulse 1s ease-in-out infinite alternate;
-}
-@keyframes hotleadSubPulse {
-    from { opacity: 0.7; }
-    to { opacity: 1; }
-}
-.hotlead-number {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    color: rgba(255,255,255,0.7);
-    margin-top: 10px;
-    z-index: 2;
-    letter-spacing: 1px;
-}
-.hotlead-pulse-bar {
-    width: 140px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.1);
-    margin-top: 18px;
-    overflow: hidden;
-    z-index: 2;
-}
-.hotlead-pulse-fill {
+.hotlead-slide-wrapper {
     width: 100%;
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, #FF6B00, #FFaa40);
-    animation: hotleadBarShrink 3s linear forwards;
+    padding: 0 8px;
+    margin-bottom: 32px;
 }
-@keyframes hotleadBarShrink {
-    from { transform: scaleX(1); transform-origin: left; }
-    to { transform: scaleX(0); transform-origin: left; }
+.hotlead-slide-track {
+    position: relative;
+    width: 100%;
+    height: 56px;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
 }
-.hotlead-transfer-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 10px;
+.hotlead-slide-thumb {
+    position: absolute;
+    left: 4px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 2;
+    animation: hotleadThumbPulse 2s ease-in-out infinite;
+}
+@keyframes hotleadThumbPulse {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+}
+.hotlead-slide-text {
+    font-family: -apple-system, 'SF Pro Text', 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.35);
+    width: 100%;
+    text-align: center;
+    letter-spacing: 0.5px;
+    z-index: 1;
+}
+.hotlead-slide-green {
+    color: #30D158;
 }
 .iphone-3d-wrapper.hotlead-expand {
     animation: iphoneHotleadExpand 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
