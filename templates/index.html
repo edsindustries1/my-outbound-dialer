@@ -1520,6 +1520,22 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="iphone-hotlead-screen" id="iphoneHotLeadScreen" style="display:none;">
+                            <div class="hotlead-glow"></div>
+                            <div class="hotlead-icon-wrap">
+                                <div class="hotlead-ring hotlead-ring-1"></div>
+                                <div class="hotlead-ring hotlead-ring-2"></div>
+                                <div class="hotlead-ring hotlead-ring-3"></div>
+                                <div class="hotlead-fire">&#128293;</div>
+                            </div>
+                            <div class="hotlead-title">HOT LEAD</div>
+                            <div class="hotlead-subtitle">Pick Up Now</div>
+                            <div class="hotlead-number" id="hotleadNumber"></div>
+                            <div class="hotlead-pulse-bar">
+                                <div class="hotlead-pulse-fill"></div>
+                            </div>
+                            <div class="hotlead-transfer-label">Transferring to you...</div>
+                        </div>
                         <div class="iphone-call-log" id="iphoneCallLog">
                             <div class="iphone-log-title">Recent Activity</div>
                             <div class="iphone-log-entries" id="iphoneLogEntries"></div>
@@ -3240,19 +3256,90 @@
             })();
 
             var iphoneMinimized = false;
+            var hotleadShownIds = {};
+            var hotleadAutoMinTimer = null;
+            var hotleadAnimating = false;
+
             function iphoneToggleMinimize() {
                 var dialer = document.getElementById("iphoneDialer");
                 var iFab = document.getElementById("iphoneFab");
                 iphoneMinimized = !iphoneMinimized;
                 if (iphoneMinimized) {
+                    dialer.classList.remove("hotlead-expand");
                     dialer.style.display = "none";
                     iFab.classList.add("visible");
                     if (typeof ballsStartIphone === "function") ballsStartIphone();
                 } else {
                     dialer.style.display = "";
+                    dialer.classList.remove("hotlead-expand", "hotlead-collapse");
                     iFab.classList.remove("visible", "floating");
                     if (typeof ballsStopIphone === "function") ballsStopIphone();
                 }
+            }
+
+            function hotleadDismiss() {
+                var dialer = document.getElementById("iphoneDialer");
+                var hlScreen = document.getElementById("iphoneHotLeadScreen");
+                hlScreen.style.display = "none";
+                dialer.classList.remove("hotlead-expand");
+                dialer.classList.add("hotlead-collapse");
+                hotleadAnimating = false;
+                setTimeout(function() {
+                    dialer.classList.remove("hotlead-collapse");
+                    dialer.style.display = "none";
+                    iphoneMinimized = true;
+                    var iFab = document.getElementById("iphoneFab");
+                    iFab.classList.add("visible");
+                    if (typeof ballsStartIphone === "function") ballsStartIphone();
+                }, 400);
+            }
+
+            function hotleadNotify(number) {
+                if (hotleadAnimating) return;
+                hotleadAnimating = true;
+                if (hotleadAutoMinTimer) clearTimeout(hotleadAutoMinTimer);
+
+                var dialer = document.getElementById("iphoneDialer");
+                var iFab = document.getElementById("iphoneFab");
+                var hlScreen = document.getElementById("iphoneHotLeadScreen");
+                var hlNumber = document.getElementById("hotleadNumber");
+
+                hlNumber.textContent = iphoneFormatNumber(number);
+
+                document.getElementById("iphoneIdleScreen").style.display = "none";
+                document.getElementById("iphoneCallScreen").style.display = "none";
+                hlScreen.style.display = "flex";
+                hlScreen.style.animation = "none";
+                void hlScreen.offsetWidth;
+                hlScreen.style.animation = "";
+
+                var pulseFill = hlScreen.querySelector(".hotlead-pulse-fill");
+                if (pulseFill) {
+                    pulseFill.style.animation = "none";
+                    void pulseFill.offsetWidth;
+                    pulseFill.style.animation = "hotleadBarShrink 3s linear forwards";
+                }
+
+                if (iphoneMinimized) {
+                    iFab.classList.remove("visible", "floating");
+                    iFab.classList.add("hotlead-alert");
+                    if (typeof ballsStopIphone === "function") ballsStopIphone();
+                    iphoneMinimized = false;
+
+                    dialer.style.display = "";
+                    dialer.classList.remove("hotlead-collapse");
+                    dialer.classList.add("hotlead-expand");
+                } else {
+                    dialer.classList.remove("hotlead-collapse");
+                }
+
+                setTimeout(function() {
+                    iFab.classList.remove("hotlead-alert");
+                }, 1500);
+
+                hotleadAutoMinTimer = setTimeout(function() {
+                    hotleadDismiss();
+                }, 3000);
             }
 
             function iphoneFormatNumber(num) {
@@ -3289,6 +3376,17 @@
                     return;
                 }
 
+                calls.forEach(function(c) {
+                    if (c.status === "transferred" && c.call_id && !hotleadShownIds[c.call_id]) {
+                        hotleadShownIds[c.call_id] = true;
+                        hotleadNotify(c.number || "");
+                    }
+                });
+
+                if (hotleadAnimating) {
+                    return;
+                }
+
                 var liveCalls = calls.filter(function(c) { return c.is_live; });
                 var activeCalls = liveCalls.filter(function(c) {
                     return c.status !== "completed" && c.status !== "hangup";
@@ -3310,6 +3408,7 @@
             function iphoneShowIdle() {
                 document.getElementById("iphoneIdleScreen").style.display = "flex";
                 document.getElementById("iphoneCallScreen").style.display = "none";
+                document.getElementById("iphoneHotLeadScreen").style.display = "none";
                 var di = document.getElementById("iphoneDynIsland");
                 di.classList.remove("di-active");
                 iphoneStopTimer();
@@ -3319,6 +3418,7 @@
             function iphoneShowCall(call) {
                 document.getElementById("iphoneIdleScreen").style.display = "none";
                 document.getElementById("iphoneCallScreen").style.display = "flex";
+                document.getElementById("iphoneHotLeadScreen").style.display = "none";
 
                 if (call.call_id !== iphonePrevCallId) {
                     iphoneStartTimer();
