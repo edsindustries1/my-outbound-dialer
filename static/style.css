@@ -3438,27 +3438,33 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 /* ---- iPhone 17 Pro Max Dialer Widget ---- */
+/* ============================================
+   iPhone 17 Pro Max Silver - Realistic 3D Widget
+   Real dimensions ratio: 163mm × 77.6mm (2.1:1)
+   Widget: 270px × 580px
+   ============================================ */
 .iphone-3d-wrapper {
     position: fixed;
-    bottom: 30px;
-    right: 100px;
+    bottom: 20px;
+    right: 90px;
     z-index: 10000;
-    perspective: 1200px;
+    perspective: 1500px;
+    perspective-origin: 50% 50%;
     cursor: default;
     user-select: none;
-    animation: iphoneSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: iphoneSlideIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .iphone-3d-body {
-    width: 280px;
-    height: 570px;
+    width: 270px;
+    height: 580px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .iphone-3d-wrapper.minimized .iphone-3d-body {
-    transform: rotateY(180deg) scale(0.6);
+    transform: rotateY(180deg) scale(0.55) translateY(30px);
 }
 
 .iphone-3d-wrapper.minimized {
@@ -3467,20 +3473,20 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-resting-shadow {
     position: absolute;
-    bottom: -20px;
-    left: 10%;
-    width: 80%;
-    height: 20px;
+    bottom: -25px;
+    left: 5%;
+    width: 90%;
+    height: 25px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 40%, transparent 70%);
     opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     pointer-events: none;
 }
 
 .iphone-3d-wrapper.minimized .iphone-resting-shadow {
     opacity: 1;
-    transform: scaleX(1.3) scaleY(1.5);
+    transform: scaleX(1.2) scaleY(1.4);
 }
 
 .iphone-front,
@@ -3492,7 +3498,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 55px;
+    border-radius: 52px;
 }
 
 .iphone-back {
@@ -3503,103 +3509,115 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     z-index: 2;
 }
 
+/* ---- Side Buttons (Realistic Titanium) ---- */
 .iphone-side-btn {
     position: absolute;
     z-index: 10;
 }
 
+.iphone-front .iphone-silent-switch {
+    left: -4px;
+    top: 100px;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 3px 0 0 3px;
+    box-shadow: -2px 0 3px rgba(0,0,0,0.15), -1px 0 1px rgba(0,0,0,0.08), inset 1px 0 1px rgba(255,255,255,0.4);
+}
+
 .iphone-front .iphone-vol-up {
-    left: -3px;
-    top: 130px;
-    width: 3px;
-    height: 32px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 2px 0 0 2px;
-    box-shadow: -1px 0 2px rgba(0,0,0,0.2), inset 1px 0 1px rgba(255,255,255,0.3);
+    left: -4px;
+    top: 140px;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 3px 0 0 3px;
+    box-shadow: -2px 0 3px rgba(0,0,0,0.15), -1px 0 1px rgba(0,0,0,0.08), inset 1px 0 1px rgba(255,255,255,0.4);
 }
 
 .iphone-front .iphone-vol-down {
-    left: -3px;
-    top: 172px;
-    width: 3px;
-    height: 32px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 2px 0 0 2px;
-    box-shadow: -1px 0 2px rgba(0,0,0,0.2), inset 1px 0 1px rgba(255,255,255,0.3);
-}
-
-.iphone-front .iphone-silent-switch {
-    left: -3px;
-    top: 95px;
-    width: 3px;
-    height: 18px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 2px 0 0 2px;
-    box-shadow: -1px 0 2px rgba(0,0,0,0.2), inset 1px 0 1px rgba(255,255,255,0.3);
+    left: -4px;
+    top: 186px;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 3px 0 0 3px;
+    box-shadow: -2px 0 3px rgba(0,0,0,0.15), -1px 0 1px rgba(0,0,0,0.08), inset 1px 0 1px rgba(255,255,255,0.4);
 }
 
 .iphone-front .iphone-power-btn {
-    right: -3px;
-    top: 145px;
-    width: 3px;
-    height: 48px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 1px 0 2px rgba(0,0,0,0.2), inset -1px 0 1px rgba(255,255,255,0.3);
+    right: -4px;
+    top: 155px;
+    width: 4px;
+    height: 52px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 2px 0 3px rgba(0,0,0,0.15), 1px 0 1px rgba(0,0,0,0.08), inset -1px 0 1px rgba(255,255,255,0.4);
 }
 
 .iphone-back .iphone-vol-up {
-    right: -3px;
-    top: 130px;
-    width: 3px;
-    height: 32px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 1px 0 2px rgba(0,0,0,0.2);
+    right: -4px;
+    top: 140px;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 2px 0 3px rgba(0,0,0,0.15);
 }
 
 .iphone-back .iphone-vol-down {
-    right: -3px;
-    top: 172px;
-    width: 3px;
-    height: 32px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 1px 0 2px rgba(0,0,0,0.2);
+    right: -4px;
+    top: 186px;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 2px 0 3px rgba(0,0,0,0.15);
 }
 
 .iphone-back .iphone-silent-switch {
-    right: -3px;
-    top: 95px;
-    width: 3px;
-    height: 18px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 1px 0 2px rgba(0,0,0,0.2);
+    right: -4px;
+    top: 100px;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 0 3px 3px 0;
+    box-shadow: 2px 0 3px rgba(0,0,0,0.15);
 }
 
 .iphone-back .iphone-power-btn {
-    left: -3px;
-    top: 145px;
-    width: 3px;
-    height: 48px;
-    background: linear-gradient(180deg, #D8D8DD, #B8B8BD, #D0D0D5);
-    border-radius: 2px 0 0 2px;
-    box-shadow: -1px 0 2px rgba(0,0,0,0.2);
+    left: -4px;
+    top: 155px;
+    width: 4px;
+    height: 52px;
+    background: linear-gradient(180deg, #DCDCE1 0%, #C5C5CA 30%, #B5B5BA 70%, #CDCDD2 100%);
+    border-radius: 3px 0 0 3px;
+    box-shadow: -2px 0 3px rgba(0,0,0,0.15);
 }
 
+/* ---- Front Frame (Titanium Silver Chassis) ---- */
 .iphone-frame {
     width: 100%;
     height: 100%;
-    background: linear-gradient(160deg, #E8E8ED, #C8C8CD, #D4D4D9, #E0E0E5);
-    border-radius: 55px;
-    padding: 4px;
+    background: linear-gradient(165deg,
+        #EEEEF3 0%,
+        #E2E2E7 15%,
+        #D0D0D5 35%,
+        #C2C2C7 50%,
+        #CCCCD1 65%,
+        #D8D8DD 80%,
+        #E4E4E9 100%
+    );
+    border-radius: 52px;
+    padding: 3px;
     box-shadow:
-        0 0 0 1px rgba(255,255,255,0.25),
-        0 25px 60px rgba(0,0,0,0.45),
-        0 8px 20px rgba(0,0,0,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.5),
-        inset 0 -1px 0 rgba(0,0,0,0.08);
+        0 0 0 0.5px rgba(0,0,0,0.12),
+        0 0 0 1px rgba(255,255,255,0.35),
+        0 30px 70px rgba(0,0,0,0.4),
+        0 10px 25px rgba(0,0,0,0.2),
+        0 3px 8px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.7),
+        inset 0 -1px 0 rgba(0,0,0,0.06);
     display: flex;
     flex-direction: column;
     position: relative;
@@ -3609,9 +3627,9 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 .iphone-frame::before {
     content: '';
     position: absolute;
-    inset: 3px;
-    border-radius: 52px;
-    border: 1.5px solid #1A1A1E;
+    inset: 2px;
+    border-radius: 50px;
+    border: 2px solid #111113;
     z-index: 1;
     pointer-events: none;
 }
@@ -3620,25 +3638,26 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     content: '';
     position: absolute;
     top: 0;
-    left: 20%;
-    width: 60%;
+    left: 15%;
+    width: 70%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-    z-index: 2;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    z-index: 3;
     pointer-events: none;
 }
 
+/* ---- Notch / Dynamic Island ---- */
 .iphone-notch-area {
-    padding: 10px 20px 0;
+    padding: 8px 16px 0;
     position: relative;
     z-index: 2;
     background: #000;
-    border-radius: 52px 52px 0 0;
+    border-radius: 50px 50px 0 0;
 }
 
 .iphone-dynamic-island {
-    width: 90px;
-    height: 26px;
+    width: 96px;
+    height: 28px;
     background: #000;
     border-radius: 20px;
     margin: 0 auto;
@@ -3647,15 +3666,16 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     justify-content: center;
     gap: 10px;
     position: relative;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+    box-shadow: inset 0 0 2px rgba(255,255,255,0.03);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .iphone-dynamic-island.di-active {
-    width: 200px;
-    height: 32px;
-    background: linear-gradient(135deg, rgba(37,99,235,0.3), rgba(6,182,212,0.3));
-    border: 1px solid rgba(6,182,212,0.3);
+    width: 190px;
+    height: 34px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(6,182,212,0.25));
+    border: 1px solid rgba(6,182,212,0.25);
+    box-shadow: 0 0 20px rgba(6,182,212,0.15);
 }
 
 .iphone-di-dot {
@@ -3663,7 +3683,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 8px;
     border-radius: 50%;
     background: #1D1D1F;
-    border: 1px solid #2C2C2E;
+    border: 1px solid #2A2A2C;
 }
 
 .iphone-di-cam {
@@ -3673,14 +3693,15 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     border: 1px solid #2C3E50;
 }
 
+/* ---- Status Bar ---- */
 .iphone-status-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 6px 4px 4px;
+    padding: 5px 6px 3px;
     font-size: 11px;
     font-weight: 600;
-    color: rgba(255,255,255,0.85);
+    color: rgba(255,255,255,0.9);
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
 
@@ -3697,8 +3718,10 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     color: #30D158;
 }
 
+/* ---- Screen Area ---- */
 .iphone-screen {
     flex: 1;
+    min-height: 0;
     background: #000;
     display: flex;
     flex-direction: column;
@@ -3713,13 +3736,13 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 20px;
+    gap: 10px;
+    padding: 16px;
 }
 
 .iphone-idle-icon {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     background: rgba(6, 182, 212, 0.08);
     display: flex;
@@ -3734,29 +3757,37 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-idle-text {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
 
 .iphone-idle-sub {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255,255,255,0.4);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ---- Call Screen ---- */
 .iphone-call-screen {
     flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 15px 20px;
-    gap: 6px;
+    padding: 10px 16px;
+    gap: 4px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.iphone-call-screen::-webkit-scrollbar {
+    display: none;
 }
 
 .iphone-call-label {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(255,255,255,0.5);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     text-transform: lowercase;
@@ -3764,36 +3795,37 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-call-number {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 300;
     color: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     text-align: center;
     word-break: break-all;
+    line-height: 1.2;
 }
 
 .iphone-call-timer {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: rgba(255,255,255,0.6);
     font-family: 'JetBrains Mono', 'SF Mono', monospace;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .iphone-call-status-badge {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
+    gap: 6px;
+    padding: 5px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #fff;
     background: rgba(48, 209, 88, 0.15);
     border: 1px solid rgba(48, 209, 88, 0.3);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    margin-top: 4px;
+    margin-top: 3px;
     transition: all 0.3s;
 }
 
@@ -3820,8 +3852,8 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-call-pulse {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #30D158;
     animation: iphonePulse 1.5s ease-in-out infinite;
@@ -3841,39 +3873,39 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 .iphone-call-amd {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: 5px;
+    font-size: 10px;
     color: rgba(255,255,255,0.6);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .iphone-call-amd #iphoneAmdIcon {
-    font-size: 8px;
+    font-size: 7px;
 }
 
 .iphone-call-transcript {
     width: 100%;
-    margin-top: 8px;
-    max-height: 80px;
+    margin-top: 6px;
+    max-height: 65px;
     overflow: hidden;
 }
 
 .iphone-transcript-label {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255,255,255,0.3);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .iphone-transcript-content {
-    font-size: 11px;
+    font-size: 10px;
     color: rgba(255,255,255,0.7);
-    line-height: 1.4;
+    line-height: 1.35;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    max-height: 60px;
+    max-height: 50px;
     overflow-y: auto;
     scrollbar-width: none;
 }
@@ -3882,46 +3914,51 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     display: none;
 }
 
+/* ---- Call Action Buttons ---- */
 .iphone-call-actions {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     margin-top: auto;
-    padding: 10px 0;
+    padding: 6px 0;
+    flex-shrink: 0;
 }
 
 .iphone-action-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 
 .iphone-action-icon {
-    width: 50px;
-    height: 50px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: rgba(255,255,255,0.08);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
     color: rgba(255,255,255,0.8);
 }
 
 .iphone-action-btn span {
-    font-size: 9px;
+    font-size: 8px;
     color: rgba(255,255,255,0.5);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* ---- Call Log ---- */
 .iphone-call-log {
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-top: 1px solid rgba(255,255,255,0.06);
-    max-height: 120px;
+    max-height: 100px;
+    min-height: 0;
     overflow-y: auto;
     scrollbar-width: none;
     position: relative;
     z-index: 2;
+    flex-shrink: 0;
 }
 
 .iphone-call-log::-webkit-scrollbar {
@@ -3929,26 +3966,26 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-log-title {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
     color: rgba(255,255,255,0.25);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .iphone-log-entries {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .iphone-log-entry {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 0;
-    font-size: 10px;
+    padding: 2px 0;
+    font-size: 9px;
     font-family: 'JetBrains Mono', monospace;
 }
 
@@ -3957,9 +3994,9 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-log-status {
-    font-size: 9px;
-    padding: 2px 8px;
-    border-radius: 10px;
+    font-size: 8px;
+    padding: 1px 6px;
+    border-radius: 8px;
     font-weight: 600;
 }
 
@@ -3983,28 +4020,43 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     background: rgba(255, 214, 10, 0.1);
 }
 
+/* ---- Home Bar ---- */
 .iphone-home-bar {
-    width: 100px;
+    width: 110px;
     height: 4px;
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.3);
     border-radius: 3px;
-    margin: 6px auto 8px;
+    margin: 4px auto 6px;
     position: relative;
     z-index: 2;
+    flex-shrink: 0;
 }
 
-/* ---- iPhone Back (Silver Titanium) ---- */
+/* ============================================
+   iPhone Back Face - Silver Titanium
+   ============================================ */
 .iphone-back-surface {
     width: 100%;
     height: 100%;
-    background: linear-gradient(160deg, #E8E8ED 0%, #D8D8DD 25%, #C8C8CD 50%, #D4D4D9 75%, #E0E0E5 100%);
-    border-radius: 55px;
+    background: linear-gradient(165deg,
+        #F0F0F5 0%,
+        #E6E6EB 12%,
+        #DDDDE2 25%,
+        #D0D0D5 40%,
+        #C5C5CA 55%,
+        #D2D2D7 70%,
+        #DDDDE2 85%,
+        #E8E8ED 100%
+    );
+    border-radius: 52px;
     position: relative;
     box-shadow:
-        0 0 0 1px rgba(255,255,255,0.3),
-        0 25px 60px rgba(0,0,0,0.45),
-        inset 0 1px 0 rgba(255,255,255,0.6),
-        inset 0 -1px 0 rgba(0,0,0,0.1);
+        0 0 0 0.5px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.4),
+        0 30px 70px rgba(0,0,0,0.4),
+        0 10px 25px rgba(0,0,0,0.2),
+        inset 0 2px 0 rgba(255,255,255,0.7),
+        inset 0 -1px 0 rgba(0,0,0,0.08);
     overflow: hidden;
 }
 
@@ -4012,13 +4064,13 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 55px;
+    border-radius: 52px;
     background: repeating-linear-gradient(
-        135deg,
+        150deg,
         transparent,
         transparent 1px,
-        rgba(255,255,255,0.03) 1px,
-        rgba(255,255,255,0.03) 2px
+        rgba(255,255,255,0.02) 1px,
+        rgba(255,255,255,0.02) 2px
     );
     pointer-events: none;
 }
@@ -4026,55 +4078,61 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 .iphone-back-surface::after {
     content: '';
     position: absolute;
-    top: -30%;
-    left: -20%;
-    width: 140%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, transparent 60%);
+    top: -40%;
+    left: -30%;
+    width: 160%;
+    height: 90%;
+    background: radial-gradient(ellipse at 40% 40%, rgba(255,255,255,0.2) 0%, transparent 55%);
     pointer-events: none;
 }
 
+/* ---- Camera Module (Triple Lens) ---- */
 .iphone-camera-module {
     position: absolute;
-    top: 30px;
-    left: 20px;
-    width: 90px;
-    height: 90px;
-    background: linear-gradient(145deg, #D0D0D5, #BBBBC0, #C8C8CD);
-    border-radius: 22px;
+    top: 22px;
+    left: 16px;
+    width: 95px;
+    height: 95px;
+    background: linear-gradient(150deg, #D4D4D9, #C0C0C5, #B8B8BD, #CCCCD1);
+    border-radius: 24px;
     box-shadow:
-        0 2px 8px rgba(0,0,0,0.2),
-        0 0 0 1px rgba(0,0,0,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.4);
+        0 3px 12px rgba(0,0,0,0.25),
+        0 1px 4px rgba(0,0,0,0.15),
+        0 0 0 1px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        inset 0 -1px 0 rgba(0,0,0,0.05);
 }
 
 .iphone-camera-lens {
     position: absolute;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%,
-        #1a1a2e 0%,
-        #16213e 30%,
-        #0f3460 50%,
-        #533483 60%,
-        #2c2c54 70%
+    background: radial-gradient(circle at 38% 32%,
+        #0a0a14 0%,
+        #111128 25%,
+        #1a1a3e 40%,
+        #252560 55%,
+        #1e1e4a 65%,
+        #151530 80%
     );
     box-shadow:
-        0 0 0 3px #A8A8AD,
-        0 0 0 4px rgba(0,0,0,0.15),
-        inset 0 1px 3px rgba(0,0,0,0.6),
-        0 1px 2px rgba(0,0,0,0.3);
+        0 0 0 2.5px #A8A8AD,
+        0 0 0 3.5px #8A8A8F,
+        0 0 0 4.5px rgba(0,0,0,0.2),
+        inset 0 2px 4px rgba(0,0,0,0.7),
+        inset 0 -1px 2px rgba(255,255,255,0.05),
+        0 2px 3px rgba(0,0,0,0.3);
 }
 
 .iphone-camera-lens::after {
     content: '';
     position: absolute;
     top: 3px;
-    left: 5px;
-    width: 8px;
+    left: 6px;
+    width: 9px;
     height: 5px;
-    background: radial-gradient(ellipse, rgba(255,255,255,0.4), transparent);
+    background: radial-gradient(ellipse, rgba(255,255,255,0.35), transparent);
     border-radius: 50%;
     transform: rotate(-30deg);
 }
@@ -4091,78 +4149,79 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-lens-3 {
     bottom: 10px;
-    left: 31px;
+    left: 32px;
 }
 
 .iphone-camera-flash {
     position: absolute;
-    top: 48px;
+    top: 50px;
     right: 10px;
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
-    background: radial-gradient(circle, #FFF8E1 20%, #FFE082 60%, #C8C8CD 80%);
-    box-shadow: 0 0 0 2px #B8B8BD;
+    background: radial-gradient(circle at 40% 35%, #FFFDE7 15%, #FFE082 45%, #D4D4D9 80%);
+    box-shadow: 0 0 0 2px #B0B0B5, 0 0 4px rgba(255,224,130,0.3);
 }
 
 .iphone-camera-lidar {
     position: absolute;
     bottom: 12px;
     right: 12px;
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: radial-gradient(circle, #1a1a2e 40%, #2d2d4e 70%);
-    box-shadow: 0 0 0 2px #A8A8AD;
+    background: radial-gradient(circle, #0a0a1e 35%, #1a1a3e 65%);
+    box-shadow: 0 0 0 2px #A0A0A5;
 }
 
 .iphone-apple-logo {
     position: absolute;
-    top: 50%;
+    top: 48%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 40px;
-    color: #B0B0B5;
+    font-size: 36px;
+    color: #B8B8BD;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    opacity: 0.6;
-    text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+    opacity: 0.5;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3), 0 -1px 0 rgba(0,0,0,0.08);
     line-height: 1;
 }
 
 .iphone-back-text {
     position: absolute;
-    bottom: 40px;
+    bottom: 35px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 300;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     color: #A0A0A5;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    opacity: 0.7;
 }
 
 /* ---- Drag Handle & Controls ---- */
 .iphone-drag-handle {
     position: absolute;
-    top: -18px;
+    top: -16px;
     left: 50%;
     transform: translateX(-50%);
-    width: 36px;
-    height: 18px;
-    background: linear-gradient(180deg, #D0D0D5, #B8B8BD);
+    width: 40px;
+    height: 16px;
+    background: linear-gradient(180deg, #DDDDE2, #C0C0C5);
     border-radius: 8px 8px 0 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(100,100,110,0.6);
+    color: rgba(100,100,110,0.5);
     cursor: grab;
     transition: all 0.2s;
     z-index: 20;
-    box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 -1px 3px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .iphone-drag-handle:hover {
-    background: linear-gradient(180deg, #E0E0E5, #C8C8CD);
+    background: linear-gradient(180deg, #E8E8ED, #D0D0D5);
     color: rgba(80,80,90,0.8);
 }
 
@@ -4172,14 +4231,14 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-minimize-btn {
     position: absolute;
-    top: -18px;
+    top: -16px;
     right: 8px;
-    width: 24px;
-    height: 18px;
-    background: linear-gradient(180deg, #D0D0D5, #B8B8BD);
+    width: 22px;
+    height: 16px;
+    background: linear-gradient(180deg, #DDDDE2, #C0C0C5);
     border: none;
     border-radius: 6px 6px 0 0;
-    color: rgba(100,100,110,0.6);
+    color: rgba(100,100,110,0.5);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -4187,7 +4246,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     transition: all 0.2s;
     padding: 0;
     z-index: 20;
-    box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 -1px 3px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .iphone-minimize-btn:hover {
@@ -4205,14 +4264,15 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-3d-wrapper.dragging .iphone-front .iphone-frame {
     box-shadow:
-        0 0 0 1px rgba(255,255,255,0.3),
-        0 35px 80px rgba(0,0,0,0.5),
-        0 12px 30px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.6);
+        0 0 0 0.5px rgba(0,0,0,0.12),
+        0 0 0 1px rgba(255,255,255,0.35),
+        0 40px 90px rgba(0,0,0,0.5),
+        0 15px 35px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 @keyframes iphoneSlideIn {
-    from { opacity: 0; transform: translateY(40px) scale(0.9); }
+    from { opacity: 0; transform: translateY(50px) scale(0.85); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
@@ -4222,20 +4282,34 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 @media (max-width: 600px) {
     .iphone-3d-wrapper {
-        right: 10px;
-        bottom: 10px;
+        right: 8px;
+        bottom: 8px;
     }
     .iphone-3d-body {
-        width: 240px;
-        height: 490px;
+        width: 230px;
+        height: 494px;
     }
     .iphone-frame {
-        border-radius: 46px;
+        border-radius: 44px;
+    }
+    .iphone-frame::before {
+        border-radius: 42px;
     }
     .iphone-front, .iphone-back {
-        border-radius: 46px;
+        border-radius: 44px;
     }
     .iphone-back-surface {
-        border-radius: 46px;
+        border-radius: 44px;
+    }
+    .iphone-notch-area {
+        border-radius: 42px 42px 0 0;
+    }
+    .iphone-action-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+    .iphone-call-number {
+        font-size: 17px;
     }
 }
