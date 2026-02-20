@@ -2878,19 +2878,12 @@
             var iphoneMinimizeTime = 0;
             function iphoneToggleMinimize() {
                 var dialer = document.getElementById("iphoneDialer");
-                var body3d = document.getElementById("iphone3dBody");
                 iphoneMinimized = !iphoneMinimized;
                 if (iphoneMinimized) {
                     iphoneMinimizeTime = Date.now();
-                    body3d.style.transformOrigin = "center bottom";
                     dialer.classList.add("minimized");
                 } else {
                     dialer.classList.remove("minimized");
-                    setTimeout(function() {
-                        if (!iphoneMinimized) {
-                            body3d.style.transformOrigin = "";
-                        }
-                    }, 1100);
                 }
             }
             (function() {

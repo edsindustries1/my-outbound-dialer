@@ -3555,13 +3555,12 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 580px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                transform-origin 0s;
-    transform-origin: center center;
+    transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center bottom;
 }
 
 .iphone-3d-wrapper.minimized .iphone-3d-body {
-    transform: rotateX(86deg) scale(0.65);
+    transform: rotateY(-180deg) rotateX(80deg) scale(0.5) translateY(40px);
 }
 
 .iphone-3d-wrapper.minimized {
@@ -3570,20 +3569,20 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-resting-shadow {
     position: absolute;
-    bottom: -15px;
-    left: -10%;
-    width: 120%;
-    height: 30px;
+    bottom: -10px;
+    left: -15%;
+    width: 130%;
+    height: 40px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 35%, transparent 65%);
+    background: radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 40%, transparent 70%);
     opacity: 0;
-    transition: opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
     pointer-events: none;
 }
 
 .iphone-3d-wrapper.minimized .iphone-resting-shadow {
     opacity: 1;
-    transform: scaleX(1.6) scaleY(0.3) translateY(-20px);
+    transform: scaleX(1.8) scaleY(0.25) translateY(-30px);
 }
 
 .iphone-front,
