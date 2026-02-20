@@ -40,6 +40,10 @@ _state_lock = threading.Lock()
 
 
 def _get_elevenlabs_api_key():
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+    if api_key:
+        return api_key
+
     hostname = os.environ.get("REPLIT_CONNECTORS_HOSTNAME", "")
     repl_identity = os.environ.get("REPL_IDENTITY", "")
     web_repl_renewal = os.environ.get("WEB_REPL_RENEWAL", "")
@@ -49,9 +53,6 @@ def _get_elevenlabs_api_key():
     elif web_repl_renewal:
         token = "depl " + web_repl_renewal
     else:
-        api_key = os.environ.get("ELEVENLABS_API_KEY", "")
-        if api_key:
-            return api_key
         raise RuntimeError("No ElevenLabs credentials found")
 
     if not hostname:
