@@ -10,7 +10,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **storage.py** - In-memory call state management, campaign config, and persistent call history (JSON)
 - **templates/index.html** - Dashboard UI with animated splash screen and polling
 - **templates/login.html** - Password-protected login page
-- **static/style.css** - Dual-theme CSS with purple/cyan gradient branding
+- **static/style.css** - Dual-theme CSS with blue/cyan gradient branding
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
 - **uploads/** - Uploaded audio files
 - **logs/** - Call logs
@@ -56,7 +56,9 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - Smooth 0.35s transitions between themes on all elements
 - Animated Open Human logo splash screen on page load with pulsing rings
 - Card-based layout with real-time call status polling
-- Full-width frosted glass header with inner content wrapper
+- Left vertical sidebar with 4 feature buttons (Voicemail Settings, Test Dialer, Phone Numbers, Voicemail Audio) that toggle collapsible panels in the main content area
+- Sidebar collapses to icon-only at 900px, becomes horizontal bar at 600px
+- Full-width frosted glass header with gradient logo text and glowing accent bottom line
 - Realistic fiber optic video background
 - Scroll-reveal animation on cards with staggered entrance
 - Mouse-following glow effect on card hover
