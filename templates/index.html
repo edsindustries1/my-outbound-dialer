@@ -38,6 +38,24 @@
                 <div class="header-logo">
                     <div class="header-text-logo">Open Human</div>
                 </div>
+                <nav class="header-nav">
+                    <button type="button" class="nav-btn" data-panel="panelVmSettings">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+                        Voicemail Settings
+                    </button>
+                    <button type="button" class="nav-btn" data-panel="panelTestDialer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        Test Dialer
+                    </button>
+                    <button type="button" class="nav-btn" data-panel="panelPhoneNumbers">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        Phone Numbers
+                    </button>
+                    <button type="button" class="nav-btn" data-panel="panelVmAudio">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                        Voicemail Audio
+                    </button>
+                </nav>
                 <div class="header-right">
                     <span class="header-status-dot"></span>
                     <span class="header-version">v1.0</span>
@@ -56,12 +74,15 @@
                 <span class="dot dot-inactive"></span> No active campaign
             </div>
 
-            <div class="settings-grid">
-                <!-- Voicemail Settings -->
-                <div class="card stagger-2">
+            <!-- Expandable Panels -->
+            <div class="panel" id="panelVmSettings">
+                <div class="card">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
                         Voicemail Settings
+                        <button type="button" class="panel-minimize" data-panel="panelVmSettings" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
                     </div>
                     <label>Voicemail Audio URL</label>
                     <div class="vm-settings-row">
@@ -75,12 +96,16 @@
                     </div>
                     <div id="vmSaveResult"></div>
                 </div>
+            </div>
 
-                <!-- Test Call -->
-                <div class="card stagger-3">
+            <div class="panel" id="panelTestDialer">
+                <div class="card">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                         Test Your Dialer
+                        <button type="button" class="panel-minimize" data-panel="panelTestDialer" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
                     </div>
                     <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
                     <div class="test-call-row">
@@ -97,31 +122,38 @@
 
             <!-- Campaign Form -->
             <form id="campaignForm">
-                <div class="form-grid stagger-4">
-                    <!-- Phone Numbers -->
-                    <div class="card card-accent">
-                        <div class="card-title">
-                            <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                            Phone Numbers
-                        </div>
-                        <label>Upload CSV file</label>
-                        <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt">
-                        <label>Or paste numbers (one per line)</label>
-                        <textarea name="numbers" id="numbersInput" rows="4" placeholder="+15551234567&#10;+15559876543"></textarea>
-                    </div>
 
-                    <!-- Audio -->
-                    <div class="card card-accent">
-                        <div class="card-title">
-                            <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                            Voicemail Audio <span style="font-weight:400;font-size:11px;color:var(--text-secondary);">(optional - uses saved URL if empty)</span>
-                        </div>
-                        <label>Upload MP3/WAV to override saved voicemail</label>
-                        <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
-                        <label>Or provide a different public audio URL</label>
-                        <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
+            <div class="panel" id="panelPhoneNumbers">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                        Phone Numbers
+                        <button type="button" class="panel-minimize" data-panel="panelPhoneNumbers" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
                     </div>
+                    <label>Upload CSV file</label>
+                    <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt">
+                    <label>Or paste numbers (one per line)</label>
+                    <textarea name="numbers" id="numbersInput" rows="4" placeholder="+15551234567&#10;+15559876543"></textarea>
                 </div>
+            </div>
+
+            <div class="panel" id="panelVmAudio">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                        Voicemail Audio <span style="font-weight:400;font-size:11px;color:var(--text-secondary);">(optional - uses saved URL if empty)</span>
+                        <button type="button" class="panel-minimize" data-panel="panelVmAudio" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <label>Upload MP3/WAV to override saved voicemail</label>
+                    <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
+                    <label>Or provide a different public audio URL</label>
+                    <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
+                </div>
+            </div>
 
                 <!-- Transfer Number -->
                 <div class="card stagger-5">
@@ -331,6 +363,44 @@
                 document.getElementById("splash").classList.add("hide");
                 document.getElementById("app").classList.add("show");
             }, 2900);
+
+            // ---- Nav Panel Toggle ----
+            var navBtns = document.querySelectorAll(".nav-btn");
+            var minimizeBtns = document.querySelectorAll(".panel-minimize");
+
+            function togglePanel(panelId) {
+                var panel = document.getElementById(panelId);
+                var btn = document.querySelector('.nav-btn[data-panel="' + panelId + '"]');
+                if (!panel || !btn) return;
+
+                var isOpen = panel.classList.contains("open");
+
+                if (isOpen) {
+                    panel.classList.remove("open");
+                    btn.classList.remove("active");
+                    setTimeout(function() {
+                        btn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    }, 350);
+                } else {
+                    panel.classList.add("open");
+                    btn.classList.add("active");
+                    setTimeout(function() {
+                        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    }, 100);
+                }
+            }
+
+            navBtns.forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    togglePanel(this.getAttribute("data-panel"));
+                });
+            });
+
+            minimizeBtns.forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    togglePanel(this.getAttribute("data-panel"));
+                });
+            });
 
             // ---- Theme Toggle ----
             var themeToggle = document.getElementById("themeToggle");
