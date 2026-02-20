@@ -763,7 +763,8 @@ def pvm_preview_audio_endpoint():
     voice_settings = data.get("voice_settings", None)
     humanize = data.get("humanize", True)
 
-    filename, result = pvm_preview_audio(contact, template, voice_id, voice_settings=voice_settings, humanize=humanize)
+    model_id = data.get("model_id", "eleven_multilingual_v2")
+    filename, result = pvm_preview_audio(contact, template, voice_id, voice_settings=voice_settings, humanize=humanize, model_id=model_id)
     if filename:
         audio_url = f"{base_url}/audio/personalized/{filename}"
         return jsonify({"audio_url": audio_url, "script": result})
@@ -793,7 +794,8 @@ def pvm_generate():
     if not base_url:
         return jsonify({"error": "Could not determine public URL for audio serving"}), 400
 
-    success, msg = pvm_start_generation(contacts, template, voice_id, base_url, voice_settings=voice_settings, humanize=humanize)
+    model_id = data.get("model_id", "eleven_multilingual_v2")
+    success, msg = pvm_start_generation(contacts, template, voice_id, base_url, voice_settings=voice_settings, humanize=humanize, model_id=model_id)
     if not success:
         return jsonify({"error": msg}), 400
     return jsonify({"message": msg, "total": len(contacts)})

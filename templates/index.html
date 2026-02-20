@@ -569,42 +569,55 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
                             Voice Controls
                         </div>
-                        <p class="pvm-hint">Fine-tune how the voice sounds. Adjust these settings to get the most natural, human-like delivery.</p>
+                        <p class="pvm-hint">Fine-tune how the voice sounds. Lower stability + some style = more natural human variation. The Turbo v2.5 model adds real timed pauses via SSML for the most realistic delivery.</p>
 
                         <div class="pvm-voice-controls">
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
-                                    <label>Stability</label>
-                                    <span class="pvm-slider-value" id="pvmStabilityVal">0.50</span>
+                                    <label>TTS Model</label>
                                 </div>
-                                <input type="range" id="pvmStability" min="0" max="100" value="50" class="pvm-slider" oninput="pvmUpdateSlider('Stability')">
+                                <select id="pvmModel" class="pvm-voice-select">
+                                    <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (SSML pauses + fast)</option>
+                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast + SSML)</option>
+                                    <option value="eleven_english_v1">English v1 (SSML + English only)</option>
+                                </select>
+                                <div class="pvm-slider-labels"><span>SSML models add real timed breath pauses</span></div>
+                            </div>
+
+                            <div class="pvm-slider-group">
+                                <div class="pvm-slider-header">
+                                    <label>Stability</label>
+                                    <span class="pvm-slider-value" id="pvmStabilityVal">0.35</span>
+                                </div>
+                                <input type="range" id="pvmStability" min="0" max="100" value="35" class="pvm-slider" oninput="pvmUpdateSlider('Stability')">
                                 <div class="pvm-slider-labels"><span>More Variable</span><span>More Stable</span></div>
                             </div>
 
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
                                     <label>Similarity</label>
-                                    <span class="pvm-slider-value" id="pvmSimilarityVal">0.75</span>
+                                    <span class="pvm-slider-value" id="pvmSimilarityVal">0.80</span>
                                 </div>
-                                <input type="range" id="pvmSimilarity" min="0" max="100" value="75" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')">
+                                <input type="range" id="pvmSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')">
                                 <div class="pvm-slider-labels"><span>Low</span><span>High</span></div>
                             </div>
 
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
                                     <label>Style Exaggeration</label>
-                                    <span class="pvm-slider-value" id="pvmStyleVal">0.00</span>
+                                    <span class="pvm-slider-value" id="pvmStyleVal">0.15</span>
                                 </div>
-                                <input type="range" id="pvmStyle" min="0" max="100" value="0" class="pvm-slider" oninput="pvmUpdateSlider('Style')">
+                                <input type="range" id="pvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="pvmUpdateSlider('Style')">
                                 <div class="pvm-slider-labels"><span>None</span><span>Exaggerated</span></div>
                             </div>
 
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
                                     <label>Speed</label>
-                                    <span class="pvm-slider-value" id="pvmSpeedVal">0.85</span>
+                                    <span class="pvm-slider-value" id="pvmSpeedVal">0.82</span>
                                 </div>
-                                <input type="range" id="pvmSpeed" min="70" max="120" value="85" class="pvm-slider" oninput="pvmUpdateSlider('Speed')">
+                                <input type="range" id="pvmSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="pvmUpdateSlider('Speed')">
                                 <div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div>
                             </div>
 
@@ -624,7 +637,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                             Human-Like Speech
                         </div>
-                        <p class="pvm-hint">When enabled, the system preprocesses your script so it sounds like a real human outbound agent - not a robot reading variables. Names get natural pauses, dates are spoken conversationally ("March twenty eighth, twenty twenty two"), phone numbers use 3-3-4 grouping with pauses, money amounts are spoken casually ("about eleven hundred dollars"), addresses are fully expanded (Ave&rarr;Avenue, NJ&rarr;New Jersey), and emails are read naturally ("at gmail dot com").</p>
+                        <p class="pvm-hint">Makes your voicemails sound like a real human agent, not a robot. Adds natural hesitations ("I was just... looking at"), breath pauses before conjunctions ("but — since you had"), conversational data reading (dates, phone numbers, amounts), and address/email expansion. Combined with the voice controls and model selection, this creates voicemails that are virtually indistinguishable from a live person.</p>
 
                         <div class="pvm-toggle-row">
                             <label class="pvm-toggle-label">
@@ -3393,6 +3406,10 @@
                 };
             }
 
+            function pvmGetModelId() {
+                return document.getElementById("pvmModel").value;
+            }
+
             function pvmGetHumanize() {
                 return document.getElementById("pvmHumanize").checked;
             }
@@ -3451,7 +3468,7 @@
                 apiFetch("/api/pvm/preview-audio", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize() })
+                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize(), model_id: pvmGetModelId() })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
@@ -3523,7 +3540,7 @@
                 apiFetch("/api/pvm/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contacts: pvmContacts, template: template, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize() })
+                    body: JSON.stringify({ contacts: pvmContacts, template: template, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize(), model_id: pvmGetModelId() })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {

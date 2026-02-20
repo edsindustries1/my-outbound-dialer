@@ -401,10 +401,31 @@ def _humanize_email(text):
     return text
 
 
+def _add_micro_hesitations(text):
+    text = re.sub(
+        r'(?i)\b(I was just|I was|I\'m just|I\'m)\b(?!\.)',
+        lambda m: m.group(0) + '...',
+        text, count=2
+    )
+    text = re.sub(
+        r'(?i)\b(looks like|it looks like|it seems like)\b(?!\.)',
+        lambda m: m.group(0) + '...',
+        text, count=2
+    )
+    return text
+
+
+def _add_breath_pauses(text):
+    text = re.sub(r',\s*(?=(?:but|so|because|since|actually|honestly)\b)', ' — ', text, flags=re.IGNORECASE)
+    return text
+
+
 def _conversational_smoothing(text):
+    text = re.sub(r'\.{4,}', '...', text)
     text = re.sub(r'\.\.\.\s*\.\.\.', '...', text)
+    text = re.sub(r'—\s*—', '—', text)
+    text = re.sub(r'\s*—\s*', ' — ', text)
     text = re.sub(r'\s{2,}', ' ', text)
-    text = re.sub(r'(?<=[.!?])\s+', '\n', text)
     return text.strip()
 
 
@@ -413,6 +434,8 @@ def humanize_text(text):
     text = _humanize_phone(text)
     text = _humanize_amount(text)
     text = _humanize_email(text)
+    text = _add_micro_hesitations(text)
+    text = _add_breath_pauses(text)
     text = _conversational_smoothing(text)
     return text
 
@@ -439,11 +462,17 @@ def render_template(template, contact, humanize=True):
 
 
 DEFAULT_VOICE_SETTINGS = {
-    "stability": 0.5,
-    "similarity_boost": 0.75,
-    "style": 0.0,
-    "speed": 0.85,
+    "stability": 0.35,
+    "similarity_boost": 0.80,
+    "style": 0.15,
+    "speed": 0.82,
     "use_speaker_boost": True,
+}
+
+SSML_MODELS = {
+    "eleven_turbo_v2", "eleven_turbo_v2_5",
+    "eleven_flash_v2", "eleven_flash_v2_5",
+    "eleven_english_v1",
 }
 
 
@@ -460,6 +489,27 @@ def _build_voice_settings(custom_settings=None):
     return settings
 
 
+def _prepare_tts_payload(script, model_id, vs):
+    use_ssml = model_id in SSML_MODELS
+    if use_ssml:
+        ssml_text = script
+        ssml_text = ssml_text.replace(' — ', ' <break time="0.6s"/> ')
+        ssml_text = re.sub(r'\.\.\.', '<break time="0.35s"/>', ssml_text)
+        payload = {
+            "text": ssml_text,
+            "model_id": model_id,
+            "voice_settings": vs,
+            "enable_ssml_parsing": True,
+        }
+    else:
+        payload = {
+            "text": script,
+            "model_id": model_id,
+            "voice_settings": vs,
+        }
+    return payload
+
+
 def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="eleven_multilingual_v2", voice_settings=None, humanize=True):
     script = render_template(template, contact, humanize=humanize)
     phone = contact.get("phone", "unknown")
@@ -468,6 +518,7 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
     filepath = os.path.join(PVM_DIR, filename)
 
     vs = _build_voice_settings(voice_settings)
+    payload = _prepare_tts_payload(script, model_id, vs)
 
     try:
         resp = requests.post(
@@ -477,11 +528,7 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
                 "Content-Type": "application/json",
                 "Accept": "audio/mpeg",
             },
-            json={
-                "text": script,
-                "model_id": model_id,
-                "voice_settings": vs,
-            },
+            json=payload,
             timeout=60,
         )
         resp.raise_for_status()
@@ -506,7 +553,7 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
         }
 
 
-def start_generation(contacts, template, voice_id, base_url, voice_settings=None, humanize=True):
+def start_generation(contacts, template, voice_id, base_url, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
     with _state_lock:
         if _generation_state["status"] == "generating":
             return False, "Generation already in progress"
@@ -523,14 +570,14 @@ def start_generation(contacts, template, voice_id, base_url, voice_settings=None
 
     t = threading.Thread(
         target=_generation_worker,
-        args=(contacts, template, voice_id, base_url, voice_settings, humanize),
+        args=(contacts, template, voice_id, base_url, voice_settings, humanize, model_id),
         daemon=True,
     )
     t.start()
     return True, "Generation started"
 
 
-def _generation_worker(contacts, template, voice_id, base_url, voice_settings=None, humanize=True):
+def _generation_worker(contacts, template, voice_id, base_url, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
     try:
         api_key = _get_elevenlabs_api_key()
     except Exception as e:
@@ -542,7 +589,7 @@ def _generation_worker(contacts, template, voice_id, base_url, voice_settings=No
     audio_map = {}
 
     for i, contact in enumerate(contacts):
-        result = generate_audio_for_contact(api_key, contact, template, voice_id, voice_settings=voice_settings, humanize=humanize)
+        result = generate_audio_for_contact(api_key, contact, template, voice_id, model_id=model_id, voice_settings=voice_settings, humanize=humanize)
 
         with _state_lock:
             _generation_state["completed"] = i + 1
@@ -608,7 +655,7 @@ def get_generation_status():
         return dict(_generation_state)
 
 
-def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True):
+def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
     try:
         api_key = _get_elevenlabs_api_key()
     except Exception as e:
@@ -620,6 +667,7 @@ def generate_preview_audio(contact, template, voice_id, voice_settings=None, hum
     os.makedirs(PVM_DIR, exist_ok=True)
 
     vs = _build_voice_settings(voice_settings)
+    payload = _prepare_tts_payload(script, model_id, vs)
 
     try:
         resp = requests.post(
@@ -629,11 +677,7 @@ def generate_preview_audio(contact, template, voice_id, voice_settings=None, hum
                 "Content-Type": "application/json",
                 "Accept": "audio/mpeg",
             },
-            json={
-                "text": script,
-                "model_id": "eleven_multilingual_v2",
-                "voice_settings": vs,
-            },
+            json=payload,
             timeout=60,
         )
         resp.raise_for_status()
