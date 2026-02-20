@@ -137,7 +137,7 @@
             <svg class="login-logo" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
-                        <stop offset="0%" stop-color="#7C3AED"/>
+                        <stop offset="0%" stop-color="#2563EB"/>
                         <stop offset="100%" stop-color="#06B6D4"/>
                     </linearGradient>
                 </defs>
@@ -214,9 +214,9 @@
         Particle.prototype.draw = function() {
             var s = this.baseSize * (0.5 + this.z * 0.8), a = 0.2 + this.z * 0.6;
             ctx.beginPath(); ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
-            ctx.fillStyle = this.hue === 264 ? "rgba(124,58,237," + a + ")" : "rgba(6,182,212," + a + ")";
+            ctx.fillStyle = this.hue === 264 ? "rgba(37,99,235," + a + ")" : "rgba(6,182,212," + a + ")";
             ctx.fill();
-            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 264 ? "rgba(124,58,237," + (a * 0.08) + ")" : "rgba(6,182,212," + (a * 0.08) + ")"; ctx.fill(); }
+            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 264 ? "rgba(37,99,235," + (a * 0.08) + ")" : "rgba(6,182,212," + (a * 0.08) + ")"; ctx.fill(); }
         };
         for (var i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
         function animate() {
@@ -225,10 +225,10 @@
             for (var i = 0; i < particles.length; i++) {
                 for (var j = i + 1; j < particles.length; j++) {
                     var a = particles[i], b = particles[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.15 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(124,58,237," + al + ")"); g.addColorStop(1, "rgba(6,182,212," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.8; ctx.stroke(); }
+                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.15 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(37,99,235," + al + ")"); g.addColorStop(1, "rgba(6,182,212," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.8; ctx.stroke(); }
                 }
             }
-            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx * dx + dy * dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(167,139,250," + ((1 - d / MOUSE_DIST) * 0.25) + ")"; ctx.lineWidth = 0.8; ctx.stroke(); } } }
+            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx * dx + dy * dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / MOUSE_DIST) * 0.25) + ")"; ctx.lineWidth = 0.8; ctx.stroke(); } } }
             for (var i = 0; i < particles.length; i++) particles[i].draw();
             requestAnimationFrame(animate);
         }

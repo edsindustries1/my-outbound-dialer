@@ -24,7 +24,7 @@
                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
-                            <stop offset="0%" stop-color="#7C3AED"/>
+                            <stop offset="0%" stop-color="#2563EB"/>
                             <stop offset="100%" stop-color="#06B6D4"/>
                         </linearGradient>
                     </defs>
@@ -58,7 +58,7 @@
                         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <defs>
                                 <linearGradient id="g2" x1="0" y1="0" x2="64" y2="64">
-                                    <stop offset="0%" stop-color="#7C3AED"/>
+                                    <stop offset="0%" stop-color="#2563EB"/>
                                     <stop offset="100%" stop-color="#06B6D4"/>
                                 </linearGradient>
                             </defs>
@@ -1387,7 +1387,7 @@
             ctx.beginPath();
             ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
             if (this.hue === 264) {
-                ctx.fillStyle = "rgba(124, 58, 237, " + alpha + ")";
+                ctx.fillStyle = "rgba(37, 99, 235, " + alpha + ")";
             } else {
                 ctx.fillStyle = "rgba(6, 182, 212, " + alpha + ")";
             }
@@ -1396,7 +1396,7 @@
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2);
                 ctx.fillStyle = (this.hue === 264)
-                    ? "rgba(124, 58, 237, " + (alpha * 0.08) + ")"
+                    ? "rgba(37, 99, 235, " + (alpha * 0.08) + ")"
                     : "rgba(6, 182, 212, " + (alpha * 0.08) + ")";
                 ctx.fill();
             }
@@ -1415,7 +1415,7 @@
                     if (dist < CONNECTION_DIST) {
                         var alpha = (1 - dist / CONNECTION_DIST) * 0.15 * Math.min(a.z, b.z);
                         var grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-                        grad.addColorStop(0, "rgba(124, 58, 237, " + alpha + ")");
+                        grad.addColorStop(0, "rgba(37, 99, 235, " + alpha + ")");
                         grad.addColorStop(1, "rgba(6, 182, 212, " + alpha + ")");
                         ctx.beginPath();
                         ctx.moveTo(a.x, a.y);
@@ -1439,7 +1439,7 @@
                     ctx.beginPath();
                     ctx.moveTo(mouseX, mouseY);
                     ctx.lineTo(p.x, p.y);
-                    ctx.strokeStyle = "rgba(167, 139, 250, " + alpha + ")";
+                    ctx.strokeStyle = "rgba(96, 165, 250, " + alpha + ")";
                     ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }

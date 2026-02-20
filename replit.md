@@ -41,16 +41,16 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **Brand**: Open Human
 - **Tagline**: Intelligent Communication at Scale
 - **Logo**: Human silhouette (head + shoulders) with signal waves, purple-to-cyan gradient background, rounded square icon
-- **Primary color**: Purple (#7C3AED) - represents human + AI fusion
+- **Primary color**: Blue (#2563EB) - represents trust + technology
 - **Secondary color**: Cyan (#06B6D4) - represents communication
-- **Accent gradient**: 135deg from #7C3AED to #06B6D4
+- **Accent gradient**: 135deg from #2563EB to #06B6D4
 - **Fonts**: Inter (UI), JetBrains Mono (monospace/data)
 - **Favicon**: Brain emoji
 
 ## UI/UX
 - Dual-theme system: Dark and Light modes with toggle button in header
 - Theme persisted in localStorage ("vb_theme") with inline head script to prevent flash
-- Purple (#7C3AED) + cyan (#06B6D4) gradient accent palette
+- Blue (#2563EB) + cyan (#06B6D4) gradient accent palette
 - Dark theme: deep navy backgrounds (#0B0F1A), subtle background glows
 - Light theme: clean white/gray surfaces (#F8FAFC), no glows, adjusted contrast
 - Smooth 0.35s transitions between themes on all elements
