@@ -2084,3 +2084,97 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     font-weight: 600;
     margin-right: 6px;
 }
+
+.call-row-live {
+    background: rgba(37, 99, 235, 0.06) !important;
+    border-left: 3px solid var(--accent) !important;
+}
+
+.call-row-live td:first-child {
+    padding-left: 10px !important;
+}
+
+.live-pulse {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: var(--success);
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    animation: livePulseAnim 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulseAnim {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+}
+
+.transcript-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 12px;
+    color: var(--success);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: livePulseAnim 1.5s ease-in-out infinite;
+}
+
+.transcript-waiting {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.transcript-row-live td {
+    padding: 0 !important;
+    border-top: none !important;
+}
+
+.transcript-box-live {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    background: rgba(16, 185, 129, 0.04) !important;
+}
+
+.transcript-header-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--success);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    margin-left: 4px;
+    animation: livePulseAnim 1.5s ease-in-out infinite;
+}
+
+.transcript-empty {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-style: italic;
+    padding: 8px 10px;
+    opacity: 0.7;
+}
+
+.transcript-waiting {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}

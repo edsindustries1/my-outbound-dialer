@@ -616,12 +616,23 @@ def webhook():
 
     # ---- call.transcription ----
     elif event_type == "call.transcription":
+        logger.info(f"RAW transcription payload keys: {list(payload.keys())} for {call_control_id}")
+        logger.info(f"RAW transcription payload: {str(payload)[:500]}")
         transcript_text = payload.get("transcript", "")
+        if not transcript_text:
+            td = payload.get("transcription_data") or payload.get("data") or {}
+            if isinstance(td, dict):
+                transcript_text = td.get("transcript", "")
         is_final = payload.get("is_final", False)
-        track = payload.get("track", "inbound")
-        if transcript_text and is_final:
-            append_transcript(call_control_id, transcript_text, track)
-            logger.info(f"Transcript [{track}] for {call_control_id}: {transcript_text[:100]}")
+        if not is_final:
+            td2 = payload.get("transcription_data") or payload.get("data") or {}
+            if isinstance(td2, dict):
+                is_final = td2.get("is_final", False)
+        track = payload.get("track", "") or payload.get("transcription_event_type", "") or "inbound"
+        logger.info(f"Transcription parsed: is_final={is_final}, track={track}, text='{transcript_text[:120] if transcript_text else '(empty)'}', call={call_control_id}")
+        if transcript_text:
+            append_transcript(call_control_id, transcript_text, track, is_final=is_final)
+            logger.info(f"Transcript stored [{track}] for {call_control_id}: {transcript_text[:100]}")
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":

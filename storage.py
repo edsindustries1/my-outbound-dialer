@@ -257,13 +257,13 @@ def mark_transferred(call_control_id):
         return False
 
 
-def append_transcript(call_control_id, text, track="inbound"):
+def append_transcript(call_control_id, text, track="inbound", is_final=True):
     with lock:
         state = call_states.get(call_control_id)
         if state:
             if "transcript" not in state:
                 state["transcript"] = []
-            state["transcript"].append({"text": text, "track": track})
+            state["transcript"].append({"text": text, "track": track, "is_final": is_final})
             return True
     return False
 
