@@ -3120,41 +3120,53 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 /* ---- Personalized Voicemail Panel ---- */
-.pvm-step {
+.pvm-section {
     padding: 16px 0;
     border-bottom: 1px solid var(--border);
 }
 
-.pvm-step:last-child {
+.pvm-section:last-child {
     border-bottom: none;
 }
 
-.pvm-step-header {
+.pvm-section-label {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.pvm-step-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2563EB, #06B6D4);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    gap: 8px;
     font-size: 13px;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.pvm-section-label svg {
+    color: #06B6D4;
     flex-shrink: 0;
 }
 
-.pvm-step-complete {
-    background: linear-gradient(135deg, #10B981, #06B6D4);
+.pvm-ready-label {
+    color: #10B981;
+}
+
+.pvm-ready-label svg {
+    color: #10B981;
+}
+
+.pvm-actions-section {
+    padding-top: 12px;
+    border-bottom: none;
+}
+
+.pvm-ready-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.pvm-ready-actions .btn {
+    flex: 1;
 }
 
 .pvm-hint {
