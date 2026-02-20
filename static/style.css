@@ -54,7 +54,7 @@
     --nav-btn-bg: rgba(255, 255, 255, 0.04);
     --nav-btn-border: rgba(255, 255, 255, 0.08);
     --nav-btn-hover-bg: rgba(255, 255, 255, 0.08);
-    --sidebar-bg: rgba(8, 12, 24, 0.6);
+    --sidebar-bg: rgba(11, 15, 26, 0.85);
 }
 
 /* ============ LIGHT THEME ============ */
@@ -104,7 +104,7 @@
     --nav-btn-bg: rgba(0, 0, 0, 0.03);
     --nav-btn-border: rgba(0, 0, 0, 0.06);
     --nav-btn-hover-bg: rgba(0, 0, 0, 0.06);
-    --sidebar-bg: rgba(248, 250, 252, 0.7);
+    --sidebar-bg: rgba(241, 245, 249, 0.9);
 }
 
 /* ============ GLOBAL TRANSITION ============ */
@@ -525,18 +525,21 @@ body {
 
 .sidebar-btn svg {
     flex-shrink: 0;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
-    min-width: 18px;
+    opacity: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    min-width: 20px;
+    stroke: var(--accent);
 }
 
 .sidebar-btn:hover svg {
     opacity: 1;
+    transform: scale(1.1);
+    stroke: var(--accent-hover);
 }
 
 .sidebar-btn.active svg {
     opacity: 1;
-    filter: brightness(1.5);
+    stroke: #fff;
 }
 
 .sidebar-label {
