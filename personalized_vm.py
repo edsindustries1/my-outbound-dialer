@@ -413,7 +413,6 @@ def humanize_text(text):
     text = _humanize_phone(text)
     text = _humanize_amount(text)
     text = _humanize_email(text)
-    text = _humanize_address(text)
     text = _conversational_smoothing(text)
     return text
 
@@ -422,10 +421,13 @@ def render_template(template, contact, humanize=True):
     def replace_placeholder(match):
         key = match.group(1).strip().lower()
         val = contact.get(key, match.group(0))
-        if humanize and key in ("first_name", "name"):
-            val = val.strip()
-            if val:
-                val = val + "..."
+        if humanize:
+            if key in ("first_name", "name"):
+                val = val.strip()
+                if val:
+                    val = val + "..."
+            if key == "address":
+                val = _humanize_address(val)
         return val
 
     result = re.sub(r'\{(\w+)\}', replace_placeholder, template)
