@@ -327,6 +327,7 @@ def status():
         "active": camp["active"],
         "stop_requested": camp["stop_requested"],
         "total": len(camp["numbers"]),
+        "dialed_count": camp["dialed_count"],
         "transfer_paused": is_transfer_paused(),
         "calls": get_all_statuses(),
     })
@@ -617,6 +618,13 @@ def api_report_test():
 def api_gmail_status():
     from gmail_client import test_connection
     return jsonify(test_connection())
+
+
+@app.route("/api/campaign_history")
+@login_required
+def campaign_history():
+    from storage import get_campaign_history_summary
+    return jsonify(get_campaign_history_summary())
 
 
 # ---- Background Scheduler Thread ----

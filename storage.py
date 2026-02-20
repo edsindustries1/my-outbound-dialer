@@ -862,3 +862,29 @@ def mark_report_sent():
     settings["last_sent"] = datetime.utcnow().isoformat()
     save_report_settings(settings)
     return settings
+
+
+def get_campaign_history_summary():
+    history = get_call_history()
+    if not history:
+        return []
+
+    campaigns = {}
+    for h in history:
+        date = h.get("timestamp", "")[:10]
+        if not date:
+            continue
+        if date not in campaigns:
+            campaigns[date] = {"date": date, "total": 0, "transferred": 0, "voicemail": 0, "failed": 0}
+        campaigns[date]["total"] += 1
+        if h.get("transferred"):
+            campaigns[date]["transferred"] += 1
+        elif h.get("voicemail_dropped"):
+            campaigns[date]["voicemail"] += 1
+        else:
+            campaigns[date]["failed"] += 1
+
+    result = sorted(campaigns.values(), key=lambda x: x["date"], reverse=True)
+    for r in result:
+        r["success_rate"] = round(((r["transferred"] + r["voicemail"]) / r["total"]) * 100, 1) if r["total"] > 0 else 0
+    return result

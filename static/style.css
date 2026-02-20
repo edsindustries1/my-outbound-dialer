@@ -4561,3 +4561,191 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,100,0,0.6); }
     50% { transform: scale(1.2); box-shadow: 0 0 35px rgba(255,100,0,0.8), 0 0 60px rgba(255,60,0,0.4); }
 }
+
+/* ============ CAMPAIGN PROGRESS BAR ============ */
+.campaign-progress-wrap {
+    margin: 8px 0 12px;
+    padding: 10px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    backdrop-filter: blur(12px);
+}
+.campaign-progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.campaign-progress-bar {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--input-bg);
+    overflow: hidden;
+}
+.campaign-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #2563EB, #06B6D4);
+    transition: width 0.5s ease;
+}
+
+/* ============ QUICK STATS BANNER ============ */
+.quick-stats-banner {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.quick-stat {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+}
+.quick-stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+.quick-stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============ DROP ZONE ============ */
+.drop-zone {
+    border: 2px dashed var(--card-border);
+    border-radius: 10px;
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    transition: all 0.25s;
+    cursor: pointer;
+    margin-bottom: 8px;
+}
+.drop-zone svg {
+    display: block;
+    margin: 0 auto 8px;
+    color: var(--text-secondary);
+}
+.drop-zone-active {
+    border-color: #2563EB;
+    background: rgba(37, 99, 235, 0.06);
+    color: #2563EB;
+}
+.drop-zone-active svg {
+    color: #2563EB;
+}
+.drop-zone-browse {
+    color: #06B6D4;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.drop-zone-filename {
+    margin-top: 6px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #06B6D4;
+}
+
+/* ============ TOAST NOTIFICATIONS ============ */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(16px);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s;
+    pointer-events: auto;
+    max-width: 320px;
+}
+.toast-show {
+    transform: translateX(0);
+}
+.toast-hide {
+    transform: translateX(120%);
+    opacity: 0;
+}
+.toast-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.toast-success .toast-icon { color: #30D158; }
+.toast-error .toast-icon { color: #FF453A; }
+.toast-info .toast-icon { color: #0A84FF; }
+.toast-warning .toast-icon { color: #FFD60A; }
+.toast-msg {
+    flex: 1;
+}
+
+/* ============ RESPONSIVE - TABLET ============ */
+@media (max-width: 900px) {
+    .quick-stats-banner {
+        gap: 8px;
+    }
+    .quick-stat-value {
+        font-size: 20px;
+    }
+}
+
+/* ============ RESPONSIVE - MOBILE NEW COMPONENTS ============ */
+@media (max-width: 600px) {
+    .quick-stats-banner {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .quick-stat {
+        flex: 1 1 45%;
+        min-width: 0;
+    }
+    .quick-stat-value {
+        font-size: 18px;
+    }
+    .campaign-progress-wrap {
+        padding: 8px 12px;
+    }
+    .toast-container {
+        left: 12px;
+        right: 12px;
+    }
+    .toast {
+        max-width: 100%;
+    }
+    .iphone-3d-wrapper {
+        transform: scale(0.75);
+        transform-origin: bottom right;
+    }
+    .drop-zone {
+        padding: 16px 12px;
+    }
+}

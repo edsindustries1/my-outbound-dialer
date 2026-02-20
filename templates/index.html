@@ -115,14 +115,49 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
                     <span class="sidebar-label">Email Reports</span>
                 </button>
+                <button type="button" class="sidebar-btn" data-panel="panelCampaignHistory" title="Campaign History">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/><path d="M1 12h2M21 12h2"/></svg>
+                    <span class="sidebar-label">History</span>
+                </button>
             </nav>
         </aside>
 
         <div class="container">
 
+            <!-- Quick Stats Banner -->
+            <div class="quick-stats-banner" id="quickStatsBanner">
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsTotalCalls">0</div>
+                    <div class="quick-stat-label">Total Calls</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsHotLeads">0</div>
+                    <div class="quick-stat-label">Hot Leads</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsVoicemails">0</div>
+                    <div class="quick-stat-label">Voicemails</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsSuccessRate">0%</div>
+                    <div class="quick-stat-label">Success Rate</div>
+                </div>
+            </div>
+
             <!-- Status Bar -->
             <div class="status-bar stagger-1" id="campaignStatus">
                 <span class="dot dot-inactive"></span> No active campaign
+            </div>
+
+            <!-- Campaign Progress Bar -->
+            <div class="campaign-progress-wrap" id="campaignProgressWrap" style="display:none;">
+                <div class="campaign-progress-info">
+                    <span id="progressLabel">Dialed: 0 / 0</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="campaign-progress-bar">
+                    <div class="campaign-progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
             </div>
 
             <!-- Expandable Panels -->
@@ -183,8 +218,12 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         </button>
                     </div>
-                    <label>Upload CSV file</label>
-                    <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt">
+                    <div class="drop-zone" id="csvDropZone">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span>Drag &amp; drop CSV here or <label for="csvFile" class="drop-zone-browse">browse</label></span>
+                        <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt" style="display:none;">
+                        <div class="drop-zone-filename" id="csvFileName"></div>
+                    </div>
                     <label>Or paste numbers (one per line)</label>
                     <textarea name="numbers" id="numbersInput" rows="4" placeholder="+15551234567&#10;+15559876543"></textarea>
                 </div>
@@ -199,8 +238,12 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         </button>
                     </div>
-                    <label>Upload MP3/WAV to override saved voicemail</label>
-                    <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav">
+                    <div class="drop-zone" id="audioDropZone">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span>Drag &amp; drop audio here or <label for="audioFile" class="drop-zone-browse">browse</label></span>
+                        <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav" style="display:none;">
+                        <div class="drop-zone-filename" id="audioFileName"></div>
+                    </div>
                     <label>Or provide a different public audio URL</label>
                     <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
                 </div>
@@ -608,6 +651,36 @@
                 </div>
             </div>
 
+            <!-- Campaign History -->
+            <div class="panel" id="panelCampaignHistory">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                        Campaign History
+                        <button type="button" class="panel-minimize" data-panel="panelCampaignHistory" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div class="table-wrap">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Total Calls</th>
+                                    <th>Hot Leads</th>
+                                    <th>Voicemails</th>
+                                    <th>Failed</th>
+                                    <th>Success Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <tr><td colspan="6" class="empty-row">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
                 <!-- Dial Mode -->
                 <div class="card stagger-6">
                     <div class="card-title">
@@ -800,6 +873,96 @@
                 document.getElementById("app").classList.add("show");
             }, 2900);
 
+            // ---- Hot Lead Sound ----
+            function playHotLeadSound() {
+                try {
+                    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    var osc1 = ctx.createOscillator();
+                    var gain1 = ctx.createGain();
+                    osc1.type = "sine";
+                    osc1.frequency.value = 880;
+                    gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                    osc1.connect(gain1);
+                    gain1.connect(ctx.destination);
+                    osc1.start(ctx.currentTime);
+                    osc1.stop(ctx.currentTime + 0.15);
+
+                    var osc2 = ctx.createOscillator();
+                    var gain2 = ctx.createGain();
+                    osc2.type = "sine";
+                    osc2.frequency.value = 1100;
+                    gain2.gain.setValueAtTime(0.3, ctx.currentTime + 0.18);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.33);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(ctx.currentTime + 0.18);
+                    osc2.stop(ctx.currentTime + 0.33);
+                } catch(e) {}
+            }
+
+            // ---- Animated Counter ----
+            function animateCounter(el, targetVal, duration) {
+                if (!el) return;
+                var isPercent = typeof targetVal === "string" && targetVal.includes("%");
+                var target = parseFloat(targetVal) || 0;
+                var current = parseFloat(el.textContent) || 0;
+                if (current === target) return;
+                var start = performance.now();
+                duration = duration || 600;
+                function step(now) {
+                    var progress = Math.min((now - start) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 3);
+                    var val = Math.round(current + (target - current) * eased);
+                    el.textContent = val + (isPercent ? "%" : "");
+                    if (progress < 1) requestAnimationFrame(step);
+                }
+                requestAnimationFrame(step);
+            }
+
+            // ---- Toast Notifications ----
+            function showToast(message, type) {
+                type = type || "info";
+                var container = document.getElementById("toastContainer");
+                var toast = document.createElement("div");
+                toast.className = "toast toast-" + type;
+                var icons = {success: "&#10003;", error: "&#10007;", info: "&#9432;", warning: "&#9888;"};
+                toast.innerHTML = '<span class="toast-icon">' + (icons[type] || icons.info) + '</span><span class="toast-msg">' + message + '</span>';
+                container.appendChild(toast);
+                requestAnimationFrame(function(){ toast.classList.add("toast-show"); });
+                setTimeout(function(){
+                    toast.classList.remove("toast-show");
+                    toast.classList.add("toast-hide");
+                    setTimeout(function(){ toast.remove(); }, 400);
+                }, 3500);
+            }
+
+            // ---- Campaign History ----
+            function loadCampaignHistory() {
+                fetch("/api/campaign_history", {credentials:"include", headers:{"X-Requested-With":"XMLHttpRequest"}})
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                        var body = document.getElementById("historyBody");
+                        if (!data || data.length === 0) {
+                            body.innerHTML = '<tr><td colspan="6" class="empty-row">No campaign history yet</td></tr>';
+                            return;
+                        }
+                        var html = "";
+                        data.forEach(function(d){
+                            var rateColor = d.success_rate >= 50 ? "green" : d.success_rate >= 25 ? "yellow" : "red";
+                            html += '<tr>';
+                            html += '<td>' + d.date + '</td>';
+                            html += '<td>' + d.total + '</td>';
+                            html += '<td style="color:#30D158">' + d.transferred + '</td>';
+                            html += '<td style="color:#0A84FF">' + d.voicemail + '</td>';
+                            html += '<td style="color:#FF453A">' + d.failed + '</td>';
+                            html += '<td><span class="badge badge-' + rateColor + '">' + d.success_rate + '%</span></td>';
+                            html += '</tr>';
+                        });
+                        body.innerHTML = html;
+                    });
+            }
+
             // ---- Sidebar Panel Toggle ----
             var sidebarBtns = document.querySelectorAll(".sidebar-btn");
             var minimizeBtns = document.querySelectorAll(".panel-minimize");
@@ -824,6 +987,7 @@
                     if (panelId === "panelTemplates" && typeof loadTemplates === "function") loadTemplates();
                     if (panelId === "panelPVM" && typeof pvmInit === "function") pvmInit();
                     if (panelId === "panelEmailReports" && typeof loadReportSettings === "function") loadReportSettings();
+                    if (panelId === "panelCampaignHistory") loadCampaignHistory();
                     setTimeout(function() {
                         panel.scrollIntoView({ behavior: "smooth", block: "start" });
                     }, 100);
@@ -1116,6 +1280,7 @@
                         }
                         callBody.innerHTML = '<tr><td colspan="8" class="empty-row">No calls yet</td></tr>';
                         callCount.textContent = "0 calls";
+                        showToast("Call logs cleared", "info");
                     })
                     .catch(function(e) {
                         clearLogsBtn.disabled = false;
@@ -1235,6 +1400,7 @@
                         } else {
                             stopBtn.disabled = false;
                             startBtn.textContent = "Campaign Running...";
+                            showToast("Campaign started!", "success");
                             pollStatus();
                         }
                     })
@@ -1254,6 +1420,7 @@
                         stopBtn.disabled = true;
                         startBtn.disabled = false;
                         startBtn.textContent = "Start Campaign";
+                        showToast("Campaign stopped", "info");
                     });
             });
 
@@ -1300,6 +1467,8 @@
             var pollInterval = 2000;
             var pollTimer = null;
             var isActive = false;
+            var prevActiveState = false;
+            var prevVmCount = 0;
 
             function pollStatus() {
                 apiFetch("/status")
@@ -1328,9 +1497,41 @@
                             }
                         }
 
+                        var progressWrap = document.getElementById("campaignProgressWrap");
+                        if (data.active && data.total > 0) {
+                            progressWrap.style.display = "";
+                            var percent = Math.round((data.dialed_count / data.total) * 100);
+                            document.getElementById("progressLabel").textContent = "Dialed: " + data.dialed_count + " / " + data.total;
+                            document.getElementById("progressPercent").textContent = percent + "%";
+                            document.getElementById("progressFill").style.width = percent + "%";
+                        } else {
+                            progressWrap.style.display = "none";
+                        }
+
                         var hasLiveCalls = false;
-                        var count = data.calls ? data.calls.length : 0;
+                        var calls = data.calls || [];
+                        var count = calls.length;
                         callCount.textContent = count + " call" + (count !== 1 ? "s" : "");
+
+                        var totalCalls = calls.length;
+                        var hotLeads = calls.filter(function(c){ return c.transferred; }).length;
+                        var voicemails = calls.filter(function(c){ return c.voicemail_dropped; }).length;
+                        var successRate = totalCalls > 0 ? Math.round(((hotLeads + voicemails) / totalCalls) * 100) : 0;
+                        animateCounter(document.getElementById("qsTotalCalls"), totalCalls);
+                        animateCounter(document.getElementById("qsHotLeads"), hotLeads);
+                        animateCounter(document.getElementById("qsVoicemails"), voicemails);
+                        animateCounter(document.getElementById("qsSuccessRate"), successRate + "%");
+
+                        var newVmCount = voicemails;
+                        if (newVmCount > prevVmCount && prevVmCount > 0) {
+                            showToast("Voicemail dropped", "success");
+                        }
+                        prevVmCount = newVmCount;
+
+                        if (prevActiveState && !data.active && !data.stop_requested) {
+                            showToast("Campaign complete!", "success");
+                        }
+                        prevActiveState = data.active;
 
                         var filterVal = statusFilter.value;
 
@@ -3305,6 +3506,7 @@
             }
 
             function hotleadNotify(number) {
+                playHotLeadSound();
                 if (hotleadAnimating) return;
                 hotleadAnimating = true;
                 if (hotleadAutoMinTimer) clearTimeout(hotleadAutoMinTimer);
@@ -3509,6 +3711,34 @@
             }
 
 
+            (function(){
+                function setupDropZone(zoneId, inputId, nameId) {
+                    var zone = document.getElementById(zoneId);
+                    var input = document.getElementById(inputId);
+                    var nameEl = document.getElementById(nameId);
+                    if (!zone || !input) return;
+
+                    ["dragenter","dragover"].forEach(function(ev) {
+                        zone.addEventListener(ev, function(e) { e.preventDefault(); zone.classList.add("drop-zone-active"); });
+                    });
+                    ["dragleave","drop"].forEach(function(ev) {
+                        zone.addEventListener(ev, function(e) { e.preventDefault(); zone.classList.remove("drop-zone-active"); });
+                    });
+                    zone.addEventListener("drop", function(e) {
+                        if (e.dataTransfer.files.length > 0) {
+                            input.files = e.dataTransfer.files;
+                            nameEl.textContent = e.dataTransfer.files[0].name;
+                        }
+                    });
+                    input.addEventListener("change", function() {
+                        nameEl.textContent = input.files.length > 0 ? input.files[0].name : "";
+                    });
+                }
+                setupDropZone("csvDropZone", "csvFile", "csvFileName");
+                setupDropZone("audioDropZone", "audioFile", "audioFileName");
+            })();
+
     </script>
+    <div class="toast-container" id="toastContainer"></div>
 </body>
 </html>
