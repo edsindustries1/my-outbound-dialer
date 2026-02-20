@@ -92,8 +92,8 @@
                     <span class="sidebar-label">Schedule</span>
                 </button>
                 <button type="button" class="sidebar-btn" data-panel="panelWebhook" title="Webhook Monitor">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                    <span class="sidebar-label">Webhooks</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><rect x="6" y="2" width="12" height="20" rx="2" fill="none"/><line x1="10" y1="0" x2="14" y2="0" stroke-width="3" stroke-linecap="round" transform="translate(0,2.5)"/><rect x="9" y="12" width="6" height="7" rx="1" fill="currentColor" opacity="0.4"/></svg>
+                    <span class="sidebar-label">Health</span>
                 </button>
                 <button type="button" class="sidebar-btn" data-panel="panelTemplates" title="Campaign Templates">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -334,14 +334,27 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         </button>
                     </div>
-                    <div class="webhook-status-grid">
-                        <div class="webhook-stat">
-                            <div class="webhook-stat-label">Status</div>
-                            <div class="webhook-health" id="webhookHealth">
-                                <span class="health-dot health-unknown"></span>
-                                <span id="webhookHealthText">Unknown</span>
+                    <div class="battery-hero" id="webhookBatteryHero">
+                        <div class="battery-container">
+                            <div class="battery-body">
+                                <div class="battery-fill" id="batteryFill">
+                                    <div class="battery-wave"></div>
+                                    <div class="battery-wave battery-wave-2"></div>
+                                </div>
+                                <div class="battery-shimmer"></div>
+                                <div class="battery-bolt" id="batteryBolt">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
+                                        <path d="M13 2L4.5 12.5H12L11 22L19.5 11.5H12L13 2Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="battery-percent" id="batteryPercent">0%</div>
                             </div>
+                            <div class="battery-tip"></div>
+                            <div class="battery-glow" id="batteryGlow"></div>
                         </div>
+                        <div class="battery-label" id="batteryLabel">Checking...</div>
+                    </div>
+                    <div class="webhook-status-grid">
                         <div class="webhook-stat">
                             <div class="webhook-stat-label">Total Received</div>
                             <div class="webhook-stat-value" id="webhookTotal">0</div>
@@ -2032,6 +2045,60 @@
             }
 
             // ---- Webhook Status Monitor ----
+            var batteryAnimFrame = null;
+            var currentBatteryLevel = 0;
+            var targetBatteryLevel = 0;
+
+            function animateBattery() {
+                if (Math.abs(currentBatteryLevel - targetBatteryLevel) > 0.5) {
+                    currentBatteryLevel += (targetBatteryLevel - currentBatteryLevel) * 0.04;
+                    updateBatteryVisual(Math.round(currentBatteryLevel));
+                    batteryAnimFrame = requestAnimationFrame(animateBattery);
+                } else {
+                    currentBatteryLevel = targetBatteryLevel;
+                    updateBatteryVisual(targetBatteryLevel);
+                }
+            }
+
+            function updateBatteryVisual(pct) {
+                var fill = document.getElementById("batteryFill");
+                var percentEl = document.getElementById("batteryPercent");
+                var glow = document.getElementById("batteryGlow");
+                var bolt = document.getElementById("batteryBolt");
+                var label = document.getElementById("batteryLabel");
+                var hero = document.getElementById("webhookBatteryHero");
+                if (!fill) return;
+
+                fill.style.height = pct + "%";
+                percentEl.textContent = Math.round(pct) + "%";
+
+                var color, glowColor, statusText;
+                if (pct >= 80) {
+                    color = "#30D158";
+                    glowColor = "rgba(48, 209, 88, 0.4)";
+                    statusText = "Fully Charged";
+                    hero.className = "battery-hero battery-charging";
+                    bolt.style.display = "flex";
+                } else if (pct >= 20) {
+                    color = "#FFD60A";
+                    glowColor = "rgba(255, 214, 10, 0.3)";
+                    statusText = "Warning";
+                    hero.className = "battery-hero";
+                    bolt.style.display = "none";
+                } else {
+                    color = "#FF453A";
+                    glowColor = "rgba(255, 69, 58, 0.3)";
+                    statusText = "No Data";
+                    hero.className = "battery-hero battery-low";
+                    bolt.style.display = "none";
+                }
+
+                fill.style.background = "linear-gradient(0deg, " + color + " 0%, " + color + "cc 100%)";
+                glow.style.boxShadow = "0 0 30px " + glowColor + ", 0 0 60px " + glowColor;
+                label.textContent = statusText;
+                label.style.color = color;
+            }
+
             function loadWebhookStatus() {
                 apiFetch("/api/webhook-status")
                     .then(function(r) { return r.json(); })
@@ -2039,10 +2106,16 @@
                         document.getElementById("webhookTotal").textContent = data.total_received;
                         document.getElementById("webhookLastTime").textContent = data.last_received_ago || "Never";
                         document.getElementById("webhookLastEvent").textContent = (data.last_event_type || "-").replace("call.", "");
-                        var healthDot = document.querySelector("#webhookHealth .health-dot");
-                        var healthText = document.getElementById("webhookHealthText");
-                        healthDot.className = "health-dot health-" + data.health;
-                        healthText.textContent = data.health === "healthy" ? "Healthy" : data.health === "warning" ? "Warning" : "No Data";
+
+                        if (data.health === "healthy") {
+                            targetBatteryLevel = 100;
+                        } else if (data.health === "warning") {
+                            targetBatteryLevel = 40;
+                        } else {
+                            targetBatteryLevel = 0;
+                        }
+                        if (batteryAnimFrame) cancelAnimationFrame(batteryAnimFrame);
+                        batteryAnimFrame = requestAnimationFrame(animateBattery);
 
                         var evtHtml = "";
                         var evtKeys = Object.keys(data.events_by_type || {}).sort(function(a,b){ return (data.events_by_type[b]||0) - (data.events_by_type[a]||0); });

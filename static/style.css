@@ -2556,25 +2556,204 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     color: var(--text-primary);
 }
 
-.webhook-health {
+/* iPhone Battery Indicator */
+.battery-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 18px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.battery-container {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-weight: 600;
-    font-size: 14px;
 }
 
-.health-dot {
-    width: 10px;
-    height: 10px;
+.battery-body {
+    width: 72px;
+    height: 120px;
+    border: 3px solid rgba(255,255,255,0.35);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+}
+
+[data-theme="light"] .battery-body {
+    border-color: rgba(0,0,0,0.25);
+    background: rgba(255,255,255,0.4);
+}
+
+.battery-tip {
+    width: 24px;
+    height: 8px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 4px 4px 0 0;
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+[data-theme="light"] .battery-tip {
+    background: rgba(0,0,0,0.25);
+}
+
+.battery-fill {
+    position: absolute;
+    bottom: 0;
+    left: 3px;
+    right: 3px;
+    height: 0%;
+    border-radius: 0 0 7px 7px;
+    background: linear-gradient(0deg, #30D158 0%, #30D158cc 100%);
+    transition: height 0.1s linear;
+    overflow: hidden;
+}
+
+.battery-wave {
+    position: absolute;
+    top: -8px;
+    left: -50%;
+    width: 200%;
+    height: 16px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.3) 0%, transparent 70%);
     border-radius: 50%;
-    display: inline-block;
+    animation: batteryWaveMove 2.5s ease-in-out infinite;
 }
 
-.health-healthy { background: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
-.health-warning { background: #F59E0B; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
-.health-unknown { background: #6B7280; }
+.battery-wave-2 {
+    animation-delay: -1.2s;
+    opacity: 0.6;
+    top: -6px;
+}
+
+@keyframes batteryWaveMove {
+    0%, 100% { transform: translateX(-10%); }
+    50% { transform: translateX(10%); }
+}
+
+.battery-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    animation: batteryShimmer 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes batteryShimmer {
+    0% { left: -60%; }
+    100% { left: 160%; }
+}
+
+.battery-bolt {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    z-index: 3;
+    display: none;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+    animation: batteryBoltPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes batteryBoltPulse {
+    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+.battery-percent {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    z-index: 4;
+}
+
+[data-theme="light"] .battery-percent {
+    color: rgba(0,0,0,0.7);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+}
+
+[data-theme="light"] .battery-bolt {
+    color: rgba(0,0,0,0.6);
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+}
+
+[data-theme="light"] .battery-label {
+    filter: brightness(0.8);
+}
+
+.battery-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 160px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+    transition: box-shadow 0.5s ease;
+}
+
+.battery-label {
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+.battery-charging .battery-body {
+    animation: batteryChargeGlow 2s ease-in-out infinite;
+}
+
+@keyframes batteryChargeGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(48, 209, 88, 0.2), inset 0 0 10px rgba(48, 209, 88, 0.05); }
+    50% { box-shadow: 0 0 25px rgba(48, 209, 88, 0.4), inset 0 0 15px rgba(48, 209, 88, 0.1); }
+}
+
+.battery-charging .battery-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(0deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+    animation: batteryChargePulse 2s ease-in-out infinite;
+}
+
+@keyframes batteryChargePulse {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(-100%); }
+}
+
+.battery-low .battery-body {
+    animation: batteryLowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes batteryLowPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 69, 58, 0.15); }
+    50% { box-shadow: 0 0 20px rgba(255, 69, 58, 0.35); }
+}
 
 .webhook-section-title {
     font-size: 11px;
