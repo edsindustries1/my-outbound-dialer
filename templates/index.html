@@ -2877,13 +2877,28 @@
             var iphoneMinimized = false;
             function iphoneToggleMinimize() {
                 var dialer = document.getElementById("iphoneDialer");
+                var body3d = document.getElementById("iphone3dBody");
                 iphoneMinimized = !iphoneMinimized;
                 if (iphoneMinimized) {
+                    body3d.style.transformOrigin = "center bottom";
                     dialer.classList.add("minimized");
                 } else {
                     dialer.classList.remove("minimized");
+                    setTimeout(function() {
+                        body3d.style.transformOrigin = "";
+                    }, 1000);
                 }
             }
+            (function() {
+                var dialer = document.getElementById("iphoneDialer");
+                if (dialer) {
+                    dialer.addEventListener("click", function(e) {
+                        if (iphoneMinimized) {
+                            iphoneToggleMinimize();
+                        }
+                    });
+                }
+            })();
 
             function iphoneFormatNumber(num) {
                 if (!num) return "";

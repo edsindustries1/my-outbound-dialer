@@ -3460,11 +3460,13 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 580px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                transform-origin 0s;
+    transform-origin: center center;
 }
 
 .iphone-3d-wrapper.minimized .iphone-3d-body {
-    transform: rotateY(180deg) scale(0.55) translateY(30px);
+    transform: rotateX(86deg) scale(0.65);
 }
 
 .iphone-3d-wrapper.minimized {
@@ -3473,20 +3475,20 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 
 .iphone-resting-shadow {
     position: absolute;
-    bottom: -25px;
-    left: 5%;
-    width: 90%;
-    height: 25px;
+    bottom: -15px;
+    left: -10%;
+    width: 120%;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.15) 40%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 35%, transparent 65%);
     opacity: 0;
-    transition: opacity 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: opacity 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     pointer-events: none;
 }
 
 .iphone-3d-wrapper.minimized .iphone-resting-shadow {
     opacity: 1;
-    transform: scaleX(1.2) scaleY(1.4);
+    transform: scaleX(1.6) scaleY(0.3) translateY(-20px);
 }
 
 .iphone-front,
@@ -4051,6 +4053,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     );
     border-radius: 52px;
     position: relative;
+    transform-style: preserve-3d;
     box-shadow:
         0 0 0 0.5px rgba(0,0,0,0.1),
         0 0 0 1px rgba(255,255,255,0.4),
@@ -4087,7 +4090,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     pointer-events: none;
 }
 
-/* ---- Camera Module (Triple Lens) ---- */
+/* ---- Camera Module (Triple Lens - 3D depth for lay-flat view) ---- */
 .iphone-camera-module {
     position: absolute;
     top: 22px;
@@ -4096,6 +4099,8 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 95px;
     background: linear-gradient(150deg, #D4D4D9, #C0C0C5, #B8B8BD, #CCCCD1);
     border-radius: 24px;
+    transform: translateZ(6px);
+    transform-style: preserve-3d;
     box-shadow:
         0 3px 12px rgba(0,0,0,0.25),
         0 1px 4px rgba(0,0,0,0.15),
