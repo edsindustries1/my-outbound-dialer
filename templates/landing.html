@@ -37,27 +37,64 @@
   </nav>
 
   <section class="hero">
-    <div class="hero-glow"></div>
-    <div class="hero-particles" id="heroParticles"></div>
+    <div class="hero-mesh"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <canvas class="hero-canvas" id="heroCanvas"></canvas>
+    <div class="hero-grid-lines"></div>
+
     <div class="hero-inner">
       <div class="hero-badge anim-fade">
         <span class="hero-badge-dot"></span>
-        AI-Powered Sales Dialer
+        <span class="hero-badge-text">AI-Powered Sales Dialer</span>
+        <span class="hero-badge-shimmer"></span>
       </div>
-      <h1 class="hero-title anim-fade">Intelligent<br>Communication<br>at Scale</h1>
-      <p class="hero-sub anim-fade">The future of outbound sales at your fingertips — AI-powered dialing, personalized voicemail drops, and real-time transcription. Secure, smart, and seamless.</p>
+
+      <h1 class="hero-title anim-fade">
+        <span class="title-line title-line-1">
+          <span class="title-word" style="--i:0">Intelligent</span>
+        </span>
+        <span class="title-line title-line-2">
+          <span class="title-word" style="--i:1">Communication</span>
+        </span>
+        <span class="title-line title-line-3">
+          <span class="title-word" style="--i:2">at</span>
+          <span class="title-word title-word-accent" style="--i:3">Scale</span>
+        </span>
+      </h1>
+
+      <p class="hero-sub anim-fade">The future of outbound sales at your fingertips — AI-powered dialing, personalized voicemail drops, and real-time transcription.</p>
+
       <div class="hero-actions anim-fade">
-        <a href="/login" class="btn-primary btn-lg">
+        <a href="/login" class="btn-primary btn-lg btn-glow">
           <span>Get Started Today</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
         <a href="#features" class="btn-ghost btn-lg">See How It Works</a>
       </div>
+
+      <div class="hero-trust anim-fade">
+        <div class="trust-avatars">
+          <div class="trust-av" style="--c:#6366f1">S</div>
+          <div class="trust-av" style="--c:#8b5cf6">M</div>
+          <div class="trust-av" style="--c:#a78bfa">R</div>
+          <div class="trust-av" style="--c:#4f46e5">T</div>
+          <div class="trust-av" style="--c:#818cf8">J</div>
+        </div>
+        <span class="trust-text">Trusted by <strong>2,000+</strong> sales teams worldwide</span>
+      </div>
     </div>
+
     <div class="hero-mockup anim-fade">
       <div class="mockup-float">
+        <div class="mockup-browser-bar">
+          <span class="browser-dot"></span><span class="browser-dot"></span><span class="browser-dot"></span>
+          <span class="browser-url">app.openhuman.ai/dashboard</span>
+        </div>
         <img src="/static/images/dashboard-preview.png" alt="Open Human dashboard preview" loading="eager">
         <div class="mockup-glow"></div>
+        <div class="mockup-reflection"></div>
       </div>
     </div>
   </section>
@@ -494,10 +531,81 @@
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
-        e.preventDefault();
-        const t = document.querySelector(a.getAttribute('href'));
-        if (t) window.scrollTo({ top: t.offsetTop - 80, behavior: 'smooth' });
+        const href = a.getAttribute('href');
+        if (href.length > 1) {
+          e.preventDefault();
+          const t = document.querySelector(href);
+          if (t) window.scrollTo({ top: t.offsetTop - 80, behavior: 'smooth' });
+        }
       });
+    });
+
+    // Hero particle canvas
+    const canvas = document.getElementById('heroCanvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      let w, h, particles = [];
+      function resizeCanvas() {
+        w = canvas.width = canvas.parentElement.offsetWidth;
+        h = canvas.height = canvas.parentElement.offsetHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * w;
+          this.y = Math.random() * h;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedX = (Math.random() - 0.5) * 0.4;
+          this.speedY = (Math.random() - 0.5) * 0.4;
+          this.opacity = Math.random() * 0.5 + 0.1;
+          this.pulse = Math.random() * Math.PI * 2;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          this.pulse += 0.02;
+          if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+        }
+        draw() {
+          const o = this.opacity * (0.5 + 0.5 * Math.sin(this.pulse));
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(99,102,241,${o})`;
+          ctx.fill();
+        }
+      }
+      for (let i = 0; i < 60; i++) particles.push(new Particle());
+      function drawLines() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(99,102,241,${0.06 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+      }
+      function animateParticles() {
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(p => { p.update(); p.draw(); });
+        drawLines();
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+    }
+
+    // Title word reveal animation
+    document.querySelectorAll('.title-word').forEach((w, i) => {
+      setTimeout(() => w.classList.add('revealed'), 300 + i * 180);
     });
 
     const aio = new IntersectionObserver((entries) => {
