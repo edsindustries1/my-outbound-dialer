@@ -214,17 +214,46 @@ def start():
 
     # ---- Parse phone numbers ----
     numbers = []
+    csv_content_for_pvm = ""
 
     csv_file = request.files.get("csv_file")
     if csv_file and csv_file.filename:
         filename = secure_filename(csv_file.filename)
         content = csv_file.read().decode("utf-8")
-        reader = csv.reader(io.StringIO(content))
-        for row in reader:
-            for cell in row:
-                cell = cell.strip()
-                if cell and cell.replace("+", "").replace("-", "").replace(" ", "").isdigit():
-                    numbers.append(cell)
+        csv_content_for_pvm = content
+
+        reader = csv.DictReader(io.StringIO(content))
+        fieldnames = reader.fieldnames or []
+        norm_fields = {f: f.strip().lower().replace(" ", "_") for f in fieldnames}
+        phone_col = None
+        for orig, norm in norm_fields.items():
+            if norm in ("phone", "phone_number", "phonenumber", "mobile", "cell", "telephone", "tel", "number"):
+                phone_col = orig
+                break
+
+        if phone_col:
+            for row in reader:
+                val = (row.get(phone_col) or "").strip()
+                if val:
+                    digits = re.sub(r'[^\d+]', '', val)
+                    if digits and len(digits) >= 7:
+                        if not digits.startswith("+"):
+                            if len(digits) == 10:
+                                digits = "+1" + digits
+                            elif len(digits) == 11 and digits.startswith("1"):
+                                digits = "+" + digits
+                            else:
+                                digits = "+" + digits
+                        numbers.append(digits)
+        else:
+            reader2 = csv.reader(io.StringIO(content))
+            header = next(reader2, None)
+            for row in reader2:
+                for cell in row:
+                    cell = cell.strip()
+                    cleaned = cell.replace("+", "").replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
+                    if cleaned.isdigit() and len(cleaned) >= 7:
+                        numbers.append(cell)
 
     if pasted_numbers:
         for line in pasted_numbers.split("\n"):
@@ -315,15 +344,10 @@ def start():
         _detect_and_set_base_url()
         base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
 
-        csv_file = request.files.get("csv_file")
-        csv_content = ""
-        if csv_file and csv_file.filename:
-            csv_file.seek(0)
-            csv_content = csv_file.read().decode("utf-8")
-
         contacts = []
-        if csv_content:
-            contacts = pvm_parse_csv(csv_content)
+        if csv_content_for_pvm:
+            parsed = pvm_parse_csv(csv_content_for_pvm)
+            contacts = parsed.get("contacts", []) if isinstance(parsed, dict) else parsed
         else:
             for num in numbers:
                 contacts.append({"phone": num, "first_name": "", "last_name": ""})
