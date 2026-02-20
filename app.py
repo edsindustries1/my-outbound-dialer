@@ -740,7 +740,8 @@ def pvm_preview():
     contact = data.get("contact", {})
     if not template:
         return jsonify({"error": "No template provided"}), 400
-    rendered = pvm_render_template(template, contact)
+    humanize = data.get("humanize", True)
+    rendered = pvm_render_template(template, contact, humanize=humanize)
     return jsonify({"rendered": rendered})
 
 
@@ -759,7 +760,10 @@ def pvm_preview_audio_endpoint():
     _detect_and_set_base_url()
     base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
 
-    filename, result = pvm_preview_audio(contact, template, voice_id)
+    voice_settings = data.get("voice_settings", None)
+    humanize = data.get("humanize", True)
+
+    filename, result = pvm_preview_audio(contact, template, voice_id, voice_settings=voice_settings, humanize=humanize)
     if filename:
         audio_url = f"{base_url}/audio/personalized/{filename}"
         return jsonify({"audio_url": audio_url, "script": result})
@@ -774,6 +778,8 @@ def pvm_generate():
     contacts = data.get("contacts", [])
     template = data.get("template", "")
     voice_id = data.get("voice_id", "")
+    voice_settings = data.get("voice_settings", None)
+    humanize = data.get("humanize", True)
 
     if not contacts:
         return jsonify({"error": "No contacts provided"}), 400
@@ -787,7 +793,7 @@ def pvm_generate():
     if not base_url:
         return jsonify({"error": "Could not determine public URL for audio serving"}), 400
 
-    success, msg = pvm_start_generation(contacts, template, voice_id, base_url)
+    success, msg = pvm_start_generation(contacts, template, voice_id, base_url, voice_settings=voice_settings, humanize=humanize)
     if not success:
         return jsonify({"error": msg}), 400
     return jsonify({"message": msg, "total": len(contacts)})

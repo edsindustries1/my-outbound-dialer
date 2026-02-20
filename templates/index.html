@@ -564,6 +564,105 @@
                         </div>
                     </div>
 
+                    <div class="pvm-section">
+                        <div class="pvm-section-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                            Voice Controls
+                        </div>
+                        <p class="pvm-hint">Fine-tune how the voice sounds. Adjust these settings to get the most natural, human-like delivery.</p>
+
+                        <div class="pvm-voice-controls">
+                            <div class="pvm-slider-group">
+                                <div class="pvm-slider-header">
+                                    <label>Stability</label>
+                                    <span class="pvm-slider-value" id="pvmStabilityVal">0.50</span>
+                                </div>
+                                <input type="range" id="pvmStability" min="0" max="100" value="50" class="pvm-slider" oninput="pvmUpdateSlider('Stability')">
+                                <div class="pvm-slider-labels"><span>More Variable</span><span>More Stable</span></div>
+                            </div>
+
+                            <div class="pvm-slider-group">
+                                <div class="pvm-slider-header">
+                                    <label>Similarity</label>
+                                    <span class="pvm-slider-value" id="pvmSimilarityVal">0.75</span>
+                                </div>
+                                <input type="range" id="pvmSimilarity" min="0" max="100" value="75" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')">
+                                <div class="pvm-slider-labels"><span>Low</span><span>High</span></div>
+                            </div>
+
+                            <div class="pvm-slider-group">
+                                <div class="pvm-slider-header">
+                                    <label>Style Exaggeration</label>
+                                    <span class="pvm-slider-value" id="pvmStyleVal">0.00</span>
+                                </div>
+                                <input type="range" id="pvmStyle" min="0" max="100" value="0" class="pvm-slider" oninput="pvmUpdateSlider('Style')">
+                                <div class="pvm-slider-labels"><span>None</span><span>Exaggerated</span></div>
+                            </div>
+
+                            <div class="pvm-slider-group">
+                                <div class="pvm-slider-header">
+                                    <label>Speed</label>
+                                    <span class="pvm-slider-value" id="pvmSpeedVal">1.00</span>
+                                </div>
+                                <input type="range" id="pvmSpeed" min="70" max="120" value="100" class="pvm-slider" oninput="pvmUpdateSlider('Speed')">
+                                <div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div>
+                            </div>
+
+                            <div class="pvm-toggle-row">
+                                <label class="pvm-toggle-label">
+                                    <input type="checkbox" id="pvmSpeakerBoost" checked>
+                                    <span class="pvm-toggle-switch"></span>
+                                    Speaker Boost
+                                </label>
+                                <span class="pvm-toggle-hint">Enhances clarity and similarity to original voice</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pvm-section">
+                        <div class="pvm-section-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                            Human-Like Speech
+                        </div>
+                        <p class="pvm-hint">When enabled, the system automatically transforms your script so it sounds like a real person speaking - dates are pronounced naturally (e.g., "28th of March, 2022"), phone numbers are spoken digit-by-digit in natural groups, and address abbreviations are expanded (Ave to Avenue, NJ to New Jersey, etc.).</p>
+
+                        <div class="pvm-toggle-row">
+                            <label class="pvm-toggle-label">
+                                <input type="checkbox" id="pvmHumanize" checked>
+                                <span class="pvm-toggle-switch"></span>
+                                Speak Like a Human
+                            </label>
+                            <span class="pvm-toggle-hint">Transforms dates, phone numbers, addresses, and abbreviations into natural speech</span>
+                        </div>
+
+                        <div class="pvm-humanize-examples" id="pvmHumanizeExamples">
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Dates:</span>
+                                <span class="pvm-example-before">03/28/2022</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">28th of March, 2022</span>
+                            </div>
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Phone:</span>
+                                <span class="pvm-example-before">555-123-4567</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">five five five, one two three, four five six seven</span>
+                            </div>
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Abbrevs:</span>
+                                <span class="pvm-example-before">Apt, Blvd, Dr, Rd</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">Apartment, Boulevard, Drive, Road</span>
+                            </div>
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Address:</span>
+                                <span class="pvm-example-before">123 Oak Ave, NJ</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">123 Oak Avenue, New Jersey</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pvm-section" id="pvmLivePreviewSection" style="display:none;">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -3262,6 +3361,30 @@
                 document.getElementById("pvmLivePreviewContact").innerHTML = html;
             }
 
+            function pvmUpdateSlider(name) {
+                var slider = document.getElementById("pvm" + name);
+                var valEl = document.getElementById("pvm" + name + "Val");
+                if (name === "Speed") {
+                    valEl.textContent = (slider.value / 100).toFixed(2);
+                } else {
+                    valEl.textContent = (slider.value / 100).toFixed(2);
+                }
+            }
+
+            function pvmGetVoiceSettings() {
+                return {
+                    stability: parseInt(document.getElementById("pvmStability").value) / 100,
+                    similarity_boost: parseInt(document.getElementById("pvmSimilarity").value) / 100,
+                    style: parseInt(document.getElementById("pvmStyle").value) / 100,
+                    speed: parseInt(document.getElementById("pvmSpeed").value) / 100,
+                    use_speaker_boost: document.getElementById("pvmSpeakerBoost").checked
+                };
+            }
+
+            function pvmGetHumanize() {
+                return document.getElementById("pvmHumanize").checked;
+            }
+
             function pvmUpdateCharCount() {
                 var text = document.getElementById("pvmTemplate").value;
                 var charCount = text.length;
@@ -3316,7 +3439,7 @@
                 apiFetch("/api/pvm/preview-audio", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId })
+                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize() })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
@@ -3364,7 +3487,7 @@
                 apiFetch("/api/pvm/preview", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ template: template, contact: contact })
+                    body: JSON.stringify({ template: template, contact: contact, humanize: pvmGetHumanize() })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
@@ -3388,7 +3511,7 @@
                 apiFetch("/api/pvm/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contacts: pvmContacts, template: template, voice_id: voiceId })
+                    body: JSON.stringify({ contacts: pvmContacts, template: template, voice_id: voiceId, voice_settings: pvmGetVoiceSettings(), humanize: pvmGetHumanize() })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {

@@ -144,20 +144,212 @@ def parse_csv(file_content):
     }
 
 
-def render_template(template, contact):
+US_STATE_ABBREVIATIONS = {
+    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas",
+    "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware",
+    "FL": "Florida", "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho",
+    "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas",
+    "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+    "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi",
+    "MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada",
+    "NH": "New Hampshire", "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York",
+    "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma",
+    "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+    "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah",
+    "VT": "Vermont", "VA": "Virginia", "WA": "Washington", "WV": "West Virginia",
+    "WI": "Wisconsin", "WY": "Wyoming", "DC": "District of Columbia",
+}
+
+ADDRESS_ABBREVIATIONS = {
+    r'\bSt\b': 'Street', r'\bAve\b': 'Avenue', r'\bBlvd\b': 'Boulevard',
+    r'\bDr\b': 'Drive', r'\bLn\b': 'Lane', r'\bRd\b': 'Road',
+    r'\bCt\b': 'Court', r'\bPl\b': 'Place', r'\bCir\b': 'Circle',
+    r'\bPkwy\b': 'Parkway', r'\bHwy\b': 'Highway', r'\bApt\b': 'Apartment',
+    r'\bSte\b': 'Suite', r'\bBldg\b': 'Building', r'\bFl\b': 'Floor',
+    r'\bTpke\b': 'Turnpike', r'\bTer\b': 'Terrace', r'\bWay\b': 'Way',
+    r'\bSq\b': 'Square', r'\bTrl\b': 'Trail', r'\bExpy\b': 'Expressway',
+    r'\bFwy\b': 'Freeway', r'\bBrg\b': 'Bridge', r'\bCres\b': 'Crescent',
+    r'\bN\b': 'North', r'\bS\b': 'South', r'\bE\b': 'East', r'\bW\b': 'West',
+    r'\bNE\b': 'Northeast', r'\bNW\b': 'Northwest', r'\bSE\b': 'Southeast', r'\bSW\b': 'Southwest',
+}
+
+DIGIT_WORDS = {
+    '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+    '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
+}
+
+MONTH_NAMES = [
+    "", "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+]
+
+
+def _ordinal(n):
+    n = int(n)
+    suffix = "th"
+    if n % 100 in (11, 12, 13):
+        suffix = "th"
+    elif n % 10 == 1:
+        suffix = "st"
+    elif n % 10 == 2:
+        suffix = "nd"
+    elif n % 10 == 3:
+        suffix = "rd"
+    return f"{n}{suffix}"
+
+
+def _humanize_date(text):
+    def replace_date(match):
+        raw = match.group(0)
+        try:
+            for fmt in ("%m/%d/%Y", "%m-%d-%Y", "%Y-%m-%d", "%m/%d/%y", "%m-%d-%y",
+                        "%d/%m/%Y", "%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y"):
+                try:
+                    dt = datetime.strptime(raw.strip(), fmt)
+                    day = _ordinal(dt.day)
+                    month = MONTH_NAMES[dt.month]
+                    year = str(dt.year)
+                    return f"{day} of {month}, {year}"
+                except ValueError:
+                    continue
+        except Exception:
+            pass
+        return raw
+
+    text = re.sub(
+        r'\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{2}-\d{2}|(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4})\b',
+        replace_date, text, flags=re.IGNORECASE
+    )
+    return text
+
+
+def _humanize_phone(text):
+    def replace_phone(match):
+        raw = match.group(0)
+        digits = re.sub(r'[^\d]', '', raw)
+        if len(digits) == 11 and digits.startswith('1'):
+            digits = digits[1:]
+        if len(digits) == 10:
+            p1 = ' '.join(DIGIT_WORDS[d] for d in digits[0:3])
+            p2 = ' '.join(DIGIT_WORDS[d] for d in digits[3:6])
+            p3 = ' '.join(DIGIT_WORDS[d] for d in digits[6:10])
+            return f"{p1}, {p2}, {p3}"
+        return raw
+
+    text = re.sub(
+        r'(?<!\w)(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})(?!\w)',
+        replace_phone, text
+    )
+    return text
+
+
+def _humanize_address(text):
+    for abbr, full in ADDRESS_ABBREVIATIONS.items():
+        text = re.sub(abbr + r'\.?', full, text, flags=re.IGNORECASE)
+
+    def replace_state(match):
+        prefix = match.group(1)
+        state_abbr = match.group(2)
+        suffix = match.group(3) or ""
+        full_name = US_STATE_ABBREVIATIONS.get(state_abbr.upper())
+        if full_name:
+            return f"{prefix}{full_name}{suffix}"
+        return match.group(0)
+
+    text = re.sub(
+        r'(,\s+)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
+        replace_state, text
+    )
+    return text
+
+
+def _humanize_dollar_amount(text):
+    def replace_amount(match):
+        raw = match.group(0)
+        cleaned = raw.replace('$', '').replace(',', '').strip()
+        try:
+            val = float(cleaned)
+            if val == int(val):
+                return f"${int(val)}"
+            return raw
+        except ValueError:
+            return raw
+    return text
+
+
+def _humanize_zipcode(text):
+    def replace_zip(match):
+        digits = match.group(1)
+        spoken = ' '.join(DIGIT_WORDS[d] for d in digits)
+        ext = match.group(2)
+        if ext:
+            ext_digits = ext.lstrip('-')
+            spoken_ext = ' '.join(DIGIT_WORDS[d] for d in ext_digits)
+            return f"{spoken} dash {spoken_ext}"
+        return spoken
+
+    text = re.sub(
+        r'(?<=,\s)(\d{5})(-\d{4})?\b',
+        replace_zip, text
+    )
+    text = re.sub(
+        r'(?<=\b[A-Za-z]{2}\s)(\d{5})(-\d{4})?\b',
+        replace_zip, text
+    )
+    return text
+
+
+def humanize_text(text):
+    text = _humanize_date(text)
+    text = _humanize_phone(text)
+    text = _humanize_address(text)
+    text = _humanize_zipcode(text)
+    return text
+
+
+def render_template(template, contact, humanize=True):
     def replace_placeholder(match):
         key = match.group(1).strip().lower()
         return contact.get(key, match.group(0))
 
-    return re.sub(r'\{(\w+)\}', replace_placeholder, template)
+    result = re.sub(r'\{(\w+)\}', replace_placeholder, template)
+
+    if humanize:
+        result = humanize_text(result)
+
+    return result
 
 
-def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="eleven_multilingual_v2"):
-    script = render_template(template, contact)
+DEFAULT_VOICE_SETTINGS = {
+    "stability": 0.5,
+    "similarity_boost": 0.75,
+    "style": 0.0,
+    "speed": 1.0,
+    "use_speaker_boost": True,
+}
+
+
+def _build_voice_settings(custom_settings=None):
+    settings = dict(DEFAULT_VOICE_SETTINGS)
+    if custom_settings:
+        for key in ("stability", "similarity_boost", "style", "speed", "use_speaker_boost"):
+            if key in custom_settings:
+                settings[key] = custom_settings[key]
+    settings["stability"] = max(0.0, min(1.0, float(settings["stability"])))
+    settings["similarity_boost"] = max(0.0, min(1.0, float(settings["similarity_boost"])))
+    settings["style"] = max(0.0, min(1.0, float(settings["style"])))
+    settings["speed"] = max(0.7, min(1.2, float(settings["speed"])))
+    return settings
+
+
+def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="eleven_multilingual_v2", voice_settings=None, humanize=True):
+    script = render_template(template, contact, humanize=humanize)
     phone = contact.get("phone", "unknown")
     safe_phone = re.sub(r'[^\d]', '', phone)
     filename = f"pvm_{safe_phone}_{int(time.time())}.mp3"
     filepath = os.path.join(PVM_DIR, filename)
+
+    vs = _build_voice_settings(voice_settings)
 
     try:
         resp = requests.post(
@@ -170,12 +362,7 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
             json={
                 "text": script,
                 "model_id": model_id,
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.75,
-                    "style": 0.0,
-                    "use_speaker_boost": True,
-                },
+                "voice_settings": vs,
             },
             timeout=60,
         )
@@ -201,7 +388,7 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
         }
 
 
-def start_generation(contacts, template, voice_id, base_url):
+def start_generation(contacts, template, voice_id, base_url, voice_settings=None, humanize=True):
     with _state_lock:
         if _generation_state["status"] == "generating":
             return False, "Generation already in progress"
@@ -218,14 +405,14 @@ def start_generation(contacts, template, voice_id, base_url):
 
     t = threading.Thread(
         target=_generation_worker,
-        args=(contacts, template, voice_id, base_url),
+        args=(contacts, template, voice_id, base_url, voice_settings, humanize),
         daemon=True,
     )
     t.start()
     return True, "Generation started"
 
 
-def _generation_worker(contacts, template, voice_id, base_url):
+def _generation_worker(contacts, template, voice_id, base_url, voice_settings=None, humanize=True):
     try:
         api_key = _get_elevenlabs_api_key()
     except Exception as e:
@@ -237,7 +424,7 @@ def _generation_worker(contacts, template, voice_id, base_url):
     audio_map = {}
 
     for i, contact in enumerate(contacts):
-        result = generate_audio_for_contact(api_key, contact, template, voice_id)
+        result = generate_audio_for_contact(api_key, contact, template, voice_id, voice_settings=voice_settings, humanize=humanize)
 
         with _state_lock:
             _generation_state["completed"] = i + 1
@@ -303,16 +490,18 @@ def get_generation_status():
         return dict(_generation_state)
 
 
-def generate_preview_audio(contact, template, voice_id):
+def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True):
     try:
         api_key = _get_elevenlabs_api_key()
     except Exception as e:
         return None, str(e)
 
-    script = render_template(template, contact)
+    script = render_template(template, contact, humanize=humanize)
     filename = f"pvm_preview_{int(time.time())}.mp3"
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
+
+    vs = _build_voice_settings(voice_settings)
 
     try:
         resp = requests.post(
@@ -325,12 +514,7 @@ def generate_preview_audio(contact, template, voice_id):
             json={
                 "text": script,
                 "model_id": "eleven_multilingual_v2",
-                "voice_settings": {
-                    "stability": 0.5,
-                    "similarity_boost": 0.75,
-                    "style": 0.0,
-                    "use_speaker_boost": True,
-                },
+                "voice_settings": vs,
             },
             timeout=60,
         )
