@@ -36,7 +36,7 @@
         <!-- Header (Full Width) -->
         <div class="header">
             <div class="header-inner">
-                <div class="header-logo">
+                <div class="header-logo" style="cursor:pointer;" onclick="showView('dashboard')">
                     <div class="header-text-logo">Open Human</div>
                 </div>
                 <div class="header-right">
@@ -54,94 +54,669 @@
             </div>
         </div>
 
-        <div class="app-layout">
+        <!-- ========== VIEW 1: DASHBOARD ========== -->
+        <div class="container" id="viewDashboard">
+            <div class="wiz-dashboard">
+                <div class="wiz-welcome">
+                    <h1 class="wiz-welcome-title">Welcome to Open Human</h1>
+                    <p class="wiz-welcome-sub">Intelligent voicemail drop & live transfer campaigns</p>
+                    <button type="button" class="wiz-create-btn" onclick="showView('wizard')">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Create New Campaign
+                    </button>
+                </div>
 
-        <aside class="sidebar" id="sidebar">
-            <nav class="sidebar-nav">
-                <button type="button" class="sidebar-btn" data-panel="panelVmSettings" title="Voicemail Settings">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                    <span class="sidebar-label">Voicemail Settings</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelTestDialer" title="Test Dialer">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    <span class="sidebar-label">Test Dialer</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelPhoneNumbers" title="Phone Numbers">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                    <span class="sidebar-label">Phone Numbers</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelVmAudio" title="Voicemail Audio">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                    <span class="sidebar-label">Voicemail Audio</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelTransfer" title="Transfer Number">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
-                    <span class="sidebar-label">Transfer Number</span>
-                </button>
-                <div class="sidebar-divider"></div>
-                <button type="button" class="sidebar-btn" data-panel="panelAnalytics" title="Call Analytics">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                    <span class="sidebar-label">Call Analytics</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelDNC" title="DNC List">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                    <span class="sidebar-label">DNC List</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelSchedule" title="Schedule Campaign">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span class="sidebar-label">Schedule</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelWebhook" title="Webhook Monitor">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><rect x="6" y="2" width="12" height="20" rx="2" fill="none"/><line x1="10" y1="0" x2="14" y2="0" stroke-width="3" stroke-linecap="round" transform="translate(0,2.5)"/><rect x="9" y="12" width="6" height="7" rx="1" fill="currentColor" opacity="0.4"/></svg>
-                    <span class="sidebar-label">Health</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelTemplates" title="Campaign Templates">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    <span class="sidebar-label">Templates</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelValidation" title="Number Validation">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <span class="sidebar-label">Validate</span>
-                </button>
-                <div class="sidebar-divider"></div>
-                <div class="sidebar-section-label">AI Voicemail</div>
-                <button type="button" class="sidebar-btn" data-panel="panelPVM" title="Personalized Voicemail">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
-                    <span class="sidebar-label">Personal VM</span>
-                </button>
-                <div class="sidebar-divider"></div>
-                <div class="sidebar-section-label">Reporting</div>
-                <button type="button" class="sidebar-btn" data-panel="panelEmailReports" title="Email Reports">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
-                    <span class="sidebar-label">Email Reports</span>
-                </button>
-                <button type="button" class="sidebar-btn" data-panel="panelCampaignHistory" title="Campaign History">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/><path d="M1 12h2M21 12h2"/></svg>
-                    <span class="sidebar-label">History</span>
-                </button>
-            </nav>
-        </aside>
+                <div class="wiz-stats-row">
+                    <div class="wiz-stat-card">
+                        <div class="wiz-stat-value" id="qsTotalCalls">0</div>
+                        <div class="wiz-stat-label">Total Calls</div>
+                    </div>
+                    <div class="wiz-stat-card">
+                        <div class="wiz-stat-value" id="qsHotLeads">0</div>
+                        <div class="wiz-stat-label">Hot Leads</div>
+                    </div>
+                    <div class="wiz-stat-card">
+                        <div class="wiz-stat-value" id="qsVoicemails">0</div>
+                        <div class="wiz-stat-label">Voicemails</div>
+                    </div>
+                    <div class="wiz-stat-card">
+                        <div class="wiz-stat-value" id="qsSuccessRate">0%</div>
+                        <div class="wiz-stat-label">Success Rate</div>
+                    </div>
+                </div>
 
-        <div class="container">
+                <div class="wiz-quick-cards">
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelTestDialer')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+                        <div class="wiz-quick-title">Test Dialer</div>
+                        <div class="wiz-quick-desc">Make a test call</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelAnalytics')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                        <div class="wiz-quick-title">Analytics</div>
+                        <div class="wiz-quick-desc">View call stats</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelDNC')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+                        <div class="wiz-quick-title">DNC List</div>
+                        <div class="wiz-quick-desc">Manage blocked numbers</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelVmSettings')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
+                        <div class="wiz-quick-title">Settings</div>
+                        <div class="wiz-quick-desc">VM & config</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelCampaignHistory')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+                        <div class="wiz-quick-title">History</div>
+                        <div class="wiz-quick-desc">Past campaigns</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelSchedule')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                        <div class="wiz-quick-title">Schedule</div>
+                        <div class="wiz-quick-desc">Schedule campaigns</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelTemplates')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                        <div class="wiz-quick-title">Templates</div>
+                        <div class="wiz-quick-desc">Saved configs</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelWebhook')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+                        <div class="wiz-quick-title">Health</div>
+                        <div class="wiz-quick-desc">Webhook status</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelValidation')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                        <div class="wiz-quick-title">Validate</div>
+                        <div class="wiz-quick-desc">Check numbers</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelPVM')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                        <div class="wiz-quick-title">Personal VM</div>
+                        <div class="wiz-quick-desc">AI voicemails</div>
+                    </div>
+                    <div class="wiz-quick-card" onclick="showDashPanel('panelEmailReports')">
+                        <div class="wiz-quick-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg></div>
+                        <div class="wiz-quick-title">Email Reports</div>
+                        <div class="wiz-quick-desc">Daily reports</div>
+                    </div>
+                </div>
 
-            <!-- Quick Stats Banner -->
-            <div class="quick-stats-banner" id="quickStatsBanner">
-                <div class="quick-stat">
-                    <div class="quick-stat-value" id="qsTotalCalls">0</div>
-                    <div class="quick-stat-label">Total Calls</div>
+                <!-- Dashboard Panels (shown inline when clicked) -->
+                <div class="wiz-dash-panel" id="dashPanelWrap" style="display:none;">
+                    <button type="button" class="wiz-dash-panel-close" onclick="closeDashPanel()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Close
+                    </button>
+
+                    <!-- VM Settings -->
+                    <div class="wiz-dash-section" id="panelVmSettings" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                Voicemail Settings
+                            </div>
+                            <label>Voicemail Audio URL</label>
+                            <div class="vm-settings-row">
+                                <input type="text" id="vmUrlInput" class="input-full" placeholder="https://example.com/voicemail.mp3 or .wav">
+                                <button type="button" class="btn btn-save-vm" id="saveVmBtn">Save</button>
+                            </div>
+                            <div class="vm-preview" id="vmPreview" style="display:none;">
+                                <label>Audio Preview</label>
+                                <audio id="vmAudioPlayer" controls preload="metadata"></audio>
+                                <div class="vm-duration" id="vmDuration"></div>
+                            </div>
+                            <div id="vmSaveResult"></div>
+                        </div>
+                    </div>
+
+                    <!-- Test Dialer -->
+                    <div class="wiz-dash-section" id="panelTestDialer" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                                Test Your Dialer
+                            </div>
+                            <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
+                            <div class="test-call-row">
+                                <input type="text" id="testNumber" class="input-phone" placeholder="Number to call: +15551234567" maxlength="16">
+                                <input type="text" id="testTransferNumber" class="input-phone" placeholder="Transfer to: +15559876543" maxlength="16">
+                                <button type="button" class="btn btn-test" id="testCallBtn">Start Test Call</button>
+                            </div>
+                            <div class="test-results-box" id="testResultsBox" style="display:none;">
+                                <div class="test-results-title">Test Results</div>
+                                <div id="testResult" class="test-result-status">Status: Idle</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics -->
+                    <div class="wiz-dash-section" id="panelAnalytics" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                                Call Analytics
+                            </div>
+                            <div id="analyticsContent">
+                                <div class="analytics-stats-grid">
+                                    <div class="analytics-stat-card"><div class="analytics-stat-value" id="statTotalCalls">0</div><div class="analytics-stat-label">Total Calls</div></div>
+                                    <div class="analytics-stat-card stat-success"><div class="analytics-stat-value" id="statSuccessRate">0%</div><div class="analytics-stat-label">Success Rate</div></div>
+                                    <div class="analytics-stat-card stat-transfer"><div class="analytics-stat-value" id="statTransferRate">0%</div><div class="analytics-stat-label">Transfer Rate</div></div>
+                                    <div class="analytics-stat-card stat-voicemail"><div class="analytics-stat-value" id="statVoicemailRate">0%</div><div class="analytics-stat-label">Voicemail Rate</div></div>
+                                    <div class="analytics-stat-card"><div class="analytics-stat-value" id="statAvgRing">0s</div><div class="analytics-stat-label">Avg Ring Time</div></div>
+                                </div>
+                                <div class="analytics-charts-grid">
+                                    <div class="analytics-chart-card"><div class="analytics-chart-title">AMD Detection Results</div><canvas id="chartAMD" height="200"></canvas></div>
+                                    <div class="analytics-chart-card"><div class="analytics-chart-title">Best Times to Call</div><canvas id="chartHourly" height="200"></canvas></div>
+                                    <div class="analytics-chart-card"><div class="analytics-chart-title">Daily Call Volume</div><canvas id="chartDaily" height="200"></canvas></div>
+                                    <div class="analytics-chart-card"><div class="analytics-chart-title">Hangup Causes</div><canvas id="chartHangup" height="200"></canvas></div>
+                                </div>
+                                <button type="button" class="btn btn-refresh-analytics" onclick="loadAnalytics()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                    Refresh Analytics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DNC -->
+                    <div class="wiz-dash-section" id="panelDNC" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                Do Not Call List
+                            </div>
+                            <div class="dnc-add-row">
+                                <input type="text" id="dncNumberInput" class="input-phone" placeholder="+15551112222" maxlength="16">
+                                <button type="button" class="btn btn-add-dnc" onclick="addDNC()">Add to DNC</button>
+                            </div>
+                            <div class="dnc-count" id="dncCount">0 numbers blocked</div>
+                            <div class="dnc-list-container" id="dncListContainer">
+                                <div class="dnc-empty">No numbers on DNC list</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule -->
+                    <div class="wiz-dash-section" id="panelSchedule" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Schedule Campaign
+                            </div>
+                            <div class="schedule-form">
+                                <label>Date & Time (your local time)</label>
+                                <input type="datetime-local" id="scheduleTime" class="input-schedule-time">
+                                <label>Transfer Number</label>
+                                <input type="text" id="scheduleTransfer" class="input-phone" placeholder="+15551112222" maxlength="16">
+                                <label>Phone Numbers (one per line)</label>
+                                <textarea id="scheduleNumbers" class="input-schedule-numbers" rows="4" placeholder="+15551112222&#10;+15553334444"></textarea>
+                                <button type="button" class="btn btn-schedule" onclick="createSchedule()">Schedule Campaign</button>
+                            </div>
+                            <div class="schedule-list-title">Scheduled Campaigns</div>
+                            <div id="scheduleListContainer">
+                                <div class="schedule-empty">No scheduled campaigns</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Webhook -->
+                    <div class="wiz-dash-section" id="panelWebhook" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                                Webhook Monitor
+                            </div>
+                            <div class="battery-hero" id="webhookBatteryHero">
+                                <div class="battery-container">
+                                    <div class="battery-body">
+                                        <div class="battery-fill" id="batteryFill"><div class="battery-wave"></div><div class="battery-wave battery-wave-2"></div></div>
+                                        <div class="battery-shimmer"></div>
+                                        <div class="battery-bolt" id="batteryBolt"><svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M13 2L4.5 12.5H12L11 22L19.5 11.5H12L13 2Z" fill="currentColor"/></svg></div>
+                                        <div class="battery-percent" id="batteryPercent">0%</div>
+                                    </div>
+                                    <div class="battery-tip"></div>
+                                    <div class="battery-glow" id="batteryGlow"></div>
+                                </div>
+                                <div class="battery-label" id="batteryLabel">Checking...</div>
+                            </div>
+                            <div class="webhook-status-grid">
+                                <div class="webhook-stat"><div class="webhook-stat-label">Total Received</div><div class="webhook-stat-value" id="webhookTotal">0</div></div>
+                                <div class="webhook-stat"><div class="webhook-stat-label">Last Received</div><div class="webhook-stat-value" id="webhookLastTime">Never</div></div>
+                                <div class="webhook-stat"><div class="webhook-stat-label">Last Event</div><div class="webhook-stat-value" id="webhookLastEvent">-</div></div>
+                            </div>
+                            <div class="webhook-section-title">Events by Type</div>
+                            <div id="webhookEventTypes" class="webhook-events-grid"></div>
+                            <div class="webhook-section-title">Recent Events</div>
+                            <div id="webhookRecentEvents" class="webhook-recent-list"></div>
+                            <div class="webhook-section-title" id="webhookErrorsTitle" style="display:none;">Errors</div>
+                            <div id="webhookErrors" class="webhook-errors-list"></div>
+                            <button type="button" class="btn btn-refresh-analytics" onclick="loadWebhookStatus()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                Refresh Status
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Templates -->
+                    <div class="wiz-dash-section" id="panelTemplates" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Campaign Templates
+                            </div>
+                            <div class="template-save-section">
+                                <label>Save Current Settings as Template</label>
+                                <div class="template-save-row">
+                                    <input type="text" id="templateName" class="input-full" placeholder="My Campaign Template" maxlength="50">
+                                    <button type="button" class="btn btn-save-template" onclick="saveTemplate()">Save Template</button>
+                                </div>
+                            </div>
+                            <div class="template-list-title">Saved Templates</div>
+                            <div id="templateListContainer"><div class="template-empty">No saved templates</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Validation -->
+                    <div class="wiz-dash-section" id="panelValidation" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Number Validation
+                            </div>
+                            <label>Paste phone numbers to validate (one per line)</label>
+                            <textarea id="validateNumbersInput" class="input-schedule-numbers" rows="5" placeholder="+15551112222&#10;+15553334444&#10;invalid-number"></textarea>
+                            <button type="button" class="btn btn-validate" onclick="validateNumbers()">Validate Numbers</button>
+                            <div id="validationResults" style="display:none;">
+                                <div class="validation-summary" id="validationSummary"></div>
+                                <div id="validationDetails"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PVM -->
+                    <div class="wiz-dash-section" id="panelPVM" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Personalized Voicemail
+                            </div>
+                            <div class="pvm-section">
+                                <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Customer CSV</div>
+                                <p class="pvm-hint">Columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
+                                <div class="pvm-upload-area">
+                                    <input type="file" id="pvmCsvFile" accept=".csv,.txt" style="display:none" onchange="pvmParseCSV()">
+                                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('pvmCsvFile').click()">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        Upload CSV File
+                                    </button>
+                                    <button type="button" class="btn btn-small" onclick="pvmDownloadSample()" title="Download sample CSV">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Sample CSV
+                                    </button>
+                                    <span class="pvm-file-name" id="pvmFileName">No file selected</span>
+                                </div>
+                                <div id="pvmCsvResult" style="display:none;">
+                                    <div class="pvm-csv-stats" id="pvmCsvStats"></div>
+                                    <div class="pvm-csv-preview" id="pvmCsvPreview"></div>
+                                </div>
+                            </div>
+                            <div class="pvm-section">
+                                <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Voicemail Script</div>
+                                <p class="pvm-hint">Click tags to insert placeholders into your script.</p>
+                                <div class="pvm-placeholders" id="pvmPlaceholders">
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('first_name')">{first_name}</span>
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('last_name')">{last_name}</span>
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('amount')">{amount}</span>
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('date')">{date}</span>
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('email')">{email}</span>
+                                    <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('address')">{address}</span>
+                                </div>
+                                <textarea id="pvmTemplate" class="pvm-template-input" rows="6" oninput="pvmUpdateCharCount()" placeholder="Hi {first_name}, this is a friendly reminder about your account..."></textarea>
+                                <div class="pvm-script-meta">
+                                    <span class="pvm-char-count" id="pvmCharCount">0 characters</span>
+                                    <span class="pvm-est-duration" id="pvmEstDuration">~0s audio</span>
+                                </div>
+                                <div class="pvm-preview-actions">
+                                    <div class="pvm-contact-selector" id="pvmContactSelector" style="display:none;">
+                                        <label class="pvm-small-label">Preview as:</label>
+                                        <select id="pvmPreviewContact" class="pvm-voice-select" style="flex:1;"></select>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary" onclick="pvmPreview()" style="margin-top:4px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Preview Text
+                                    </button>
+                                </div>
+                                <div id="pvmPreviewResult" class="pvm-preview-box" style="display:none;"></div>
+                            </div>
+                            <div class="pvm-section">
+                                <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Select Voice</div>
+                                <div class="pvm-voice-row">
+                                    <select id="pvmVoiceSelect" class="pvm-voice-select"><option value="">Loading voices...</option></select>
+                                    <button type="button" class="btn btn-small" onclick="pvmLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                                </div>
+                            </div>
+                            <div class="pvm-section">
+                                <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg> Voice Controls</div>
+                                <div class="pvm-voice-controls">
+                                    <div class="pvm-slider-group">
+                                        <div class="pvm-slider-header"><label>TTS Model</label></div>
+                                        <select id="pvmModel" class="pvm-voice-select">
+                                            <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                            <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural pauses)</option>
+                                            <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                            <option value="eleven_english_v1">English v1 (Classic)</option>
+                                        </select>
+                                    </div>
+                                    <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="pvmStabilityVal">0.35</span></div><input type="range" id="pvmStability" min="0" max="100" value="35" class="pvm-slider" oninput="pvmUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>More Variable</span><span>More Stable</span></div></div>
+                                    <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="pvmSimilarityVal">0.80</span></div><input type="range" id="pvmSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
+                                    <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Style</label><span class="pvm-slider-value" id="pvmStyleVal">0.15</span></div><input type="range" id="pvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="pvmUpdateSlider('Style')"><div class="pvm-slider-labels"><span>None</span><span>Expressive</span></div></div>
+                                    <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="pvmSpeedVal">0.82</span></div><input type="range" id="pvmSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="pvmUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
+                                    <div class="pvm-toggles-compact">
+                                        <div class="pvm-toggle-row"><label class="pvm-toggle-label"><input type="checkbox" id="pvmHumanize" checked><span class="pvm-toggle-switch"></span> Natural Speech</label></div>
+                                        <div class="pvm-toggle-row"><label class="pvm-toggle-label"><input type="checkbox" id="pvmSpeakerBoost" checked><span class="pvm-toggle-switch"></span> Speaker Boost</label></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pvm-section" id="pvmLivePreviewSection" style="display:none;">
+                                <div class="pvm-section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Live Voice Preview</div>
+                                <p class="pvm-hint">Hear how it sounds for a specific contact before generating all.</p>
+                                <div class="pvm-live-preview-row">
+                                    <select id="pvmLivePreviewContact" class="pvm-voice-select" style="flex:1;"></select>
+                                    <button type="button" class="btn btn-gradient" id="pvmLivePreviewBtn" onclick="pvmLivePreview()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Preview</button>
+                                </div>
+                                <div id="pvmLivePreviewStatus" class="pvm-live-status" style="display:none;">
+                                    <svg class="pvm-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                    <span>Generating voice preview...</span>
+                                </div>
+                                <div id="pvmLivePreviewPlayer" style="display:none;">
+                                    <div class="pvm-audio-player-wrap"><audio id="pvmPreviewAudio" controls style="width:100%;border-radius:8px;"></audio></div>
+                                    <div class="pvm-preview-script-text" id="pvmPreviewScriptText"></div>
+                                </div>
+                            </div>
+                            <div class="pvm-section pvm-actions-section">
+                                <div class="pvm-cost-estimate" id="pvmCostEstimate" style="display:none;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                                    <span id="pvmCostText">Estimated cost: ~$0.00</span>
+                                </div>
+                                <button type="button" class="btn btn-gradient pvm-generate-btn" id="pvmGenerateBtn" onclick="pvmGenerate()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate All Personalized Voicemails</button>
+                                <div id="pvmProgress" style="display:none;"><div class="pvm-progress-bar"><div class="pvm-progress-fill" id="pvmProgressFill"></div></div><div class="pvm-progress-text" id="pvmProgressText">Generating... 0/0</div></div>
+                                <div id="pvmErrors" class="pvm-errors" style="display:none;"></div>
+                            </div>
+                            <div class="pvm-section" id="pvmStep4" style="display:none;">
+                                <div class="pvm-section-label pvm-ready-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Ready to Dial</div>
+                                <div class="pvm-ready-stats" id="pvmReadyStats"></div>
+                                <div class="pvm-ready-actions">
+                                    <button type="button" class="btn btn-gradient" onclick="pvmLoadToDialer()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg> Load Numbers into Dialer</button>
+                                    <button type="button" class="btn btn-secondary" onclick="pvmClearAll()">Clear All</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Reports -->
+                    <div class="wiz-dash-section" id="panelEmailReports" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
+                                Daily Email Reports
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                                    <div id="gmailStatusDot" style="width:10px;height:10px;border-radius:50%;background:#94A3B8;flex-shrink:0;"></div>
+                                    <span id="gmailStatusText" style="font-size:12px;color:var(--text-secondary);">Checking Gmail connection...</span>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:16px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                                    <label style="font-size:13px;font-weight:600;">Enable Daily Reports</label>
+                                    <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;">
+                                        <input type="checkbox" id="reportEnabled" style="opacity:0;width:0;height:0;" onchange="saveReportSettings()">
+                                        <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:.3s;"></span>
+                                        <span id="reportToggleKnob" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none;"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:14px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Recipient Email</label>
+                                <input type="email" id="reportEmail" class="input" placeholder="your@email.com" style="width:100%;font-size:13px;" onchange="saveReportSettings()">
+                            </div>
+                            <div style="margin-bottom:14px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send Time (UTC, 24h format)</label>
+                                <input type="time" id="reportSendTime" class="input" value="08:00" style="width:140px;font-size:13px;" onchange="saveReportSettings()">
+                            </div>
+                            <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+                                <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;">Report Contents</div>
+                                <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
+                                    <div>&#128293; <strong>Hot Leads</strong> &mdash; Calls answered by humans &amp; transferred</div>
+                                    <div>&#9888;&#65039; <strong>Failed Calls</strong> &mdash; Numbers that failed with reasons</div>
+                                    <div>&#128232; <strong>Voicemails Left</strong> &mdash; All voicemail drops in 24 hours</div>
+                                    <div>&#128202; <strong>Summary Stats</strong> &mdash; Total calls, success rate, breakdown</div>
+                                    <div>&#128206; <strong>CSV Attachment</strong> &mdash; Raw data for analysis</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button type="button" class="btn btn-gradient" onclick="sendTestReport()" id="testReportBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Test Report</button>
+                                <button type="button" class="btn btn-secondary" onclick="checkGmailStatus()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Check Connection</button>
+                            </div>
+                            <div id="reportMessage" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;"></div>
+                            <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+                                <div style="font-size:11px;color:var(--text-secondary);"><span id="reportLastSent">Last sent: Never</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign History -->
+                    <div class="wiz-dash-section" id="panelCampaignHistory" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">
+                                <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                                Campaign History
+                            </div>
+                            <div class="table-wrap">
+                                <table id="historyTable">
+                                    <thead><tr><th>Date</th><th>Total Calls</th><th>Hot Leads</th><th>Voicemails</th><th>Failed</th><th>Success Rate</th></tr></thead>
+                                    <tbody id="historyBody"><tr><td colspan="6" class="empty-row">Loading...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="quick-stat">
-                    <div class="quick-stat-value" id="qsHotLeads">0</div>
-                    <div class="quick-stat-label">Hot Leads</div>
+            </div>
+        </div>
+
+        <!-- ========== VIEW 2: CAMPAIGN WIZARD ========== -->
+        <div class="container" id="viewWizard" style="display:none;">
+            <div class="wiz-header-row">
+                <button type="button" class="wiz-back-to-dash" onclick="showView('dashboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Dashboard
+                </button>
+            </div>
+
+            <div class="wiz-stepper">
+                <div class="wiz-step" data-step="1" id="wizStep1Ind"><div class="wiz-step-num">1</div><div class="wiz-step-label">Campaign Type</div></div>
+                <div class="wiz-step-line"></div>
+                <div class="wiz-step" data-step="2" id="wizStep2Ind"><div class="wiz-step-num">2</div><div class="wiz-step-label">Data Source</div></div>
+                <div class="wiz-step-line"></div>
+                <div class="wiz-step" data-step="3" id="wizStep3Ind"><div class="wiz-step-num">3</div><div class="wiz-step-label">Voicemail</div></div>
+                <div class="wiz-step-line"></div>
+                <div class="wiz-step" data-step="4" id="wizStep4Ind"><div class="wiz-step-num">4</div><div class="wiz-step-label">Settings</div></div>
+                <div class="wiz-step-line"></div>
+                <div class="wiz-step" data-step="5" id="wizStep5Ind"><div class="wiz-step-num">5</div><div class="wiz-step-label">Review</div></div>
+            </div>
+
+            <form id="campaignForm">
+                <!-- Step 1: Campaign Type -->
+                <div class="wiz-step-content" id="wizContent1">
+                    <h2 class="wiz-step-title">Choose Campaign Type</h2>
+                    <div class="wiz-type-cards">
+                        <div class="wiz-type-card wiz-type-selected" id="wizTypeOutbound" onclick="wizSelectType('outbound')">
+                            <div class="wiz-type-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+                            <div class="wiz-type-name">Outbound Campaign</div>
+                            <div class="wiz-type-desc">Automatically dial contacts, detect answering machines, drop voicemails, and transfer live-answered calls to your team.</div>
+                            <div class="wiz-type-check"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="quick-stat">
-                    <div class="quick-stat-value" id="qsVoicemails">0</div>
-                    <div class="quick-stat-label">Voicemails</div>
+
+                <!-- Step 2: Data Source -->
+                <div class="wiz-step-content" id="wizContent2" style="display:none;">
+                    <h2 class="wiz-step-title">Add Phone Numbers</h2>
+                    <div class="wiz-source-tabs">
+                        <button type="button" class="wiz-source-tab active" onclick="wizSwitchSource('csv')">Upload CSV</button>
+                        <button type="button" class="wiz-source-tab" onclick="wizSwitchSource('paste')">Paste Numbers</button>
+                    </div>
+                    <div id="wizSourceCSV">
+                        <div class="drop-zone" id="csvDropZone">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>Drag &amp; drop CSV here or <label for="csvFile" class="drop-zone-browse">browse</label></span>
+                            <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt" style="display:none;">
+                            <div class="drop-zone-filename" id="csvFileName"></div>
+                        </div>
+                    </div>
+                    <div id="wizSourcePaste" style="display:none;">
+                        <label>Paste phone numbers (one per line)</label>
+                        <textarea name="numbers" id="numbersInput" rows="6" placeholder="+15551234567&#10;+15559876543"></textarea>
+                    </div>
+                    <div class="wiz-number-count" id="wizNumberCount"></div>
                 </div>
-                <div class="quick-stat">
-                    <div class="quick-stat-value" id="qsSuccessRate">0%</div>
-                    <div class="quick-stat-label">Success Rate</div>
+
+                <!-- Step 3: Voicemail -->
+                <div class="wiz-step-content" id="wizContent3" style="display:none;">
+                    <h2 class="wiz-step-title">Configure Voicemail</h2>
+                    <div class="wiz-vm-tabs">
+                        <button type="button" class="wiz-vm-tab active" onclick="wizSwitchVmType('standard')">Standard Voicemail</button>
+                        <button type="button" class="wiz-vm-tab" onclick="wizSwitchVmType('personalized')">Personalized (AI)</button>
+                    </div>
+
+                    <div id="wizVmStandard">
+                        <p class="wiz-vm-desc">Same voicemail audio for all contacts. Upload a file, paste a URL, or use your saved default.</p>
+                        <div class="drop-zone" id="audioDropZone">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <span>Drag &amp; drop audio here or <label for="audioFile" class="drop-zone-browse">browse</label></span>
+                            <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav" style="display:none;">
+                            <div class="drop-zone-filename" id="audioFileName"></div>
+                        </div>
+                        <label>Or provide a public audio URL</label>
+                        <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
+                        <p class="wiz-vm-hint">Leave empty to use your saved default voicemail URL.</p>
+                    </div>
+
+                    <div id="wizVmPersonalized" style="display:none;">
+                        <p class="wiz-vm-desc">AI-generated unique voicemail for each contact using ElevenLabs. Configure in the Personalized VM panel on the Dashboard, then come back here.</p>
+                        <div class="wiz-pvm-status" id="wizPvmStatus">
+                            <span>Checking personalized voicemails...</span>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Step 4: Settings -->
+                <div class="wiz-step-content" id="wizContent4" style="display:none;">
+                    <h2 class="wiz-step-title">Campaign Settings</h2>
+
+                    <div class="wiz-settings-group">
+                        <label>Transfer Number <span style="font-size:11px;color:var(--text-secondary);">(required)</span></label>
+                        <p class="wiz-settings-hint">If a human answers, transfer the call to this number.</p>
+                        <div class="transfer-row">
+                            <div class="transfer-input-wrap">
+                                <input type="text" name="transfer_number" id="transferNumber" class="input-phone" placeholder="+15551112222" maxlength="16" required>
+                            </div>
+                            <button type="button" class="btn-save-transfer" id="saveTransferBtn">Save for future</button>
+                        </div>
+                        <div class="saved-indicator" id="savedIndicator">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            Saved &mdash; auto-fills next time
+                        </div>
+                    </div>
+
+                    <div class="wiz-settings-group">
+                        <label>Dial Mode</label>
+                        <div class="dial-mode-toggle">
+                            <button type="button" class="dial-mode-btn active" data-mode="sequential" id="modeSeq">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                                Sequential
+                            </button>
+                            <button type="button" class="dial-mode-btn" data-mode="simultaneous" id="modeSimul">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                Simultaneous
+                            </button>
+                        </div>
+                        <input type="hidden" name="dial_mode" id="dialModeInput" value="sequential">
+                        <div class="batch-size-wrap" id="dialDelayWrap">
+                            <label>Delay between calls</label>
+                            <div class="batch-size-row">
+                                <input type="number" name="dial_delay" id="dialDelay" class="input-batch" value="2" min="1" max="10">
+                                <span class="batch-hint">1&ndash;10 minutes between each call</span>
+                            </div>
+                        </div>
+                        <div class="batch-size-wrap" id="batchSizeWrap" style="display:none;">
+                            <label>Calls per batch</label>
+                            <div class="batch-size-row">
+                                <input type="number" name="batch_size" id="batchSize" class="input-batch" value="5" min="2" max="50">
+                                <span class="batch-hint">2&ndash;50 calls fired at once per batch</span>
+                            </div>
+                        </div>
+                        <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time with a configurable delay between each call.</div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Review & Launch -->
+                <div class="wiz-step-content" id="wizContent5" style="display:none;">
+                    <h2 class="wiz-step-title">Review & Launch</h2>
+                    <div class="wiz-review-cards">
+                        <div class="wiz-review-card">
+                            <div class="wiz-review-label">Campaign Type</div>
+                            <div class="wiz-review-value" id="wizReviewType">Outbound Campaign</div>
+                        </div>
+                        <div class="wiz-review-card">
+                            <div class="wiz-review-label">Phone Numbers</div>
+                            <div class="wiz-review-value" id="wizReviewNumbers">0 numbers</div>
+                        </div>
+                        <div class="wiz-review-card">
+                            <div class="wiz-review-label">Voicemail</div>
+                            <div class="wiz-review-value" id="wizReviewVm">Standard</div>
+                        </div>
+                        <div class="wiz-review-card">
+                            <div class="wiz-review-label">Transfer Number</div>
+                            <div class="wiz-review-value" id="wizReviewTransfer">-</div>
+                        </div>
+                        <div class="wiz-review-card">
+                            <div class="wiz-review-label">Dial Mode</div>
+                            <div class="wiz-review-value" id="wizReviewMode">Sequential</div>
+                        </div>
+                    </div>
+                    <div class="wiz-launch-wrap">
+                        <button type="submit" class="wiz-launch-btn" id="startBtn">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Launch Campaign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden stop button for JS reference -->
+                <button type="button" class="btn btn-stop" id="stopBtn" style="display:none;" disabled>Stop Campaign</button>
+            </form>
+
+            <!-- Wizard Nav Buttons -->
+            <div class="wiz-nav">
+                <button type="button" class="wiz-nav-btn wiz-nav-back" id="wizBackBtn" onclick="wizardBack()" style="display:none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
+                </button>
+                <button type="button" class="wiz-nav-btn wiz-nav-next" id="wizNextBtn" onclick="wizardNext()">
+                    Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ========== VIEW 3: LIVE CAMPAIGN MONITOR ========== -->
+        <div class="container" id="viewMonitor" style="display:none;">
+            <div class="wiz-monitor-header">
+                <h2 class="wiz-monitor-title">Live Campaign Monitor</h2>
+                <button type="button" class="btn btn-stop wiz-stop-btn" id="monitorStopBtn" onclick="document.getElementById('stopBtn').click()">Stop Campaign</button>
             </div>
 
             <!-- Status Bar -->
@@ -160,696 +735,37 @@
                 </div>
             </div>
 
-            <!-- Expandable Panels -->
-            <div class="panel" id="panelVmSettings">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                        Voicemail Settings
-                        <button type="button" class="panel-minimize" data-panel="panelVmSettings" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <label>Voicemail Audio URL</label>
-                    <div class="vm-settings-row">
-                        <input type="text" id="vmUrlInput" class="input-full" placeholder="https://example.com/voicemail.mp3 or .wav">
-                        <button type="button" class="btn btn-save-vm" id="saveVmBtn">Save</button>
-                    </div>
-                    <div class="vm-preview" id="vmPreview" style="display:none;">
-                        <label>Audio Preview</label>
-                        <audio id="vmAudioPlayer" controls preload="metadata"></audio>
-                        <div class="vm-duration" id="vmDuration"></div>
-                    </div>
-                    <div id="vmSaveResult"></div>
+            <!-- Quick Stats -->
+            <div class="quick-stats-banner" id="quickStatsBanner">
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsTotalCallsMon">0</div>
+                    <div class="quick-stat-label">Total Calls</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsHotLeadsMon">0</div>
+                    <div class="quick-stat-label">Hot Leads</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsVoicemailsMon">0</div>
+                    <div class="quick-stat-label">Voicemails</div>
+                </div>
+                <div class="quick-stat">
+                    <div class="quick-stat-value" id="qsSuccessRateMon">0%</div>
+                    <div class="quick-stat-label">Success Rate</div>
                 </div>
             </div>
-
-            <div class="panel" id="panelTestDialer">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                        Test Your Dialer
-                        <button type="button" class="panel-minimize" data-panel="panelTestDialer" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
-                    <div class="test-call-row">
-                        <input type="text" id="testNumber" class="input-phone" placeholder="Number to call: +15551234567" maxlength="16">
-                        <input type="text" id="testTransferNumber" class="input-phone" placeholder="Transfer to: +15559876543" maxlength="16">
-                        <button type="button" class="btn btn-test" id="testCallBtn">Start Test Call</button>
-                    </div>
-                    <div class="test-results-box" id="testResultsBox" style="display:none;">
-                        <div class="test-results-title">Test Results</div>
-                        <div id="testResult" class="test-result-status">Status: Idle</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Campaign Form -->
-            <form id="campaignForm">
-
-            <div class="panel" id="panelPhoneNumbers">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                        Phone Numbers
-                        <button type="button" class="panel-minimize" data-panel="panelPhoneNumbers" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="drop-zone" id="csvDropZone">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span>Drag &amp; drop CSV here or <label for="csvFile" class="drop-zone-browse">browse</label></span>
-                        <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt" style="display:none;">
-                        <div class="drop-zone-filename" id="csvFileName"></div>
-                    </div>
-                    <label>Or paste numbers (one per line)</label>
-                    <textarea name="numbers" id="numbersInput" rows="4" placeholder="+15551234567&#10;+15559876543"></textarea>
-                </div>
-            </div>
-
-            <div class="panel" id="panelVmAudio">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                        Voicemail Audio <span style="font-weight:400;font-size:11px;color:var(--text-secondary);">(optional - uses saved URL if empty)</span>
-                        <button type="button" class="panel-minimize" data-panel="panelVmAudio" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="drop-zone" id="audioDropZone">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span>Drag &amp; drop audio here or <label for="audioFile" class="drop-zone-browse">browse</label></span>
-                        <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav" style="display:none;">
-                        <div class="drop-zone-filename" id="audioFileName"></div>
-                    </div>
-                    <label>Or provide a different public audio URL</label>
-                    <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
-                </div>
-            </div>
-
-                <!-- Transfer Number -->
-            <div class="panel" id="panelTransfer">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
-                        Transfer Number
-                        <button type="button" class="panel-minimize" data-panel="panelTransfer" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <label>If a human answers, transfer the call to</label>
-                    <div class="transfer-row">
-                        <div class="transfer-input-wrap">
-                            <input type="text" name="transfer_number" id="transferNumber" class="input-phone" placeholder="+15551112222" maxlength="16" required>
-                        </div>
-                        <button type="button" class="btn-save-transfer" id="saveTransferBtn">Save for future</button>
-                    </div>
-                    <div class="saved-indicator" id="savedIndicator">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Saved &mdash; auto-fills next time
-                    </div>
-                </div>
-            </div>
-
-            <!-- Call Analytics Panel -->
-            <div class="panel" id="panelAnalytics">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        Call Analytics
-                        <button type="button" class="panel-minimize" data-panel="panelAnalytics" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div id="analyticsContent">
-                        <div class="analytics-stats-grid">
-                            <div class="analytics-stat-card">
-                                <div class="analytics-stat-value" id="statTotalCalls">0</div>
-                                <div class="analytics-stat-label">Total Calls</div>
-                            </div>
-                            <div class="analytics-stat-card stat-success">
-                                <div class="analytics-stat-value" id="statSuccessRate">0%</div>
-                                <div class="analytics-stat-label">Success Rate</div>
-                            </div>
-                            <div class="analytics-stat-card stat-transfer">
-                                <div class="analytics-stat-value" id="statTransferRate">0%</div>
-                                <div class="analytics-stat-label">Transfer Rate</div>
-                            </div>
-                            <div class="analytics-stat-card stat-voicemail">
-                                <div class="analytics-stat-value" id="statVoicemailRate">0%</div>
-                                <div class="analytics-stat-label">Voicemail Rate</div>
-                            </div>
-                            <div class="analytics-stat-card">
-                                <div class="analytics-stat-value" id="statAvgRing">0s</div>
-                                <div class="analytics-stat-label">Avg Ring Time</div>
-                            </div>
-                        </div>
-                        <div class="analytics-charts-grid">
-                            <div class="analytics-chart-card">
-                                <div class="analytics-chart-title">AMD Detection Results</div>
-                                <canvas id="chartAMD" height="200"></canvas>
-                            </div>
-                            <div class="analytics-chart-card">
-                                <div class="analytics-chart-title">Best Times to Call</div>
-                                <canvas id="chartHourly" height="200"></canvas>
-                            </div>
-                            <div class="analytics-chart-card">
-                                <div class="analytics-chart-title">Daily Call Volume</div>
-                                <canvas id="chartDaily" height="200"></canvas>
-                            </div>
-                            <div class="analytics-chart-card">
-                                <div class="analytics-chart-title">Hangup Causes</div>
-                                <canvas id="chartHangup" height="200"></canvas>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-refresh-analytics" onclick="loadAnalytics()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                            Refresh Analytics
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- DNC List Panel -->
-            <div class="panel" id="panelDNC">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                        Do Not Call List
-                        <button type="button" class="panel-minimize" data-panel="panelDNC" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="dnc-add-row">
-                        <input type="text" id="dncNumberInput" class="input-phone" placeholder="+15551112222" maxlength="16">
-                        <button type="button" class="btn btn-add-dnc" onclick="addDNC()">Add to DNC</button>
-                    </div>
-                    <div class="dnc-count" id="dncCount">0 numbers blocked</div>
-                    <div class="dnc-list-container" id="dncListContainer">
-                        <div class="dnc-empty">No numbers on DNC list</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Campaign Scheduling Panel -->
-            <div class="panel" id="panelSchedule">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        Schedule Campaign
-                        <button type="button" class="panel-minimize" data-panel="panelSchedule" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="schedule-form">
-                        <label>Date & Time (your local time)</label>
-                        <input type="datetime-local" id="scheduleTime" class="input-schedule-time">
-                        <label>Transfer Number</label>
-                        <input type="text" id="scheduleTransfer" class="input-phone" placeholder="+15551112222" maxlength="16">
-                        <label>Phone Numbers (one per line)</label>
-                        <textarea id="scheduleNumbers" class="input-schedule-numbers" rows="4" placeholder="+15551112222&#10;+15553334444"></textarea>
-                        <button type="button" class="btn btn-schedule" onclick="createSchedule()">Schedule Campaign</button>
-                    </div>
-                    <div class="schedule-list-title">Scheduled Campaigns</div>
-                    <div id="scheduleListContainer">
-                        <div class="schedule-empty">No scheduled campaigns</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Webhook Status Monitor -->
-            <div class="panel" id="panelWebhook">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                        Webhook Monitor
-                        <button type="button" class="panel-minimize" data-panel="panelWebhook" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="battery-hero" id="webhookBatteryHero">
-                        <div class="battery-container">
-                            <div class="battery-body">
-                                <div class="battery-fill" id="batteryFill">
-                                    <div class="battery-wave"></div>
-                                    <div class="battery-wave battery-wave-2"></div>
-                                </div>
-                                <div class="battery-shimmer"></div>
-                                <div class="battery-bolt" id="batteryBolt">
-                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none">
-                                        <path d="M13 2L4.5 12.5H12L11 22L19.5 11.5H12L13 2Z" fill="currentColor"/>
-                                    </svg>
-                                </div>
-                                <div class="battery-percent" id="batteryPercent">0%</div>
-                            </div>
-                            <div class="battery-tip"></div>
-                            <div class="battery-glow" id="batteryGlow"></div>
-                        </div>
-                        <div class="battery-label" id="batteryLabel">Checking...</div>
-                    </div>
-                    <div class="webhook-status-grid">
-                        <div class="webhook-stat">
-                            <div class="webhook-stat-label">Total Received</div>
-                            <div class="webhook-stat-value" id="webhookTotal">0</div>
-                        </div>
-                        <div class="webhook-stat">
-                            <div class="webhook-stat-label">Last Received</div>
-                            <div class="webhook-stat-value" id="webhookLastTime">Never</div>
-                        </div>
-                        <div class="webhook-stat">
-                            <div class="webhook-stat-label">Last Event</div>
-                            <div class="webhook-stat-value" id="webhookLastEvent">-</div>
-                        </div>
-                    </div>
-                    <div class="webhook-section-title">Events by Type</div>
-                    <div id="webhookEventTypes" class="webhook-events-grid"></div>
-                    <div class="webhook-section-title">Recent Events</div>
-                    <div id="webhookRecentEvents" class="webhook-recent-list"></div>
-                    <div class="webhook-section-title" id="webhookErrorsTitle" style="display:none;">Errors</div>
-                    <div id="webhookErrors" class="webhook-errors-list"></div>
-                    <button type="button" class="btn btn-refresh-analytics" onclick="loadWebhookStatus()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                        Refresh Status
-                    </button>
-                </div>
-            </div>
-
-            <!-- Campaign Templates -->
-            <div class="panel" id="panelTemplates">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        Campaign Templates
-                        <button type="button" class="panel-minimize" data-panel="panelTemplates" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="template-save-section">
-                        <label>Save Current Settings as Template</label>
-                        <div class="template-save-row">
-                            <input type="text" id="templateName" class="input-full" placeholder="My Campaign Template" maxlength="50">
-                            <button type="button" class="btn btn-save-template" onclick="saveTemplate()">Save Template</button>
-                        </div>
-                    </div>
-                    <div class="template-list-title">Saved Templates</div>
-                    <div id="templateListContainer">
-                        <div class="template-empty">No saved templates</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Number Validation -->
-            <div class="panel" id="panelValidation">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        Number Validation
-                        <button type="button" class="panel-minimize" data-panel="panelValidation" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <label>Paste phone numbers to validate (one per line)</label>
-                    <textarea id="validateNumbersInput" class="input-schedule-numbers" rows="5" placeholder="+15551112222&#10;+15553334444&#10;invalid-number"></textarea>
-                    <button type="button" class="btn btn-validate" onclick="validateNumbers()">Validate Numbers</button>
-                    <div id="validationResults" style="display:none;">
-                        <div class="validation-summary" id="validationSummary"></div>
-                        <div id="validationDetails"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Personalized Voicemail -->
-            <div class="panel" id="panelPVM">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        Personalized Voicemail
-                        <button type="button" class="panel-minimize" data-panel="panelPVM" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-
-                    <div class="pvm-section">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            Upload Customer CSV
-                        </div>
-                        <p class="pvm-hint">Columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
-                        <div class="pvm-upload-area">
-                            <input type="file" id="pvmCsvFile" accept=".csv,.txt" style="display:none" onchange="pvmParseCSV()">
-                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('pvmCsvFile').click()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                Upload CSV File
-                            </button>
-                            <button type="button" class="btn btn-small" onclick="pvmDownloadSample()" title="Download sample CSV">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                Sample CSV
-                            </button>
-                            <span class="pvm-file-name" id="pvmFileName">No file selected</span>
-                        </div>
-                        <div id="pvmCsvResult" style="display:none;">
-                            <div class="pvm-csv-stats" id="pvmCsvStats"></div>
-                            <div class="pvm-csv-preview" id="pvmCsvPreview"></div>
-                        </div>
-                    </div>
-
-                    <div class="pvm-section">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Voicemail Script
-                        </div>
-                        <p class="pvm-hint">Click tags to insert placeholders into your script.</p>
-                        <div class="pvm-placeholders" id="pvmPlaceholders">
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('first_name')">{first_name}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('last_name')">{last_name}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('amount')">{amount}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('date')">{date}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('email')">{email}</span>
-                            <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('address')">{address}</span>
-                        </div>
-                        <textarea id="pvmTemplate" class="pvm-template-input" rows="6" oninput="pvmUpdateCharCount()" placeholder="Hi {first_name}, this is a friendly reminder about your account. Your balance of {amount} was due on {date}. Please call us back at your earliest convenience. Thank you!"></textarea>
-                        <div class="pvm-script-meta">
-                            <span class="pvm-char-count" id="pvmCharCount">0 characters</span>
-                            <span class="pvm-est-duration" id="pvmEstDuration">~0s audio</span>
-                        </div>
-
-                        <div class="pvm-preview-actions">
-                            <div class="pvm-contact-selector" id="pvmContactSelector" style="display:none;">
-                                <label class="pvm-small-label">Preview as:</label>
-                                <select id="pvmPreviewContact" class="pvm-voice-select" style="flex:1;"></select>
-                            </div>
-                            <button type="button" class="btn btn-secondary" onclick="pvmPreview()" style="margin-top:4px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                Preview Text
-                            </button>
-                        </div>
-                        <div id="pvmPreviewResult" class="pvm-preview-box" style="display:none;"></div>
-                    </div>
-
-                    <div class="pvm-section">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                            Select Voice
-                        </div>
-                        <div class="pvm-voice-row">
-                            <select id="pvmVoiceSelect" class="pvm-voice-select">
-                                <option value="">Loading voices...</option>
-                            </select>
-                            <button type="button" class="btn btn-small" onclick="pvmLoadVoices()" title="Refresh voices">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="pvm-section">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
-                            Voice Controls
-                        </div>
-                        <div class="pvm-voice-controls">
-                            <div class="pvm-slider-group">
-                                <div class="pvm-slider-header">
-                                    <label>TTS Model</label>
-                                </div>
-                                <select id="pvmModel" class="pvm-voice-select">
-                                    <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
-                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural pauses)</option>
-                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
-                                    <option value="eleven_english_v1">English v1 (Classic)</option>
-                                </select>
-                            </div>
-
-                            <div class="pvm-slider-group">
-                                <div class="pvm-slider-header">
-                                    <label>Stability</label>
-                                    <span class="pvm-slider-value" id="pvmStabilityVal">0.35</span>
-                                </div>
-                                <input type="range" id="pvmStability" min="0" max="100" value="35" class="pvm-slider" oninput="pvmUpdateSlider('Stability')">
-                                <div class="pvm-slider-labels"><span>More Variable</span><span>More Stable</span></div>
-                            </div>
-
-                            <div class="pvm-slider-group">
-                                <div class="pvm-slider-header">
-                                    <label>Similarity</label>
-                                    <span class="pvm-slider-value" id="pvmSimilarityVal">0.80</span>
-                                </div>
-                                <input type="range" id="pvmSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="pvmUpdateSlider('Similarity')">
-                                <div class="pvm-slider-labels"><span>Low</span><span>High</span></div>
-                            </div>
-
-                            <div class="pvm-slider-group">
-                                <div class="pvm-slider-header">
-                                    <label>Style</label>
-                                    <span class="pvm-slider-value" id="pvmStyleVal">0.15</span>
-                                </div>
-                                <input type="range" id="pvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="pvmUpdateSlider('Style')">
-                                <div class="pvm-slider-labels"><span>None</span><span>Expressive</span></div>
-                            </div>
-
-                            <div class="pvm-slider-group">
-                                <div class="pvm-slider-header">
-                                    <label>Speed</label>
-                                    <span class="pvm-slider-value" id="pvmSpeedVal">0.82</span>
-                                </div>
-                                <input type="range" id="pvmSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="pvmUpdateSlider('Speed')">
-                                <div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div>
-                            </div>
-
-                            <div class="pvm-toggles-compact">
-                                <div class="pvm-toggle-row">
-                                    <label class="pvm-toggle-label">
-                                        <input type="checkbox" id="pvmHumanize" checked>
-                                        <span class="pvm-toggle-switch"></span>
-                                        Natural Speech
-                                    </label>
-                                </div>
-                                <div class="pvm-toggle-row">
-                                    <label class="pvm-toggle-label">
-                                        <input type="checkbox" id="pvmSpeakerBoost" checked>
-                                        <span class="pvm-toggle-switch"></span>
-                                        Speaker Boost
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pvm-section" id="pvmLivePreviewSection" style="display:none;">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            Live Voice Preview
-                        </div>
-                        <p class="pvm-hint">Hear how it sounds for a specific contact before generating all.</p>
-                        <div class="pvm-live-preview-row">
-                            <select id="pvmLivePreviewContact" class="pvm-voice-select" style="flex:1;"></select>
-                            <button type="button" class="btn btn-gradient" id="pvmLivePreviewBtn" onclick="pvmLivePreview()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                Generate Preview
-                            </button>
-                        </div>
-                        <div id="pvmLivePreviewStatus" class="pvm-live-status" style="display:none;">
-                            <svg class="pvm-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                            <span>Generating voice preview...</span>
-                        </div>
-                        <div id="pvmLivePreviewPlayer" style="display:none;">
-                            <div class="pvm-audio-player-wrap">
-                                <audio id="pvmPreviewAudio" controls style="width:100%;border-radius:8px;"></audio>
-                            </div>
-                            <div class="pvm-preview-script-text" id="pvmPreviewScriptText"></div>
-                        </div>
-                    </div>
-
-                    <div class="pvm-section pvm-actions-section">
-                        <div class="pvm-cost-estimate" id="pvmCostEstimate" style="display:none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                            <span id="pvmCostText">Estimated cost: ~$0.00</span>
-                        </div>
-                        <button type="button" class="btn btn-gradient pvm-generate-btn" id="pvmGenerateBtn" onclick="pvmGenerate()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            Generate All Personalized Voicemails
-                        </button>
-                        <div id="pvmProgress" style="display:none;">
-                            <div class="pvm-progress-bar">
-                                <div class="pvm-progress-fill" id="pvmProgressFill"></div>
-                            </div>
-                            <div class="pvm-progress-text" id="pvmProgressText">Generating... 0/0</div>
-                        </div>
-                        <div id="pvmErrors" class="pvm-errors" style="display:none;"></div>
-                    </div>
-
-                    <div class="pvm-section" id="pvmStep4" style="display:none;">
-                        <div class="pvm-section-label pvm-ready-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                            Ready to Dial
-                        </div>
-                        <div class="pvm-ready-stats" id="pvmReadyStats"></div>
-                        <div class="pvm-ready-actions">
-                            <button type="button" class="btn btn-gradient" onclick="pvmLoadToDialer()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                                Load Numbers into Dialer
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="pvmClearAll()">Clear All</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Email Reports -->
-            <div class="panel" id="panelEmailReports">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
-                        Daily Email Reports
-                        <button type="button" class="panel-minimize" data-panel="panelEmailReports" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-
-                    <div style="margin-bottom:16px;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                            <div id="gmailStatusDot" style="width:10px;height:10px;border-radius:50%;background:#94A3B8;flex-shrink:0;"></div>
-                            <span id="gmailStatusText" style="font-size:12px;color:var(--text-secondary);">Checking Gmail connection...</span>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:16px;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                            <label style="font-size:13px;font-weight:600;">Enable Daily Reports</label>
-                            <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;">
-                                <input type="checkbox" id="reportEnabled" style="opacity:0;width:0;height:0;" onchange="saveReportSettings()">
-                                <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:.3s;"></span>
-                                <span id="reportToggleKnob" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none;"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom:14px;">
-                        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Recipient Email</label>
-                        <input type="email" id="reportEmail" class="input" placeholder="your@email.com" style="width:100%;font-size:13px;" onchange="saveReportSettings()">
-                    </div>
-
-                    <div style="margin-bottom:14px;">
-                        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send Time (UTC, 24h format)</label>
-                        <input type="time" id="reportSendTime" class="input" value="08:00" style="width:140px;font-size:13px;" onchange="saveReportSettings()">
-                    </div>
-
-                    <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
-                        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;">Report Contents</div>
-                        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
-                            <div>&#128293; <strong>Hot Leads</strong> &mdash; Calls answered by humans &amp; transferred</div>
-                            <div>&#9888;&#65039; <strong>Failed Calls</strong> &mdash; Numbers that failed with reasons</div>
-                            <div>&#128232; <strong>Voicemails Left</strong> &mdash; All voicemail drops in 24 hours</div>
-                            <div>&#128202; <strong>Summary Stats</strong> &mdash; Total calls, success rate, breakdown</div>
-                            <div>&#128206; <strong>CSV Attachment</strong> &mdash; Raw data for analysis</div>
-                        </div>
-                    </div>
-
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <button type="button" class="btn btn-gradient" onclick="sendTestReport()" id="testReportBtn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            Send Test Report
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="checkGmailStatus()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                            Check Connection
-                        </button>
-                    </div>
-
-                    <div id="reportMessage" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;"></div>
-
-                    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-                        <div style="font-size:11px;color:var(--text-secondary);">
-                            <span id="reportLastSent">Last sent: Never</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Campaign History -->
-            <div class="panel" id="panelCampaignHistory">
-                <div class="card">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-                        Campaign History
-                        <button type="button" class="panel-minimize" data-panel="panelCampaignHistory" title="Minimize">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </button>
-                    </div>
-                    <div class="table-wrap">
-                        <table id="historyTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Total Calls</th>
-                                    <th>Hot Leads</th>
-                                    <th>Voicemails</th>
-                                    <th>Failed</th>
-                                    <th>Success Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyBody">
-                                <tr><td colspan="6" class="empty-row">Loading...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-                <!-- Dial Mode -->
-                <div class="card stagger-6">
-                    <div class="card-title">
-                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
-                        Dial Mode
-                    </div>
-                    <label>Choose how calls are placed</label>
-                    <div class="dial-mode-toggle">
-                        <button type="button" class="dial-mode-btn active" data-mode="sequential" id="modeSeq">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                            Sequential
-                        </button>
-                        <button type="button" class="dial-mode-btn" data-mode="simultaneous" id="modeSimul">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                            Simultaneous
-                        </button>
-                    </div>
-                    <input type="hidden" name="dial_mode" id="dialModeInput" value="sequential">
-                    <div class="batch-size-wrap" id="dialDelayWrap">
-                        <label>Delay between calls</label>
-                        <div class="batch-size-row">
-                            <input type="number" name="dial_delay" id="dialDelay" class="input-batch" value="2" min="1" max="10">
-                            <span class="batch-hint">1–10 minutes between each call</span>
-                        </div>
-                    </div>
-                    <div class="batch-size-wrap" id="batchSizeWrap" style="display:none;">
-                        <label>Calls per batch</label>
-                        <div class="batch-size-row">
-                            <input type="number" name="batch_size" id="batchSize" class="input-batch" value="5" min="2" max="50">
-                            <span class="batch-hint">2–50 calls fired at once per batch</span>
-                        </div>
-                    </div>
-                    <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time with a configurable delay between each call.</div>
-                </div>
-
-                <!-- Buttons -->
-                <div class="button-group stagger-7">
-                    <button type="submit" class="btn btn-start" id="startBtn">Start Campaign</button>
-                    <button type="button" class="btn btn-stop" id="stopBtn" disabled>Stop Campaign</button>
-                </div>
-            </form>
 
             <!-- Call Log -->
             <div class="log-section stagger-8">
                 <div class="log-header">
                     <h2>
-                        <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <svg class="log-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         Call Log
                     </h2>
                     <div class="log-header-actions">
                         <span id="callCount" class="call-count">0 calls</span>
                         <button type="button" class="btn-clear-logs" id="clearLogsBtn" title="Clear all call logs">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                             Clear
                         </button>
                     </div>
@@ -868,15 +784,7 @@
                     <table id="callTable">
                         <thead>
                             <tr>
-                                <th>Date/Time</th>
-                                <th>Destination</th>
-                                <th>Caller ID</th>
-                                <th>Status Description</th>
-                                <th>Ring</th>
-                                <th>Machine?</th>
-                                <th>Transferred</th>
-                                <th>Voicemail</th>
-                                <th>Transcript</th>
+                                <th>Date/Time</th><th>Destination</th><th>Caller ID</th><th>Status Description</th><th>Ring</th><th>Machine?</th><th>Transferred</th><th>Voicemail</th><th>Transcript</th>
                             </tr>
                         </thead>
                         <tbody id="callBody">
@@ -887,7 +795,7 @@
 
                 <div class="download-section">
                     <div class="download-title">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Download Report
                     </div>
                     <div class="download-filters">
@@ -899,25 +807,23 @@
                             <button type="button" class="download-preset" data-range="custom">Custom</button>
                         </div>
                         <div class="download-custom-row" id="customDateRow" style="display:none;">
-                            <div class="date-field">
-                                <label>From</label>
-                                <input type="datetime-local" id="reportStart" class="input-date">
-                            </div>
-                            <div class="date-field">
-                                <label>To</label>
-                                <input type="datetime-local" id="reportEnd" class="input-date">
-                            </div>
+                            <div class="date-field"><label>From</label><input type="datetime-local" id="reportStart" class="input-date"></div>
+                            <div class="date-field"><label>To</label><input type="datetime-local" id="reportEnd" class="input-date"></div>
                         </div>
                     </div>
                     <button type="button" class="btn btn-download" id="downloadReportBtn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Download CSV
                     </button>
                 </div>
             </div>
-        </div>
 
-        </div> <!-- /app-layout -->
+            <div class="wiz-campaign-complete" id="wizCampaignComplete" style="display:none;">
+                <div class="wiz-complete-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#30D158" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                <h3>Campaign Complete!</h3>
+                <button type="button" class="wiz-create-btn" onclick="showView('dashboard')" style="margin-top:16px;">Back to Dashboard</button>
+            </div>
+        </div>
 
         <!-- FOOTER -->
         <footer class="oh-footer">
@@ -928,37 +834,13 @@
                         <p class="oh-footer-tagline">Empowering businesses with intelligent communication solutions</p>
                     </div>
                 </div>
-                <div class="oh-footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Documentation</a></li>
-                        <li><a href="#">API Reference</a></li>
-                    </ul>
-                </div>
-                <div class="oh-footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Support</a></li>
-                    </ul>
-                </div>
-                <div class="oh-footer-section">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">TCPA Compliance</a></li>
-                    </ul>
-                </div>
+                <div class="oh-footer-section"><h4>Product</h4><ul><li><a href="#">Features</a></li><li><a href="#">Documentation</a></li><li><a href="#">API Reference</a></li></ul></div>
+                <div class="oh-footer-section"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Contact</a></li><li><a href="#">Support</a></li></ul></div>
+                <div class="oh-footer-section"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">TCPA Compliance</a></li></ul></div>
             </div>
             <div class="oh-footer-bottom">
                 <div class="oh-footer-copyright">&copy; 2026 Open Human. All rights reserved.</div>
-                <div class="oh-footer-socials">
-                    <a href="#" aria-label="Twitter">&#120143;</a>
-                    <a href="#" aria-label="LinkedIn">in</a>
-                </div>
+                <div class="oh-footer-socials"><a href="#" aria-label="Twitter">&#120143;</a><a href="#" aria-label="LinkedIn">in</a></div>
             </div>
         </footer>
     </div>
@@ -1079,23 +961,32 @@
                     });
             }
 
-            // ---- Sidebar Panel Toggle ----
-            var sidebarBtns = document.querySelectorAll(".sidebar-btn");
-            var minimizeBtns = document.querySelectorAll(".panel-minimize");
+            // ---- View Switching ----
+            var currentView = "dashboard";
+            function showView(view) {
+                document.getElementById("viewDashboard").style.display = view === "dashboard" ? "" : "none";
+                document.getElementById("viewWizard").style.display = view === "wizard" ? "" : "none";
+                document.getElementById("viewMonitor").style.display = view === "monitor" ? "" : "none";
+                currentView = view;
+                if (view === "wizard") {
+                    wizardGoToStep(1);
+                }
+                window.scrollTo(0, 0);
+            }
 
-            function togglePanel(panelId) {
-                var panel = document.getElementById(panelId);
-                var btn = document.querySelector('.sidebar-btn[data-panel="' + panelId + '"]');
-                if (!panel || !btn) return;
+            // ---- Dashboard Panel Toggle ----
+            var currentDashPanel = null;
+            function showDashPanel(panelId) {
+                var wrap = document.getElementById("dashPanelWrap");
+                var allSections = wrap.querySelectorAll(".wiz-dash-section");
+                allSections.forEach(function(s) { s.style.display = "none"; });
 
-                var isOpen = panel.classList.contains("open");
+                var target = document.getElementById(panelId);
+                if (target) {
+                    target.style.display = "";
+                    wrap.style.display = "";
+                    currentDashPanel = panelId;
 
-                if (isOpen) {
-                    panel.classList.remove("open");
-                    btn.classList.remove("active");
-                } else {
-                    panel.classList.add("open");
-                    btn.classList.add("active");
                     if (panelId === "panelAnalytics" && typeof loadAnalytics === "function") loadAnalytics();
                     if (panelId === "panelDNC" && typeof loadDNC === "function") loadDNC();
                     if (panelId === "panelSchedule" && typeof loadSchedules === "function") loadSchedules();
@@ -1104,23 +995,166 @@
                     if (panelId === "panelPVM" && typeof pvmInit === "function") pvmInit();
                     if (panelId === "panelEmailReports" && typeof loadReportSettings === "function") loadReportSettings();
                     if (panelId === "panelCampaignHistory") loadCampaignHistory();
+
                     setTimeout(function() {
-                        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+                        wrap.scrollIntoView({ behavior: "smooth", block: "start" });
                     }, 100);
                 }
             }
 
-            sidebarBtns.forEach(function(btn) {
-                btn.addEventListener("click", function() {
-                    togglePanel(this.getAttribute("data-panel"));
-                });
-            });
+            function closeDashPanel() {
+                document.getElementById("dashPanelWrap").style.display = "none";
+                currentDashPanel = null;
+            }
 
-            minimizeBtns.forEach(function(btn) {
-                btn.addEventListener("click", function() {
-                    togglePanel(this.getAttribute("data-panel"));
-                });
-            });
+            // ---- Wizard State ----
+            var wizCurrentStep = 1;
+            var wizTotalSteps = 5;
+            var wizSelectedType = "outbound";
+            var wizVmType = "standard";
+
+            function wizardGoToStep(step) {
+                wizCurrentStep = step;
+                for (var i = 1; i <= wizTotalSteps; i++) {
+                    var content = document.getElementById("wizContent" + i);
+                    if (content) content.style.display = i === step ? "" : "none";
+
+                    var ind = document.getElementById("wizStep" + i + "Ind");
+                    if (ind) {
+                        ind.classList.remove("wiz-step-active", "wiz-step-completed");
+                        if (i === step) ind.classList.add("wiz-step-active");
+                        else if (i < step) ind.classList.add("wiz-step-completed");
+                    }
+                }
+                document.getElementById("wizBackBtn").style.display = step > 1 ? "" : "none";
+                document.getElementById("wizNextBtn").style.display = step < wizTotalSteps ? "" : "none";
+
+                if (step === 5) wizPopulateReview();
+                if (step === 3 && wizVmType === "personalized") wizCheckPvm();
+            }
+
+            function wizardNext() {
+                if (wizCurrentStep === 2) {
+                    var csvFile = document.getElementById("csvFile");
+                    var numbersInput = document.getElementById("numbersInput");
+                    var hasCsv = csvFile && csvFile.files && csvFile.files.length > 0;
+                    var hasNumbers = numbersInput && numbersInput.value.trim().length > 0;
+                    if (!hasCsv && !hasNumbers) {
+                        showToast("Please upload a CSV or paste phone numbers", "warning");
+                        return;
+                    }
+                }
+                if (wizCurrentStep === 4) {
+                    var tf = document.getElementById("transferNumber");
+                    if (!tf || !tf.value.trim()) {
+                        showToast("Please enter a transfer number", "warning");
+                        return;
+                    }
+                }
+                if (wizCurrentStep < wizTotalSteps) {
+                    wizardGoToStep(wizCurrentStep + 1);
+                }
+            }
+
+            function wizardBack() {
+                if (wizCurrentStep > 1) {
+                    wizardGoToStep(wizCurrentStep - 1);
+                }
+            }
+
+            function wizSelectType(type) {
+                wizSelectedType = type;
+            }
+
+            function wizSwitchSource(mode) {
+                var tabs = document.querySelectorAll(".wiz-source-tab");
+                tabs.forEach(function(t) { t.classList.remove("active"); });
+                if (mode === "csv") {
+                    tabs[0].classList.add("active");
+                    document.getElementById("wizSourceCSV").style.display = "";
+                    document.getElementById("wizSourcePaste").style.display = "none";
+                } else {
+                    tabs[1].classList.add("active");
+                    document.getElementById("wizSourceCSV").style.display = "none";
+                    document.getElementById("wizSourcePaste").style.display = "";
+                }
+            }
+
+            function wizSwitchVmType(type) {
+                wizVmType = type;
+                var tabs = document.querySelectorAll(".wiz-vm-tab");
+                tabs.forEach(function(t) { t.classList.remove("active"); });
+                if (type === "standard") {
+                    tabs[0].classList.add("active");
+                    document.getElementById("wizVmStandard").style.display = "";
+                    document.getElementById("wizVmPersonalized").style.display = "none";
+                } else {
+                    tabs[1].classList.add("active");
+                    document.getElementById("wizVmStandard").style.display = "none";
+                    document.getElementById("wizVmPersonalized").style.display = "";
+                    wizCheckPvm();
+                }
+            }
+
+            function wizCheckPvm() {
+                var statusEl = document.getElementById("wizPvmStatus");
+                apiFetch("/api/pvm/audio-map")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.count > 0) {
+                            statusEl.innerHTML = '<span style="color:var(--success);">&#10003; ' + data.count + ' personalized voicemails ready. Numbers will be auto-loaded at launch.</span>';
+                        } else {
+                            statusEl.innerHTML = '<span style="color:var(--text-secondary);">No personalized voicemails generated yet. Go to Dashboard &rarr; Personal VM to create them.</span>';
+                        }
+                    }).catch(function() {
+                        statusEl.innerHTML = '<span style="color:var(--danger);">Could not check PVM status.</span>';
+                    });
+            }
+
+            function wizPopulateReview() {
+                document.getElementById("wizReviewType").textContent = "Outbound Campaign";
+
+                var csvFile = document.getElementById("csvFile");
+                var numbersInput = document.getElementById("numbersInput");
+                var count = 0;
+                if (csvFile && csvFile.files && csvFile.files.length > 0) {
+                    count = "CSV: " + csvFile.files[0].name;
+                } else if (numbersInput && numbersInput.value.trim()) {
+                    count = numbersInput.value.trim().split(/[\n,]+/).filter(function(n) { return n.trim(); }).length + " numbers";
+                }
+                document.getElementById("wizReviewNumbers").textContent = count || "0 numbers";
+
+                var audioFile = document.getElementById("audioFile");
+                var audioUrl = document.getElementById("audioUrl");
+                var vmText = wizVmType === "personalized" ? "Personalized (AI)" : "Standard";
+                if (wizVmType === "standard") {
+                    if (audioFile && audioFile.files && audioFile.files.length > 0) vmText += " - " + audioFile.files[0].name;
+                    else if (audioUrl && audioUrl.value.trim()) vmText += " - URL";
+                    else vmText += " - Saved default";
+                }
+                document.getElementById("wizReviewVm").textContent = vmText;
+
+                var tf = document.getElementById("transferNumber");
+                document.getElementById("wizReviewTransfer").textContent = tf ? tf.value : "-";
+
+                var mode = document.getElementById("dialModeInput").value;
+                var modeText = mode === "simultaneous" ? "Simultaneous (batch: " + document.getElementById("batchSize").value + ")" : "Sequential (delay: " + document.getElementById("dialDelay").value + " min)";
+                document.getElementById("wizReviewMode").textContent = modeText;
+            }
+
+            function wizUpdateNumberCount() {
+                var csvFile = document.getElementById("csvFile");
+                var numbersInput = document.getElementById("numbersInput");
+                var el = document.getElementById("wizNumberCount");
+                if (csvFile && csvFile.files && csvFile.files.length > 0) {
+                    el.textContent = "File selected: " + csvFile.files[0].name;
+                } else if (numbersInput && numbersInput.value.trim()) {
+                    var count = numbersInput.value.trim().split(/[\n,]+/).filter(function(n) { return n.trim(); }).length;
+                    el.textContent = count + " number" + (count !== 1 ? "s" : "") + " detected";
+                } else {
+                    el.textContent = "";
+                }
+            }
 
             // ---- Theme Toggle ----
             var themeToggle = document.getElementById("themeToggle");
@@ -1191,7 +1225,7 @@
 
             // ---- Ripple Effect ----
             document.addEventListener("click", function(e) {
-                var btn = e.target.closest(".btn, .btn-save-transfer, .btn-clear-logs");
+                var btn = e.target.closest(".btn, .btn-save-transfer, .btn-clear-logs, .wiz-create-btn, .wiz-launch-btn, .wiz-nav-btn");
                 if (!btn || btn.disabled) return;
                 var rect = btn.getBoundingClientRect();
                 var ripple = document.createElement("span");
@@ -1287,29 +1321,18 @@
                 });
             });
 
-            loadVmSettings();
-
-            // ---- Load Saved Transfer Number ----
-            var saved = localStorage.getItem("vb_transfer_number");
-            if (saved) {
-                transferNumber.value = saved;
-                savedIndicator.classList.add("show");
-                saveTransferBtn.textContent = "Update";
-            }
-
-            // ---- Save Transfer Number ----
+            // ---- Saved Transfer Number ----
+            (function() {
+                var saved = localStorage.getItem("vb_transfer");
+                if (saved) transferNumber.value = saved;
+            })();
             saveTransferBtn.addEventListener("click", function() {
-                var num = transferNumber.value.trim();
-                if (!num) return;
-                localStorage.setItem("vb_transfer_number", num);
-                savedIndicator.classList.add("show");
-                saveTransferBtn.textContent = "Update";
-                saveTransferBtn.style.borderColor = "var(--success)";
-                saveTransferBtn.style.color = "var(--success)";
-                setTimeout(function() {
-                    saveTransferBtn.style.borderColor = "";
-                    saveTransferBtn.style.color = "";
-                }, 1500);
+                var val = transferNumber.value.trim();
+                if (val) {
+                    localStorage.setItem("vb_transfer", val);
+                    savedIndicator.classList.add("show");
+                    setTimeout(function() { savedIndicator.classList.remove("show"); }, 2000);
+                }
             });
 
             // ---- Dial Mode Toggle ----
@@ -1322,13 +1345,15 @@
 
             function setDialMode(mode) {
                 dialModeInput.value = mode;
-                modeSeq.classList.toggle("active", mode === "sequential");
-                modeSimul.classList.toggle("active", mode === "simultaneous");
                 if (mode === "simultaneous") {
+                    modeSeq.classList.remove("active");
+                    modeSimul.classList.add("active");
                     batchSizeWrap.style.display = "";
                     dialDelayWrap.style.display = "none";
                     dialModeDesc.textContent = "Multiple calls are fired at the same time in batches for faster dialing.";
                 } else {
+                    modeSimul.classList.remove("active");
+                    modeSeq.classList.add("active");
                     batchSizeWrap.style.display = "none";
                     dialDelayWrap.style.display = "";
                     dialModeDesc.textContent = "Calls are placed one at a time with a configurable delay between each call.";
@@ -1502,6 +1527,24 @@
             // ---- Start Campaign ----
             form.addEventListener("submit", function(e) {
                 e.preventDefault();
+
+                if (wizVmType === "personalized") {
+                    apiFetch("/api/pvm/audio-map")
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var phones = Object.keys(data.audio_map || {});
+                            if (phones.length > 0) {
+                                var numbersField = document.getElementById("numbersInput");
+                                if (numbersField) numbersField.value = phones.join("\n");
+                            }
+                            doStartCampaign();
+                        }).catch(function() { doStartCampaign(); });
+                } else {
+                    doStartCampaign();
+                }
+            });
+
+            function doStartCampaign() {
                 var formData = new FormData(form);
                 startBtn.disabled = true;
                 startBtn.textContent = "Starting...";
@@ -1512,11 +1555,13 @@
                         if (data.error) {
                             alert("Error: " + data.error);
                             startBtn.disabled = false;
-                            startBtn.textContent = "Start Campaign";
+                            startBtn.textContent = "Launch Campaign";
                         } else {
                             stopBtn.disabled = false;
+                            document.getElementById("monitorStopBtn").disabled = false;
                             startBtn.textContent = "Campaign Running...";
                             showToast("Campaign started!", "success");
+                            showView("monitor");
                             pollStatus();
                         }
                     })
@@ -1524,9 +1569,9 @@
                         if (e.message === "auth") return;
                         alert("Failed to start campaign");
                         startBtn.disabled = false;
-                        startBtn.textContent = "Start Campaign";
+                        startBtn.textContent = "Launch Campaign";
                     });
-            });
+            }
 
             // ---- Stop Campaign ----
             stopBtn.addEventListener("click", function() {
@@ -1534,8 +1579,9 @@
                     .then(function(r) { return r.json(); })
                     .then(function() {
                         stopBtn.disabled = true;
+                        document.getElementById("monitorStopBtn").disabled = true;
                         startBtn.disabled = false;
-                        startBtn.textContent = "Start Campaign";
+                        startBtn.textContent = "Launch Campaign";
                         showToast("Campaign stopped", "info");
                     });
             });
@@ -1585,6 +1631,7 @@
             var isActive = false;
             var prevActiveState = false;
             var prevVmCount = 0;
+            var initialPollDone = false;
 
             function pollStatus() {
                 apiFetch("/status")
@@ -1593,6 +1640,13 @@
                         var bar = document.getElementById("campaignStatus");
                         var wasActive = isActive;
                         isActive = data.active;
+
+                        if (!initialPollDone) {
+                            initialPollDone = true;
+                            if (data.active) {
+                                showView("monitor");
+                            }
+                        }
 
                         if (data.active && data.transfer_paused) {
                             bar.className = "status-bar stagger-1 active";
@@ -1608,8 +1662,9 @@
                             bar.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
                             if (data.calls && data.calls.length > 0) {
                                 startBtn.disabled = false;
-                                startBtn.textContent = "Start Campaign";
+                                startBtn.textContent = "Launch Campaign";
                                 stopBtn.disabled = true;
+                                document.getElementById("monitorStopBtn").disabled = true;
                             }
                         }
 
@@ -1637,6 +1692,10 @@
                         animateCounter(document.getElementById("qsHotLeads"), hotLeads);
                         animateCounter(document.getElementById("qsVoicemails"), voicemails);
                         animateCounter(document.getElementById("qsSuccessRate"), successRate + "%");
+                        animateCounter(document.getElementById("qsTotalCallsMon"), totalCalls);
+                        animateCounter(document.getElementById("qsHotLeadsMon"), hotLeads);
+                        animateCounter(document.getElementById("qsVoicemailsMon"), voicemails);
+                        animateCounter(document.getElementById("qsSuccessRateMon"), successRate + "%");
 
                         var newVmCount = voicemails;
                         if (newVmCount > prevVmCount && prevVmCount > 0) {
@@ -1646,6 +1705,7 @@
 
                         if (prevActiveState && !data.active && !data.stop_requested) {
                             showToast("Campaign complete!", "success");
+                            document.getElementById("wizCampaignComplete").style.display = "";
                         }
                         prevActiveState = data.active;
 
@@ -1773,6 +1833,10 @@
 
             pollTimer = setInterval(pollStatus, pollInterval);
             pollStatus();
+
+            // Wire up number count tracking
+            document.getElementById("csvFile").addEventListener("change", function() { wizUpdateNumberCount(); });
+            document.getElementById("numbersInput").addEventListener("input", function() { wizUpdateNumberCount(); });
     </script>
 
     <!-- iPHONE DIALER WIDGET -->
@@ -1823,18 +1887,9 @@
                                 <div class="iphone-transcript-content" id="iphoneTranscriptContent"></div>
                             </div>
                             <div class="iphone-call-actions">
-                                <div class="iphone-action-btn">
-                                    <div class="iphone-action-icon">&#128264;</div>
-                                    <span>mute</span>
-                                </div>
-                                <div class="iphone-action-btn">
-                                    <div class="iphone-action-icon">&#9881;</div>
-                                    <span>keypad</span>
-                                </div>
-                                <div class="iphone-action-btn">
-                                    <div class="iphone-action-icon">&#128266;</div>
-                                    <span>speaker</span>
-                                </div>
+                                <div class="iphone-action-btn"><div class="iphone-action-icon">&#128264;</div><span>mute</span></div>
+                                <div class="iphone-action-btn"><div class="iphone-action-icon">&#9881;</div><span>keypad</span></div>
+                                <div class="iphone-action-btn"><div class="iphone-action-icon">&#128266;</div><span>speaker</span></div>
                             </div>
                         </div>
                         <div class="iphone-hotlead-screen" id="iphoneHotLeadScreen" style="display:none;">
@@ -1842,15 +1897,11 @@
                             <div class="hotlead-caller-location" id="hotleadNumber"></div>
                             <div class="hotlead-mid-actions">
                                 <div class="hotlead-action-btn">
-                                    <div class="hotlead-action-icon hotlead-remind">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                                    </div>
+                                    <div class="hotlead-action-icon hotlead-remind"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
                                     <span>Remind Me</span>
                                 </div>
                                 <div class="hotlead-action-btn">
-                                    <div class="hotlead-action-icon hotlead-message">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                                    </div>
+                                    <div class="hotlead-action-icon hotlead-message"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
                                     <span>Message</span>
                                 </div>
                             </div>
@@ -2304,6 +2355,12 @@
             iFab.style.right = "";
         };
 
+        function initFabFloat() {
+            initFabPos();
+            fabVX = (Math.random() - 0.5) * 2;
+            fabVY = -(1 + Math.random() * 2);
+        }
+
         if (isFloating) {
             fab.classList.add("floating");
             setTimeout(function() {
@@ -2621,89 +2678,57 @@
                         document.getElementById("statSuccessRate").textContent = data.success_rate + "%";
                         document.getElementById("statTransferRate").textContent = data.transfer_rate + "%";
                         document.getElementById("statVoicemailRate").textContent = data.voicemail_rate + "%";
-                        document.getElementById("statAvgRing").textContent = data.avg_ring_duration + "s";
+                        document.getElementById("statAvgRing").textContent = data.avg_ring_time + "s";
 
-                        renderChart("chartAMD", "doughnut", {
-                            labels: Object.keys(data.amd_accuracy),
-                            datasets: [{
-                                data: Object.values(data.amd_accuracy),
-                                backgroundColor: ["#2563EB", "#06B6D4", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"]
-                            }]
-                        });
+                        function renderChart(canvasId, type, labels, datasets, options) {
+                            if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+                            var ctx = document.getElementById(canvasId);
+                            if (!ctx) return;
+                            var isDark = document.documentElement.getAttribute("data-theme") !== "light";
+                            var gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+                            var textColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)";
+                            var defaultOpts = {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: { legend: { labels: { color: textColor, font: { size: 11 } } } },
+                                scales: type === "bar" || type === "line" ? {
+                                    x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } },
+                                    y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } }, beginAtZero: true }
+                                } : undefined
+                            };
+                            chartInstances[canvasId] = new Chart(ctx, {
+                                type: type,
+                                data: { labels: labels, datasets: datasets },
+                                options: Object.assign(defaultOpts, options || {})
+                            });
+                        }
 
-                        var hours = Object.keys(data.hourly_distribution).sort(function(a,b){return parseInt(a)-parseInt(b);});
-                        var hourLabels = hours.map(function(h){var hr=parseInt(h);return hr===0?"12am":hr<12?hr+"am":hr===12?"12pm":(hr-12)+"pm";});
-                        renderChart("chartHourly", "bar", {
-                            labels: hourLabels,
-                            datasets: [{
-                                label: "Total Calls",
-                                data: hours.map(function(h){return data.hourly_distribution[h];}),
-                                backgroundColor: "rgba(37, 99, 235, 0.6)",
-                                borderColor: "#2563EB",
-                                borderWidth: 1
-                            },{
-                                label: "Successful",
-                                data: hours.map(function(h){return (data.hourly_success||{})[h]||0;}),
-                                backgroundColor: "rgba(16, 185, 129, 0.6)",
-                                borderColor: "#10B981",
-                                borderWidth: 1
-                            }]
-                        });
+                        var amd = data.amd_breakdown || {};
+                        renderChart("chartAMD", "doughnut",
+                            Object.keys(amd),
+                            [{ data: Object.values(amd), backgroundColor: ["#2563EB","#30D158","#FF453A","#FFD60A","#A78BFA"], borderWidth: 0 }],
+                            { cutout: "65%" }
+                        );
 
-                        var days = Object.keys(data.daily_distribution).sort();
-                        renderChart("chartDaily", "line", {
-                            labels: days.map(function(d){return d.substring(5);}),
-                            datasets: [{
-                                label: "Total",
-                                data: days.map(function(d){return data.daily_distribution[d].total;}),
-                                borderColor: "#2563EB",
-                                backgroundColor: "rgba(37,99,235,0.1)",
-                                fill: true,
-                                tension: 0.3
-                            },{
-                                label: "Successful",
-                                data: days.map(function(d){return data.daily_distribution[d].success;}),
-                                borderColor: "#10B981",
-                                backgroundColor: "rgba(16,185,129,0.1)",
-                                fill: true,
-                                tension: 0.3
-                            }]
-                        });
+                        var hourly = data.hourly_distribution || {};
+                        renderChart("chartHourly", "bar",
+                            Object.keys(hourly),
+                            [{ label: "Calls", data: Object.values(hourly), backgroundColor: "rgba(37,99,235,0.6)", borderRadius: 4 }]
+                        );
 
-                        var hangupKeys = Object.keys(data.hangup_causes);
-                        renderChart("chartHangup", "doughnut", {
-                            labels: hangupKeys.map(function(k){return k.replace(/_/g," ");}),
-                            datasets: [{
-                                data: hangupKeys.map(function(k){return data.hangup_causes[k];}),
-                                backgroundColor: ["#2563EB","#06B6D4","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#6B7280","#14B8A6","#F97316"]
-                            }]
-                        });
-                    }).catch(function(e){ if(e.message==="auth")return; });
-            }
+                        var daily = data.daily_volume || {};
+                        renderChart("chartDaily", "line",
+                            Object.keys(daily),
+                            [{ label: "Calls", data: Object.values(daily), borderColor: "#06B6D4", backgroundColor: "rgba(6,182,212,0.1)", fill: true, tension: 0.4, pointRadius: 3 }]
+                        );
 
-            function renderChart(canvasId, type, data) {
-                if (chartInstances[canvasId]) {
-                    chartInstances[canvasId].destroy();
-                }
-                var ctx = document.getElementById(canvasId);
-                if (!ctx) return;
-                var isDark = document.documentElement.getAttribute("data-theme") !== "light";
-                var textColor = isDark ? "#94A3B8" : "#64748B";
-                var gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)";
-                var opts = {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { labels: { color: textColor, font: { size: 11 } } }
-                    }
-                };
-                if (type === "bar" || type === "line") {
-                    opts.scales = {
-                        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
-                        y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
-                    };
-                }
-                chartInstances[canvasId] = new Chart(ctx, { type: type, data: data, options: opts });
+                        var hangup = data.hangup_causes || {};
+                        renderChart("chartHangup", "doughnut",
+                            Object.keys(hangup),
+                            [{ data: Object.values(hangup), backgroundColor: ["#FF453A","#FFD60A","#2563EB","#30D158","#A78BFA","#F97316"], borderWidth: 0 }],
+                            { cutout: "65%" }
+                        );
+                    }).catch(function(e) { if (e.message === "auth") return; });
             }
 
             // ---- DNC List ----
@@ -2711,40 +2736,32 @@
                 apiFetch("/api/dnc")
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        var list = data.dnc || [];
-                        var container = document.getElementById("dncListContainer");
+                        var list = data.dnc_list || [];
                         var countEl = document.getElementById("dncCount");
+                        var container = document.getElementById("dncListContainer");
                         countEl.textContent = list.length + " number" + (list.length !== 1 ? "s" : "") + " blocked";
                         if (list.length === 0) {
                             container.innerHTML = '<div class="dnc-empty">No numbers on DNC list</div>';
                             return;
                         }
-                        var html = '<div class="dnc-table-wrap"><table class="dnc-table"><thead><tr><th>Number</th><th>Reason</th><th>Added</th><th></th></tr></thead><tbody>';
-                        list.forEach(function(entry) {
-                            var addedAt = "-";
-                            if (entry.added_at) {
-                                try { var d = new Date(entry.added_at); addedAt = d.toLocaleDateString(undefined, {month:"short",day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit"}); } catch(e){}
-                            }
-                            html += '<tr><td class="td-mono">' + (entry.number||"").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</td>';
-                            html += '<td>' + (entry.reason||"manual") + '</td>';
-                            html += '<td>' + addedAt + '</td>';
-                            html += '<td><button type="button" class="btn-dnc-remove" onclick="removeDNC(\'' + (entry.number||"").replace(/'/g,"\\'") + '\')">Remove</button></td></tr>';
+                        var html = "";
+                        list.forEach(function(n) {
+                            html += '<div class="dnc-item"><span class="dnc-number">' + n + '</span><button type="button" class="dnc-remove" onclick="removeDNC(\'' + n + '\')" title="Remove">&times;</button></div>';
                         });
-                        html += '</tbody></table></div>';
                         container.innerHTML = html;
-                    }).catch(function(e){ if(e.message==="auth")return; });
+                    }).catch(function(e) { if (e.message === "auth") return; });
             }
 
             function addDNC() {
                 var input = document.getElementById("dncNumberInput");
                 var number = input.value.trim();
-                if (!number) return;
+                if (!number) { alert("Enter a phone number"); return; }
                 apiFetch("/api/dnc", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({number: number, reason: "manual"})
+                    body: JSON.stringify({number: number})
                 }).then(function(r) { return r.json(); })
-                  .then(function(data) {
+                .then(function() {
                     input.value = "";
                     loadDNC();
                 }).catch(function(e){ if(e.message==="auth")return; });
@@ -2862,23 +2879,14 @@
 
                 var color, glowColor, statusText;
                 if (pct >= 80) {
-                    color = "#30D158";
-                    glowColor = "rgba(48, 209, 88, 0.4)";
-                    statusText = "Fully Charged";
-                    hero.className = "battery-hero battery-charging";
-                    bolt.style.display = "flex";
+                    color = "#30D158"; glowColor = "rgba(48, 209, 88, 0.4)"; statusText = "Fully Charged";
+                    hero.className = "battery-hero battery-charging"; bolt.style.display = "flex";
                 } else if (pct >= 20) {
-                    color = "#FFD60A";
-                    glowColor = "rgba(255, 214, 10, 0.3)";
-                    statusText = "Warning";
-                    hero.className = "battery-hero";
-                    bolt.style.display = "none";
+                    color = "#FFD60A"; glowColor = "rgba(255, 214, 10, 0.3)"; statusText = "Warning";
+                    hero.className = "battery-hero"; bolt.style.display = "none";
                 } else {
-                    color = "#FF453A";
-                    glowColor = "rgba(255, 69, 58, 0.3)";
-                    statusText = "No Data";
-                    hero.className = "battery-hero battery-low";
-                    bolt.style.display = "none";
+                    color = "#FF453A"; glowColor = "rgba(255, 69, 58, 0.3)"; statusText = "No Data";
+                    hero.className = "battery-hero battery-low"; bolt.style.display = "none";
                 }
 
                 fill.style.background = "linear-gradient(0deg, " + color + " 0%, " + color + "cc 100%)";
@@ -2895,13 +2903,9 @@
                         document.getElementById("webhookLastTime").textContent = data.last_received_ago || "Never";
                         document.getElementById("webhookLastEvent").textContent = (data.last_event_type || "-").replace("call.", "");
 
-                        if (data.health === "healthy") {
-                            targetBatteryLevel = 100;
-                        } else if (data.health === "warning") {
-                            targetBatteryLevel = 40;
-                        } else {
-                            targetBatteryLevel = 0;
-                        }
+                        if (data.health === "healthy") { targetBatteryLevel = 100; }
+                        else if (data.health === "warning") { targetBatteryLevel = 40; }
+                        else { targetBatteryLevel = 0; }
                         if (batteryAnimFrame) cancelAnimationFrame(batteryAnimFrame);
                         batteryAnimFrame = requestAnimationFrame(animateBattery);
 
@@ -3004,32 +3008,14 @@
                 var modeEl = document.getElementById("dialModeInput");
                 var batchEl = document.getElementById("batchSize");
                 var delayEl = document.getElementById("dialDelay");
-                var modeSeq = document.getElementById("modeSeq");
-                var modeSimul = document.getElementById("modeSimul");
-                var batchWrap = document.getElementById("batchSizeWrap");
-                var delayWrap = document.getElementById("dialDelayWrap");
-                var descEl = document.getElementById("dialModeDesc");
 
                 if (transferEl && t.transfer_number) transferEl.value = t.transfer_number;
                 if (modeEl) modeEl.value = t.dial_mode || "sequential";
                 if (batchEl) batchEl.value = t.batch_size || 5;
                 if (delayEl) delayEl.value = t.dial_delay || 2;
 
-                if (t.dial_mode === "simultaneous") {
-                    if (modeSeq) modeSeq.classList.remove("active");
-                    if (modeSimul) modeSimul.classList.add("active");
-                    if (batchWrap) batchWrap.style.display = "";
-                    if (delayWrap) delayWrap.style.display = "none";
-                    if (descEl) descEl.textContent = "Multiple calls fired simultaneously in batches.";
-                } else {
-                    if (modeSeq) modeSeq.classList.add("active");
-                    if (modeSimul) modeSimul.classList.remove("active");
-                    if (batchWrap) batchWrap.style.display = "none";
-                    if (delayWrap) delayWrap.style.display = "";
-                    if (descEl) descEl.textContent = "Calls are placed one at a time with a configurable delay between each call.";
-                }
-
-                alert("Template '" + t.name + "' loaded! Settings have been applied to the campaign form.");
+                setDialMode(t.dial_mode || "sequential");
+                alert("Template '" + t.name + "' loaded! Settings have been applied.");
             }
 
             function deleteTemplate(id) {
@@ -3125,12 +3111,8 @@
             function updateToggleVisual(enabled) {
                 var knob = document.getElementById("reportToggleKnob");
                 var bg = knob ? knob.previousElementSibling : null;
-                if (knob) {
-                    knob.style.left = enabled ? "23px" : "3px";
-                }
-                if (bg) {
-                    bg.style.background = enabled ? "#2563EB" : "var(--border)";
-                }
+                if (knob) { knob.style.left = enabled ? "23px" : "3px"; }
+                if (bg) { bg.style.background = enabled ? "#2563EB" : "var(--border)"; }
             }
 
             function saveReportSettings() {
@@ -3147,11 +3129,8 @@
                 })
                 .then(function(r){return r.json()})
                 .then(function(data){
-                    if (data.error) {
-                        showReportMsg(data.error, "error");
-                    } else {
-                        showReportMsg("Settings saved", "success");
-                    }
+                    if (data.error) { showReportMsg(data.error, "error"); }
+                    else { showReportMsg("Settings saved", "success"); }
                 })
                 .catch(function(e){ showReportMsg("Failed to save settings", "error"); });
             }
@@ -3171,11 +3150,8 @@
                 .then(function(data){
                     btn.disabled = false;
                     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Test Report';
-                    if (data.error) {
-                        showReportMsg(data.error, "error");
-                    } else {
-                        showReportMsg(data.message || "Test report sent!", "success");
-                    }
+                    if (data.error) { showReportMsg(data.error, "error"); }
+                    else { showReportMsg(data.message || "Test report sent!", "success"); }
                 })
                 .catch(function(e){
                     btn.disabled = false;
@@ -3211,13 +3187,9 @@
                 el.style.display = "block";
                 el.textContent = msg;
                 if (type === "success") {
-                    el.style.background = "rgba(22,163,74,0.1)";
-                    el.style.color = "#16A34A";
-                    el.style.border = "1px solid rgba(22,163,74,0.2)";
+                    el.style.background = "rgba(22,163,74,0.1)"; el.style.color = "#16A34A"; el.style.border = "1px solid rgba(22,163,74,0.2)";
                 } else {
-                    el.style.background = "rgba(239,68,68,0.1)";
-                    el.style.color = "#EF4444";
-                    el.style.border = "1px solid rgba(239,68,68,0.2)";
+                    el.style.background = "rgba(239,68,68,0.1)"; el.style.color = "#EF4444"; el.style.border = "1px solid rgba(239,68,68,0.2)";
                 }
                 setTimeout(function(){ el.style.display = "none"; }, 5000);
             }
@@ -3251,10 +3223,7 @@
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         var voices = data.voices || [];
-                        if (voices.length === 0) {
-                            sel.innerHTML = '<option value="">No voices available</option>';
-                            return;
-                        }
+                        if (voices.length === 0) { sel.innerHTML = '<option value="">No voices available</option>'; return; }
                         var html = '<option value="">Select a voice...</option>';
                         voices.forEach(function(v) {
                             html += '<option value="' + v.voice_id + '">' + v.name + (v.category ? ' (' + v.category + ')' : '') + '</option>';
@@ -3269,32 +3238,22 @@
             function pvmParseCSV() {
                 var fileInput = document.getElementById("pvmCsvFile");
                 if (!fileInput.files.length) return;
-
                 var file = fileInput.files[0];
                 document.getElementById("pvmFileName").textContent = file.name;
-
                 var formData = new FormData();
                 formData.append("csv_file", file);
-
                 apiFetch("/api/pvm/parse", { method: "POST", body: formData })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        if (data.error) {
-                            alert(data.error);
-                            return;
-                        }
+                        if (data.error) { alert(data.error); return; }
                         pvmContacts = data.contacts || [];
                         pvmFields = data.fields || [];
-
                         var statsHtml = '<div class="pvm-stat-row">';
                         statsHtml += '<div class="pvm-stat"><span class="pvm-stat-num">' + data.total + '</span><span class="pvm-stat-lbl">Contacts</span></div>';
                         statsHtml += '<div class="pvm-stat"><span class="pvm-stat-num">' + pvmFields.length + '</span><span class="pvm-stat-lbl">Fields</span></div>';
-                        if (data.errors.length > 0) {
-                            statsHtml += '<div class="pvm-stat pvm-stat-warn"><span class="pvm-stat-num">' + data.errors.length + '</span><span class="pvm-stat-lbl">Warnings</span></div>';
-                        }
+                        if (data.errors.length > 0) { statsHtml += '<div class="pvm-stat pvm-stat-warn"><span class="pvm-stat-num">' + data.errors.length + '</span><span class="pvm-stat-lbl">Warnings</span></div>'; }
                         statsHtml += '</div>';
                         document.getElementById("pvmCsvStats").innerHTML = statsHtml;
-
                         var previewHtml = '<table class="pvm-preview-table"><tr>';
                         var showFields = pvmFields.slice(0, 7);
                         showFields.forEach(function(f) { previewHtml += '<th>' + f + '</th>'; });
@@ -3307,15 +3266,12 @@
                         if (pvmContacts.length > 3) previewHtml += '<tr><td colspan="' + showFields.length + '" style="text-align:center;opacity:0.6;">... and ' + (pvmContacts.length - 3) + ' more</td></tr>';
                         previewHtml += '</table>';
                         document.getElementById("pvmCsvPreview").innerHTML = previewHtml;
-
                         document.getElementById("pvmCsvResult").style.display = "";
-
                         var placeholderHtml = '';
                         pvmFields.forEach(function(f) {
                             placeholderHtml += '<span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder(\'' + f + '\')">{' + f + '}</span>';
                         });
                         document.getElementById("pvmPlaceholders").innerHTML = placeholderHtml;
-
                         pvmPopulateContactSelectors();
                         document.getElementById("pvmLivePreviewSection").style.display = "";
                         document.getElementById("pvmContactSelector").style.display = "";
@@ -3337,11 +3293,7 @@
             function pvmUpdateSlider(name) {
                 var slider = document.getElementById("pvm" + name);
                 var valEl = document.getElementById("pvm" + name + "Val");
-                if (name === "Speed") {
-                    valEl.textContent = (slider.value / 100).toFixed(2);
-                } else {
-                    valEl.textContent = (slider.value / 100).toFixed(2);
-                }
+                valEl.textContent = (slider.value / 100).toFixed(2);
             }
 
             function pvmGetVoiceSettings() {
@@ -3354,13 +3306,8 @@
                 };
             }
 
-            function pvmGetModelId() {
-                return document.getElementById("pvmModel").value;
-            }
-
-            function pvmGetHumanize() {
-                return document.getElementById("pvmHumanize").checked;
-            }
+            function pvmGetModelId() { return document.getElementById("pvmModel").value; }
+            function pvmGetHumanize() { return document.getElementById("pvmHumanize").checked; }
 
             function pvmUpdateCharCount() {
                 var text = document.getElementById("pvmTemplate").value;
@@ -3376,14 +3323,11 @@
                 var charCount = text.length;
                 var costEl = document.getElementById("pvmCostEstimate");
                 if (pvmContacts.length > 0 && charCount > 0) {
-                    var charsPerContact = charCount;
-                    var totalChars = charsPerContact * pvmContacts.length;
+                    var totalChars = charCount * pvmContacts.length;
                     var cost = (totalChars / 1000) * 0.30;
                     document.getElementById("pvmCostText").textContent = "Estimated cost: ~$" + cost.toFixed(2) + " for " + pvmContacts.length + " voicemails (" + totalChars.toLocaleString() + " chars)";
                     costEl.style.display = "";
-                } else {
-                    costEl.style.display = "none";
-                }
+                } else { costEl.style.display = "none"; }
             }
 
             function pvmDownloadSample() {
@@ -3394,9 +3338,7 @@
                 var blob = new Blob([csv], {type: "text/csv"});
                 var url = URL.createObjectURL(blob);
                 var a = document.createElement("a");
-                a.href = url;
-                a.download = "sample_contacts.csv";
-                a.click();
+                a.href = url; a.download = "sample_contacts.csv"; a.click();
                 URL.revokeObjectURL(url);
             }
 
@@ -3407,12 +3349,10 @@
                 if (!template) { alert("Please write a voicemail script first"); return; }
                 if (!voiceId) { alert("Please select a voice first"); return; }
                 if (pvmContacts.length === 0) { alert("Please upload a CSV first"); return; }
-
                 var contact = pvmContacts[contactIdx];
                 document.getElementById("pvmLivePreviewBtn").disabled = true;
                 document.getElementById("pvmLivePreviewStatus").style.display = "";
                 document.getElementById("pvmLivePreviewPlayer").style.display = "none";
-
                 apiFetch("/api/pvm/preview-audio", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -3422,10 +3362,7 @@
                 .then(function(data) {
                     document.getElementById("pvmLivePreviewBtn").disabled = false;
                     document.getElementById("pvmLivePreviewStatus").style.display = "none";
-                    if (data.error) {
-                        alert("Preview failed: " + data.error);
-                        return;
-                    }
+                    if (data.error) { alert("Preview failed: " + data.error); return; }
                     var audio = document.getElementById("pvmPreviewAudio");
                     audio.src = data.audio_url;
                     document.getElementById("pvmPreviewScriptText").innerHTML = '<strong>Script:</strong> ' + (data.script || '').replace(/\n/g, '<br>');
@@ -3455,12 +3392,10 @@
                 var template = document.getElementById("pvmTemplate").value;
                 if (!template) { alert("Please write a template first"); return; }
                 if (pvmContacts.length === 0) { alert("Please upload a CSV first"); return; }
-
                 var contactIdx = parseInt(document.getElementById("pvmPreviewContact").value) || 0;
                 var contact = pvmContacts[contactIdx];
                 var contactName = (contact.first_name || contact.name || '') + ' ' + (contact.last_name || '');
                 contactName = contactName.trim() || 'Contact ' + (contactIdx + 1);
-
                 apiFetch("/api/pvm/preview", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -3480,11 +3415,9 @@
                 if (!template) { alert("Please write a template first"); return; }
                 if (!voiceId) { alert("Please select a voice"); return; }
                 if (pvmContacts.length === 0) { alert("Please upload a CSV first"); return; }
-
                 document.getElementById("pvmGenerateBtn").disabled = true;
                 document.getElementById("pvmProgress").style.display = "";
                 document.getElementById("pvmErrors").style.display = "none";
-
                 apiFetch("/api/pvm/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -3492,11 +3425,7 @@
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    if (data.error) {
-                        alert(data.error);
-                        document.getElementById("pvmGenerateBtn").disabled = false;
-                        return;
-                    }
+                    if (data.error) { alert(data.error); document.getElementById("pvmGenerateBtn").disabled = false; return; }
                     pvmGenInterval = setInterval(pvmPollProgress, 2000);
                 }).catch(function(e) {
                     if (e.message === "auth") return;
@@ -3512,13 +3441,11 @@
                         var pct = data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
                         document.getElementById("pvmProgressFill").style.width = pct + "%";
                         document.getElementById("pvmProgressText").textContent = "Generating... " + data.completed + "/" + data.total;
-
                         if (data.errors && data.errors.length > 0) {
                             var errDiv = document.getElementById("pvmErrors");
                             errDiv.style.display = "";
                             errDiv.innerHTML = '<strong>Errors:</strong><br>' + data.errors.map(function(e) { return '<span class="pvm-error-item">' + e + '</span>'; }).join('<br>');
                         }
-
                         if (data.status === "complete" || data.status === "error") {
                             clearInterval(pvmGenInterval);
                             document.getElementById("pvmGenerateBtn").disabled = false;
@@ -3536,14 +3463,9 @@
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         var phones = Object.keys(data.audio_map || {});
-                        if (phones.length === 0) {
-                            alert("No personalized voicemails found. Generate them first.");
-                            return;
-                        }
+                        if (phones.length === 0) { alert("No personalized voicemails found. Generate them first."); return; }
                         var numbersField = document.getElementById("numbersInput");
-                        if (numbersField) {
-                            numbersField.value = phones.join("\n");
-                        }
+                        if (numbersField) { numbersField.value = phones.join("\n"); }
                         alert(phones.length + " phone numbers loaded into the dialer! The system will automatically use each contact's personalized voicemail when dropping.");
                     }).catch(function(e) { if (e.message === "auth") return; });
             }
@@ -3753,41 +3675,30 @@
                 if (hotleadAnimating) return;
                 hotleadAnimating = true;
                 if (hotleadAutoMinTimer) clearTimeout(hotleadAutoMinTimer);
-
                 var dialer = document.getElementById("iphoneDialer");
                 var iFab = document.getElementById("iphoneFab");
                 var hlScreen = document.getElementById("iphoneHotLeadScreen");
                 var hlNumber = document.getElementById("hotleadNumber");
-
                 hlNumber.textContent = iphoneFormatNumber(number);
-
                 document.getElementById("iphoneIdleScreen").style.display = "none";
                 document.getElementById("iphoneCallScreen").style.display = "none";
                 hlScreen.style.display = "flex";
                 hlScreen.style.animation = "none";
                 void hlScreen.offsetWidth;
                 hlScreen.style.animation = "";
-
                 if (iphoneMinimized) {
                     iFab.classList.remove("visible", "floating");
                     iFab.classList.add("hotlead-alert");
                     if (typeof ballsStopIphone === "function") ballsStopIphone();
                     iphoneMinimized = false;
-
                     dialer.style.display = "";
                     dialer.classList.remove("hotlead-collapse");
                     dialer.classList.add("hotlead-expand");
                 } else {
                     dialer.classList.remove("hotlead-collapse");
                 }
-
-                setTimeout(function() {
-                    iFab.classList.remove("hotlead-alert");
-                }, 1500);
-
-                hotleadAutoMinTimer = setTimeout(function() {
-                    hotleadDismiss();
-                }, 7000);
+                setTimeout(function() { iFab.classList.remove("hotlead-alert"); }, 1500);
+                hotleadAutoMinTimer = setTimeout(function() { hotleadDismiss(); }, 7000);
             }
 
             function iphoneFormatNumber(num) {
@@ -3812,44 +3723,23 @@
             }
 
             function iphoneStopTimer() {
-                if (iphoneCallTimerInterval) {
-                    clearInterval(iphoneCallTimerInterval);
-                    iphoneCallTimerInterval = null;
-                }
+                if (iphoneCallTimerInterval) { clearInterval(iphoneCallTimerInterval); iphoneCallTimerInterval = null; }
             }
 
             function iphoneUpdateDialer(calls) {
-                if (!calls || calls.length === 0) {
-                    iphoneShowIdle();
-                    return;
-                }
-
+                if (!calls || calls.length === 0) { iphoneShowIdle(); return; }
                 calls.forEach(function(c) {
                     if (c.status === "transferred" && c.call_id && !hotleadShownIds[c.call_id]) {
                         hotleadShownIds[c.call_id] = true;
                         hotleadNotify(c.number || "");
                     }
                 });
-
-                if (hotleadAnimating) {
-                    return;
-                }
-
+                if (hotleadAnimating) return;
                 var liveCalls = calls.filter(function(c) { return c.is_live; });
-                var activeCalls = liveCalls.filter(function(c) {
-                    return c.status !== "completed" && c.status !== "hangup";
-                });
-
-                if (activeCalls.length > 0) {
-                    var call = activeCalls[0];
-                    iphoneShowCall(call);
-                } else if (liveCalls.length > 0) {
-                    var recent = liveCalls[0];
-                    iphoneShowCall(recent);
-                } else {
-                    iphoneShowIdle();
-                }
-
+                var activeCalls = liveCalls.filter(function(c) { return c.status !== "completed" && c.status !== "hangup"; });
+                if (activeCalls.length > 0) { iphoneShowCall(activeCalls[0]); }
+                else if (liveCalls.length > 0) { iphoneShowCall(liveCalls[0]); }
+                else { iphoneShowIdle(); }
                 iphoneUpdateLog(liveCalls);
             }
 
@@ -3867,71 +3757,41 @@
                 document.getElementById("iphoneIdleScreen").style.display = "none";
                 document.getElementById("iphoneCallScreen").style.display = "flex";
                 document.getElementById("iphoneHotLeadScreen").style.display = "none";
-
-                if (call.call_id !== iphonePrevCallId) {
-                    iphoneStartTimer();
-                    iphonePrevCallId = call.call_id;
-                }
-
+                if (call.call_id !== iphonePrevCallId) { iphoneStartTimer(); iphonePrevCallId = call.call_id; }
                 var di = document.getElementById("iphoneDynIsland");
                 di.classList.add("di-active");
-
                 document.getElementById("iphoneCallNumber").textContent = iphoneFormatNumber(call.number);
-
                 var status = call.status || "";
                 var desc = call.status_description || status.replace(/_/g, " ");
-                var color = call.status_color || "blue";
-
                 var label = "calling...";
                 if (status === "answered" || status === "machine_detected") label = "on call";
                 else if (status === "ringing" || status === "initiated") label = "calling...";
                 else if (status === "completed" || status === "hangup") label = "call ended";
                 else if (status === "transferred") label = "transferred";
                 document.getElementById("iphoneCallLabel").textContent = label;
-
                 document.getElementById("iphoneCallStatusText").textContent = desc;
                 var badge = document.getElementById("iphoneCallBadge");
-                badge.className = "iphone-call-status-badge badge-" + color;
-
+                badge.className = "iphone-call-status-badge badge-" + (call.status_color || "blue");
                 var amdDiv = document.getElementById("iphoneCallAmd");
                 if (call.amd_result) {
                     amdDiv.style.display = "flex";
                     var amdIcon = document.getElementById("iphoneAmdIcon");
                     var amdText = document.getElementById("iphoneAmdText");
-                    if (call.amd_result === "machine") {
-                        amdIcon.style.color = "#0A84FF";
-                        amdText.textContent = "Answering Machine";
-                    } else if (call.amd_result === "human") {
-                        amdIcon.style.color = "#30D158";
-                        amdText.textContent = "Human Detected";
-                    } else if (call.amd_result === "fax") {
-                        amdIcon.style.color = "#FF453A";
-                        amdText.textContent = "Fax Machine";
-                    } else {
-                        amdIcon.style.color = "#FFD60A";
-                        amdText.textContent = call.amd_result;
-                    }
-                } else {
-                    amdDiv.style.display = "none";
-                }
-
+                    if (call.amd_result === "machine") { amdIcon.style.color = "#0A84FF"; amdText.textContent = "Answering Machine"; }
+                    else if (call.amd_result === "human") { amdIcon.style.color = "#30D158"; amdText.textContent = "Human Detected"; }
+                    else if (call.amd_result === "fax") { amdIcon.style.color = "#FF453A"; amdText.textContent = "Fax Machine"; }
+                    else { amdIcon.style.color = "#FFD60A"; amdText.textContent = call.amd_result; }
+                } else { amdDiv.style.display = "none"; }
                 var transcriptDiv = document.getElementById("iphoneCallTranscript");
                 var transcriptContent = document.getElementById("iphoneTranscriptContent");
                 if (call.transcript && call.transcript.length > 0) {
                     transcriptDiv.style.display = "";
-                    var tText = call.transcript.map(function(t) {
-                        return typeof t === "string" ? t : (t.text || "");
-                    }).join(" ");
+                    var tText = call.transcript.map(function(t) { return typeof t === "string" ? t : (t.text || ""); }).join(" ");
                     if (tText.length > 150) tText = "..." + tText.slice(-150);
                     transcriptContent.textContent = tText;
                     transcriptContent.scrollTop = transcriptContent.scrollHeight;
-                } else {
-                    transcriptDiv.style.display = "none";
-                }
-
-                if (status === "completed" || status === "hangup") {
-                    iphoneStopTimer();
-                }
+                } else { transcriptDiv.style.display = "none"; }
+                if (status === "completed" || status === "hangup") { iphoneStopTimer(); }
             }
 
             function iphoneUpdateLog(calls) {
@@ -3981,6 +3841,7 @@
                 setupDropZone("audioDropZone", "audioFile", "audioFileName");
             })();
 
+            loadVmSettings();
     </script>
     <div class="toast-container" id="toastContainer"></div>
 </body>

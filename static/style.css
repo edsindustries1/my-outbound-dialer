@@ -5002,3 +5002,646 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
         padding: 16px 12px;
     }
 }
+
+
+/* ========================================
+   WIZARD UI STYLES
+   ======================================== */
+
+.wiz-dashboard {
+    padding: 32px 0 48px;
+}
+
+.wiz-welcome {
+    text-align: center;
+    padding: 48px 24px 40px;
+}
+
+.wiz-welcome-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+}
+
+.wiz-welcome-sub {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    margin-bottom: 32px;
+}
+
+.wiz-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 36px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 24px rgba(37, 99, 235, 0.3);
+}
+
+.wiz-create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.45);
+}
+
+.wiz-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.wiz-stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.wiz-stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.wiz-stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.wiz-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.wiz-quick-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+}
+
+.wiz-quick-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.wiz-quick-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+}
+
+.wiz-quick-icon {
+    margin-bottom: 10px;
+    color: var(--accent);
+}
+
+.wiz-quick-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.wiz-quick-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.wiz-dash-panel {
+    margin-top: 8px;
+    margin-bottom: 32px;
+    position: relative;
+}
+
+.wiz-dash-panel-close {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+}
+
+.wiz-dash-panel-close:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.wiz-dash-section {
+    animation: wizFadeIn 0.3s ease;
+}
+
+/* ---- Wizard Stepper ---- */
+
+.wiz-header-row {
+    padding: 16px 0 0;
+}
+
+.wiz-back-to-dash {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.2s;
+}
+
+.wiz-back-to-dash:hover {
+    color: var(--accent);
+}
+
+.wiz-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 28px 0 32px;
+    flex-wrap: wrap;
+}
+
+.wiz-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s;
+    padding: 6px 10px;
+}
+
+.wiz-step.wiz-step-active {
+    opacity: 1;
+}
+
+.wiz-step.wiz-step-completed {
+    opacity: 0.8;
+}
+
+.wiz-step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.wiz-step-active .wiz-step-num {
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.4);
+}
+
+.wiz-step-completed .wiz-step-num {
+    background: #30D158;
+    color: #fff;
+}
+
+.wiz-step-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.wiz-step-active .wiz-step-label {
+    color: var(--accent);
+}
+
+.wiz-step-line {
+    width: 32px;
+    height: 2px;
+    background: var(--border);
+    margin: 0 4px;
+    flex-shrink: 0;
+}
+
+/* ---- Wizard Step Content ---- */
+
+.wiz-step-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 16px;
+    animation: wizFadeIn 0.3s ease;
+}
+
+@keyframes wizFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wiz-step-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+/* Campaign Type Cards */
+.wiz-type-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 500px;
+}
+
+.wiz-type-card {
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.wiz-type-card:hover {
+    border-color: var(--accent);
+}
+
+.wiz-type-selected {
+    border-color: #2563EB;
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.wiz-type-icon {
+    margin-bottom: 12px;
+    color: var(--accent);
+}
+
+.wiz-type-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.wiz-type-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.wiz-type-check {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    color: #2563EB;
+    display: none;
+}
+
+.wiz-type-selected .wiz-type-check {
+    display: block;
+}
+
+/* Source Tabs */
+.wiz-source-tabs,
+.wiz-vm-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.wiz-source-tab,
+.wiz-vm-tab {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    background: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.wiz-source-tab.active,
+.wiz-vm-tab.active {
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    color: #fff;
+    border-color: transparent;
+}
+
+.wiz-source-tab:hover:not(.active),
+.wiz-vm-tab:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.wiz-number-count {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* VM Section */
+.wiz-vm-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.wiz-vm-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}
+
+.wiz-pvm-status {
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+/* Settings */
+.wiz-settings-group {
+    margin-bottom: 28px;
+}
+
+.wiz-settings-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.wiz-settings-hint {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+/* Review Cards */
+.wiz-review-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+}
+
+.wiz-review-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.wiz-review-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.wiz-review-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.wiz-launch-wrap {
+    text-align: center;
+    padding: 16px 0 8px;
+}
+
+.wiz-launch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 48px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 24px rgba(37, 99, 235, 0.3);
+}
+
+.wiz-launch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.45);
+}
+
+.wiz-launch-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Wizard Nav */
+.wiz-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0 32px;
+}
+
+.wiz-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-primary);
+}
+
+.wiz-nav-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.wiz-nav-next {
+    margin-left: auto;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    color: #fff;
+    border: none;
+}
+
+.wiz-nav-next:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+}
+
+/* ---- Monitor View ---- */
+
+.wiz-monitor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.wiz-monitor-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.wiz-stop-btn {
+    background: #FF453A;
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wiz-stop-btn:hover {
+    background: #d63a31;
+}
+
+.wiz-stop-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.wiz-campaign-complete {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-top: 24px;
+}
+
+.wiz-complete-icon {
+    margin-bottom: 16px;
+}
+
+.wiz-campaign-complete h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #30D158;
+}
+
+/* Quick Stats Banner (Monitor) */
+.quick-stats-banner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.quick-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.quick-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.quick-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 4px;
+}
+
+/* ---- Responsive Wizard ---- */
+
+@media (max-width: 768px) {
+    .wiz-welcome-title {
+        font-size: 1.6rem;
+    }
+
+    .wiz-stepper {
+        gap: 0;
+        padding: 16px 0;
+    }
+
+    .wiz-step-label {
+        display: none;
+    }
+
+    .wiz-step-line {
+        width: 16px;
+    }
+
+    .wiz-step-content {
+        padding: 20px 16px;
+    }
+
+    .wiz-quick-cards {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+
+    .wiz-review-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .wiz-nav-btn {
+        padding: 10px 18px;
+        font-size: 0.85rem;
+    }
+
+    .quick-stats-banner {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .wiz-monitor-header {
+        padding: 16px 0 8px;
+    }
+}
