@@ -82,38 +82,19 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 #app {
     opacity: 0;
     min-height: 100vh;
-    transform: perspective(2200px) rotateY(-90deg);
-    transform-origin: left center;
-    backface-visibility: hidden;
+    transform: translateY(20px);
 }
 #app.show {
-    animation: pageFlipIn 1.8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    animation: gentleFadeRise 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-@keyframes pageFlipIn {
+@keyframes gentleFadeRise {
     0% {
         opacity: 0;
-        transform: perspective(2200px) rotateY(-90deg);
-        filter: brightness(0.6);
-    }
-    30% {
-        opacity: 1;
-        filter: brightness(0.85);
-    }
-    60% {
-        transform: perspective(2200px) rotateY(-12deg);
-        filter: brightness(0.95);
-    }
-    80% {
-        transform: perspective(2200px) rotateY(4deg);
-        filter: brightness(1);
-    }
-    90% {
-        transform: perspective(2200px) rotateY(-1.5deg);
+        transform: translateY(20px);
     }
     100% {
         opacity: 1;
-        transform: perspective(2200px) rotateY(0deg);
-        filter: brightness(1);
+        transform: translateY(0);
     }
 }
 
@@ -416,31 +397,17 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     transform-style: preserve-3d;
 }
 .gads-page.page-flip-enter {
-    animation: pageFlipEnter 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    animation: gentlePageRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pageFlipEnter {
+@keyframes gentlePageRise {
     0% {
         opacity: 0;
-        transform: perspective(1800px) rotateY(-45deg) scale(0.96);
-        transform-origin: left center;
-        filter: brightness(0.7);
-    }
-    40% {
-        opacity: 1;
-        filter: brightness(0.92);
-    }
-    70% {
-        transform: perspective(1800px) rotateY(3deg) scale(1);
-        filter: brightness(1);
-    }
-    85% {
-        transform: perspective(1800px) rotateY(-1deg) scale(1);
+        transform: translateY(14px);
     }
     100% {
         opacity: 1;
-        transform: perspective(1800px) rotateY(0deg) scale(1);
-        filter: brightness(1);
+        transform: translateY(0);
     }
 }
 
