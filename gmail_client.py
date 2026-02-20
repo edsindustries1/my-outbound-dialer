@@ -122,13 +122,24 @@ def send_email(to_email, subject, html_body, text_body=None, csv_attachment=None
 def test_connection():
     try:
         token = _get_access_token()
+        if not token:
+            return {"connected": False, "error": "No access token available"}
+
+        email = ""
+        if _connection_settings:
+            settings = _connection_settings.get("settings", {})
+            oauth = settings.get("oauth", {})
+            creds = oauth.get("credentials", {})
+            raw = creds.get("raw", {})
+            email = raw.get("email", "") or raw.get("login", "") or creds.get("email", "")
+
         resp = requests.get(
-            "https://gmail.googleapis.com/gmail/v1/users/me/profile",
-            headers={"Authorization": f"Bearer {token}"}
+            "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+            headers={"Authorization": f"Bearer {token}"},
+            params={"maxResults": 1}
         )
         if resp.status_code == 200:
-            profile = resp.json()
-            return {"connected": True, "email": profile.get("emailAddress", "")}
+            return {"connected": True, "email": email or "Connected"}
         return {"connected": False, "error": f"API returned {resp.status_code}"}
     except Exception as e:
         return {"connected": False, "error": str(e)}
