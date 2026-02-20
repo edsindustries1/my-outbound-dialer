@@ -494,9 +494,9 @@
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            Step 1: Upload Customer CSV
+                            Upload Customer CSV
                         </div>
-                        <p class="pvm-hint">Upload a CSV with columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
+                        <p class="pvm-hint">Columns: <code>First name</code>, <code>Last name</code>, <code>email</code>, <code>phone</code>, <code>address</code>, <code>amount</code>, <code>date</code></p>
                         <div class="pvm-upload-area">
                             <input type="file" id="pvmCsvFile" accept=".csv,.txt" style="display:none" onchange="pvmParseCSV()">
                             <button type="button" class="btn btn-secondary" onclick="document.getElementById('pvmCsvFile').click()">
@@ -518,9 +518,9 @@
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Step 2: Write Voicemail Script
+                            Voicemail Script
                         </div>
-                        <p class="pvm-hint">Write your voicemail script below. Click any placeholder tag to insert it at the cursor position. Each contact gets a unique personalized message.</p>
+                        <p class="pvm-hint">Click tags to insert placeholders into your script.</p>
                         <div class="pvm-placeholders" id="pvmPlaceholders">
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('first_name')">{first_name}</span>
                             <span class="pvm-placeholder-tag" onclick="pvmInsertPlaceholder('last_name')">{last_name}</span>
@@ -551,9 +551,8 @@
                     <div class="pvm-section">
                         <div class="pvm-section-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                            Step 3: Select Voice
+                            Select Voice
                         </div>
-                        <p class="pvm-hint">Choose from your ElevenLabs voices. This is the voice that will speak your personalized messages.</p>
                         <div class="pvm-voice-row">
                             <select id="pvmVoiceSelect" class="pvm-voice-select">
                                 <option value="">Loading voices...</option>
@@ -569,8 +568,6 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
                             Voice Controls
                         </div>
-                        <p class="pvm-hint">Fine-tune how the voice sounds. Lower stability + some style = more natural human variation. The Turbo v2.5 model adds real timed pauses via SSML for the most realistic delivery.</p>
-
                         <div class="pvm-voice-controls">
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
@@ -578,11 +575,10 @@
                                 </div>
                                 <select id="pvmModel" class="pvm-voice-select">
                                     <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
-                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (SSML pauses + fast)</option>
-                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast + SSML)</option>
-                                    <option value="eleven_english_v1">English v1 (SSML + English only)</option>
+                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural pauses)</option>
+                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                    <option value="eleven_english_v1">English v1 (Classic)</option>
                                 </select>
-                                <div class="pvm-slider-labels"><span>SSML models add real timed breath pauses</span></div>
                             </div>
 
                             <div class="pvm-slider-group">
@@ -605,11 +601,11 @@
 
                             <div class="pvm-slider-group">
                                 <div class="pvm-slider-header">
-                                    <label>Style Exaggeration</label>
+                                    <label>Style</label>
                                     <span class="pvm-slider-value" id="pvmStyleVal">0.15</span>
                                 </div>
                                 <input type="range" id="pvmStyle" min="0" max="100" value="15" class="pvm-slider" oninput="pvmUpdateSlider('Style')">
-                                <div class="pvm-slider-labels"><span>None</span><span>Exaggerated</span></div>
+                                <div class="pvm-slider-labels"><span>None</span><span>Expressive</span></div>
                             </div>
 
                             <div class="pvm-slider-group">
@@ -621,69 +617,21 @@
                                 <div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div>
                             </div>
 
-                            <div class="pvm-toggle-row">
-                                <label class="pvm-toggle-label">
-                                    <input type="checkbox" id="pvmSpeakerBoost" checked>
-                                    <span class="pvm-toggle-switch"></span>
-                                    Speaker Boost
-                                </label>
-                                <span class="pvm-toggle-hint">Enhances clarity and similarity to original voice</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pvm-section">
-                        <div class="pvm-section-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                            Human-Like Speech
-                        </div>
-                        <p class="pvm-hint">Makes your voicemails sound like a real human agent, not a robot. Adds natural hesitations ("I was just... looking at"), breath pauses before conjunctions ("but — since you had"), conversational data reading (dates, phone numbers, amounts), and address/email expansion. Combined with the voice controls and model selection, this creates voicemails that are virtually indistinguishable from a live person.</p>
-
-                        <div class="pvm-toggle-row">
-                            <label class="pvm-toggle-label">
-                                <input type="checkbox" id="pvmHumanize" checked>
-                                <span class="pvm-toggle-switch"></span>
-                                Speak Like a Human
-                            </label>
-                            <span class="pvm-toggle-hint">Transforms dates, phone numbers, addresses, and abbreviations into natural speech</span>
-                        </div>
-
-                        <div class="pvm-humanize-examples" id="pvmHumanizeExamples">
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Name:</span>
-                                <span class="pvm-example-before">{first_name}</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"Hey John..." (natural pause)</span>
-                            </div>
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Date:</span>
-                                <span class="pvm-example-before">03/28/2022</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"March twenty eighth... twenty twenty two"</span>
-                            </div>
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Phone:</span>
-                                <span class="pvm-example-before">360-306-5536</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"three six zero... three zero six... five five three six"</span>
-                            </div>
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Money:</span>
-                                <span class="pvm-example-before">$1,129.00</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"about eleven hundred twenty nine dollars"</span>
-                            </div>
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Address:</span>
-                                <span class="pvm-example-before">123 W Main St, NJ 07102</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"123 West Main Street, New Jersey"</span>
-                            </div>
-                            <div class="pvm-example-item">
-                                <span class="pvm-example-label">Email:</span>
-                                <span class="pvm-example-before">john92@gmail.com</span>
-                                <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">"john ninety two at gmail dot com"</span>
+                            <div class="pvm-toggles-compact">
+                                <div class="pvm-toggle-row">
+                                    <label class="pvm-toggle-label">
+                                        <input type="checkbox" id="pvmHumanize" checked>
+                                        <span class="pvm-toggle-switch"></span>
+                                        Natural Speech
+                                    </label>
+                                </div>
+                                <div class="pvm-toggle-row">
+                                    <label class="pvm-toggle-label">
+                                        <input type="checkbox" id="pvmSpeakerBoost" checked>
+                                        <span class="pvm-toggle-switch"></span>
+                                        Speaker Boost
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -693,7 +641,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                             Live Voice Preview
                         </div>
-                        <p class="pvm-hint">Hear exactly how the voicemail will sound for a specific contact before generating all of them. Uses your selected voice and script.</p>
+                        <p class="pvm-hint">Hear how it sounds for a specific contact before generating all.</p>
                         <div class="pvm-live-preview-row">
                             <select id="pvmLivePreviewContact" class="pvm-voice-select" style="flex:1;"></select>
                             <button type="button" class="btn btn-gradient" id="pvmLivePreviewBtn" onclick="pvmLivePreview()">

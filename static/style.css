@@ -3813,47 +3813,17 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     flex: 1;
 }
 
-.pvm-humanize-examples {
+.pvm-toggles-compact {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 12px;
-    background: rgba(37, 99, 235, 0.04);
-    border: 1px solid rgba(37, 99, 235, 0.1);
-    border-radius: 8px;
-    margin-top: 8px;
+    gap: 16px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
 }
 
-.pvm-example-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    flex-wrap: wrap;
-}
-
-.pvm-example-label {
-    font-weight: 600;
-    color: var(--text-secondary);
-    min-width: 55px;
-}
-
-.pvm-example-before {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text-muted);
-    text-decoration: line-through;
-    opacity: 0.7;
-}
-
-.pvm-example-arrow {
-    color: #06B6D4;
-    font-weight: bold;
-}
-
-.pvm-example-after {
-    font-family: 'JetBrains Mono', monospace;
-    color: #10B981;
-    font-weight: 500;
+.pvm-toggles-compact .pvm-toggle-row {
+    margin: 0;
+    padding: 0;
 }
 
 /* ---- iPhone 17 Pro Max Dialer Widget ---- */
