@@ -217,102 +217,85 @@
   </section>
 
   <section class="pricing" id="pricing">
-    <div class="section-inner">
-      <div class="pricing-header">
+    <div class="pricing-inner">
+      <div class="pricing-top">
         <span class="pricing-eyebrow">Pricing</span>
-        <h2 class="section-title">Simple, transparent pricing</h2>
-        <p class="section-sub">No per-user charges. No hidden fees. Scale your team without scaling costs.</p>
-      </div>
-      <div class="pricing-toggle">
-        <span class="toggle-label active" id="toggleMonthly">Monthly</span>
-        <button class="toggle-switch" id="billingToggle" aria-label="Toggle billing">
-          <span class="toggle-knob"></span>
-        </button>
-        <span class="toggle-label" id="toggleAnnual">Annual <span class="toggle-save">Save 20%</span></span>
-      </div>
-      <div class="pricing-grid">
-        <div class="price-card">
-          <div class="price-card-inner">
-            <div class="price-head">
-              <div class="price-tier">Starter</div>
-              <p class="price-desc">Perfect for solo wholesalers and small teams getting started</p>
-            </div>
-            <div class="price-amount-wrap">
-              <div class="price-amount">
-                <span class="price-currency">$</span><span class="price-number" data-monthly="99" data-annual="79">99</span>
-              </div>
-              <span class="price-period">per month</span>
-            </div>
-            <a href="#" class="btn-outline price-btn">Get Started Free</a>
-            <div class="price-divider"></div>
-            <ul class="price-features">
-              <li>Up to 1,000 calls/month</li>
-              <li>Sequential dialing mode</li>
-              <li>Automatic voicemail drop</li>
-              <li>Hot lead alerts & transfer</li>
-              <li>Basic analytics dashboard</li>
-              <li>DNC list management</li>
-              <li>Email support</li>
-            </ul>
-          </div>
-        </div>
-        <div class="price-card featured">
-          <div class="price-badge">Most Popular</div>
-          <div class="price-card-inner">
-            <div class="price-head">
-              <div class="price-tier">Professional</div>
-              <p class="price-desc">For growing teams that need AI power and maximum reach</p>
-            </div>
-            <div class="price-amount-wrap">
-              <div class="price-amount">
-                <span class="price-currency">$</span><span class="price-number" data-monthly="249" data-annual="199">249</span>
-              </div>
-              <span class="price-period">per month</span>
-            </div>
-            <a href="#" class="btn-primary price-btn">Get Started Free</a>
-            <div class="price-divider"></div>
-            <p class="price-includes">Everything in Starter, plus:</p>
-            <ul class="price-features">
-              <li>Up to 5,000 calls/month</li>
-              <li>Sequential + Simultaneous modes</li>
-              <li class="feature-highlight">AI personalized voicemail</li>
-              <li class="feature-highlight">Live call transcription</li>
-              <li>Full analytics + daily email reports</li>
-              <li>Voicemail template library</li>
-              <li>Campaign scheduling</li>
-              <li>Priority support</li>
-            </ul>
-          </div>
-        </div>
-        <div class="price-card">
-          <div class="price-card-inner">
-            <div class="price-head">
-              <div class="price-tier">Enterprise</div>
-              <p class="price-desc">Unlimited power for large-scale operations and agencies</p>
-            </div>
-            <div class="price-amount-wrap">
-              <div class="price-amount">
-                <span class="price-currency">$</span><span class="price-number" data-monthly="499" data-annual="399">499</span>
-              </div>
-              <span class="price-period">per month</span>
-            </div>
-            <a href="#" class="btn-outline price-btn">Contact Sales</a>
-            <div class="price-divider"></div>
-            <p class="price-includes">Everything in Professional, plus:</p>
-            <ul class="price-features">
-              <li>Unlimited calls</li>
-              <li>Up to 50 parallel dials</li>
-              <li>Custom API access</li>
-              <li>Advanced compliance tools</li>
-              <li>Custom report builder</li>
-              <li>Dedicated account manager</li>
-              <li>Onboarding & training</li>
-              <li>SLA guarantee</li>
-            </ul>
-          </div>
+        <h2 class="pricing-title">Choose your plan</h2>
+        <p class="pricing-sub">No per-user charges. No hidden fees. Cancel anytime.</p>
+        <div class="pricing-toggle">
+          <span class="toggle-label active" id="toggleMonthly">Monthly</span>
+          <button class="toggle-switch" id="billingToggle" aria-label="Toggle billing">
+            <span class="toggle-knob"></span>
+          </button>
+          <span class="toggle-label" id="toggleAnnual">Annually <span class="toggle-save">-20%</span></span>
         </div>
       </div>
-      <p class="pricing-note">All plans include a 14-day free trial. No credit card required.</p>
+      <div class="pricing-cards">
+        <div class="p-card" id="pcard1">
+          <div class="p-step">1</div>
+          <div class="p-name">Starter</div>
+          <div class="p-price">
+            <span class="p-dollar">$</span><span class="p-num" data-monthly="99" data-annual="79">99</span><span class="p-mo">/mo</span>
+          </div>
+          <p class="p-desc">For solo operators and small teams who need to dial smarter, not harder.</p>
+          <a href="#" class="p-btn p-btn-outline">Start 14-day free trial</a>
+          <div class="p-line"></div>
+          <div class="p-label">What's included</div>
+          <ul class="p-list">
+            <li>1,000 calls / month</li>
+            <li>Sequential dialing</li>
+            <li>Voicemail drop (pre-recorded)</li>
+            <li>Hot lead alerts + live transfer</li>
+            <li>Basic analytics</li>
+            <li>DNC list management</li>
+            <li>Email support</li>
+          </ul>
+        </div>
+        <div class="p-card p-featured" id="pcard2">
+          <div class="p-pop">Most Popular</div>
+          <div class="p-step">2</div>
+          <div class="p-name">Professional</div>
+          <div class="p-price">
+            <span class="p-dollar">$</span><span class="p-num" data-monthly="249" data-annual="199">249</span><span class="p-mo">/mo</span>
+          </div>
+          <p class="p-desc">For teams ready to unlock AI personalization and scale their outreach.</p>
+          <a href="#" class="p-btn p-btn-fill">Start 14-day free trial</a>
+          <div class="p-line"></div>
+          <div class="p-label">Everything in Starter, plus</div>
+          <ul class="p-list">
+            <li>5,000 calls / month</li>
+            <li>Sequential + Simultaneous modes</li>
+            <li class="p-star">AI personalized voicemail</li>
+            <li class="p-star">Live call transcription</li>
+            <li>Full analytics + daily email reports</li>
+            <li>Voicemail template library</li>
+            <li>Campaign scheduling</li>
+            <li>Priority support</li>
+          </ul>
+        </div>
+        <div class="p-card" id="pcard3">
+          <div class="p-step">3</div>
+          <div class="p-name">Enterprise</div>
+          <div class="p-price">
+            <span class="p-dollar">$</span><span class="p-num" data-monthly="499" data-annual="399">499</span><span class="p-mo">/mo</span>
+          </div>
+          <p class="p-desc">Unlimited power for agencies and large teams running high-volume campaigns.</p>
+          <a href="#" class="p-btn p-btn-outline">Contact Sales</a>
+          <div class="p-line"></div>
+          <div class="p-label">Everything in Professional, plus</div>
+          <ul class="p-list">
+            <li>Unlimited calls</li>
+            <li>Up to 50 parallel dials</li>
+            <li>Custom API access</li>
+            <li>Advanced compliance tools</li>
+            <li>Custom report builder</li>
+            <li>Dedicated account manager</li>
+            <li>Onboarding & training</li>
+            <li>SLA guarantee</li>
+          </ul>
+        </div>
+      </div>
+      <p class="pricing-footer-note">All plans include a 14-day free trial. No credit card required to start.</p>
     </div>
   </section>
 
@@ -382,7 +365,7 @@
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }});
     }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-    document.querySelectorAll('.feature-block, .step, .testimonial-card, .price-card, .stat-card').forEach(el => io.observe(el));
+    document.querySelectorAll('.feature-block, .step, .testimonial-card, .p-card, .stat-card').forEach(el => io.observe(el));
 
     const sio = new IntersectionObserver((entries) => {
       entries.forEach(e => {
@@ -403,12 +386,9 @@
     const toggleAnnual = document.getElementById('toggleAnnual');
     let isAnnual = false;
     function updatePricing() {
-      document.querySelectorAll('.price-number').forEach(el => {
+      document.querySelectorAll('.p-num').forEach(el => {
         const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
         el.textContent = val;
-      });
-      document.querySelectorAll('.price-period').forEach(el => {
-        el.textContent = isAnnual ? 'per month, billed annually' : 'per month';
       });
       toggleMonthly.classList.toggle('active', !isAnnual);
       toggleAnnual.classList.toggle('active', isAnnual);
