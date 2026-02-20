@@ -49,11 +49,11 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 ## Branding & Design
 - **Brand**: Open Human
 - **Tagline**: Power Sales Assistant
-- **Primary color**: Blue (#1a73e8) - Google Ads style
-- **Success**: Green (#1e8e3e)
-- **Error**: Red (#d93025)
-- **Warning**: Amber (#f9ab00)
-- **Background**: Light gray (#f1f3f4)
+- **Primary color**: Indigo (#6366f1) - consistent across landing, login, and dashboard
+- **Success**: Green (#10b981)
+- **Error**: Red (#ef4444)
+- **Warning**: Amber (#f59e0b)
+- **Background**: Light gray (#f8f9fa)
 - **Cards**: White with subtle shadows
 - **Font**: Inter (UI), system sans-serif fallback
 - **Favicon**: Brain emoji
@@ -64,7 +64,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **Page switching**: navigateTo() function toggles page containers, updates sidebar active state and page title
 - **Dual-theme system**: Light (default, Google Ads style) and Dark modes with toggle in top bar
 - **Theme persisted**: localStorage ("vb_theme") with inline head script to prevent flash
-- **Sidebar**: White bg, nav items with SVG icons, active item has blue text + light blue bg, collapsible via toggle button
+- **Sidebar**: White bg, nav items with SVG icons, active item has indigo text + light indigo bg, collapsible via toggle button
 - **Dashboard page**: 6 KPI metric cards (Total Calls, Connected, Voicemails, Hot Leads, Success Rate, Campaign Status) + Recent Activity table (last 20 calls auto-refreshing)
 - **Campaigns page**: Active campaign status card with progress bar + Campaign History table + "+ New Campaign" button opens wizard overlay
 - **Campaign Wizard**: 5-step overlay (Campaign Type, Calling Mode, Upload Contacts, Select Voicemail, Settings & Launch) with stepper navigation
