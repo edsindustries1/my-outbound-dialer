@@ -160,18 +160,20 @@ US_STATE_ABBREVIATIONS = {
     "WI": "Wisconsin", "WY": "Wyoming", "DC": "District of Columbia",
 }
 
-ADDRESS_ABBREVIATIONS = {
-    r'\bSt\b': 'Street', r'\bAve\b': 'Avenue', r'\bBlvd\b': 'Boulevard',
-    r'\bDr\b': 'Drive', r'\bLn\b': 'Lane', r'\bRd\b': 'Road',
-    r'\bCt\b': 'Court', r'\bPl\b': 'Place', r'\bCir\b': 'Circle',
-    r'\bPkwy\b': 'Parkway', r'\bHwy\b': 'Highway', r'\bApt\b': 'Apartment',
-    r'\bSte\b': 'Suite', r'\bBldg\b': 'Building', r'\bFl\b': 'Floor',
-    r'\bTpke\b': 'Turnpike', r'\bTer\b': 'Terrace', r'\bWay\b': 'Way',
-    r'\bSq\b': 'Square', r'\bTrl\b': 'Trail', r'\bExpy\b': 'Expressway',
-    r'\bFwy\b': 'Freeway', r'\bBrg\b': 'Bridge', r'\bCres\b': 'Crescent',
-    r'\bN\b': 'North', r'\bS\b': 'South', r'\bE\b': 'East', r'\bW\b': 'West',
-    r'\bNE\b': 'Northeast', r'\bNW\b': 'Northwest', r'\bSE\b': 'Southeast', r'\bSW\b': 'Southwest',
-}
+ADDRESS_ABBREVIATIONS = [
+    (r'\bSt\b\.?', 'Street'), (r'\bAve\b\.?', 'Avenue'), (r'\bBlvd\b\.?', 'Boulevard'),
+    (r'\bDr\b\.?', 'Drive'), (r'\bLn\b\.?', 'Lane'), (r'\bRd\b\.?', 'Road'),
+    (r'\bCt\b\.?', 'Court'), (r'\bPl\b\.?', 'Place'), (r'\bCir\b\.?', 'Circle'),
+    (r'\bPkwy\b\.?', 'Parkway'), (r'\bHwy\b\.?', 'Highway'), (r'\bApt\b\.?', 'Apartment'),
+    (r'\bSte\b\.?', 'Suite'), (r'\bBldg\b\.?', 'Building'), (r'\bFl\b\.?', 'Floor'),
+    (r'\bTpke\b\.?', 'Turnpike'), (r'\bTer\b\.?', 'Terrace'),
+    (r'\bSq\b\.?', 'Square'), (r'\bTrl\b\.?', 'Trail'), (r'\bExpy\b\.?', 'Expressway'),
+    (r'\bFwy\b\.?', 'Freeway'), (r'\bCres\b\.?', 'Crescent'),
+    (r'\bN\b\.?(?=\s+[A-Z])', 'North'), (r'\bS\b\.?(?=\s+[A-Z])', 'South'),
+    (r'\bE\b\.?(?=\s+[A-Z])', 'East'), (r'\bW\b\.?(?=\s+[A-Z])', 'West'),
+    (r'\bNE\b\.?(?=\s+[A-Z])', 'Northeast'), (r'\bNW\b\.?(?=\s+[A-Z])', 'Northwest'),
+    (r'\bSE\b\.?(?=\s+[A-Z])', 'Southeast'), (r'\bSW\b\.?(?=\s+[A-Z])', 'Southwest'),
+]
 
 DIGIT_WORDS = {
     '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
@@ -183,19 +185,101 @@ MONTH_NAMES = [
     "July", "August", "September", "October", "November", "December"
 ]
 
+ONES = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+        'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen',
+        'seventeen', 'eighteen', 'nineteen']
+TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
 
-def _ordinal(n):
+
+def _number_to_words(n):
+    if n < 0:
+        return "negative " + _number_to_words(-n)
+    if n == 0:
+        return "zero"
+    if n < 20:
+        return ONES[n]
+    if n < 100:
+        t = TENS[n // 10]
+        o = ONES[n % 10]
+        return f"{t} {o}".strip() if o else t
+    if n < 1000:
+        h = ONES[n // 100] + " hundred"
+        rem = n % 100
+        if rem == 0:
+            return h
+        return f"{h} {_number_to_words(rem)}"
+    if n < 10000:
+        thousands = n // 1000
+        rem = n % 1000
+        if rem == 0:
+            return _number_to_words(thousands) + " thousand"
+        if rem < 100:
+            return _number_to_words(thousands) + " thousand " + _number_to_words(rem)
+        return _number_to_words(thousands) + " thousand " + _number_to_words(rem)
+    if n < 1000000:
+        thousands = n // 1000
+        rem = n % 1000
+        if rem == 0:
+            return _number_to_words(thousands) + " thousand"
+        return _number_to_words(thousands) + " thousand " + _number_to_words(rem)
+    if n < 1000000000:
+        millions = n // 1000000
+        rem = n % 1000000
+        if rem == 0:
+            return _number_to_words(millions) + " million"
+        return _number_to_words(millions) + " million " + _number_to_words(rem)
+    return str(n)
+
+
+def _speak_year(year):
+    if year < 100:
+        return _number_to_words(year)
+    if year < 2000:
+        first = year // 100
+        second = year % 100
+        if second == 0:
+            return _number_to_words(first) + " hundred"
+        return _number_to_words(first) + " " + _number_to_words(second)
+    if year < 2010:
+        return "two thousand " + (_number_to_words(year % 100) if year % 100 else "")
+    first = year // 100
+    second = year % 100
+    return _number_to_words(first) + " " + _number_to_words(second)
+
+
+def _speak_amount(val):
+    val = int(round(val))
+    if val == 0:
+        return "zero dollars"
+    if val < 0:
+        return "negative " + _speak_amount(-val)
+    if val >= 1100 and val < 10000:
+        hundreds = val // 100
+        rem = val % 100
+        spoken = _number_to_words(hundreds) + " hundred"
+        if rem > 0:
+            spoken += " " + _number_to_words(rem)
+        return spoken + " dollars"
+    return _number_to_words(val) + " dollars"
+
+
+ORDINAL_MAP = {
+    1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
+    6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth",
+    11: "eleventh", 12: "twelfth", 13: "thirteenth", 14: "fourteenth",
+    15: "fifteenth", 16: "sixteenth", 17: "seventeenth", 18: "eighteenth",
+    19: "nineteenth", 20: "twentieth", 21: "twenty first", 22: "twenty second",
+    23: "twenty third", 24: "twenty fourth", 25: "twenty fifth",
+    26: "twenty sixth", 27: "twenty seventh", 28: "twenty eighth",
+    29: "twenty ninth", 30: "thirtieth", 31: "thirty first",
+}
+
+
+def _ordinal_spoken(n):
     n = int(n)
-    suffix = "th"
-    if n % 100 in (11, 12, 13):
-        suffix = "th"
-    elif n % 10 == 1:
-        suffix = "st"
-    elif n % 10 == 2:
-        suffix = "nd"
-    elif n % 10 == 3:
-        suffix = "rd"
-    return f"{n}{suffix}"
+    if n in ORDINAL_MAP:
+        return ORDINAL_MAP[n]
+    return _number_to_words(n)
 
 
 def _humanize_date(text):
@@ -203,13 +287,14 @@ def _humanize_date(text):
         raw = match.group(0)
         try:
             for fmt in ("%m/%d/%Y", "%m-%d-%Y", "%Y-%m-%d", "%m/%d/%y", "%m-%d-%y",
-                        "%d/%m/%Y", "%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y"):
+                        "%d/%m/%Y", "%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y",
+                        "%B %d %Y", "%b %d %Y"):
                 try:
                     dt = datetime.strptime(raw.strip(), fmt)
-                    day = _ordinal(dt.day)
+                    day = _ordinal_spoken(dt.day)
                     month = MONTH_NAMES[dt.month]
-                    year = str(dt.year)
-                    return f"{day} of {month}, {year}"
+                    year = _speak_year(dt.year)
+                    return f"{month} {day}... {year}"
                 except ValueError:
                     continue
         except Exception:
@@ -233,7 +318,7 @@ def _humanize_phone(text):
             p1 = ' '.join(DIGIT_WORDS[d] for d in digits[0:3])
             p2 = ' '.join(DIGIT_WORDS[d] for d in digits[3:6])
             p3 = ' '.join(DIGIT_WORDS[d] for d in digits[6:10])
-            return f"{p1}, {p2}, {p3}"
+            return f"{p1}... {p2}... {p3}"
         return raw
 
     text = re.sub(
@@ -243,74 +328,105 @@ def _humanize_phone(text):
     return text
 
 
-def _humanize_address(text):
-    for abbr, full in ADDRESS_ABBREVIATIONS.items():
-        text = re.sub(abbr + r'\.?', full, text, flags=re.IGNORECASE)
-
-    def replace_state(match):
-        prefix = match.group(1)
-        state_abbr = match.group(2)
-        suffix = match.group(3) or ""
-        full_name = US_STATE_ABBREVIATIONS.get(state_abbr.upper())
-        if full_name:
-            return f"{prefix}{full_name}{suffix}"
-        return match.group(0)
-
-    text = re.sub(
-        r'(,\s+)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
-        replace_state, text
-    )
-    return text
-
-
-def _humanize_dollar_amount(text):
+def _humanize_amount(text):
     def replace_amount(match):
         raw = match.group(0)
         cleaned = raw.replace('$', '').replace(',', '').strip()
         try:
             val = float(cleaned)
-            if val == int(val):
-                return f"${int(val)}"
+            cents = round((val % 1) * 100)
+            whole = int(val)
+            spoken = _speak_amount(whole)
+            if cents > 0:
+                spoken = spoken.replace(" dollars", "") + f" and {_number_to_words(cents)} cents"
+            return "about " + spoken
+        except (ValueError, TypeError):
             return raw
-        except ValueError:
-            return raw
+
+    text = re.sub(
+        r'\$[\d,]+(?:\.\d{1,2})?',
+        replace_amount, text
+    )
+    return text
+
+
+def _humanize_address(text):
+    for abbr, full in ADDRESS_ABBREVIATIONS:
+        text = re.sub(abbr, full, text, flags=re.IGNORECASE)
+
+    def replace_state(match):
+        prefix = match.group(1)
+        state_abbr = match.group(2)
+        full_name = US_STATE_ABBREVIATIONS.get(state_abbr.upper())
+        if full_name:
+            return f"{prefix}{full_name}"
+        return match.group(0)
+
+    text = re.sub(
+        r'(,?\s+)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
+        replace_state, text
+    )
+
+    text = re.sub(r',\s*\d{5}(?:-\d{4})?\s*$', '', text)
+    text = re.sub(r'\s+\.', '.', text)
+    text = re.sub(r'\s{2,}', ' ', text).strip()
+    text = re.sub(r',\s*$', '', text)
+    text = re.sub(r'\s+([.,])', r'\1', text)
     return text
 
 
-def _humanize_zipcode(text):
-    def replace_zip(match):
-        digits = match.group(1)
-        spoken = ' '.join(DIGIT_WORDS[d] for d in digits)
-        ext = match.group(2)
-        if ext:
-            ext_digits = ext.lstrip('-')
-            spoken_ext = ' '.join(DIGIT_WORDS[d] for d in ext_digits)
-            return f"{spoken} dash {spoken_ext}"
-        return spoken
+def _humanize_email(text):
+    def speak_number_in_email(m):
+        num = int(m.group(0))
+        if num < 100:
+            return _number_to_words(num)
+        return ' '.join(DIGIT_WORDS[d] for d in m.group(0))
+
+    def replace_email(match):
+        raw = match.group(0)
+        local, domain = raw.split('@', 1)
+        local_spoken = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', local)
+        local_spoken = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', local_spoken)
+        local_spoken = re.sub(r'(\d+)', speak_number_in_email, local_spoken)
+        local_spoken = re.sub(r'([a-z])([A-Z])', r'\1 \2', local_spoken)
+        local_spoken = re.sub(r'[._-]', ' ', local_spoken)
+        parts = domain.split('.')
+        domain_spoken = ' dot '.join(parts)
+        return f"{local_spoken} at {domain_spoken}"
 
     text = re.sub(
-        r'(?<=,\s)(\d{5})(-\d{4})?\b',
-        replace_zip, text
-    )
-    text = re.sub(
-        r'(?<=\b[A-Za-z]{2}\s)(\d{5})(-\d{4})?\b',
-        replace_zip, text
+        r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
+        replace_email, text
     )
     return text
+
+
+def _conversational_smoothing(text):
+    text = re.sub(r'\.\.\.\s*\.\.\.', '...', text)
+    text = re.sub(r'\s{2,}', ' ', text)
+    text = re.sub(r'(?<=[.!?])\s+', '\n', text)
+    return text.strip()
 
 
 def humanize_text(text):
     text = _humanize_date(text)
     text = _humanize_phone(text)
+    text = _humanize_amount(text)
+    text = _humanize_email(text)
     text = _humanize_address(text)
-    text = _humanize_zipcode(text)
+    text = _conversational_smoothing(text)
     return text
 
 
 def render_template(template, contact, humanize=True):
     def replace_placeholder(match):
         key = match.group(1).strip().lower()
-        return contact.get(key, match.group(0))
+        val = contact.get(key, match.group(0))
+        if humanize and key in ("first_name", "name"):
+            val = val.strip()
+            if val:
+                val = val + "..."
+        return val
 
     result = re.sub(r'\{(\w+)\}', replace_placeholder, template)
 

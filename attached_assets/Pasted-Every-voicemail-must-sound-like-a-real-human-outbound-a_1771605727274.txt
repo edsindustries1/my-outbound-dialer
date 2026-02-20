@@ -1,0 +1,225 @@
+Every voicemail must sound like a real human outbound agent — not a robot reading variables.
+
+The system must preprocess the script BEFORE sending to ElevenLabs.
+
+Create a middleware text-normalization layer that converts structured CRM variables into natural spoken language.
+
+The agent personality:
+
+Mid-30s professional support representative
+
+Calm, relaxed pacing
+
+Slight hesitations but NOT robotic fillers
+
+Conversational tone, not scripted reading
+
+Slight pauses where commas or thoughts naturally occur
+
+Speaks like a human remembering details, not reciting a database
+
+Do NOT add robotic phrases like:
+"This message is regarding"
+"Dear customer"
+"This is an automated message"
+
+Instead it should sound like:
+Someone looking at the account while talking.
+
+VARIABLE NORMALIZATION RULES
+
+You must transform variables before audio generation.
+
+1. Names
+
+{first_name} {last_name}
+
+Rules:
+
+Only say last name when natural
+
+Default: use first name conversationally
+
+If both present → "John Miller" first time, then just "John"
+
+Example:
+Input: John Miller
+Output: "John…"
+
+NOT:
+"J O H N"
+"Customer John Miller"
+
+2. Phone Numbers
+
+{phone}
+
+Speak digit groups like humans naturally do.
+
+Rules:
+
+US/Canada numbers grouped 3-3-4
+
+Pause between groups
+
+Never read continuous digits
+
+Example:
+3603065536 →
+"three six zero… three zero six… five five three six"
+
+Add natural rhythm — slight pauses between groups.
+
+3. Dates
+
+{date}
+
+Convert to spoken date format.
+
+Format:
+DD/MM/YYYY
+MM/DD/YYYY
+YYYY-MM-DD
+
+Convert to:
+
+"March twenty-eighth, twenty twenty-two"
+"the 14th of July, twenty twenty-three"
+
+Rules:
+
+Month words, not numbers
+
+Year spoken naturally (twenty twenty-four, not two zero two four)
+
+Add “the” optionally for conversational tone
+
+4. Money
+
+{amount}
+
+Convert to spoken currency.
+
+1129 →
+"about eleven hundred twenty-nine dollars"
+
+970 →
+"roughly nine seventy"
+or
+"around nine hundred seventy dollars"
+
+Rules:
+
+Never read digit by digit
+
+Round naturally if conversational context allows
+
+Prefer casual phrasing: about / around / roughly
+
+5. Address
+
+{address}
+
+Expand abbreviations and speak naturally.
+
+Dictionary:
+St → Street
+Rd → Road
+Ave → Avenue
+Blvd → Boulevard
+Dr → Drive
+Ln → Lane
+Ct → Court
+Apt → Apartment
+Ste → Suite
+NJ → New Jersey
+CA → California
+TX → Texas
+IL → Illinois
+
+Example:
+123 W Main St Apt 4B Newark NJ
+
+Output:
+"123 West Main Street, Apartment 4B, Newark New Jersey"
+
+Rules:
+
+No commas spoken literally
+
+Smooth phrasing
+
+Pause between sections
+
+6. Email
+
+{email}
+
+Speak like humans do:
+
+johnsmith92@gmail.com
+ →
+
+"john smith ninety two at gmail dot com"
+
+Rules:
+
+@ = "at"
+
+. = "dot"
+
+Separate words where readable
+
+Numbers spoken normally
+
+HUMANIZATION LAYER
+
+After variable replacement, apply conversational smoothing:
+
+Add micro-pauses:
+
+After name
+
+Before bad news / good news
+
+Before call-back instruction
+
+Replace robotic phrasing:
+
+"you qualify for a reimbursement of $970"
+→
+"looks like you’re actually getting about nine seventy back"
+
+"please contact us"
+→
+"just give me a quick call back"
+
+OUTPUT STYLE EXAMPLE
+
+Final generated text must sound like someone talking while checking a screen:
+
+"Hey John… this is Cody from your security provider.
+I was just looking at your account from March twenty-eighth, twenty twenty-two…
+You had picked up the protection plan for about eleven hundred twenty-nine dollars.
+So — quick update.
+The system you’re on isn’t really compatible anymore with the newer AI protection we rolled out.
+But the good news… since you had the lifetime plan… looks like you’re getting about nine seventy back.
+Just call me at three six zero… three zero six… five five three six… and I’ll handle it for you."
+
+IMPLEMENTATION REQUIREMENT
+
+Build a preprocessing function:
+
+processVoicemailScript(script, variables) → returns naturalSpeechScript
+
+Pipeline:
+
+Replace variables
+
+Normalize (names, phone, date, amount, address, email)
+
+Conversational smoothing
+
+Send final text to ElevenLabs
+
+The audio must NEVER contain raw placeholders or robotic numeric reading.

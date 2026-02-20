@@ -624,7 +624,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                             Human-Like Speech
                         </div>
-                        <p class="pvm-hint">When enabled, the system automatically transforms your script so it sounds like a real person speaking - dates are pronounced naturally (e.g., "28th of March, 2022"), phone numbers are spoken digit-by-digit in natural groups, and address abbreviations are expanded (Ave to Avenue, NJ to New Jersey, etc.).</p>
+                        <p class="pvm-hint">When enabled, the system preprocesses your script so it sounds like a real human outbound agent - not a robot reading variables. Names get natural pauses, dates are spoken conversationally ("March twenty eighth, twenty twenty two"), phone numbers use 3-3-4 grouping with pauses, money amounts are spoken casually ("about eleven hundred dollars"), addresses are fully expanded (Ave&rarr;Avenue, NJ&rarr;New Jersey), and emails are read naturally ("at gmail dot com").</p>
 
                         <div class="pvm-toggle-row">
                             <label class="pvm-toggle-label">
@@ -637,28 +637,40 @@
 
                         <div class="pvm-humanize-examples" id="pvmHumanizeExamples">
                             <div class="pvm-example-item">
-                                <span class="pvm-example-label">Dates:</span>
+                                <span class="pvm-example-label">Name:</span>
+                                <span class="pvm-example-before">{first_name}</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">"Hey John..." (natural pause)</span>
+                            </div>
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Date:</span>
                                 <span class="pvm-example-before">03/28/2022</span>
                                 <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">28th of March, 2022</span>
+                                <span class="pvm-example-after">"March twenty eighth... twenty twenty two"</span>
                             </div>
                             <div class="pvm-example-item">
                                 <span class="pvm-example-label">Phone:</span>
-                                <span class="pvm-example-before">555-123-4567</span>
+                                <span class="pvm-example-before">360-306-5536</span>
                                 <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">five five five, one two three, four five six seven</span>
+                                <span class="pvm-example-after">"three six zero... three zero six... five five three six"</span>
                             </div>
                             <div class="pvm-example-item">
-                                <span class="pvm-example-label">Abbrevs:</span>
-                                <span class="pvm-example-before">Apt, Blvd, Dr, Rd</span>
+                                <span class="pvm-example-label">Money:</span>
+                                <span class="pvm-example-before">$1,129.00</span>
                                 <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">Apartment, Boulevard, Drive, Road</span>
+                                <span class="pvm-example-after">"about eleven hundred twenty nine dollars"</span>
                             </div>
                             <div class="pvm-example-item">
                                 <span class="pvm-example-label">Address:</span>
-                                <span class="pvm-example-before">123 Oak Ave, NJ</span>
+                                <span class="pvm-example-before">123 W Main St, NJ 07102</span>
                                 <span class="pvm-example-arrow">&rarr;</span>
-                                <span class="pvm-example-after">123 Oak Avenue, New Jersey</span>
+                                <span class="pvm-example-after">"123 West Main Street, New Jersey"</span>
+                            </div>
+                            <div class="pvm-example-item">
+                                <span class="pvm-example-label">Email:</span>
+                                <span class="pvm-example-before">john92@gmail.com</span>
+                                <span class="pvm-example-arrow">&rarr;</span>
+                                <span class="pvm-example-after">"john ninety two at gmail dot com"</span>
                             </div>
                         </div>
                     </div>
