@@ -41,6 +41,10 @@
                 <div class="header-right">
                     <span class="header-status-dot"></span>
                     <span class="header-version">v1.0</span>
+                    <button type="button" class="theme-toggle" id="fullscreenToggle" title="Toggle fullscreen">
+                        <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                        <svg class="icon-shrink" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                    </button>
                     <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">
                         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -425,6 +429,24 @@
                 document.documentElement.setAttribute("data-theme", next);
                 localStorage.setItem("vb_theme", next);
             });
+
+            // ---- Fullscreen Toggle ----
+            var fsBtn = document.getElementById("fullscreenToggle");
+            fsBtn.addEventListener("click", function() {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    var el = document.documentElement;
+                    if (el.requestFullscreen) el.requestFullscreen();
+                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                }
+            });
+            function onFsChange() {
+                document.body.classList.toggle("is-fullscreen", !!(document.fullscreenElement || document.webkitFullscreenElement));
+            }
+            document.addEventListener("fullscreenchange", onFsChange);
+            document.addEventListener("webkitfullscreenchange", onFsChange);
 
             // ---- Scroll Reveal + Mouse Glow Effect on Cards ----
             (function() {
