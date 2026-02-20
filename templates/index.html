@@ -69,6 +69,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <span class="sidebar-label">Voicemail Audio</span>
                 </button>
+                <button type="button" class="sidebar-btn" data-panel="panelTransfer" title="Transfer Number">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
+                    <span class="sidebar-label">Transfer Number</span>
+                </button>
             </nav>
         </aside>
 
@@ -161,10 +165,14 @@
             </div>
 
                 <!-- Transfer Number -->
-                <div class="card stagger-5">
+            <div class="panel" id="panelTransfer">
+                <div class="card">
                     <div class="card-title">
                         <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
                         Transfer Number
+                        <button type="button" class="panel-minimize" data-panel="panelTransfer" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
                     </div>
                     <label>If a human answers, transfer the call to</label>
                     <div class="transfer-row">
@@ -178,6 +186,7 @@
                         Saved &mdash; auto-fills next time
                     </div>
                 </div>
+            </div>
 
                 <!-- Dial Mode -->
                 <div class="card stagger-6">
