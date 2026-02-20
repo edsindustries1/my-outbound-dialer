@@ -3544,15 +3544,13 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     right: 90px;
     z-index: 10000;
     perspective: 1200px;
-    perspective-origin: 50% 50%;
+    perspective-origin: 50% 40%;
     cursor: default;
     user-select: none;
     animation: iphoneSlideIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    transition: perspective-origin 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .iphone-3d-wrapper.minimized {
-    perspective-origin: 50% 95%;
     cursor: pointer;
 }
 
@@ -3561,30 +3559,92 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 580px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     transform-origin: center bottom;
 }
 
-.iphone-3d-wrapper.minimized .iphone-3d-body {
-    transform: rotateY(-180deg) rotateX(88deg) scale(0.55);
+.iphone-3d-body.phone-putting-down {
+    animation: phonePutDown 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.iphone-3d-body.phone-picking-up {
+    animation: phonePickUp 1.2s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+}
+
+@keyframes phonePutDown {
+    0% {
+        transform: rotateX(0deg) rotateY(0deg) scale(1);
+    }
+    18% {
+        transform: rotateX(25deg) rotateY(0deg) scale(0.95);
+    }
+    40% {
+        transform: rotateX(70deg) rotateY(-60deg) scale(0.7);
+    }
+    65% {
+        transform: rotateX(85deg) rotateY(-160deg) scale(0.55);
+    }
+    85% {
+        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
+    }
+    100% {
+        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
+    }
+}
+
+@keyframes phonePickUp {
+    0% {
+        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
+    }
+    10% {
+        transform: rotateX(86deg) rotateY(-180deg) scale(0.52);
+    }
+    35% {
+        transform: rotateX(70deg) rotateY(-120deg) scale(0.7);
+    }
+    60% {
+        transform: rotateX(30deg) rotateY(-40deg) scale(0.9);
+    }
+    80% {
+        transform: rotateX(5deg) rotateY(-5deg) scale(0.98);
+    }
+    92% {
+        transform: rotateX(-2deg) rotateY(2deg) scale(1.01);
+    }
+    100% {
+        transform: rotateX(0deg) rotateY(0deg) scale(1);
+    }
 }
 
 .iphone-resting-shadow {
     position: absolute;
-    bottom: -6px;
+    bottom: -8px;
     left: -10%;
     width: 120%;
-    height: 20px;
+    height: 24px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 40%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.12) 40%, transparent 70%);
     opacity: 0;
-    transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
     pointer-events: none;
+    transition: none;
 }
 
-.iphone-3d-wrapper.minimized .iphone-resting-shadow {
-    opacity: 1;
-    transform: scaleX(2) scaleY(0.2) translateY(-5px);
+.iphone-3d-body.phone-putting-down ~ .iphone-resting-shadow {
+    animation: shadowAppear 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.iphone-3d-body.phone-picking-up ~ .iphone-resting-shadow {
+    animation: shadowDisappear 0.6s ease forwards;
+}
+
+@keyframes shadowAppear {
+    0%, 50% { opacity: 0; transform: scaleX(1) scaleY(1); }
+    75% { opacity: 0.6; transform: scaleX(1.6) scaleY(0.2); }
+    100% { opacity: 1; transform: scaleX(2) scaleY(0.15) translateY(-2px); }
+}
+
+@keyframes shadowDisappear {
+    0% { opacity: 1; transform: scaleX(2) scaleY(0.15) translateY(-2px); }
+    100% { opacity: 0; transform: scaleX(1) scaleY(1); }
 }
 
 .iphone-front,

@@ -2875,22 +2875,41 @@
             })();
 
             var iphoneMinimized = false;
-            var iphoneMinimizeTime = 0;
+            var iphoneAnimating = false;
             function iphoneToggleMinimize() {
+                if (iphoneAnimating) return;
                 var dialer = document.getElementById("iphoneDialer");
-                iphoneMinimized = !iphoneMinimized;
-                if (iphoneMinimized) {
-                    iphoneMinimizeTime = Date.now();
+                var body3d = document.getElementById("iphone3dBody");
+                iphoneAnimating = true;
+
+                if (!iphoneMinimized) {
+                    body3d.classList.remove("phone-picking-up");
+                    void body3d.offsetWidth;
+                    body3d.classList.add("phone-putting-down");
                     dialer.classList.add("minimized");
+                    body3d.addEventListener("animationend", function handler() {
+                        body3d.removeEventListener("animationend", handler);
+                        iphoneMinimized = true;
+                        iphoneAnimating = false;
+                    });
                 } else {
-                    dialer.classList.remove("minimized");
+                    body3d.classList.remove("phone-putting-down");
+                    void body3d.offsetWidth;
+                    body3d.classList.add("phone-picking-up");
+                    body3d.addEventListener("animationend", function handler() {
+                        body3d.removeEventListener("animationend", handler);
+                        body3d.classList.remove("phone-picking-up");
+                        dialer.classList.remove("minimized");
+                        iphoneMinimized = false;
+                        iphoneAnimating = false;
+                    });
                 }
             }
             (function() {
                 var dialer = document.getElementById("iphoneDialer");
                 if (dialer) {
                     dialer.addEventListener("click", function(e) {
-                        if (iphoneMinimized && (Date.now() - iphoneMinimizeTime > 500)) {
+                        if (iphoneMinimized && !iphoneAnimating) {
                             iphoneToggleMinimize();
                         }
                     });
