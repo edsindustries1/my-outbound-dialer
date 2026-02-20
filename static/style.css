@@ -46,6 +46,14 @@
     --toggle-icon-show: block;
     --toggle-icon-hide: none;
     --ripple-color: rgba(37, 99, 235, 0.25);
+    --accent-secondary: #06B6D4;
+    --header-bg: rgba(8, 12, 24, 0.92);
+    --header-border: rgba(37, 99, 235, 0.15);
+    --header-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+    --header-glow-line: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.4), rgba(6, 182, 212, 0.3), transparent);
+    --nav-btn-bg: rgba(255, 255, 255, 0.04);
+    --nav-btn-border: rgba(255, 255, 255, 0.08);
+    --nav-btn-hover-bg: rgba(255, 255, 255, 0.08);
 }
 
 /* ============ LIGHT THEME ============ */
@@ -87,6 +95,14 @@
     --toggle-icon-show: none;
     --toggle-icon-hide: block;
     --ripple-color: rgba(37, 99, 235, 0.2);
+    --accent-secondary: #06B6D4;
+    --header-bg: rgba(255, 255, 255, 0.92);
+    --header-border: rgba(37, 99, 235, 0.1);
+    --header-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+    --header-glow-line: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.2), rgba(6, 182, 212, 0.15), transparent);
+    --nav-btn-bg: rgba(0, 0, 0, 0.03);
+    --nav-btn-border: rgba(0, 0, 0, 0.06);
+    --nav-btn-hover-bg: rgba(0, 0, 0, 0.06);
 }
 
 /* ============ GLOBAL TRANSITION ============ */
@@ -369,11 +385,22 @@ body {
     top: 0;
     z-index: 100;
     width: 100%;
-    background: var(--bg-header);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
+    background: var(--header-bg);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border-bottom: 1px solid var(--header-border);
     margin-bottom: 32px;
+    box-shadow: var(--header-shadow);
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--header-glow-line);
 }
 
 .header-inner {
@@ -381,8 +408,8 @@ body {
     margin: 0 auto;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 32px;
+    gap: 16px;
+    padding: 16px 32px;
     width: 100%;
 }
 
@@ -390,59 +417,85 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 
 .header-text-logo {
     font-family: 'Sora', sans-serif;
-    font-size: 22px;
+    font-size: 23px;
     font-weight: 800;
     letter-spacing: -0.5px;
     color: var(--text-primary);
+    position: relative;
+    background: linear-gradient(135deg, var(--text-primary) 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+    opacity: 0.5;
+    flex-shrink: 0;
 }
 
 .header-nav {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .nav-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 14px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 8px;
+    gap: 7px;
+    padding: 8px 16px;
+    background: var(--nav-btn-bg);
+    border: 1px solid var(--nav-btn-border);
+    border-radius: 10px;
     color: var(--text-secondary);
     font-family: 'Inter', sans-serif;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 550;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+    position: relative;
+    letter-spacing: 0.01em;
 }
 
 .nav-btn:hover {
     color: var(--text-primary);
-    background: rgba(var(--accent-rgb), 0.08);
-    border-color: var(--border);
+    background: var(--nav-btn-hover-bg);
+    border-color: rgba(var(--accent-rgb), 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.1);
 }
 
 .nav-btn.active {
-    color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.12);
-    border-color: var(--accent);
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.35), 0 0 0 1px rgba(var(--accent-rgb), 0.1);
+    transform: translateY(-1px);
 }
 
 .nav-btn svg {
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.nav-btn.active svg,
 .nav-btn:hover svg {
     opacity: 1;
+    transform: scale(1.1);
+}
+
+.nav-btn.active svg {
+    opacity: 1;
+    filter: brightness(1.5);
 }
 
 /* ============ COLLAPSIBLE PANELS ============ */
@@ -495,17 +548,20 @@ body {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    flex-shrink: 0;
 }
 
 .header-version {
     font-size: 11px;
     color: var(--text-secondary);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    padding: 4px 12px;
+    background: var(--nav-btn-bg);
+    border: 1px solid var(--nav-btn-border);
+    padding: 5px 14px;
     border-radius: 20px;
-    font-weight: 500;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
 }
 
 .header-status-dot {
@@ -514,7 +570,7 @@ body {
     border-radius: 50%;
     background: var(--success);
     box-shadow: 0 0 8px var(--success);
-    animation: dotBlink 2s ease-in-out infinite;
+    animation: statusPulse 2s ease-in-out infinite;
 }
 
 /* ============ STATUS BAR ============ */
@@ -1428,9 +1484,10 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 @media (max-width: 900px) {
-    .header-inner { flex-wrap: wrap; gap: 8px; }
-    .header-nav { order: 3; width: 100%; overflow-x: auto; padding-bottom: 4px; }
-    .nav-btn { font-size: 12px; padding: 6px 10px; }
+    .header-inner { flex-wrap: wrap; gap: 10px; }
+    .header-divider { display: none; }
+    .header-nav { order: 3; width: 100%; overflow-x: auto; padding-bottom: 6px; gap: 6px; }
+    .nav-btn { font-size: 12px; padding: 7px 12px; }
 }
 
 @media (max-width: 700px) {
