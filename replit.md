@@ -45,55 +45,44 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 
 ## Branding & Design
 - **Brand**: Open Human
-- **Tagline**: Intelligent Communication at Scale
-- **Logo**: Human silhouette (head + shoulders) with signal waves, purple-to-cyan gradient background, rounded square icon
-- **Primary color**: Blue (#2563EB) - represents trust + technology
-- **Secondary color**: Cyan (#06B6D4) - represents communication
-- **Accent gradient**: 135deg from #2563EB to #06B6D4
-- **Fonts**: Inter (UI), JetBrains Mono (monospace/data)
+- **Tagline**: Power Sales Assistant
+- **Primary color**: Blue (#1a73e8) - Google Ads style
+- **Success**: Green (#1e8e3e)
+- **Error**: Red (#d93025)
+- **Warning**: Amber (#f9ab00)
+- **Background**: Light gray (#f1f3f4)
+- **Cards**: White with subtle shadows
+- **Font**: Inter (UI), system sans-serif fallback
 - **Favicon**: Brain emoji
 
-## UI/UX
-- Dual-theme system: Dark and Light modes with toggle button in header
-- Theme persisted in localStorage ("vb_theme") with inline head script to prevent flash
-- Blue (#2563EB) + cyan (#06B6D4) gradient accent palette
-- Dark theme: deep navy backgrounds (#0B0F1A), subtle background glows
-- Light theme: clean white/gray surfaces (#F8FAFC), no glows, adjusted contrast
-- Smooth 0.35s transitions between themes on all elements
-- Animated Open Human logo splash screen on page load with pulsing rings
-- Card-based layout with real-time call status polling
-- Left vertical sidebar with 8 feature buttons (Voicemail Settings, Test Dialer, Phone Numbers, Voicemail Audio, Transfer Number, Call Analytics, DNC List, Schedule) that toggle collapsible panels in the main content area
-- Campaign Intelligence sidebar section (divider-separated): Call Analytics with Chart.js charts (AMD doughnut, hourly bar, daily line, hangup doughnut) and stat cards; DNC List with add/remove table UI; Campaign Scheduling with datetime picker, transfer number, phone list, and scheduled list view
-- Operational Improvements section: Webhook Status Monitor (health indicator, event counts, recent events, errors); Campaign Templates (save/load campaign settings); Number Validation (validate phone numbers, detect invalid/duplicates/DNC, copy valid numbers)
-- Quick Stats Banner: 4 stat cards at top (Total Calls, Hot Leads, Voicemails, Success Rate) with animated counters
-- Campaign Progress Bar: shows dialed/total with animated fill during active campaigns
-- Toast Notifications: slide-in toasts for campaign start/stop/complete, voicemail drops, log clearing
-- Hot Lead Sound Alert: Web Audio API two-tone chime plays on human transfer detection
-- Drag-and-Drop File Upload: styled drop zones for CSV phone lists and audio files with file name preview
-- Campaign History Panel: sidebar panel showing daily campaign summaries (calls, leads, voicemails, success rate)
-- Animated Counter Stats: smooth counting animation on stat value changes using cubic easing
-- Sidebar collapses to icon-only at 900px, becomes horizontal bar at 600px
-- Full-width frosted glass header with gradient logo text and glowing accent bottom line
-- Realistic fiber optic video background
-- Scroll-reveal animation on cards with staggered entrance
-- Mouse-following glow effect on card hover
-- Parallax scrolling on background video
-- Clear Call Logs button (blocked during active campaigns)
-- Download Report section with date presets (All Time, Today, This Week, This Month, Custom) and CSV export
-- Persistent call history saved to logs/call_history.json for historical reporting across sessions
+## UI/UX - Google Ads Style SaaS Interface
+- **Layout**: Fixed left sidebar (220px) + top bar (56px) + main content area
+- **Navigation**: SPA-style with 7 pages: Dashboard, Campaigns, Voicemails, Contacts, Live Calls, Reports, Settings
+- **Page switching**: navigateTo() function toggles page containers, updates sidebar active state and page title
+- **Dual-theme system**: Light (default, Google Ads style) and Dark modes with toggle in top bar
+- **Theme persisted**: localStorage ("vb_theme") with inline head script to prevent flash
+- **Sidebar**: White bg, nav items with SVG icons, active item has blue text + light blue bg, collapsible via toggle button
+- **Dashboard page**: 6 KPI metric cards (Total Calls, Connected, Voicemails, Hot Leads, Success Rate, Campaign Status) + Recent Activity table (last 20 calls auto-refreshing)
+- **Campaigns page**: Active campaign status card with progress bar + Campaign History table + "+ New Campaign" button opens wizard overlay
+- **Campaign Wizard**: 5-step overlay (Campaign Type, Calling Mode, Upload Contacts, Select Voicemail, Settings & Launch) with stepper navigation
+- **Voicemails page**: Voicemail Settings card (saved URL, player, update) + Personalized Voicemail section with full PVM controls
+- **Contacts page**: DNC List management + Number Validation tool
+- **Live Calls page**: Full call logs table with status filter, search, clear logs, download report with date range picker
+- **Reports page**: Call Analytics with Chart.js charts (AMD doughnut, hourly bar, daily line, hangup doughnut), stat cards, campaign history, email reports
+- **Settings page**: Test Dialer, Webhook Monitor, Campaign Templates, Campaign Scheduler
+- Quick Stats Banner: KPI cards with animated counters
+- Campaign Progress Bar: shows dialed/total with animated fill
+- Toast Notifications: slide-in toasts for campaign events
+- Hot Lead Sound Alert: Web Audio API chime on human transfer
+- Drag-and-Drop File Upload: styled drop zones for CSV and audio files
+- Persistent call history saved to logs/call_history.json
 - Password protection using Flask sessions with APP_PASSWORD env var
-- Responsive design with grid layout
-- Detailed call status descriptions with color-coded badges (green=success, blue=in progress, yellow=warning, red=error)
-- Status filter dropdown: All Calls, Successful, Failed, Warnings, In Progress
-- Enhanced AMD result tracking: human, machine, fax, not_sure, timeout with distinct descriptions
-- Comprehensive hangup cause mapping: busy, no answer, invalid number, rejected, network errors, etc.
-- CSV export includes Status Description, AMD Result, and Hangup Cause columns
-- Footer with brand info, product/company/legal links, social icons
-- "Powered by Open Human" floating badge with pulse indicator
-- Floating Notepad widget: chatbot-style FAB button ("N" logo) at bottom-right, expands to draggable/resizable rich text editor with toolbar (bold, italic, underline, strikethrough, font size, text color, highlight color, remove formatting, bullet/numbered lists, text alignment), content persisted in localStorage, character counter, download as text, clear all, minimize snaps back to bottom-right corner, touch drag support, Escape to close
-- iPhone 17 Pro Max Live Dialer Widget: Realistic 3D iPhone in Natural Titanium/Silver color with brushed metal frame, side buttons (volume, power, silent switch), and camera module on back. 3D structure (iphone-3d-wrapper → iphone-3d-body → iphone-front + iphone-back). Shows real-time call status (number, timer, status badge, AMD result, live transcript). Minimize hides dialer and shows floating Apple logo (&#63743;) ball with physics. Click Apple ball to restore dialer. Alt+drag enables 360° rotation with momentum and snap-to-face. Drag handle for repositioning anywhere on screen. Integrated with existing pollStatus (no separate polling loop). Hot Lead Notification: When a call is transferred to a human, even if the dialer is minimized to ball form, it auto-expands with a dramatic fire/glow animation showing "HOT LEAD - Pick Up Now" with the caller's number, a countdown progress bar, then auto-minimizes back to ball after 3 seconds. Repeats on every new transfer. Tracked per call_id to avoid duplicate alerts.
-- Floating Physics Balls: Notepad "N" ball (blue gradient) and iPhone Apple logo ball (silver metallic) share a physics engine with gravity, wall bouncing, drag-and-throw momentum, and ball-to-ball elastic collision. Balls bounce off each other realistically using impulse-based collision response. Both are draggable with throw physics. Collision uses proper elastic formula with restitution coefficient and random micro-perturbation for natural feel.
-- Left sidebar: Icon-only strip (46px wide), no hover-expand, each icon has unique looping CSS animation (spin, ring, breathe, bounce, etc.), CSS tooltip on hover shows feature name, click opens corresponding panel with smooth scroll.
+- Color-coded status badges (green=success, blue=in progress, amber=warning, red=error)
+- Status filter dropdown: All, Successful, Failed, Warnings, In Progress
+- CSV export with Status Description, AMD Result, and Hangup Cause columns
+- Floating Notepad widget with rich text editor, physics ball interaction
+- iPhone 17 Pro Max Live Dialer Widget with 3D rotation, live call status, Hot Lead notification
+- Floating Physics Balls: Notepad + iPhone balls with gravity, collision, drag-throw physics
 
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key
