@@ -13,6 +13,7 @@ import functools
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for
 from werkzeug.utils import secure_filename
+import html as html_module
 
 from storage import (
     set_campaign,
@@ -142,6 +143,142 @@ def landing():
     """Serve the public landing page."""
     _detect_and_set_base_url()
     return render_template("landing.html")
+
+
+# ---- Lead Capture ----
+@app.route("/api/lead", methods=["POST"])
+def api_lead():
+    """Receive lead form submission and email to owner."""
+    try:
+        data = request.get_json() or {}
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip()
+        phone = data.get("phone", "").strip()
+        company = data.get("company", "").strip()
+        team_size = data.get("team_size", "").strip()
+
+        if not name or not email or not phone:
+            return jsonify({"success": False, "error": "Name, email, and phone are required"}), 400
+
+        name = html_module.escape(name)
+        email = html_module.escape(email)
+        phone = html_module.escape(phone)
+        company = html_module.escape(company)
+        team_size = html_module.escape(team_size)
+
+        now = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+
+        html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+<tr><td style="background:linear-gradient(135deg,#1e1b4b 0%,#4338ca 100%);padding:36px 40px;text-align:center;">
+  <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">&#128293; Hot Lead Received!</h1>
+  <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:14px;">A new prospect just submitted the demo request form</p>
+</td></tr>
+
+<tr><td style="padding:36px 40px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9ff;border:1px solid #e8e8f4;border-radius:10px;overflow:hidden;">
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #e8e8f4;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Full Name</span>
+        <span style="font-size:16px;font-weight:700;color:#111827;">{name}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #e8e8f4;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Email Address</span>
+        <a href="mailto:{email}" style="font-size:16px;font-weight:600;color:#4338ca;text-decoration:none;">{email}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #e8e8f4;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Phone Number</span>
+        <a href="tel:{phone}" style="font-size:16px;font-weight:600;color:#4338ca;text-decoration:none;">{phone}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #e8e8f4;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Company</span>
+        <span style="font-size:16px;font-weight:600;color:#111827;">{company or 'Not provided'}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:4px;">Team Size</span>
+        <span style="font-size:16px;font-weight:600;color:#111827;">{team_size or 'Not specified'}</span>
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+    <tr>
+      <td style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:16px 20px;">
+        <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
+          <strong>&#9889; Action Required:</strong> This lead submitted a demo request on {now}. Reach out within the next 5 minutes for the highest conversion rate.
+        </p>
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+    <tr>
+      <td align="center">
+        <a href="mailto:{email}" style="display:inline-block;padding:14px 36px;background:#6366f1;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Reply to {name.split()[0] if name else 'Lead'} Now</a>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+
+<tr><td style="background:#f8f9fa;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+  <p style="margin:0;font-size:12px;color:#9ca3af;">This lead was captured from your Open Human landing page.<br>&#169; 2026 Open Human &mdash; AI-Powered Sales Dialer</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+"""
+
+        text_body = f"""
+HOT LEAD RECEIVED - {now}
+
+Name: {name}
+Email: {email}
+Phone: {phone}
+Company: {company or 'Not provided'}
+Team Size: {team_size or 'Not specified'}
+
+ACTION: Reach out within 5 minutes for highest conversion.
+"""
+
+        from gmail_client import send_email
+        result = send_email(
+            to_email="edsindutires1@gmail.com",
+            subject="1 Hot Lead Received Just Now",
+            html_body=html_body,
+            text_body=text_body
+        )
+
+        if result:
+            logger.info(f"Lead captured and emailed: {name} ({email}, {phone})")
+            return jsonify({"success": True})
+        else:
+            logger.error(f"Lead captured but email failed: {name} ({email})")
+            return jsonify({"success": False, "error": "Failed to send notification email"}), 500
+
+    except Exception as e:
+        logger.error(f"Lead capture error: {e}")
+        return jsonify({"success": False, "error": "Server error"}), 500
 
 
 # ---- Login Route ----

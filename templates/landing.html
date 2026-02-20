@@ -28,7 +28,7 @@
       </div>
       <div class="nav-right">
         <a href="/login" class="nav-login">Log in</a>
-        <a href="#pricing" class="nav-cta">Get Started</a>
+        <a href="#" class="nav-cta" data-open-lead>Get Started</a>
       </div>
       <button class="nav-mobile" id="navMobile" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -67,7 +67,7 @@
       <p class="hero-sub anim-fade">The future of outbound sales at your fingertips — AI-powered dialing, personalized voicemail drops, and real-time transcription.</p>
 
       <div class="hero-actions anim-fade">
-        <a href="/login" class="btn-primary btn-lg btn-glow">
+        <a href="#" class="btn-primary btn-lg btn-glow" data-open-lead>
           <span>Get Started Today</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -203,7 +203,7 @@
           <p class="section-eyebrow anim-up">Workflow</p>
           <h2 class="section-title section-title-left anim-up">A Smarter Way to<br>Reach Your Prospects</h2>
           <p class="section-sub-left anim-up">Take control of your outbound with a smarter, more efficient approach. Upload, configure, launch, and close — all from one dashboard.</p>
-          <a href="/login" class="btn-primary anim-up" style="margin-top:24px;">
+          <a href="#" class="btn-primary anim-up" style="margin-top:24px;" data-open-lead>
             <span>Get Started Today</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
@@ -371,7 +371,7 @@
             <li>Instant hot lead alerts with live call transfer</li>
             <li>Standard customer support</li>
           </ul>
-          <a href="/login" class="p-cta p-cta-outline">Get Started</a>
+          <a href="#" class="p-cta p-cta-outline" data-open-lead>Get Started</a>
         </div>
 
         <div class="p-card p-card-featured anim-up">
@@ -390,7 +390,7 @@
             <li>Simultaneous dialing — up to 10 parallel calls</li>
             <li>Priority customer support</li>
           </ul>
-          <a href="/login" class="p-cta p-cta-fill">Get Started</a>
+          <a href="#" class="p-cta p-cta-fill" data-open-lead>Get Started</a>
         </div>
 
         <div class="p-card anim-up">
@@ -403,7 +403,7 @@
             <li>Custom API integrations and compliance tools</li>
             <li>SLA and uptime guarantees</li>
           </ul>
-          <a href="/login" class="p-cta p-cta-outline">Talk to Sales</a>
+          <a href="#" class="p-cta p-cta-outline" data-open-lead>Talk to Sales</a>
         </div>
       </div>
     </div>
@@ -457,13 +457,98 @@
       <h2 class="anim-up">Ready to 10x Your<br>Outbound Results?</h2>
       <p class="anim-up">Sign up today and see how Open Human can transform your sales process.</p>
       <div class="hero-actions anim-up">
-        <a href="/login" class="btn-primary btn-lg btn-white">
+        <a href="#" class="btn-primary btn-lg btn-white" data-open-lead>
           <span>Get Started Today</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
       </div>
     </div>
   </section>
+
+  <div class="lead-overlay" id="leadOverlay">
+    <div class="lead-backdrop" id="leadBackdrop"></div>
+    <div class="lead-modal" id="leadModal">
+      <button class="lead-close" id="leadClose" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="lead-modal-inner">
+        <div class="lead-left">
+          <div class="lead-left-content">
+            <div class="lead-icon-wrap">
+              <span class="lead-brain">🧠</span>
+              <div class="lead-icon-ring"></div>
+            </div>
+            <h2>Start Closing<br>More Deals Today</h2>
+            <p>Join 2,000+ sales teams using AI-powered dialing to 10x their outbound results.</p>
+            <div class="lead-features">
+              <div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg><span>Free setup & onboarding</span></div>
+              <div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg><span>No credit card required</span></div>
+              <div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg><span>Live demo within 24 hours</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="lead-right">
+          <h3>Get Started</h3>
+          <p class="lead-right-sub">Fill in your details and we'll reach out within minutes.</p>
+          <form class="lead-form" id="leadForm">
+            <div class="lead-field">
+              <label for="leadName">Full Name *</label>
+              <div class="lead-input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="leadName" name="name" placeholder="John Smith" required>
+              </div>
+            </div>
+            <div class="lead-field">
+              <label for="leadEmail">Email Address *</label>
+              <div class="lead-input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="leadEmail" name="email" placeholder="john@company.com" required>
+              </div>
+            </div>
+            <div class="lead-field">
+              <label for="leadPhone">Phone Number *</label>
+              <div class="lead-input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                <input type="tel" id="leadPhone" name="phone" placeholder="+1 (555) 123-4567" required>
+              </div>
+            </div>
+            <div class="lead-field">
+              <label for="leadCompany">Company Name</label>
+              <div class="lead-input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                <input type="text" id="leadCompany" name="company" placeholder="Acme Inc.">
+              </div>
+            </div>
+            <div class="lead-field">
+              <label for="leadTeam">Team Size</label>
+              <div class="lead-select-wrap">
+                <select id="leadTeam" name="team_size">
+                  <option value="">Select team size</option>
+                  <option value="1-5">1-5 reps</option>
+                  <option value="6-20">6-20 reps</option>
+                  <option value="21-50">21-50 reps</option>
+                  <option value="50+">50+ reps</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="lead-submit" id="leadSubmitBtn">
+              <span class="lead-submit-text">Request a Demo</span>
+              <span class="lead-submit-loader" style="display:none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="lead-spinner"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              </span>
+            </button>
+          </form>
+          <div class="lead-success" id="leadSuccess" style="display:none;">
+            <div class="lead-success-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h3>We've Got Your Info!</h3>
+            <p>A member of our team will reach out to you shortly. Check your inbox for a confirmation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <div class="footer-inner">
@@ -683,6 +768,78 @@
       const diff = touchStartX - e.changedTouches[0].clientX;
       if (Math.abs(diff) > 50) { diff > 0 ? carouselIndex++ : carouselIndex--; updateCarousel(); }
     }, { passive: true });
+
+    // Lead form modal
+    const leadOverlay = document.getElementById('leadOverlay');
+    const leadModal = document.getElementById('leadModal');
+    const leadForm = document.getElementById('leadForm');
+    const leadSuccess = document.getElementById('leadSuccess');
+    const leadSubmitBtn = document.getElementById('leadSubmitBtn');
+
+    function openLeadForm(e) {
+      if (e) e.preventDefault();
+      leadOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => leadModal.classList.add('show'), 50);
+    }
+    function closeLeadForm() {
+      leadModal.classList.remove('show');
+      setTimeout(() => {
+        leadOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }, 350);
+    }
+
+    document.querySelectorAll('[data-open-lead]').forEach(btn => {
+      btn.addEventListener('click', openLeadForm);
+    });
+    document.getElementById('leadClose').addEventListener('click', closeLeadForm);
+    document.getElementById('leadBackdrop').addEventListener('click', closeLeadForm);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && leadOverlay.classList.contains('active')) closeLeadForm(); });
+
+    leadForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = leadSubmitBtn;
+      const textEl = btn.querySelector('.lead-submit-text');
+      const loaderEl = btn.querySelector('.lead-submit-loader');
+      textEl.style.display = 'none';
+      loaderEl.style.display = 'inline-flex';
+      btn.disabled = true;
+
+      const data = {
+        name: document.getElementById('leadName').value,
+        email: document.getElementById('leadEmail').value,
+        phone: document.getElementById('leadPhone').value,
+        company: document.getElementById('leadCompany').value,
+        team_size: document.getElementById('leadTeam').value
+      };
+
+      try {
+        const resp = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await resp.json();
+        if (result.success) {
+          leadForm.style.display = 'none';
+          document.querySelector('.lead-right h3').style.display = 'none';
+          document.querySelector('.lead-right-sub').style.display = 'none';
+          leadSuccess.style.display = 'flex';
+          leadSuccess.classList.add('show');
+        } else {
+          alert('Something went wrong. Please try again.');
+          textEl.style.display = '';
+          loaderEl.style.display = 'none';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Connection error. Please try again.');
+        textEl.style.display = '';
+        loaderEl.style.display = 'none';
+        btn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
