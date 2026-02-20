@@ -1349,6 +1349,10 @@
                             callBody.innerHTML = '<tr><td colspan="9" class="empty-row">No calls yet</td></tr>';
                         }
 
+                        if (typeof iphoneUpdateDialer === "function") {
+                            iphoneUpdateDialer(data.calls || []);
+                        }
+
                         adjustPollSpeed(data.active || hasLiveCalls);
                     })
                     .catch(function(e) {
@@ -1375,6 +1379,81 @@
             pollTimer = setInterval(pollStatus, pollInterval);
             pollStatus();
     </script>
+
+    <!-- iPHONE DIALER WIDGET -->
+    <div class="iphone-dialer" id="iphoneDialer">
+        <div class="iphone-frame">
+            <div class="iphone-notch-area">
+                <div class="iphone-dynamic-island" id="iphoneDynIsland">
+                    <div class="iphone-di-dot"></div>
+                    <div class="iphone-di-dot iphone-di-cam"></div>
+                </div>
+                <div class="iphone-status-bar">
+                    <span class="iphone-time" id="iphoneTime">9:41</span>
+                    <div class="iphone-status-icons">
+                        <span class="iphone-signal">&#9679;&#9679;&#9679;&#9679;</span>
+                        <span class="iphone-wifi">&#9681;</span>
+                        <span class="iphone-battery-icon">&#9608;</span>
+                    </div>
+                </div>
+            </div>
+            <div class="iphone-screen" id="iphoneScreen">
+                <div class="iphone-idle-screen" id="iphoneIdleScreen">
+                    <div class="iphone-idle-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    </div>
+                    <div class="iphone-idle-text">Live Dialer</div>
+                    <div class="iphone-idle-sub">Waiting for active calls...</div>
+                </div>
+                <div class="iphone-call-screen" id="iphoneCallScreen" style="display:none;">
+                    <div class="iphone-call-label" id="iphoneCallLabel">calling...</div>
+                    <div class="iphone-call-number" id="iphoneCallNumber">+1 (555) 123-4567</div>
+                    <div class="iphone-call-timer" id="iphoneCallTimer">00:00</div>
+                    <div class="iphone-call-status-badge" id="iphoneCallBadge">
+                        <span class="iphone-call-pulse"></span>
+                        <span id="iphoneCallStatusText">Ringing</span>
+                    </div>
+                    <div class="iphone-call-amd" id="iphoneCallAmd" style="display:none;">
+                        <span id="iphoneAmdIcon">&#9679;</span>
+                        <span id="iphoneAmdText">Detecting...</span>
+                    </div>
+                    <div class="iphone-call-transcript" id="iphoneCallTranscript" style="display:none;">
+                        <div class="iphone-transcript-label">Live Transcript</div>
+                        <div class="iphone-transcript-content" id="iphoneTranscriptContent"></div>
+                    </div>
+                    <div class="iphone-call-actions">
+                        <div class="iphone-action-btn">
+                            <div class="iphone-action-icon">&#128264;</div>
+                            <span>mute</span>
+                        </div>
+                        <div class="iphone-action-btn">
+                            <div class="iphone-action-icon">&#9881;</div>
+                            <span>keypad</span>
+                        </div>
+                        <div class="iphone-action-btn">
+                            <div class="iphone-action-icon">&#128266;</div>
+                            <span>speaker</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="iphone-call-log" id="iphoneCallLog">
+                    <div class="iphone-log-title">Recent Activity</div>
+                    <div class="iphone-log-entries" id="iphoneLogEntries"></div>
+                </div>
+            </div>
+            <div class="iphone-home-bar"></div>
+        </div>
+        <div class="iphone-drag-handle" id="iphoneDragHandle">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </div>
+        <button class="iphone-minimize-btn" id="iphoneMinBtn" onclick="iphoneToggleMinimize()" title="Minimize">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+    </div>
+    <button class="iphone-fab" id="iphoneFab" onclick="iphoneToggleMinimize()" title="Open Live Dialer" style="display:none;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        <span class="iphone-fab-badge" id="iphoneFabBadge" style="display:none;">0</span>
+    </button>
 
     <!-- POWERED BY BADGE -->
     <div class="oh-powered-badge">
@@ -2625,6 +2704,272 @@
                         alert("All personalized audio cleared");
                     }).catch(function(e) { if (e.message === "auth") return; });
             }
+
+            // ---- iPhone Live Dialer ----
+            var iphoneDragging = false;
+            var iphoneOffX = 0, iphoneOffY = 0;
+            var iphoneCallTimerInterval = null;
+            var iphoneCallStart = null;
+            var iphoneLogHistory = [];
+            var iphonePrevCallId = null;
+
+            (function() {
+                var dialer = document.getElementById("iphoneDialer");
+                var handle = document.getElementById("iphoneDragHandle");
+                if (!handle || !dialer) return;
+
+                function updateIphoneTime() {
+                    var now = new Date();
+                    var h = now.getHours();
+                    var m = now.getMinutes();
+                    var el = document.getElementById("iphoneTime");
+                    if (el) el.textContent = h + ":" + (m < 10 ? "0" : "") + m;
+                }
+                updateIphoneTime();
+                setInterval(updateIphoneTime, 30000);
+
+                handle.addEventListener("mousedown", function(e) {
+                    e.preventDefault();
+                    iphoneDragging = true;
+                    var rect = dialer.getBoundingClientRect();
+                    iphoneOffX = e.clientX - rect.left;
+                    iphoneOffY = e.clientY - rect.top;
+                    dialer.classList.add("dragging");
+                    dialer.style.transition = "none";
+                });
+
+                document.addEventListener("mousemove", function(e) {
+                    if (!iphoneDragging) return;
+                    var dialer = document.getElementById("iphoneDialer");
+                    var x = e.clientX - iphoneOffX;
+                    var y = e.clientY - iphoneOffY;
+                    var maxX = window.innerWidth - dialer.offsetWidth;
+                    var maxY = window.innerHeight - dialer.offsetHeight;
+                    x = Math.max(0, Math.min(x, maxX));
+                    y = Math.max(0, Math.min(y, maxY));
+                    dialer.style.left = x + "px";
+                    dialer.style.top = y + "px";
+                    dialer.style.right = "auto";
+                    dialer.style.bottom = "auto";
+                });
+
+                document.addEventListener("mouseup", function() {
+                    if (iphoneDragging) {
+                        iphoneDragging = false;
+                        var dialer = document.getElementById("iphoneDialer");
+                        dialer.classList.remove("dragging");
+                        dialer.style.transition = "";
+                    }
+                });
+
+                handle.addEventListener("touchstart", function(e) {
+                    e.preventDefault();
+                    iphoneDragging = true;
+                    var touch = e.touches[0];
+                    var rect = dialer.getBoundingClientRect();
+                    iphoneOffX = touch.clientX - rect.left;
+                    iphoneOffY = touch.clientY - rect.top;
+                    dialer.classList.add("dragging");
+                    dialer.style.transition = "none";
+                }, { passive: false });
+
+                document.addEventListener("touchmove", function(e) {
+                    if (!iphoneDragging) return;
+                    var touch = e.touches[0];
+                    var dialer = document.getElementById("iphoneDialer");
+                    var x = touch.clientX - iphoneOffX;
+                    var y = touch.clientY - iphoneOffY;
+                    var maxX = window.innerWidth - dialer.offsetWidth;
+                    var maxY = window.innerHeight - dialer.offsetHeight;
+                    x = Math.max(0, Math.min(x, maxX));
+                    y = Math.max(0, Math.min(y, maxY));
+                    dialer.style.left = x + "px";
+                    dialer.style.top = y + "px";
+                    dialer.style.right = "auto";
+                    dialer.style.bottom = "auto";
+                }, { passive: false });
+
+                document.addEventListener("touchend", function() {
+                    if (iphoneDragging) {
+                        iphoneDragging = false;
+                        dialer.classList.remove("dragging");
+                        dialer.style.transition = "";
+                    }
+                });
+            })();
+
+            var iphoneMinimized = false;
+            function iphoneToggleMinimize() {
+                var dialer = document.getElementById("iphoneDialer");
+                var fab = document.getElementById("iphoneFab");
+                iphoneMinimized = !iphoneMinimized;
+                if (iphoneMinimized) {
+                    dialer.style.display = "none";
+                    fab.style.display = "flex";
+                } else {
+                    dialer.style.display = "";
+                    fab.style.display = "none";
+                }
+            }
+
+            function iphoneFormatNumber(num) {
+                if (!num) return "";
+                var clean = num.replace(/[^\d+]/g, "");
+                if (clean.startsWith("+1") && clean.length === 12) {
+                    return "+1 (" + clean.substr(2,3) + ") " + clean.substr(5,3) + "-" + clean.substr(8,4);
+                }
+                return num;
+            }
+
+            function iphoneStartTimer() {
+                iphoneCallStart = Date.now();
+                if (iphoneCallTimerInterval) clearInterval(iphoneCallTimerInterval);
+                iphoneCallTimerInterval = setInterval(function() {
+                    var elapsed = Math.floor((Date.now() - iphoneCallStart) / 1000);
+                    var m = Math.floor(elapsed / 60);
+                    var s = elapsed % 60;
+                    var el = document.getElementById("iphoneCallTimer");
+                    if (el) el.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+                }, 1000);
+            }
+
+            function iphoneStopTimer() {
+                if (iphoneCallTimerInterval) {
+                    clearInterval(iphoneCallTimerInterval);
+                    iphoneCallTimerInterval = null;
+                }
+            }
+
+            function iphoneUpdateDialer(calls) {
+                if (!calls || calls.length === 0) {
+                    iphoneShowIdle();
+                    return;
+                }
+
+                var liveCalls = calls.filter(function(c) { return c.is_live; });
+                var activeCalls = liveCalls.filter(function(c) {
+                    return c.status !== "completed" && c.status !== "hangup";
+                });
+
+                var badge = document.getElementById("iphoneFabBadge");
+                if (activeCalls.length > 0 && iphoneMinimized) {
+                    badge.textContent = activeCalls.length;
+                    badge.style.display = "flex";
+                } else if (badge) {
+                    badge.style.display = "none";
+                }
+
+                if (activeCalls.length > 0) {
+                    var call = activeCalls[0];
+                    iphoneShowCall(call);
+                } else if (liveCalls.length > 0) {
+                    var recent = liveCalls[0];
+                    iphoneShowCall(recent);
+                } else {
+                    iphoneShowIdle();
+                }
+
+                iphoneUpdateLog(liveCalls);
+            }
+
+            function iphoneShowIdle() {
+                document.getElementById("iphoneIdleScreen").style.display = "flex";
+                document.getElementById("iphoneCallScreen").style.display = "none";
+                var di = document.getElementById("iphoneDynIsland");
+                di.classList.remove("di-active");
+                iphoneStopTimer();
+                iphonePrevCallId = null;
+            }
+
+            function iphoneShowCall(call) {
+                document.getElementById("iphoneIdleScreen").style.display = "none";
+                document.getElementById("iphoneCallScreen").style.display = "flex";
+
+                if (call.call_id !== iphonePrevCallId) {
+                    iphoneStartTimer();
+                    iphonePrevCallId = call.call_id;
+                }
+
+                var di = document.getElementById("iphoneDynIsland");
+                di.classList.add("di-active");
+
+                document.getElementById("iphoneCallNumber").textContent = iphoneFormatNumber(call.number);
+
+                var status = call.status || "";
+                var desc = call.status_description || status.replace(/_/g, " ");
+                var color = call.status_color || "blue";
+
+                var label = "calling...";
+                if (status === "answered" || status === "machine_detected") label = "on call";
+                else if (status === "ringing" || status === "initiated") label = "calling...";
+                else if (status === "completed" || status === "hangup") label = "call ended";
+                else if (status === "transferred") label = "transferred";
+                document.getElementById("iphoneCallLabel").textContent = label;
+
+                document.getElementById("iphoneCallStatusText").textContent = desc;
+                var badge = document.getElementById("iphoneCallBadge");
+                badge.className = "iphone-call-status-badge badge-" + color;
+
+                var amdDiv = document.getElementById("iphoneCallAmd");
+                if (call.amd_result) {
+                    amdDiv.style.display = "flex";
+                    var amdIcon = document.getElementById("iphoneAmdIcon");
+                    var amdText = document.getElementById("iphoneAmdText");
+                    if (call.amd_result === "machine") {
+                        amdIcon.style.color = "#0A84FF";
+                        amdText.textContent = "Answering Machine";
+                    } else if (call.amd_result === "human") {
+                        amdIcon.style.color = "#30D158";
+                        amdText.textContent = "Human Detected";
+                    } else if (call.amd_result === "fax") {
+                        amdIcon.style.color = "#FF453A";
+                        amdText.textContent = "Fax Machine";
+                    } else {
+                        amdIcon.style.color = "#FFD60A";
+                        amdText.textContent = call.amd_result;
+                    }
+                } else {
+                    amdDiv.style.display = "none";
+                }
+
+                var transcriptDiv = document.getElementById("iphoneCallTranscript");
+                var transcriptContent = document.getElementById("iphoneTranscriptContent");
+                if (call.transcript && call.transcript.length > 0) {
+                    transcriptDiv.style.display = "";
+                    var tText = call.transcript.map(function(t) {
+                        return typeof t === "string" ? t : (t.text || "");
+                    }).join(" ");
+                    if (tText.length > 150) tText = "..." + tText.slice(-150);
+                    transcriptContent.textContent = tText;
+                    transcriptContent.scrollTop = transcriptContent.scrollHeight;
+                } else {
+                    transcriptDiv.style.display = "none";
+                }
+
+                if (status === "completed" || status === "hangup") {
+                    iphoneStopTimer();
+                }
+            }
+
+            function iphoneUpdateLog(calls) {
+                var entries = document.getElementById("iphoneLogEntries");
+                if (!entries) return;
+                var html = "";
+                var shown = calls.slice(0, 8);
+                shown.forEach(function(c) {
+                    var color = c.status_color || "blue";
+                    var shortDesc = c.status_description || c.status || "";
+                    if (shortDesc.length > 22) shortDesc = shortDesc.substring(0, 20) + "..";
+                    var num = c.number || "";
+                    if (num.length > 14) num = num.substring(0, 4) + "..." + num.slice(-4);
+                    html += '<div class="iphone-log-entry">';
+                    html += '<span class="iphone-log-number">' + num + '</span>';
+                    html += '<span class="iphone-log-status log-' + color + '">' + shortDesc + '</span>';
+                    html += '</div>';
+                });
+                entries.innerHTML = html;
+            }
+
 
     </script>
 </body>
