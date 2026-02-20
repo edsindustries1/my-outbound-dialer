@@ -3543,11 +3543,17 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     bottom: 20px;
     right: 90px;
     z-index: 10000;
-    perspective: 1500px;
+    perspective: 1200px;
     perspective-origin: 50% 50%;
     cursor: default;
     user-select: none;
     animation: iphoneSlideIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    transition: perspective-origin 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.iphone-3d-wrapper.minimized {
+    perspective-origin: 50% 95%;
+    cursor: pointer;
 }
 
 .iphone-3d-body {
@@ -3560,29 +3566,25 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 }
 
 .iphone-3d-wrapper.minimized .iphone-3d-body {
-    transform: rotateY(-180deg) rotateX(80deg) scale(0.5) translateY(40px);
-}
-
-.iphone-3d-wrapper.minimized {
-    cursor: pointer;
+    transform: rotateY(-180deg) rotateX(88deg) scale(0.55);
 }
 
 .iphone-resting-shadow {
     position: absolute;
-    bottom: -10px;
-    left: -15%;
-    width: 130%;
-    height: 40px;
+    bottom: -6px;
+    left: -10%;
+    width: 120%;
+    height: 20px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 40%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 40%, transparent 70%);
     opacity: 0;
-    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+    transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
     pointer-events: none;
 }
 
 .iphone-3d-wrapper.minimized .iphone-resting-shadow {
     opacity: 1;
-    transform: scaleX(1.8) scaleY(0.25) translateY(-30px);
+    transform: scaleX(2) scaleY(0.2) translateY(-5px);
 }
 
 .iphone-front,
@@ -4193,7 +4195,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 95px;
     background: linear-gradient(150deg, #D4D4D9, #C0C0C5, #B8B8BD, #CCCCD1);
     border-radius: 24px;
-    transform: translateZ(6px);
+    transform: translateZ(8px);
     transform-style: preserve-3d;
     box-shadow:
         0 3px 12px rgba(0,0,0,0.25),
