@@ -657,3 +657,171 @@ def delete_schedule(schedule_id):
             _save_schedules(updated)
             return True
         return False
+
+
+# ── Webhook Status Monitor ────────────────────────────────────────────────
+
+import re
+
+_webhook_stats = {
+    "total_received": 0,
+    "last_received_at": None,
+    "last_event_type": None,
+    "events_by_type": {},
+    "errors": [],
+    "recent_events": [],
+}
+_webhook_lock = threading.Lock()
+
+def record_webhook_event(event_type, call_control_id="", success=True, error_msg=None):
+    with _webhook_lock:
+        _webhook_stats["total_received"] += 1
+        _webhook_stats["last_received_at"] = datetime.utcnow().isoformat()
+        _webhook_stats["last_event_type"] = event_type
+        _webhook_stats["events_by_type"][event_type] = _webhook_stats["events_by_type"].get(event_type, 0) + 1
+        entry = {
+            "time": datetime.utcnow().isoformat(),
+            "event": event_type,
+            "call_id": call_control_id[:12] if call_control_id else "",
+            "success": success,
+        }
+        if error_msg:
+            entry["error"] = str(error_msg)[:200]
+            _webhook_stats["errors"].append({
+                "time": datetime.utcnow().isoformat(),
+                "event": event_type,
+                "error": str(error_msg)[:200]
+            })
+            _webhook_stats["errors"] = _webhook_stats["errors"][-20:]
+        _webhook_stats["recent_events"].append(entry)
+        _webhook_stats["recent_events"] = _webhook_stats["recent_events"][-50:]
+
+def get_webhook_stats():
+    with _webhook_lock:
+        import copy
+        stats = copy.deepcopy(_webhook_stats)
+        uptime = None
+        if stats["last_received_at"]:
+            last = _parse_ts(stats["last_received_at"])
+            if last:
+                diff = (datetime.utcnow() - last).total_seconds()
+                if diff < 60:
+                    uptime = f"{int(diff)}s ago"
+                elif diff < 3600:
+                    uptime = f"{int(diff/60)}m ago"
+                else:
+                    uptime = f"{int(diff/3600)}h ago"
+        stats["last_received_ago"] = uptime
+        stats["health"] = "healthy" if stats["total_received"] > 0 and len(stats["errors"]) < 5 else ("warning" if stats["total_received"] > 0 else "unknown")
+        return stats
+
+
+# ── Campaign Templates ────────────────────────────────────────────────────
+
+TEMPLATES_FILE = os.path.join(LOGS_DIR, "campaign_templates.json")
+
+def _load_templates():
+    try:
+        if os.path.exists(TEMPLATES_FILE):
+            with open(TEMPLATES_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+def _save_templates(templates):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(TEMPLATES_FILE, "w") as f:
+            json.dump(templates, f, indent=2)
+    except Exception:
+        pass
+
+def save_template(name, config):
+    import uuid
+    template = {
+        "id": str(uuid.uuid4())[:8],
+        "name": name,
+        "transfer_number": config.get("transfer_number", ""),
+        "dial_mode": config.get("dial_mode", "sequential"),
+        "batch_size": config.get("batch_size", 5),
+        "dial_delay": config.get("dial_delay", 2),
+        "audio_url": config.get("audio_url", ""),
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    with _file_lock:
+        templates = _load_templates()
+        templates.append(template)
+        _save_templates(templates)
+    return template
+
+def get_templates():
+    with _file_lock:
+        return _load_templates()
+
+def delete_template(template_id):
+    with _file_lock:
+        templates = _load_templates()
+        updated = [t for t in templates if t.get("id") != template_id]
+        if len(updated) < len(templates):
+            _save_templates(updated)
+            return True
+        return False
+
+
+# ── Number Validation ─────────────────────────────────────────────────────
+
+def validate_phone_numbers(numbers_text):
+    lines = [l.strip() for l in numbers_text.strip().split("\n") if l.strip()]
+    results = {
+        "valid": [],
+        "invalid": [],
+        "duplicates_removed": 0,
+        "dnc_blocked": 0,
+        "total_input": len(lines),
+    }
+    seen = set()
+    dnc = get_dnc_list()
+    dnc_numbers = set()
+    for d in dnc:
+        n = d.get("number", "").lstrip("+").replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
+        if n:
+            dnc_numbers.add(n)
+
+    e164_pattern = re.compile(r'^\+?1?\d{10,15}$')
+
+    for line in lines:
+        raw = line.strip()
+        cleaned = raw.lstrip("+").replace("-", "").replace(" ", "").replace("(", "").replace(")", "").replace(".", "")
+        if not cleaned:
+            continue
+
+        if not e164_pattern.match(cleaned) and not e164_pattern.match("+" + cleaned):
+            results["invalid"].append({"number": raw, "reason": "Invalid format"})
+            continue
+
+        if len(cleaned) < 10:
+            results["invalid"].append({"number": raw, "reason": "Too short"})
+            continue
+
+        if len(cleaned) > 15:
+            results["invalid"].append({"number": raw, "reason": "Too long"})
+            continue
+
+        normalized = cleaned
+        if normalized in seen:
+            results["duplicates_removed"] += 1
+            continue
+        seen.add(normalized)
+
+        if normalized in dnc_numbers:
+            results["dnc_blocked"] += 1
+            results["invalid"].append({"number": raw, "reason": "On DNC list"})
+            continue
+
+        formatted = "+" + cleaned if not raw.startswith("+") else raw
+        results["valid"].append(formatted)
+
+    results["total_valid"] = len(results["valid"])
+    results["total_invalid"] = len(results["invalid"])
+    return results

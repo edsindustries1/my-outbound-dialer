@@ -91,6 +91,18 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     <span class="sidebar-label">Schedule</span>
                 </button>
+                <button type="button" class="sidebar-btn" data-panel="panelWebhook" title="Webhook Monitor">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                    <span class="sidebar-label">Webhooks</span>
+                </button>
+                <button type="button" class="sidebar-btn" data-panel="panelTemplates" title="Campaign Templates">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span class="sidebar-label">Templates</span>
+                </button>
+                <button type="button" class="sidebar-btn" data-panel="panelValidation" title="Number Validation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span class="sidebar-label">Validate</span>
+                </button>
             </nav>
         </aside>
 
@@ -312,6 +324,94 @@
                 </div>
             </div>
 
+            <!-- Webhook Status Monitor -->
+            <div class="panel" id="panelWebhook">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                        Webhook Monitor
+                        <button type="button" class="panel-minimize" data-panel="panelWebhook" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div class="webhook-status-grid">
+                        <div class="webhook-stat">
+                            <div class="webhook-stat-label">Status</div>
+                            <div class="webhook-health" id="webhookHealth">
+                                <span class="health-dot health-unknown"></span>
+                                <span id="webhookHealthText">Unknown</span>
+                            </div>
+                        </div>
+                        <div class="webhook-stat">
+                            <div class="webhook-stat-label">Total Received</div>
+                            <div class="webhook-stat-value" id="webhookTotal">0</div>
+                        </div>
+                        <div class="webhook-stat">
+                            <div class="webhook-stat-label">Last Received</div>
+                            <div class="webhook-stat-value" id="webhookLastTime">Never</div>
+                        </div>
+                        <div class="webhook-stat">
+                            <div class="webhook-stat-label">Last Event</div>
+                            <div class="webhook-stat-value" id="webhookLastEvent">-</div>
+                        </div>
+                    </div>
+                    <div class="webhook-section-title">Events by Type</div>
+                    <div id="webhookEventTypes" class="webhook-events-grid"></div>
+                    <div class="webhook-section-title">Recent Events</div>
+                    <div id="webhookRecentEvents" class="webhook-recent-list"></div>
+                    <div class="webhook-section-title" id="webhookErrorsTitle" style="display:none;">Errors</div>
+                    <div id="webhookErrors" class="webhook-errors-list"></div>
+                    <button type="button" class="btn btn-refresh-analytics" onclick="loadWebhookStatus()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                        Refresh Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Campaign Templates -->
+            <div class="panel" id="panelTemplates">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Campaign Templates
+                        <button type="button" class="panel-minimize" data-panel="panelTemplates" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div class="template-save-section">
+                        <label>Save Current Settings as Template</label>
+                        <div class="template-save-row">
+                            <input type="text" id="templateName" class="input-full" placeholder="My Campaign Template" maxlength="50">
+                            <button type="button" class="btn btn-save-template" onclick="saveTemplate()">Save Template</button>
+                        </div>
+                    </div>
+                    <div class="template-list-title">Saved Templates</div>
+                    <div id="templateListContainer">
+                        <div class="template-empty">No saved templates</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Number Validation -->
+            <div class="panel" id="panelValidation">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Number Validation
+                        <button type="button" class="panel-minimize" data-panel="panelValidation" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <label>Paste phone numbers to validate (one per line)</label>
+                    <textarea id="validateNumbersInput" class="input-schedule-numbers" rows="5" placeholder="+15551112222&#10;+15553334444&#10;invalid-number"></textarea>
+                    <button type="button" class="btn btn-validate" onclick="validateNumbers()">Validate Numbers</button>
+                    <div id="validationResults" style="display:none;">
+                        <div class="validation-summary" id="validationSummary"></div>
+                        <div id="validationDetails"></div>
+                    </div>
+                </div>
+            </div>
+
                 <!-- Dial Mode -->
                 <div class="card stagger-6">
                     <div class="card-title">
@@ -479,8 +579,7 @@
     </div>
 
     <script>
-        (function() {
-            function apiFetch(url, opts) {
+        window.apiFetch = function(url, opts) {
                 var defaults = { credentials: "include", headers: {} };
                 var merged = Object.assign({}, defaults, opts || {});
                 if (!merged.body || !(merged.body instanceof FormData)) {
@@ -497,7 +596,7 @@
                     }
                     return r;
                 });
-            }
+            };
 
             // ---- Splash Screen ----
             setTimeout(function() {
@@ -525,6 +624,8 @@
                     if (panelId === "panelAnalytics" && typeof loadAnalytics === "function") loadAnalytics();
                     if (panelId === "panelDNC" && typeof loadDNC === "function") loadDNC();
                     if (panelId === "panelSchedule" && typeof loadSchedules === "function") loadSchedules();
+                    if (panelId === "panelWebhook" && typeof loadWebhookStatus === "function") loadWebhookStatus();
+                    if (panelId === "panelTemplates" && typeof loadTemplates === "function") loadTemplates();
                     setTimeout(function() {
                         panel.scrollIntoView({ behavior: "smooth", block: "start" });
                     }, 100);
@@ -1153,7 +1254,6 @@
 
             pollTimer = setInterval(pollStatus, pollInterval);
             pollStatus();
-        })();
     </script>
 
     <!-- POWERED BY BADGE -->
@@ -1929,6 +2029,209 @@
                     .then(function(r) { return r.json(); })
                     .then(function() { loadSchedules(); })
                     .catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            // ---- Webhook Status Monitor ----
+            function loadWebhookStatus() {
+                apiFetch("/api/webhook-status")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        document.getElementById("webhookTotal").textContent = data.total_received;
+                        document.getElementById("webhookLastTime").textContent = data.last_received_ago || "Never";
+                        document.getElementById("webhookLastEvent").textContent = (data.last_event_type || "-").replace("call.", "");
+                        var healthDot = document.querySelector("#webhookHealth .health-dot");
+                        var healthText = document.getElementById("webhookHealthText");
+                        healthDot.className = "health-dot health-" + data.health;
+                        healthText.textContent = data.health === "healthy" ? "Healthy" : data.health === "warning" ? "Warning" : "No Data";
+
+                        var evtHtml = "";
+                        var evtKeys = Object.keys(data.events_by_type || {}).sort(function(a,b){ return (data.events_by_type[b]||0) - (data.events_by_type[a]||0); });
+                        evtKeys.forEach(function(k) {
+                            evtHtml += '<div class="webhook-event-pill"><span class="webhook-event-name">' + k.replace("call.","") + '</span><span class="webhook-event-count">' + data.events_by_type[k] + '</span></div>';
+                        });
+                        document.getElementById("webhookEventTypes").innerHTML = evtHtml || '<div class="webhook-empty">No events yet</div>';
+
+                        var recentHtml = "";
+                        (data.recent_events || []).slice(-15).reverse().forEach(function(evt) {
+                            var t = "-";
+                            try { var d = new Date(evt.time); t = d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit",second:"2-digit"}); } catch(e){}
+                            var cls = evt.success ? "evt-success" : "evt-error";
+                            recentHtml += '<div class="webhook-recent-item ' + cls + '"><span class="webhook-recent-time">' + t + '</span><span class="webhook-recent-event">' + (evt.event||"").replace("call.","") + '</span>';
+                            if (evt.call_id) recentHtml += '<span class="webhook-recent-callid">' + evt.call_id + '</span>';
+                            recentHtml += '</div>';
+                        });
+                        document.getElementById("webhookRecentEvents").innerHTML = recentHtml || '<div class="webhook-empty">No recent events</div>';
+
+                        var errors = data.errors || [];
+                        var errTitle = document.getElementById("webhookErrorsTitle");
+                        if (errors.length > 0) {
+                            errTitle.style.display = "";
+                            var errHtml = "";
+                            errors.slice(-5).reverse().forEach(function(err) {
+                                var t = "-";
+                                try { var d = new Date(err.time); t = d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit"}); } catch(e){}
+                                errHtml += '<div class="webhook-error-item"><span class="webhook-error-time">' + t + '</span><span class="webhook-error-msg">' + (err.error||"").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span></div>';
+                            });
+                            document.getElementById("webhookErrors").innerHTML = errHtml;
+                        } else {
+                            errTitle.style.display = "none";
+                            document.getElementById("webhookErrors").innerHTML = "";
+                        }
+                    }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            // ---- Campaign Templates ----
+            function loadTemplates() {
+                apiFetch("/api/templates")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var list = data.templates || [];
+                        var container = document.getElementById("templateListContainer");
+                        if (list.length === 0) {
+                            container.innerHTML = '<div class="template-empty">No saved templates</div>';
+                            return;
+                        }
+                        var html = "";
+                        list.forEach(function(t) {
+                            var created = "-";
+                            try { var d = new Date(t.created_at); created = d.toLocaleDateString(undefined, {month:"short",day:"numeric"}); } catch(e){}
+                            html += '<div class="template-item">';
+                            html += '<div class="template-item-header"><span class="template-name">' + (t.name||"Untitled").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span><span class="template-date">' + created + '</span></div>';
+                            html += '<div class="template-item-detail">';
+                            html += '<span>Mode: ' + (t.dial_mode||"sequential") + '</span>';
+                            if (t.transfer_number) html += ' &bull; <span>Transfer: ' + t.transfer_number + '</span>';
+                            if (t.dial_mode === "simultaneous") html += ' &bull; <span>Batch: ' + (t.batch_size||5) + '</span>';
+                            else html += ' &bull; <span>Delay: ' + (t.dial_delay||2) + 'min</span>';
+                            html += '</div>';
+                            html += '<div class="template-actions">';
+                            html += '<button type="button" class="btn-template-load" onclick=\'loadTemplate(' + JSON.stringify(t) + ')\'>Load</button>';
+                            html += '<button type="button" class="btn-template-delete" onclick="deleteTemplate(\'' + t.id + '\')">Delete</button>';
+                            html += '</div></div>';
+                        });
+                        container.innerHTML = html;
+                    }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function saveTemplate() {
+                var nameInput = document.getElementById("templateName");
+                var name = nameInput.value.trim();
+                if (!name) { alert("Please enter a template name."); return; }
+                var transferEl = document.getElementById("transferNumber");
+                var modeEl = document.getElementById("dialModeInput");
+                var batchEl = document.getElementById("batchSize");
+                var delayEl = document.getElementById("dialDelay");
+                apiFetch("/api/templates", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        name: name,
+                        transfer_number: transferEl ? transferEl.value : "",
+                        dial_mode: modeEl ? modeEl.value : "sequential",
+                        batch_size: batchEl ? parseInt(batchEl.value) : 5,
+                        dial_delay: delayEl ? parseInt(delayEl.value) : 2,
+                    })
+                }).then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    if (data.error) { alert(data.error); return; }
+                    nameInput.value = "";
+                    loadTemplates();
+                }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function loadTemplate(t) {
+                var transferEl = document.getElementById("transferNumber");
+                var modeEl = document.getElementById("dialModeInput");
+                var batchEl = document.getElementById("batchSize");
+                var delayEl = document.getElementById("dialDelay");
+                var modeSeq = document.getElementById("modeSeq");
+                var modeSimul = document.getElementById("modeSimul");
+                var batchWrap = document.getElementById("batchSizeWrap");
+                var delayWrap = document.getElementById("dialDelayWrap");
+                var descEl = document.getElementById("dialModeDesc");
+
+                if (transferEl && t.transfer_number) transferEl.value = t.transfer_number;
+                if (modeEl) modeEl.value = t.dial_mode || "sequential";
+                if (batchEl) batchEl.value = t.batch_size || 5;
+                if (delayEl) delayEl.value = t.dial_delay || 2;
+
+                if (t.dial_mode === "simultaneous") {
+                    if (modeSeq) modeSeq.classList.remove("active");
+                    if (modeSimul) modeSimul.classList.add("active");
+                    if (batchWrap) batchWrap.style.display = "";
+                    if (delayWrap) delayWrap.style.display = "none";
+                    if (descEl) descEl.textContent = "Multiple calls fired simultaneously in batches.";
+                } else {
+                    if (modeSeq) modeSeq.classList.add("active");
+                    if (modeSimul) modeSimul.classList.remove("active");
+                    if (batchWrap) batchWrap.style.display = "none";
+                    if (delayWrap) delayWrap.style.display = "";
+                    if (descEl) descEl.textContent = "Calls are placed one at a time with a configurable delay between each call.";
+                }
+
+                alert("Template '" + t.name + "' loaded! Settings have been applied to the campaign form.");
+            }
+
+            function deleteTemplate(id) {
+                apiFetch("/api/templates/" + id, { method: "DELETE" })
+                    .then(function(r) { return r.json(); })
+                    .then(function() { loadTemplates(); })
+                    .catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            // ---- Number Validation ----
+            function validateNumbers() {
+                var input = document.getElementById("validateNumbersInput");
+                var text = input.value.trim();
+                if (!text) { alert("Please paste phone numbers to validate."); return; }
+                apiFetch("/api/validate-numbers", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({numbers: text})
+                }).then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    var resultsDiv = document.getElementById("validationResults");
+                    var summaryDiv = document.getElementById("validationSummary");
+                    var detailsDiv = document.getElementById("validationDetails");
+                    resultsDiv.style.display = "";
+
+                    var summaryHtml = '<div class="validation-stats">';
+                    summaryHtml += '<div class="val-stat"><span class="val-stat-num val-good">' + data.total_valid + '</span><span class="val-stat-label">Valid</span></div>';
+                    summaryHtml += '<div class="val-stat"><span class="val-stat-num val-bad">' + data.total_invalid + '</span><span class="val-stat-label">Invalid</span></div>';
+                    summaryHtml += '<div class="val-stat"><span class="val-stat-num val-dup">' + data.duplicates_removed + '</span><span class="val-stat-label">Duplicates</span></div>';
+                    summaryHtml += '<div class="val-stat"><span class="val-stat-num val-dnc">' + data.dnc_blocked + '</span><span class="val-stat-label">DNC Blocked</span></div>';
+                    summaryHtml += '</div>';
+                    summaryDiv.innerHTML = summaryHtml;
+
+                    var detailHtml = "";
+                    if (data.invalid && data.invalid.length > 0) {
+                        detailHtml += '<div class="validation-section-title">Invalid Numbers</div>';
+                        detailHtml += '<div class="validation-invalid-list">';
+                        data.invalid.forEach(function(item) {
+                            detailHtml += '<div class="val-invalid-item"><span class="val-invalid-num">' + (item.number||"").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span><span class="val-invalid-reason">' + (item.reason||"") + '</span></div>';
+                        });
+                        detailHtml += '</div>';
+                    }
+                    if (data.valid && data.valid.length > 0) {
+                        detailHtml += '<div class="validation-section-title">Valid Numbers (' + data.valid.length + ')</div>';
+                        detailHtml += '<button type="button" class="btn-copy-valid" onclick="copyValidNumbers()">Copy Valid Numbers</button>';
+                        detailHtml += '<div class="validation-valid-list" id="validNumbersList">';
+                        data.valid.forEach(function(n) {
+                            detailHtml += '<div class="val-valid-item">' + n + '</div>';
+                        });
+                        detailHtml += '</div>';
+                    }
+                    detailsDiv.innerHTML = detailHtml;
+                }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function copyValidNumbers() {
+                var items = document.querySelectorAll("#validNumbersList .val-valid-item");
+                var text = "";
+                items.forEach(function(el) { text += el.textContent + "\n"; });
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text.trim());
+                    alert("Valid numbers copied to clipboard!");
+                }
             }
 
     </script>

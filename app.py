@@ -46,6 +46,12 @@ from storage import (
     delete_schedule,
     get_due_schedules,
     mark_schedule_executed,
+    record_webhook_event,
+    get_webhook_stats,
+    save_template,
+    get_templates,
+    delete_template,
+    validate_phone_numbers,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
 from call_manager import start_dialer
@@ -491,6 +497,53 @@ def api_schedule_cancel(schedule_id):
     return jsonify({"error": "Schedule not found"}), 404
 
 
+# ---- Webhook Status Monitor API ----
+@app.route("/api/webhook-status", methods=["GET"])
+@login_required
+def api_webhook_status():
+    return jsonify(get_webhook_stats())
+
+
+# ---- Campaign Templates API ----
+@app.route("/api/templates", methods=["GET"])
+@login_required
+def api_templates_list():
+    return jsonify({"templates": get_templates()})
+
+
+@app.route("/api/templates", methods=["POST"])
+@login_required
+def api_template_save():
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"error": "Template name is required"}), 400
+    template = save_template(name, data)
+    logger.info(f"Template saved: {name} ({template['id']})")
+    return jsonify({"template": template})
+
+
+@app.route("/api/templates/<template_id>", methods=["DELETE"])
+@login_required
+def api_template_delete(template_id):
+    if delete_template(template_id):
+        logger.info(f"Template deleted: {template_id}")
+        return jsonify({"message": "Template deleted"})
+    return jsonify({"error": "Template not found"}), 404
+
+
+# ---- Number Validation API ----
+@app.route("/api/validate-numbers", methods=["POST"])
+@login_required
+def api_validate_numbers():
+    data = request.get_json() or {}
+    numbers_text = data.get("numbers", "")
+    if not numbers_text.strip():
+        return jsonify({"error": "No numbers provided"}), 400
+    results = validate_phone_numbers(numbers_text)
+    return jsonify(results)
+
+
 # ---- Background Scheduler Thread ----
 def _scheduler_worker():
     while True:
@@ -550,6 +603,7 @@ def webhook():
     call_control_id = payload.get("call_control_id", "")
 
     logger.info(f">>> WEBHOOK received: {event_type} for call {call_control_id}")
+    record_webhook_event(event_type, call_control_id)
 
     to_number = payload.get("to", "")
     from_number = payload.get("from", "")
