@@ -82,6 +82,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - Footer with brand info, product/company/legal links, social icons
 - "Powered by Open Human" floating badge with pulse indicator
 - Floating Notepad widget: chatbot-style FAB button ("N" logo) at bottom-right, expands to draggable/resizable rich text editor with toolbar (bold, italic, underline, strikethrough, font size, text color, highlight color, remove formatting, bullet/numbered lists, text alignment), content persisted in localStorage, character counter, download as text, clear all, minimize snaps back to bottom-right corner, touch drag support, Escape to close
+- iPhone 17 Pro Max Live Dialer Widget: Realistic 3D iPhone in Natural Titanium/Silver color with brushed metal frame, side buttons (volume, power, silent switch), and camera module on back. 3D structure (iphone-3d-wrapper → iphone-3d-body → iphone-front + iphone-back). Shows real-time call status (number, timer, status badge, AMD result, live transcript). Minimize flips phone face-down (rotateY 180deg, scale 0.6) showing silver back with triple camera, Apple logo, and "iPhone" text. Click back to pick up. Alt+drag enables 360° rotation with momentum and snap-to-face. Drag handle for repositioning anywhere on screen. Integrated with existing pollStatus (no separate polling loop).
 
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key
