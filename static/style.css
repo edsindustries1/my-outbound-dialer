@@ -572,6 +572,7 @@ body.is-fullscreen #fullscreenToggle .icon-shrink {
 .sidebar-nav button:nth-of-type(10) svg { animation: sbBob 3s ease-in-out infinite; }
 .sidebar-nav button:nth-of-type(11) svg { animation: sbCheck 3s ease-in-out infinite; }
 .sidebar-nav button:nth-of-type(12) svg { animation: sbFloat 4s ease-in-out infinite; }
+.sidebar-nav button:nth-of-type(13) svg { animation: sbEnvelope 3s ease-in-out infinite; }
 
 @keyframes sbSpin {
     0% { transform: rotate(0deg); }
@@ -640,6 +641,13 @@ body.is-fullscreen #fullscreenToggle .icon-shrink {
 @keyframes sbFloat {
     0%, 100% { transform: translateY(0); opacity: 0.85; }
     50% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes sbEnvelope {
+    0%, 100% { transform: translateY(0) rotateX(0deg); }
+    25% { transform: translateY(-3px) rotateX(-15deg); }
+    50% { transform: translateY(0) rotateX(0deg); }
+    75% { transform: translateY(-2px) rotateX(10deg); }
 }
 
 .sidebar-label {

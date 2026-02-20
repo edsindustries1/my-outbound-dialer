@@ -825,3 +825,40 @@ def validate_phone_numbers(numbers_text):
     results["total_valid"] = len(results["valid"])
     results["total_invalid"] = len(results["invalid"])
     return results
+
+
+# ── Email Report Settings ─────────────────────────────────────────────────
+
+REPORT_SETTINGS_FILE = os.path.join(LOGS_DIR, "report_settings.json")
+
+def get_report_settings():
+    try:
+        if os.path.exists(REPORT_SETTINGS_FILE):
+            with open(REPORT_SETTINGS_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {
+        "enabled": False,
+        "recipient_email": "",
+        "send_time": "08:00",
+        "last_sent": None,
+    }
+
+def save_report_settings(settings):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    current = get_report_settings()
+    current.update(settings)
+    current["updated_at"] = datetime.utcnow().isoformat()
+    try:
+        with open(REPORT_SETTINGS_FILE, "w") as f:
+            json.dump(current, f, indent=2)
+    except Exception:
+        pass
+    return current
+
+def mark_report_sent():
+    settings = get_report_settings()
+    settings["last_sent"] = datetime.utcnow().isoformat()
+    save_report_settings(settings)
+    return settings

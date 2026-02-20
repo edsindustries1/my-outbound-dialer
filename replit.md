@@ -13,6 +13,8 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **static/style.css** - Dual-theme CSS with blue/cyan gradient branding
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
 - **personalized_vm.py** - Personalized voicemail system (CSV parsing, template rendering, ElevenLabs TTS generation)
+- **gmail_client.py** - Gmail API integration via Replit connector for sending emails
+- **daily_report.py** - Daily email report generator (hot leads, failed calls, voicemails)
 - **uploads/** - Uploaded audio files
 - **uploads/personalized/** - Generated personalized voicemail audio files
 - **logs/** - Call logs

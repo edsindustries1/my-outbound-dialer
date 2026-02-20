@@ -52,6 +52,9 @@ from storage import (
     get_templates,
     delete_template,
     validate_phone_numbers,
+    get_report_settings,
+    save_report_settings,
+    mark_report_sent,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
 from call_manager import start_dialer
@@ -563,8 +566,62 @@ def api_validate_numbers():
     return jsonify(results)
 
 
+# ---- Email Report Settings API ----
+@app.route("/api/report-settings", methods=["GET"])
+@login_required
+def api_report_settings_get():
+    settings = get_report_settings()
+    return jsonify(settings)
+
+
+@app.route("/api/report-settings", methods=["POST"])
+@login_required
+def api_report_settings_save():
+    data = request.get_json() or {}
+    allowed_keys = {"enabled", "recipient_email", "send_time"}
+    filtered = {k: v for k, v in data.items() if k in allowed_keys}
+    if "recipient_email" in filtered:
+        email = filtered["recipient_email"].strip()
+        if email and "@" not in email:
+            return jsonify({"error": "Invalid email address"}), 400
+        filtered["recipient_email"] = email
+    if "send_time" in filtered:
+        send_time = filtered["send_time"].strip()
+        try:
+            parts = send_time.split(":")
+            h, m = int(parts[0]), int(parts[1])
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                raise ValueError
+        except (ValueError, IndexError):
+            return jsonify({"error": "Invalid send time format (use HH:MM)"}), 400
+        filtered["send_time"] = send_time
+    settings = save_report_settings(filtered)
+    logger.info(f"Report settings updated: enabled={settings.get('enabled')}, recipient={settings.get('recipient_email')}, time={settings.get('send_time')}")
+    return jsonify(settings)
+
+
+@app.route("/api/report-settings/test", methods=["POST"])
+@login_required
+def api_report_test():
+    from daily_report import send_test_report
+    data = request.get_json() or {}
+    recipient = data.get("recipient_email", "").strip()
+    result = send_test_report(recipient_email=recipient if recipient else None)
+    if result.get("success"):
+        return jsonify({"message": f"Test report sent to {result['recipient']}", "summary": result.get("summary")})
+    return jsonify({"error": result.get("error", "Failed to send test report")}), 500
+
+
+@app.route("/api/gmail-status", methods=["GET"])
+@login_required
+def api_gmail_status():
+    from gmail_client import test_connection
+    return jsonify(test_connection())
+
+
 # ---- Background Scheduler Thread ----
 def _scheduler_worker():
+    import time as _time
     while True:
         try:
             due = get_due_schedules()
@@ -587,20 +644,60 @@ def _scheduler_worker():
                 logger.info(f"Scheduler: Campaign {schedule['id']} started with {len(numbers)} numbers")
         except Exception as e:
             logger.error(f"Scheduler error: {e}")
-        import time
-        time.sleep(30)
+        _time.sleep(30)
+
+
+def _report_scheduler_worker():
+    import time as _time
+    from daily_report import generate_and_send_report
+    logger.info("Daily report scheduler started")
+    while True:
+        try:
+            settings = get_report_settings()
+            if settings.get("enabled") and settings.get("recipient_email"):
+                send_time = settings.get("send_time", "08:00")
+                now = datetime.utcnow()
+                current_time = now.strftime("%H:%M")
+
+                send_h, send_m = int(send_time.split(":")[0]), int(send_time.split(":")[1])
+                current_h, current_m = now.hour, now.minute
+                is_past_send_time = (current_h > send_h) or (current_h == send_h and current_m >= send_m)
+
+                if is_past_send_time:
+                    last_sent = settings.get("last_sent")
+                    should_send = True
+                    if last_sent:
+                        from storage import _parse_ts
+                        last_dt = _parse_ts(last_sent)
+                        if last_dt and (now - last_dt).total_seconds() < 82800:
+                            should_send = False
+
+                    if should_send:
+                        logger.info(f"Daily report: Sending scheduled report (send_time={send_time}, now={now.strftime('%H:%M')} UTC)")
+                        success = generate_and_send_report()
+                        if success:
+                            mark_report_sent()
+                            logger.info("Daily report: Sent successfully")
+                        else:
+                            logger.error("Daily report: Failed to send")
+        except Exception as e:
+            logger.error(f"Report scheduler error: {e}")
+        _time.sleep(30)
 
 
 _scheduler_thread = None
+_report_thread = None
 
 
 def start_scheduler():
-    global _scheduler_thread
-    if _scheduler_thread and _scheduler_thread.is_alive():
-        return
-    _scheduler_thread = threading.Thread(target=_scheduler_worker, daemon=True)
-    _scheduler_thread.start()
-    logger.info("Background scheduler started")
+    global _scheduler_thread, _report_thread
+    if not _scheduler_thread or not _scheduler_thread.is_alive():
+        _scheduler_thread = threading.Thread(target=_scheduler_worker, daemon=True)
+        _scheduler_thread.start()
+        logger.info("Background scheduler started")
+    if not _report_thread or not _report_thread.is_alive():
+        _report_thread = threading.Thread(target=_report_scheduler_worker, daemon=True)
+        _report_thread.start()
 
 
 # ---- Personalized Voicemail API ----

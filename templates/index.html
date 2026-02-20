@@ -109,6 +109,12 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>
                     <span class="sidebar-label">Personal VM</span>
                 </button>
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-section-label">Reporting</div>
+                <button type="button" class="sidebar-btn" data-panel="panelEmailReports" title="Email Reports">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
+                    <span class="sidebar-label">Email Reports</span>
+                </button>
             </nav>
         </aside>
 
@@ -531,6 +537,77 @@
                 </div>
             </div>
 
+            <!-- Email Reports -->
+            <div class="panel" id="panelEmailReports">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/></svg>
+                        Daily Email Reports
+                        <button type="button" class="panel-minimize" data-panel="panelEmailReports" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <div id="gmailStatusDot" style="width:10px;height:10px;border-radius:50%;background:#94A3B8;flex-shrink:0;"></div>
+                            <span id="gmailStatusText" style="font-size:12px;color:var(--text-secondary);">Checking Gmail connection...</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <label style="font-size:13px;font-weight:600;">Enable Daily Reports</label>
+                            <label class="toggle-switch" style="position:relative;display:inline-block;width:44px;height:24px;">
+                                <input type="checkbox" id="reportEnabled" style="opacity:0;width:0;height:0;" onchange="saveReportSettings()">
+                                <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:.3s;"></span>
+                                <span id="reportToggleKnob" style="position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none;"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Recipient Email</label>
+                        <input type="email" id="reportEmail" class="input" placeholder="your@email.com" style="width:100%;font-size:13px;" onchange="saveReportSettings()">
+                    </div>
+
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send Time (UTC, 24h format)</label>
+                        <input type="time" id="reportSendTime" class="input" value="08:00" style="width:140px;font-size:13px;" onchange="saveReportSettings()">
+                    </div>
+
+                    <div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+                        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:8px;">Report Contents</div>
+                        <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
+                            <div>&#128293; <strong>Hot Leads</strong> &mdash; Calls answered by humans &amp; transferred</div>
+                            <div>&#9888;&#65039; <strong>Failed Calls</strong> &mdash; Numbers that failed with reasons</div>
+                            <div>&#128232; <strong>Voicemails Left</strong> &mdash; All voicemail drops in 24 hours</div>
+                            <div>&#128202; <strong>Summary Stats</strong> &mdash; Total calls, success rate, breakdown</div>
+                            <div>&#128206; <strong>CSV Attachment</strong> &mdash; Raw data for analysis</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="btn btn-gradient" onclick="sendTestReport()" id="testReportBtn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            Send Test Report
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="checkGmailStatus()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                            Check Connection
+                        </button>
+                    </div>
+
+                    <div id="reportMessage" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:12px;"></div>
+
+                    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+                        <div style="font-size:11px;color:var(--text-secondary);">
+                            <span id="reportLastSent">Last sent: Never</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
                 <!-- Dial Mode -->
                 <div class="card stagger-6">
                     <div class="card-title">
@@ -746,6 +823,7 @@
                     if (panelId === "panelWebhook" && typeof loadWebhookStatus === "function") loadWebhookStatus();
                     if (panelId === "panelTemplates" && typeof loadTemplates === "function") loadTemplates();
                     if (panelId === "panelPVM" && typeof pvmInit === "function") pvmInit();
+                    if (panelId === "panelEmailReports" && typeof loadReportSettings === "function") loadReportSettings();
                     setTimeout(function() {
                         panel.scrollIntoView({ behavior: "smooth", block: "start" });
                     }, 100);
@@ -2673,6 +2751,134 @@
                     alert("Valid numbers copied to clipboard!");
                 }
             }
+
+            // ── Email Reports ──────────────────────────────────────
+            var _reportSettingsLoaded = false;
+
+            function loadReportSettings() {
+                fetch("/api/report-settings", {credentials:"include", headers:{"X-Requested-With":"XMLHttpRequest"}})
+                .then(function(r){return r.json()})
+                .then(function(data){
+                    document.getElementById("reportEnabled").checked = !!data.enabled;
+                    updateToggleVisual(data.enabled);
+                    document.getElementById("reportEmail").value = data.recipient_email || "";
+                    document.getElementById("reportSendTime").value = data.send_time || "08:00";
+                    if (data.last_sent) {
+                        try {
+                            var d = new Date(data.last_sent + "Z");
+                            document.getElementById("reportLastSent").textContent = "Last sent: " + d.toLocaleString();
+                        } catch(e) {
+                            document.getElementById("reportLastSent").textContent = "Last sent: " + data.last_sent;
+                        }
+                    } else {
+                        document.getElementById("reportLastSent").textContent = "Last sent: Never";
+                    }
+                    _reportSettingsLoaded = true;
+                })
+                .catch(function(e){ console.error("Failed to load report settings:", e); });
+                checkGmailStatus();
+            }
+
+            function updateToggleVisual(enabled) {
+                var knob = document.getElementById("reportToggleKnob");
+                var bg = knob ? knob.previousElementSibling : null;
+                if (knob) {
+                    knob.style.left = enabled ? "23px" : "3px";
+                }
+                if (bg) {
+                    bg.style.background = enabled ? "#2563EB" : "var(--border)";
+                }
+            }
+
+            function saveReportSettings() {
+                if (!_reportSettingsLoaded) return;
+                var enabled = document.getElementById("reportEnabled").checked;
+                updateToggleVisual(enabled);
+                var email = document.getElementById("reportEmail").value.trim();
+                var time = document.getElementById("reportSendTime").value.trim();
+                fetch("/api/report-settings", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {"Content-Type":"application/json","X-Requested-With":"XMLHttpRequest"},
+                    body: JSON.stringify({enabled: enabled, recipient_email: email, send_time: time})
+                })
+                .then(function(r){return r.json()})
+                .then(function(data){
+                    if (data.error) {
+                        showReportMsg(data.error, "error");
+                    } else {
+                        showReportMsg("Settings saved", "success");
+                    }
+                })
+                .catch(function(e){ showReportMsg("Failed to save settings", "error"); });
+            }
+
+            function sendTestReport() {
+                var btn = document.getElementById("testReportBtn");
+                btn.disabled = true;
+                btn.textContent = "Sending...";
+                var email = document.getElementById("reportEmail").value.trim();
+                fetch("/api/report-settings/test", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {"Content-Type":"application/json","X-Requested-With":"XMLHttpRequest"},
+                    body: JSON.stringify({recipient_email: email})
+                })
+                .then(function(r){return r.json()})
+                .then(function(data){
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Test Report';
+                    if (data.error) {
+                        showReportMsg(data.error, "error");
+                    } else {
+                        showReportMsg(data.message || "Test report sent!", "success");
+                    }
+                })
+                .catch(function(e){
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Test Report';
+                    showReportMsg("Failed to send test report", "error");
+                });
+            }
+
+            function checkGmailStatus() {
+                var dot = document.getElementById("gmailStatusDot");
+                var text = document.getElementById("gmailStatusText");
+                text.textContent = "Checking...";
+                dot.style.background = "#94A3B8";
+                fetch("/api/gmail-status", {credentials:"include", headers:{"X-Requested-With":"XMLHttpRequest"}})
+                .then(function(r){return r.json()})
+                .then(function(data){
+                    if (data.connected) {
+                        dot.style.background = "#16A34A";
+                        text.textContent = "Connected: " + (data.email || "Gmail");
+                    } else {
+                        dot.style.background = "#EF4444";
+                        text.textContent = "Not connected: " + (data.error || "Unknown error");
+                    }
+                })
+                .catch(function(e){
+                    dot.style.background = "#EF4444";
+                    text.textContent = "Connection check failed";
+                });
+            }
+
+            function showReportMsg(msg, type) {
+                var el = document.getElementById("reportMessage");
+                el.style.display = "block";
+                el.textContent = msg;
+                if (type === "success") {
+                    el.style.background = "rgba(22,163,74,0.1)";
+                    el.style.color = "#16A34A";
+                    el.style.border = "1px solid rgba(22,163,74,0.2)";
+                } else {
+                    el.style.background = "rgba(239,68,68,0.1)";
+                    el.style.color = "#EF4444";
+                    el.style.border = "1px solid rgba(239,68,68,0.2)";
+                }
+                setTimeout(function(){ el.style.display = "none"; }, 5000);
+            }
+
 
             // ---- Personalized Voicemail ----
             var pvmContacts = [];
