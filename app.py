@@ -55,6 +55,16 @@ from storage import (
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
 from call_manager import start_dialer
+from personalized_vm import (
+    parse_csv as pvm_parse_csv,
+    render_template as pvm_render_template,
+    start_generation as pvm_start_generation,
+    get_generation_status as pvm_get_generation_status,
+    get_available_voices as pvm_get_voices,
+    get_personalized_audio_url,
+    get_audio_map as pvm_get_audio_map,
+    clear_personalized_audio as pvm_clear,
+)
 
 _amd_timers = {}
 _detected_base_url = None
@@ -164,6 +174,15 @@ def index():
 def serve_audio(filename):
     """Serve uploaded audio files so Telnyx can access them (no auth - Telnyx needs direct access)."""
     response = send_from_directory(UPLOAD_FOLDER, filename)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+@app.route("/audio/personalized/<filename>")
+def serve_personalized_audio(filename):
+    """Serve personalized voicemail audio files (no auth - Telnyx needs direct access)."""
+    pvm_dir = os.path.join(UPLOAD_FOLDER, "personalized")
+    response = send_from_directory(pvm_dir, filename)
     response.headers["Cache-Control"] = "no-cache"
     return response
 
@@ -584,6 +603,93 @@ def start_scheduler():
     logger.info("Background scheduler started")
 
 
+# ---- Personalized Voicemail API ----
+@app.route("/api/pvm/voices", methods=["GET"])
+@login_required
+def pvm_voices():
+    voices = pvm_get_voices()
+    return jsonify({"voices": voices})
+
+
+@app.route("/api/pvm/parse", methods=["POST"])
+@login_required
+def pvm_parse():
+    if "csv_file" not in request.files:
+        csv_text = request.form.get("csv_text", "")
+        if not csv_text:
+            return jsonify({"error": "No CSV data provided"}), 400
+    else:
+        f = request.files["csv_file"]
+        csv_text = f.read().decode("utf-8", errors="replace")
+
+    result = pvm_parse_csv(csv_text)
+    return jsonify(result)
+
+
+@app.route("/api/pvm/preview", methods=["POST"])
+@login_required
+def pvm_preview():
+    data = request.get_json() or {}
+    template = data.get("template", "")
+    contact = data.get("contact", {})
+    if not template:
+        return jsonify({"error": "No template provided"}), 400
+    rendered = pvm_render_template(template, contact)
+    return jsonify({"rendered": rendered})
+
+
+@app.route("/api/pvm/generate", methods=["POST"])
+@login_required
+def pvm_generate():
+    data = request.get_json() or {}
+    contacts = data.get("contacts", [])
+    template = data.get("template", "")
+    voice_id = data.get("voice_id", "")
+
+    if not contacts:
+        return jsonify({"error": "No contacts provided"}), 400
+    if not template:
+        return jsonify({"error": "No template provided"}), 400
+    if not voice_id:
+        return jsonify({"error": "No voice selected"}), 400
+
+    _detect_and_set_base_url()
+    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    if not base_url:
+        return jsonify({"error": "Could not determine public URL for audio serving"}), 400
+
+    success, msg = pvm_start_generation(contacts, template, voice_id, base_url)
+    if not success:
+        return jsonify({"error": msg}), 400
+    return jsonify({"message": msg, "total": len(contacts)})
+
+
+@app.route("/api/pvm/status", methods=["GET"])
+@login_required
+def pvm_status():
+    status = pvm_get_generation_status()
+    return jsonify({
+        "status": status["status"],
+        "total": status["total"],
+        "completed": status["completed"],
+        "errors": status["errors"],
+    })
+
+
+@app.route("/api/pvm/audio-map", methods=["GET"])
+@login_required
+def pvm_audio_map():
+    audio_map = pvm_get_audio_map()
+    return jsonify({"audio_map": audio_map, "count": len(audio_map)})
+
+
+@app.route("/api/pvm/clear", methods=["POST"])
+@login_required
+def pvm_clear_all():
+    pvm_clear()
+    return jsonify({"message": "Personalized audio cleared"})
+
+
 # ---- Telnyx Webhook Handler ----
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -762,7 +868,13 @@ def webhook():
             if mark_voicemail_dropped(call_control_id):
                 update_call_state(call_control_id, status_description="Dropping voicemail...", status_color="blue")
                 camp = get_campaign()
-                audio_url = camp.get("audio_url", "") or get_voicemail_url()
+                state = get_call_state(call_control_id)
+                customer_number = (state or {}).get("number", "")
+                personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
+                audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url()
+                if personalized_url:
+                    logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
+                    update_call_state(call_control_id, status_description="Dropping personalized voicemail...", status_color="blue")
                 if audio_url:
                     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
                     play_audio(call_control_id, audio_url)
@@ -812,7 +924,9 @@ def webhook():
 
         if state.get("voicemail_dropped"):
             camp = get_campaign()
-            audio_url = camp.get("audio_url", "") or get_voicemail_url()
+            customer_number = state.get("number", "")
+            personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
+            audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url()
             if audio_url and beep_result == "beep_detected":
                 logger.info(f"Beep detected! Restarting voicemail from beginning on {call_control_id}")
                 play_audio(call_control_id, audio_url)

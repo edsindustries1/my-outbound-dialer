@@ -12,8 +12,11 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **templates/login.html** - Password-protected login page
 - **static/style.css** - Dual-theme CSS with blue/cyan gradient branding
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
+- **personalized_vm.py** - Personalized voicemail system (CSV parsing, template rendering, ElevenLabs TTS generation)
 - **uploads/** - Uploaded audio files
+- **uploads/personalized/** - Generated personalized voicemail audio files
 - **logs/** - Call logs
+- **logs/pvm_state.json** - Personalized VM audio mapping (phone -> audio URL)
 
 ## Key Decisions
 - Event-driven architecture using Telnyx webhooks
