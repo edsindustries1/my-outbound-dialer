@@ -45,12 +45,7 @@
 
     <!-- MAIN APP -->
     <div id="app">
-        <div class="video-bg">
-            <video autoplay muted loop playsinline preload="metadata" id="bgVideo">
-                <source src="/static/videos/bg-loop-new.mp4" type="video/mp4">
-            </video>
-            <div class="video-overlay"></div>
-        </div>
+        <canvas id="bgCanvas"></canvas>
         <div class="bg-glow bg-glow-1"></div>
         <div class="bg-glow bg-glow-2"></div>
         <div class="bg-glow bg-glow-3"></div>
@@ -416,14 +411,6 @@
                     });
                 });
 
-                var videoBg = document.querySelector(".video-bg video");
-                var maxShift = 150;
-                window.addEventListener("scroll", function() {
-                    if (videoBg) {
-                        var shift = Math.min(window.pageYOffset * 0.25, maxShift);
-                        videoBg.style.transform = "translateY(" + shift + "px) scale(1.1)";
-                    }
-                }, { passive: true });
             })();
 
             // ---- Ripple Effect ----
@@ -1337,6 +1324,141 @@
                 closeNotepad();
             }
         });
+    })();
+    </script>
+
+    <script>
+    (function(){
+        var canvas = document.getElementById("bgCanvas");
+        if (!canvas) return;
+        var ctx = canvas.getContext("2d");
+        var W, H, particles = [], mouseX = -1000, mouseY = -1000;
+        var PARTICLE_COUNT = 80;
+        var CONNECTION_DIST = 160;
+        var MOUSE_DIST = 200;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener("resize", resize);
+
+        document.addEventListener("mousemove", function(e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function Particle() {
+            this.x = Math.random() * W;
+            this.y = Math.random() * H;
+            this.z = Math.random() * 1;
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            this.vz = (Math.random() - 0.5) * 0.005;
+            this.baseSize = 1.5 + Math.random() * 2;
+            this.hue = Math.random() > 0.5 ? 264 : 187;
+        }
+
+        Particle.prototype.update = function() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.z += this.vz;
+            if (this.z < 0.1) { this.z = 0.1; this.vz = Math.abs(this.vz); }
+            if (this.z > 1) { this.z = 1; this.vz = -Math.abs(this.vz); }
+            if (this.x < 0) { this.x = 0; this.vx *= -1; }
+            if (this.x > W) { this.x = W; this.vx *= -1; }
+            if (this.y < 0) { this.y = 0; this.vy *= -1; }
+            if (this.y > H) { this.y = H; this.vy *= -1; }
+            var dx = mouseX - this.x, dy = mouseY - this.y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_DIST) {
+                var force = (MOUSE_DIST - dist) / MOUSE_DIST * 0.02;
+                this.vx -= dx * force;
+                this.vy -= dy * force;
+            }
+            var speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            if (speed > 1.5) { this.vx *= 0.98; this.vy *= 0.98; }
+        };
+
+        Particle.prototype.draw = function() {
+            var s = this.baseSize * (0.5 + this.z * 0.8);
+            var alpha = 0.2 + this.z * 0.6;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
+            if (this.hue === 264) {
+                ctx.fillStyle = "rgba(124, 58, 237, " + alpha + ")";
+            } else {
+                ctx.fillStyle = "rgba(6, 182, 212, " + alpha + ")";
+            }
+            ctx.fill();
+            if (s > 2) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2);
+                ctx.fillStyle = (this.hue === 264)
+                    ? "rgba(124, 58, 237, " + (alpha * 0.08) + ")"
+                    : "rgba(6, 182, 212, " + (alpha * 0.08) + ")";
+                ctx.fill();
+            }
+        };
+
+        for (var i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new Particle());
+        }
+
+        function drawConnections() {
+            for (var i = 0; i < particles.length; i++) {
+                for (var j = i + 1; j < particles.length; j++) {
+                    var a = particles[i], b = particles[j];
+                    var dx = a.x - b.x, dy = a.y - b.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < CONNECTION_DIST) {
+                        var alpha = (1 - dist / CONNECTION_DIST) * 0.15 * Math.min(a.z, b.z);
+                        var grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+                        grad.addColorStop(0, "rgba(124, 58, 237, " + alpha + ")");
+                        grad.addColorStop(1, "rgba(6, 182, 212, " + alpha + ")");
+                        ctx.beginPath();
+                        ctx.moveTo(a.x, a.y);
+                        ctx.lineTo(b.x, b.y);
+                        ctx.strokeStyle = grad;
+                        ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function drawMouseConnections() {
+            if (mouseX < 0) return;
+            for (var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+                var dx = mouseX - p.x, dy = mouseY - p.y;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < MOUSE_DIST) {
+                    var alpha = (1 - dist / MOUSE_DIST) * 0.25;
+                    ctx.beginPath();
+                    ctx.moveTo(mouseX, mouseY);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.strokeStyle = "rgba(167, 139, 250, " + alpha + ")";
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, W, H);
+            for (var i = 0; i < particles.length; i++) {
+                particles[i].update();
+            }
+            drawConnections();
+            drawMouseConnections();
+            for (var i = 0; i < particles.length; i++) {
+                particles[i].draw();
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
     })();
     </script>
 </body>
