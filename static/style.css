@@ -2178,3 +2178,349 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     align-items: center;
     gap: 4px;
 }
+
+/* ---- Sidebar Divider ---- */
+.sidebar-divider {
+    width: 60%;
+    height: 1px;
+    margin: 8px auto;
+    background: var(--border);
+    opacity: 0.5;
+}
+
+/* ---- Analytics Panel ---- */
+.analytics-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.analytics-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.analytics-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.analytics-stat-card.stat-success { border-top: 3px solid #10B981; }
+.analytics-stat-card.stat-transfer { border-top: 3px solid #2563EB; }
+.analytics-stat-card.stat-voicemail { border-top: 3px solid #F59E0B; }
+
+.analytics-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+.analytics-stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.analytics-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.analytics-chart-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.analytics-chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.btn-refresh-analytics {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-refresh-analytics:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ---- DNC Panel ---- */
+.dnc-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.dnc-add-row .input-phone {
+    flex: 1;
+}
+
+.btn-add-dnc {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.btn-add-dnc:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.dnc-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.dnc-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dnc-table-wrap {
+    overflow-x: auto;
+}
+
+.dnc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.dnc-table th {
+    text-align: left;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.dnc-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.td-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+}
+
+.btn-dnc-remove {
+    padding: 4px 10px;
+    background: transparent;
+    color: #EF4444;
+    border: 1px solid #EF4444;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-dnc-remove:hover {
+    background: #EF4444;
+    color: #fff;
+}
+
+.dnc-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* ---- Scheduling Panel ---- */
+.schedule-form {
+    margin-bottom: 16px;
+}
+
+.schedule-form label {
+    display: block;
+    margin-bottom: 4px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.schedule-form label:first-child {
+    margin-top: 0;
+}
+
+.input-schedule-time {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.input-schedule-numbers {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    resize: vertical;
+}
+
+.btn-schedule {
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #2563EB, #06B6D4);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.btn-schedule:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+}
+
+.schedule-list-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.schedule-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.schedule-pending {
+    border-left: 3px solid #2563EB;
+}
+
+.schedule-past {
+    opacity: 0.6;
+}
+
+.schedule-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.schedule-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.badge-pending {
+    background: rgba(37, 99, 235, 0.15);
+    color: #2563EB;
+}
+
+.badge-executed {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+}
+
+.badge-cancelled {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6B7280;
+}
+
+.schedule-time {
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+}
+
+.schedule-item-detail {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.btn-schedule-cancel {
+    margin-top: 8px;
+    padding: 5px 12px;
+    background: transparent;
+    color: #EF4444;
+    border: 1px solid #EF4444;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-schedule-cancel:hover {
+    background: #EF4444;
+    color: #fff;
+}
+
+.schedule-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}

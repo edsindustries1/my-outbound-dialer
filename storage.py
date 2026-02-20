@@ -399,3 +399,261 @@ def get_all_statuses():
 
     combined.sort(key=_sort_key, reverse=True)
     return combined
+
+
+# ── DNC (Do Not Call) List ──────────────────────────────────────────────────
+
+DNC_FILE = os.path.join(LOGS_DIR, "dnc_list.json")
+
+def _load_dnc_list():
+    """Load DNC list from file."""
+    try:
+        if os.path.exists(DNC_FILE):
+            with open(DNC_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+def _save_dnc_list(dnc):
+    """Save DNC list to file."""
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(DNC_FILE, "w") as f:
+            json.dump(dnc, f, indent=2)
+    except Exception:
+        pass
+
+def get_dnc_list():
+    """Get all DNC numbers."""
+    with _file_lock:
+        return _load_dnc_list()
+
+def add_to_dnc(number, reason="manual"):
+    """Add a number to DNC list. Returns True if added, False if already exists."""
+    number = number.strip()
+    if not number:
+        return False
+    with _file_lock:
+        dnc = _load_dnc_list()
+        existing_numbers = [entry["number"] for entry in dnc]
+        if number in existing_numbers:
+            return False
+        dnc.append({
+            "number": number,
+            "reason": reason,
+            "added_at": datetime.utcnow().isoformat()
+        })
+        _save_dnc_list(dnc)
+        return True
+
+def remove_from_dnc(number):
+    """Remove a number from DNC list."""
+    number = number.strip()
+    with _file_lock:
+        dnc = _load_dnc_list()
+        updated = [entry for entry in dnc if entry["number"] != number]
+        if len(updated) < len(dnc):
+            _save_dnc_list(updated)
+            return True
+        return False
+
+def is_dnc(number):
+    """Check if a number is on the DNC list."""
+    number = number.strip()
+    with _file_lock:
+        dnc = _load_dnc_list()
+        return number in [entry["number"] for entry in dnc]
+
+def clear_dnc_list():
+    """Clear the entire DNC list."""
+    with _file_lock:
+        _save_dnc_list([])
+
+
+# ── Call Analytics ──────────────────────────────────────────────────────────
+
+def get_analytics():
+    """Compute analytics from call history."""
+    history = get_call_history()
+
+    total_calls = len(history)
+    if total_calls == 0:
+        return {
+            "total_calls": 0,
+            "success_rate": 0,
+            "transfer_rate": 0,
+            "voicemail_rate": 0,
+            "avg_ring_duration": 0,
+            "amd_accuracy": {"human": 0, "machine": 0, "fax": 0, "not_sure": 0, "timeout": 0, "unknown": 0},
+            "hourly_distribution": {str(h): 0 for h in range(24)},
+            "daily_distribution": {},
+            "status_breakdown": {},
+            "hangup_causes": {},
+            "recent_success_trend": [],
+        }
+
+    transferred = sum(1 for h in history if h.get("transferred"))
+    voicemail_dropped = sum(1 for h in history if h.get("voicemail_dropped"))
+    successful = transferred + voicemail_dropped
+
+    ring_durations = [h["ring_duration"] for h in history if h.get("ring_duration") is not None and h["ring_duration"] > 0]
+    avg_ring = round(sum(ring_durations) / len(ring_durations), 1) if ring_durations else 0
+
+    # AMD breakdown
+    amd_counts = {"human": 0, "machine": 0, "fax": 0, "not_sure": 0, "timeout": 0, "unknown": 0}
+    for h in history:
+        result = h.get("amd_result", "unknown") or "unknown"
+        if result in amd_counts:
+            amd_counts[result] += 1
+        else:
+            amd_counts["unknown"] += 1
+
+    # Hourly distribution (best times to call)
+    hourly = {str(h): 0 for h in range(24)}
+    hourly_success = {str(h): 0 for h in range(24)}
+    for h in history:
+        ts = _parse_ts(h.get("timestamp", ""))
+        if ts:
+            hour_key = str(ts.hour)
+            hourly[hour_key] = hourly.get(hour_key, 0) + 1
+            if h.get("transferred") or h.get("voicemail_dropped"):
+                hourly_success[hour_key] = hourly_success.get(hour_key, 0) + 1
+
+    # Daily distribution (last 7 days)
+    daily = {}
+    for h in history:
+        ts = _parse_ts(h.get("timestamp", ""))
+        if ts:
+            day_key = ts.strftime("%Y-%m-%d")
+            if day_key not in daily:
+                daily[day_key] = {"total": 0, "success": 0}
+            daily[day_key]["total"] += 1
+            if h.get("transferred") or h.get("voicemail_dropped"):
+                daily[day_key]["success"] += 1
+
+    # Status breakdown
+    status_counts = {}
+    for h in history:
+        desc = h.get("status_description", h.get("status", "unknown"))
+        status_counts[desc] = status_counts.get(desc, 0) + 1
+
+    # Hangup cause breakdown
+    hangup_counts = {}
+    for h in history:
+        cause = h.get("hangup_cause", "unknown") or "unknown"
+        hangup_counts[cause] = hangup_counts.get(cause, 0) + 1
+
+    # Recent success trend (last 10 groups of 5 calls)
+    trend = []
+    chunk_size = max(1, total_calls // 10) if total_calls >= 10 else total_calls
+    sorted_history = sorted(history, key=lambda x: x.get("timestamp", ""))
+    for i in range(0, len(sorted_history), chunk_size):
+        chunk = sorted_history[i:i+chunk_size]
+        chunk_success = sum(1 for c in chunk if c.get("transferred") or c.get("voicemail_dropped"))
+        rate = round((chunk_success / len(chunk)) * 100, 1) if chunk else 0
+        ts = chunk[0].get("timestamp", "") if chunk else ""
+        trend.append({"timestamp": ts, "rate": rate, "count": len(chunk)})
+
+    return {
+        "total_calls": total_calls,
+        "success_rate": round((successful / total_calls) * 100, 1),
+        "transfer_rate": round((transferred / total_calls) * 100, 1),
+        "voicemail_rate": round((voicemail_dropped / total_calls) * 100, 1),
+        "avg_ring_duration": avg_ring,
+        "amd_accuracy": amd_counts,
+        "hourly_distribution": hourly,
+        "hourly_success": hourly_success,
+        "daily_distribution": daily,
+        "status_breakdown": status_counts,
+        "hangup_causes": hangup_counts,
+        "recent_success_trend": trend,
+    }
+
+
+# ── Campaign Scheduling ────────────────────────────────────────────────────
+
+SCHEDULE_FILE = os.path.join(LOGS_DIR, "scheduled_campaigns.json")
+
+def _load_schedules():
+    try:
+        if os.path.exists(SCHEDULE_FILE):
+            with open(SCHEDULE_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+def _save_schedules(schedules):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(SCHEDULE_FILE, "w") as f:
+            json.dump(schedules, f, indent=2)
+    except Exception:
+        pass
+
+def add_schedule(schedule_data):
+    """Add a scheduled campaign. schedule_data should include: scheduled_time (ISO UTC), numbers, transfer_number, audio_url, dial_mode, batch_size, timezone."""
+    import uuid
+    schedule_data["id"] = str(uuid.uuid4())[:8]
+    schedule_data["status"] = "pending"
+    schedule_data["created_at"] = datetime.utcnow().isoformat()
+    with _file_lock:
+        schedules = _load_schedules()
+        schedules.append(schedule_data)
+        _save_schedules(schedules)
+    return schedule_data
+
+def get_schedules():
+    """Get all scheduled campaigns."""
+    with _file_lock:
+        return _load_schedules()
+
+def cancel_schedule(schedule_id):
+    """Cancel a scheduled campaign."""
+    with _file_lock:
+        schedules = _load_schedules()
+        updated = []
+        found = False
+        for s in schedules:
+            if s.get("id") == schedule_id:
+                s["status"] = "cancelled"
+                found = True
+            updated.append(s)
+        if found:
+            _save_schedules(updated)
+        return found
+
+def mark_schedule_executed(schedule_id):
+    """Mark a scheduled campaign as executed."""
+    with _file_lock:
+        schedules = _load_schedules()
+        for s in schedules:
+            if s.get("id") == schedule_id:
+                s["status"] = "executed"
+                s["executed_at"] = datetime.utcnow().isoformat()
+        _save_schedules(schedules)
+
+def get_due_schedules():
+    """Get schedules that are due to execute (scheduled_time <= now and status is pending)."""
+    now = datetime.utcnow()
+    with _file_lock:
+        schedules = _load_schedules()
+        due = []
+        for s in schedules:
+            if s.get("status") != "pending":
+                continue
+            scheduled_time = _parse_ts(s.get("scheduled_time", ""))
+            if scheduled_time and scheduled_time <= now:
+                due.append(s)
+        return due
+
+def delete_schedule(schedule_id):
+    """Delete a scheduled campaign entirely."""
+    with _file_lock:
+        schedules = _load_schedules()
+        updated = [s for s in schedules if s.get("id") != schedule_id]
+        if len(updated) < len(schedules):
+            _save_schedules(updated)
+            return True
+        return False

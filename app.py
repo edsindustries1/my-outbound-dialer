@@ -36,6 +36,16 @@ from storage import (
     is_active_transfer,
     call_states_snapshot,
     append_transcript,
+    get_dnc_list,
+    add_to_dnc,
+    remove_from_dnc,
+    get_analytics,
+    get_schedules,
+    add_schedule,
+    cancel_schedule,
+    delete_schedule,
+    get_due_schedules,
+    mark_schedule_executed,
 )
 from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
 from call_manager import start_dialer
@@ -369,6 +379,148 @@ def download_report():
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+# ---- DNC List API ----
+@app.route("/api/dnc", methods=["GET"])
+@login_required
+def api_dnc_list():
+    return jsonify({"dnc": get_dnc_list()})
+
+
+@app.route("/api/dnc", methods=["POST"])
+@login_required
+def api_dnc_add():
+    data = request.get_json() or {}
+    number = data.get("number", "").strip()
+    reason = data.get("reason", "manual")
+    if not number:
+        return jsonify({"error": "Phone number is required"}), 400
+    if add_to_dnc(number, reason):
+        logger.info(f"DNC: Added {number} (reason: {reason})")
+        return jsonify({"message": f"Added {number} to DNC list"})
+    return jsonify({"message": f"{number} is already on the DNC list"})
+
+
+@app.route("/api/dnc", methods=["DELETE"])
+@login_required
+def api_dnc_remove():
+    data = request.get_json() or {}
+    number = data.get("number", "").strip()
+    if not number:
+        return jsonify({"error": "Phone number is required"}), 400
+    if remove_from_dnc(number):
+        logger.info(f"DNC: Removed {number}")
+        return jsonify({"message": f"Removed {number} from DNC list"})
+    return jsonify({"error": "Number not found in DNC list"}), 404
+
+
+# ---- Analytics API ----
+@app.route("/api/analytics", methods=["GET"])
+@login_required
+def api_analytics():
+    return jsonify(get_analytics())
+
+
+# ---- Campaign Scheduling API ----
+@app.route("/api/schedules", methods=["GET"])
+@login_required
+def api_schedules_list():
+    return jsonify({"schedules": get_schedules()})
+
+
+@app.route("/api/schedules", methods=["POST"])
+@login_required
+def api_schedule_create():
+    data = request.get_json() or {}
+    scheduled_time = data.get("scheduled_time", "").strip()
+    numbers_text = data.get("numbers", "").strip()
+    transfer_number = data.get("transfer_number", "").strip()
+    timezone = data.get("timezone", "UTC")
+    dial_mode = data.get("dial_mode", "sequential")
+    batch_size = data.get("batch_size", 5)
+
+    if not scheduled_time:
+        return jsonify({"error": "Scheduled time is required"}), 400
+    if not numbers_text:
+        return jsonify({"error": "Phone numbers are required"}), 400
+    if not transfer_number:
+        return jsonify({"error": "Transfer number is required"}), 400
+
+    numbers = [n.strip() for n in numbers_text.split("\n") if n.strip()]
+    if not numbers:
+        return jsonify({"error": "No valid phone numbers provided"}), 400
+
+    schedule = add_schedule({
+        "scheduled_time": scheduled_time,
+        "numbers": numbers,
+        "transfer_number": transfer_number,
+        "audio_url": data.get("audio_url", "") or get_voicemail_url(),
+        "dial_mode": dial_mode,
+        "batch_size": batch_size,
+        "timezone": timezone,
+        "total_numbers": len(numbers),
+    })
+    logger.info(f"Schedule created: {schedule['id']} for {scheduled_time} with {len(numbers)} numbers")
+    return jsonify({"message": "Campaign scheduled", "schedule": schedule})
+
+
+@app.route("/api/schedules/<schedule_id>", methods=["DELETE"])
+@login_required
+def api_schedule_delete(schedule_id):
+    if delete_schedule(schedule_id):
+        logger.info(f"Schedule deleted: {schedule_id}")
+        return jsonify({"message": "Schedule deleted"})
+    return jsonify({"error": "Schedule not found"}), 404
+
+
+@app.route("/api/schedules/<schedule_id>/cancel", methods=["POST"])
+@login_required
+def api_schedule_cancel(schedule_id):
+    if cancel_schedule(schedule_id):
+        logger.info(f"Schedule cancelled: {schedule_id}")
+        return jsonify({"message": "Schedule cancelled"})
+    return jsonify({"error": "Schedule not found"}), 404
+
+
+# ---- Background Scheduler Thread ----
+def _scheduler_worker():
+    while True:
+        try:
+            due = get_due_schedules()
+            for schedule in due:
+                camp = get_campaign()
+                if camp.get("active"):
+                    logger.info(f"Scheduler: Campaign already active, skipping schedule {schedule['id']}")
+                    continue
+
+                logger.info(f"Scheduler: Executing scheduled campaign {schedule['id']}")
+                numbers = schedule.get("numbers", [])
+                transfer_number = schedule.get("transfer_number", "")
+                audio_url = schedule.get("audio_url", "") or get_voicemail_url()
+                dial_mode = schedule.get("dial_mode", "sequential")
+                batch_size = schedule.get("batch_size", 5)
+
+                set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size)
+                start_dialer()
+                mark_schedule_executed(schedule["id"])
+                logger.info(f"Scheduler: Campaign {schedule['id']} started with {len(numbers)} numbers")
+        except Exception as e:
+            logger.error(f"Scheduler error: {e}")
+        import time
+        time.sleep(30)
+
+
+_scheduler_thread = None
+
+
+def start_scheduler():
+    global _scheduler_thread
+    if _scheduler_thread and _scheduler_thread.is_alive():
+        return
+    _scheduler_thread = threading.Thread(target=_scheduler_worker, daemon=True)
+    _scheduler_thread.start()
+    logger.info("Background scheduler started")
 
 
 # ---- Telnyx Webhook Handler ----
@@ -715,5 +867,7 @@ if __name__ == "__main__":
     conn_id = validate_connection_id()
     print(f"  Using Connection ID: {conn_id}")
     print("=" * 60)
+
+    start_scheduler()
 
     app.run(host="0.0.0.0", port=5000, debug=False)

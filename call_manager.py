@@ -16,6 +16,7 @@ from storage import (
     register_call_complete_event,
     is_transfer_paused,
     wait_if_transfer_paused,
+    is_dnc,
 )
 from telnyx_client import make_call
 
@@ -80,6 +81,11 @@ def _dial_sequential(numbers, dial_delay=2):
 
         number = number.strip()
         if not number:
+            continue
+
+        if is_dnc(number):
+            logger.info(f"Skipping DNC number [{i+1}/{len(numbers)}]: {number}")
+            increment_dialed()
             continue
 
         logger.info(f"Dialing [{i+1}/{len(numbers)}]: {number}")
@@ -150,6 +156,9 @@ def _dial_simultaneous(numbers, batch_size):
 
 def _place_single_call(number):
     """Place a single call and create its state entry."""
+    if is_dnc(number):
+        logger.info(f"Skipping DNC number: {number}")
+        return
     call_control_id = make_call(number)
     if call_control_id:
         create_call_state(call_control_id, number)

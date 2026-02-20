@@ -9,6 +9,7 @@
     <script>
         (function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);})();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -76,6 +77,19 @@
                 <button type="button" class="sidebar-btn" data-panel="panelTransfer" title="Transfer Number">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 014-4h12"/></svg>
                     <span class="sidebar-label">Transfer Number</span>
+                </button>
+                <div class="sidebar-divider"></div>
+                <button type="button" class="sidebar-btn" data-panel="panelAnalytics" title="Call Analytics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span class="sidebar-label">Call Analytics</span>
+                </button>
+                <button type="button" class="sidebar-btn" data-panel="panelDNC" title="DNC List">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    <span class="sidebar-label">DNC List</span>
+                </button>
+                <button type="button" class="sidebar-btn" data-panel="panelSchedule" title="Schedule Campaign">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span class="sidebar-label">Schedule</span>
                 </button>
             </nav>
         </aside>
@@ -188,6 +202,112 @@
                     <div class="saved-indicator" id="savedIndicator">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                         Saved &mdash; auto-fills next time
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call Analytics Panel -->
+            <div class="panel" id="panelAnalytics">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Call Analytics
+                        <button type="button" class="panel-minimize" data-panel="panelAnalytics" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div id="analyticsContent">
+                        <div class="analytics-stats-grid">
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-value" id="statTotalCalls">0</div>
+                                <div class="analytics-stat-label">Total Calls</div>
+                            </div>
+                            <div class="analytics-stat-card stat-success">
+                                <div class="analytics-stat-value" id="statSuccessRate">0%</div>
+                                <div class="analytics-stat-label">Success Rate</div>
+                            </div>
+                            <div class="analytics-stat-card stat-transfer">
+                                <div class="analytics-stat-value" id="statTransferRate">0%</div>
+                                <div class="analytics-stat-label">Transfer Rate</div>
+                            </div>
+                            <div class="analytics-stat-card stat-voicemail">
+                                <div class="analytics-stat-value" id="statVoicemailRate">0%</div>
+                                <div class="analytics-stat-label">Voicemail Rate</div>
+                            </div>
+                            <div class="analytics-stat-card">
+                                <div class="analytics-stat-value" id="statAvgRing">0s</div>
+                                <div class="analytics-stat-label">Avg Ring Time</div>
+                            </div>
+                        </div>
+                        <div class="analytics-charts-grid">
+                            <div class="analytics-chart-card">
+                                <div class="analytics-chart-title">AMD Detection Results</div>
+                                <canvas id="chartAMD" height="200"></canvas>
+                            </div>
+                            <div class="analytics-chart-card">
+                                <div class="analytics-chart-title">Best Times to Call</div>
+                                <canvas id="chartHourly" height="200"></canvas>
+                            </div>
+                            <div class="analytics-chart-card">
+                                <div class="analytics-chart-title">Daily Call Volume</div>
+                                <canvas id="chartDaily" height="200"></canvas>
+                            </div>
+                            <div class="analytics-chart-card">
+                                <div class="analytics-chart-title">Hangup Causes</div>
+                                <canvas id="chartHangup" height="200"></canvas>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-refresh-analytics" onclick="loadAnalytics()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                            Refresh Analytics
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNC List Panel -->
+            <div class="panel" id="panelDNC">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        Do Not Call List
+                        <button type="button" class="panel-minimize" data-panel="panelDNC" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div class="dnc-add-row">
+                        <input type="text" id="dncNumberInput" class="input-phone" placeholder="+15551112222" maxlength="16">
+                        <button type="button" class="btn btn-add-dnc" onclick="addDNC()">Add to DNC</button>
+                    </div>
+                    <div class="dnc-count" id="dncCount">0 numbers blocked</div>
+                    <div class="dnc-list-container" id="dncListContainer">
+                        <div class="dnc-empty">No numbers on DNC list</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Scheduling Panel -->
+            <div class="panel" id="panelSchedule">
+                <div class="card">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Schedule Campaign
+                        <button type="button" class="panel-minimize" data-panel="panelSchedule" title="Minimize">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                    </div>
+                    <div class="schedule-form">
+                        <label>Date & Time (your local time)</label>
+                        <input type="datetime-local" id="scheduleTime" class="input-schedule-time">
+                        <label>Transfer Number</label>
+                        <input type="text" id="scheduleTransfer" class="input-phone" placeholder="+15551112222" maxlength="16">
+                        <label>Phone Numbers (one per line)</label>
+                        <textarea id="scheduleNumbers" class="input-schedule-numbers" rows="4" placeholder="+15551112222&#10;+15553334444"></textarea>
+                        <button type="button" class="btn btn-schedule" onclick="createSchedule()">Schedule Campaign</button>
+                    </div>
+                    <div class="schedule-list-title">Scheduled Campaigns</div>
+                    <div id="scheduleListContainer">
+                        <div class="schedule-empty">No scheduled campaigns</div>
                     </div>
                 </div>
             </div>
@@ -402,6 +522,9 @@
                 } else {
                     panel.classList.add("open");
                     btn.classList.add("active");
+                    if (panelId === "panelAnalytics" && typeof loadAnalytics === "function") loadAnalytics();
+                    if (panelId === "panelDNC" && typeof loadDNC === "function") loadDNC();
+                    if (panelId === "panelSchedule" && typeof loadSchedules === "function") loadSchedules();
                     setTimeout(function() {
                         panel.scrollIntoView({ behavior: "smooth", block: "start" });
                     }, 100);
@@ -1586,6 +1709,228 @@
         }
         animate();
     })();
+
+            // ---- Analytics ----
+            var chartInstances = {};
+            function loadAnalytics() {
+                apiFetch("/api/analytics")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        document.getElementById("statTotalCalls").textContent = data.total_calls;
+                        document.getElementById("statSuccessRate").textContent = data.success_rate + "%";
+                        document.getElementById("statTransferRate").textContent = data.transfer_rate + "%";
+                        document.getElementById("statVoicemailRate").textContent = data.voicemail_rate + "%";
+                        document.getElementById("statAvgRing").textContent = data.avg_ring_duration + "s";
+
+                        renderChart("chartAMD", "doughnut", {
+                            labels: Object.keys(data.amd_accuracy),
+                            datasets: [{
+                                data: Object.values(data.amd_accuracy),
+                                backgroundColor: ["#2563EB", "#06B6D4", "#F59E0B", "#EF4444", "#8B5CF6", "#6B7280"]
+                            }]
+                        });
+
+                        var hours = Object.keys(data.hourly_distribution).sort(function(a,b){return parseInt(a)-parseInt(b);});
+                        var hourLabels = hours.map(function(h){var hr=parseInt(h);return hr===0?"12am":hr<12?hr+"am":hr===12?"12pm":(hr-12)+"pm";});
+                        renderChart("chartHourly", "bar", {
+                            labels: hourLabels,
+                            datasets: [{
+                                label: "Total Calls",
+                                data: hours.map(function(h){return data.hourly_distribution[h];}),
+                                backgroundColor: "rgba(37, 99, 235, 0.6)",
+                                borderColor: "#2563EB",
+                                borderWidth: 1
+                            },{
+                                label: "Successful",
+                                data: hours.map(function(h){return (data.hourly_success||{})[h]||0;}),
+                                backgroundColor: "rgba(16, 185, 129, 0.6)",
+                                borderColor: "#10B981",
+                                borderWidth: 1
+                            }]
+                        });
+
+                        var days = Object.keys(data.daily_distribution).sort();
+                        renderChart("chartDaily", "line", {
+                            labels: days.map(function(d){return d.substring(5);}),
+                            datasets: [{
+                                label: "Total",
+                                data: days.map(function(d){return data.daily_distribution[d].total;}),
+                                borderColor: "#2563EB",
+                                backgroundColor: "rgba(37,99,235,0.1)",
+                                fill: true,
+                                tension: 0.3
+                            },{
+                                label: "Successful",
+                                data: days.map(function(d){return data.daily_distribution[d].success;}),
+                                borderColor: "#10B981",
+                                backgroundColor: "rgba(16,185,129,0.1)",
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        });
+
+                        var hangupKeys = Object.keys(data.hangup_causes);
+                        renderChart("chartHangup", "doughnut", {
+                            labels: hangupKeys.map(function(k){return k.replace(/_/g," ");}),
+                            datasets: [{
+                                data: hangupKeys.map(function(k){return data.hangup_causes[k];}),
+                                backgroundColor: ["#2563EB","#06B6D4","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#6B7280","#14B8A6","#F97316"]
+                            }]
+                        });
+                    }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function renderChart(canvasId, type, data) {
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                }
+                var ctx = document.getElementById(canvasId);
+                if (!ctx) return;
+                var isDark = document.documentElement.getAttribute("data-theme") !== "light";
+                var textColor = isDark ? "#94A3B8" : "#64748B";
+                var gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)";
+                var opts = {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { labels: { color: textColor, font: { size: 11 } } }
+                    }
+                };
+                if (type === "bar" || type === "line") {
+                    opts.scales = {
+                        x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+                        y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
+                    };
+                }
+                chartInstances[canvasId] = new Chart(ctx, { type: type, data: data, options: opts });
+            }
+
+            // ---- DNC List ----
+            function loadDNC() {
+                apiFetch("/api/dnc")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var list = data.dnc || [];
+                        var container = document.getElementById("dncListContainer");
+                        var countEl = document.getElementById("dncCount");
+                        countEl.textContent = list.length + " number" + (list.length !== 1 ? "s" : "") + " blocked";
+                        if (list.length === 0) {
+                            container.innerHTML = '<div class="dnc-empty">No numbers on DNC list</div>';
+                            return;
+                        }
+                        var html = '<div class="dnc-table-wrap"><table class="dnc-table"><thead><tr><th>Number</th><th>Reason</th><th>Added</th><th></th></tr></thead><tbody>';
+                        list.forEach(function(entry) {
+                            var addedAt = "-";
+                            if (entry.added_at) {
+                                try { var d = new Date(entry.added_at); addedAt = d.toLocaleDateString(undefined, {month:"short",day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit"}); } catch(e){}
+                            }
+                            html += '<tr><td class="td-mono">' + (entry.number||"").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</td>';
+                            html += '<td>' + (entry.reason||"manual") + '</td>';
+                            html += '<td>' + addedAt + '</td>';
+                            html += '<td><button type="button" class="btn-dnc-remove" onclick="removeDNC(\'' + (entry.number||"").replace(/'/g,"\\'") + '\')">Remove</button></td></tr>';
+                        });
+                        html += '</tbody></table></div>';
+                        container.innerHTML = html;
+                    }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function addDNC() {
+                var input = document.getElementById("dncNumberInput");
+                var number = input.value.trim();
+                if (!number) return;
+                apiFetch("/api/dnc", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({number: number, reason: "manual"})
+                }).then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    input.value = "";
+                    loadDNC();
+                }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function removeDNC(number) {
+                apiFetch("/api/dnc", {
+                    method: "DELETE",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({number: number})
+                }).then(function(r) { return r.json(); })
+                  .then(function() { loadDNC(); })
+                  .catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            // ---- Campaign Scheduling ----
+            function loadSchedules() {
+                apiFetch("/api/schedules")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var list = data.schedules || [];
+                        var container = document.getElementById("scheduleListContainer");
+                        var active = list.filter(function(s){ return s.status === "pending"; });
+                        var past = list.filter(function(s){ return s.status !== "pending"; });
+                        if (list.length === 0) {
+                            container.innerHTML = '<div class="schedule-empty">No scheduled campaigns</div>';
+                            return;
+                        }
+                        var html = '';
+                        active.forEach(function(s) {
+                            var schedTime = "-";
+                            try { var d = new Date(s.scheduled_time); schedTime = d.toLocaleDateString(undefined, {month:"short",day:"numeric",year:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit"}); } catch(e){}
+                            html += '<div class="schedule-item schedule-pending">';
+                            html += '<div class="schedule-item-header"><span class="schedule-badge badge-pending">Pending</span><span class="schedule-time">' + schedTime + '</span></div>';
+                            html += '<div class="schedule-item-detail">' + (s.total_numbers||s.numbers.length) + ' numbers &bull; Transfer to ' + (s.transfer_number||"-") + '</div>';
+                            html += '<button type="button" class="btn-schedule-cancel" onclick="cancelSchedule(\'' + s.id + '\')">Cancel</button>';
+                            html += '</div>';
+                        });
+                        past.slice(-5).reverse().forEach(function(s) {
+                            var schedTime = "-";
+                            try { var d = new Date(s.scheduled_time); schedTime = d.toLocaleDateString(undefined, {month:"short",day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit"}); } catch(e){}
+                            var badgeCls = s.status === "executed" ? "badge-executed" : "badge-cancelled";
+                            var badgeText = s.status === "executed" ? "Executed" : "Cancelled";
+                            html += '<div class="schedule-item schedule-past">';
+                            html += '<div class="schedule-item-header"><span class="schedule-badge ' + badgeCls + '">' + badgeText + '</span><span class="schedule-time">' + schedTime + '</span></div>';
+                            html += '<div class="schedule-item-detail">' + (s.total_numbers||0) + ' numbers</div>';
+                            html += '</div>';
+                        });
+                        container.innerHTML = html;
+                    }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function createSchedule() {
+                var timeInput = document.getElementById("scheduleTime");
+                var transferInput = document.getElementById("scheduleTransfer");
+                var numbersInput = document.getElementById("scheduleNumbers");
+                if (!timeInput.value || !transferInput.value.trim() || !numbersInput.value.trim()) {
+                    alert("Please fill in all fields: time, transfer number, and phone numbers.");
+                    return;
+                }
+                var localDate = new Date(timeInput.value);
+                var utcISO = localDate.toISOString().replace("Z","").split(".")[0];
+                apiFetch("/api/schedules", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        scheduled_time: utcISO,
+                        transfer_number: transferInput.value.trim(),
+                        numbers: numbersInput.value.trim(),
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+                    })
+                }).then(function(r) { return r.json(); })
+                  .then(function(data) {
+                    if (data.error) { alert(data.error); return; }
+                    timeInput.value = "";
+                    numbersInput.value = "";
+                    loadSchedules();
+                }).catch(function(e){ if(e.message==="auth")return; });
+            }
+
+            function cancelSchedule(id) {
+                apiFetch("/api/schedules/" + id + "/cancel", { method: "POST" })
+                    .then(function(r) { return r.json(); })
+                    .then(function() { loadSchedules(); })
+                    .catch(function(e){ if(e.message==="auth")return; });
+            }
+
     </script>
 </body>
 </html>
