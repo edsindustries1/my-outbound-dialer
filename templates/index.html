@@ -1846,6 +1846,8 @@
             var prevActiveState = false;
             var prevVmCount = 0;
             var initialPollDone = false;
+            var expandedTranscripts = {};
+            var prevCallDataHash = "";
 
             function pollStatus() {
                 apiFetch("/status")
@@ -1936,7 +1938,36 @@
 
                         var filterVal = statusFilter.value;
 
-                        if (data.calls && data.calls.length > 0) {
+                        var callStructureHash = filterVal + "||";
+                        if (data.calls) {
+                            callStructureHash += data.calls.map(function(c) {
+                                return (c.call_id||c.number) + ":" + c.status + ":" + c.status_color + ":" + (c.machine_detected === null ? "n" : c.machine_detected ? "m" : "h") + ":" + (c.transferred?"t":"") + ":" + (c.voicemail_dropped?"v":"");
+                            }).join("|");
+                        }
+                        var structureChanged = callStructureHash !== prevCallDataHash;
+
+                        if (!structureChanged && data.calls && data.calls.length > 0) {
+                            data.calls.forEach(function(c) {
+                                if (!c.transcript || c.transcript.length === 0) return;
+                                var trKey = c.call_id || c.number;
+                                var boxes = callBody.querySelectorAll('.transcript-row[data-trkey="' + trKey + '"] .transcript-lines');
+                                boxes.forEach(function(box) {
+                                    var linesHtml = "";
+                                    c.transcript.forEach(function(t) {
+                                        var speaker = t.track === "outbound" ? "Agent" : "Caller";
+                                        var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                                        var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                                        linesHtml += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                                    });
+                                    box.innerHTML = linesHtml;
+                                    box.scrollTop = box.scrollHeight;
+                                });
+                            });
+                        }
+
+                        prevCallDataHash = callStructureHash;
+
+                        if (structureChanged && data.calls && data.calls.length > 0) {
                             var filtered = data.calls.filter(function(c) {
                                 if (filterVal === "all") return true;
                                 var col = c.status_color || "";
@@ -1979,7 +2010,8 @@
                                 html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
 
                                 var hasTranscript = c.transcript && c.transcript.length > 0;
-                                var trId = "tr_" + idx;
+                                var trId = "tr_" + (c.call_id || c.number || idx);
+                                var trKey = c.call_id || c.number || ("idx_" + idx);
                                 if (isLive) {
                                     if (hasTranscript) {
                                         html += '<td><span class="transcript-live-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> LIVE</span></td>';
@@ -1987,7 +2019,7 @@
                                         html += '<td><span class="transcript-waiting"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Listening...</span></td>';
                                     }
                                 } else if (hasTranscript) {
-                                    html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\')">';
+                                    html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\',\'' + trKey + '\')">';
                                     html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
                                     html += ' View</button></td>';
                                 } else {
@@ -1996,8 +2028,10 @@
                                 html += '</tr>';
 
                                 if (isLive) {
-                                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" style="display:table-row;"><td colspan="9"><div class="transcript-box transcript-box-live">';
+                                    expandedTranscripts[trKey] = true;
+                                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" data-trkey="' + trKey + '" style="display:table-row;"><td colspan="9"><div class="transcript-box transcript-box-live">';
                                     html += '<div class="transcript-header-live"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Live Transcription <span class="live-dot"></span></div>';
+                                    html += '<div class="transcript-lines">';
                                     if (hasTranscript) {
                                         c.transcript.forEach(function(t) {
                                             var speaker = t.track === "outbound" ? "Agent" : "Caller";
@@ -2008,24 +2042,29 @@
                                     } else {
                                         html += '<div class="transcript-empty">Waiting for speech...</div>';
                                     }
-                                    html += '</div></td></tr>';
+                                    html += '</div></div></td></tr>';
                                 } else if (hasTranscript) {
-                                    html += '<tr class="transcript-row" id="' + trId + '" style="display:none;"><td colspan="9"><div class="transcript-box">';
+                                    var wasOpen = expandedTranscripts[trKey] === true;
+                                    html += '<tr class="transcript-row" id="' + trId + '" data-trkey="' + trKey + '" style="display:' + (wasOpen ? "table-row" : "none") + ';"><td colspan="9"><div class="transcript-box"><div class="transcript-lines">';
                                     c.transcript.forEach(function(t) {
                                         var speaker = t.track === "outbound" ? "Agent" : "Caller";
                                         var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
                                         var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
                                         html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
                                     });
-                                    html += '</div></td></tr>';
+                                    html += '</div></div></td></tr>';
                                 }
                             });
                             if (filtered.length > 0) {
                                 callBody.innerHTML = html;
+                                var liveBoxes = callBody.querySelectorAll('.transcript-box-live .transcript-lines');
+                                liveBoxes.forEach(function(box) {
+                                    box.scrollTop = box.scrollHeight;
+                                });
                             } else {
                                 callBody.innerHTML = '<tr><td colspan="9" class="gads-empty">No matching calls</td></tr>';
                             }
-                        } else if (count === 0) {
+                        } else if (structureChanged && count === 0) {
                             callBody.innerHTML = '<tr><td colspan="9" class="gads-empty">No calls yet</td></tr>';
                         }
 
@@ -2071,10 +2110,18 @@
                     });
             }
 
-            window.toggleTranscript = function(id) {
+            window.toggleTranscript = function(id, trKey) {
                 var row = document.getElementById(id);
                 if (row) {
-                    row.style.display = row.style.display === "none" ? "table-row" : "none";
+                    var isOpen = row.style.display !== "none";
+                    row.style.display = isOpen ? "none" : "table-row";
+                    if (trKey) {
+                        if (isOpen) {
+                            delete expandedTranscripts[trKey];
+                        } else {
+                            expandedTranscripts[trKey] = true;
+                        }
+                    }
                 }
             };
 
