@@ -90,40 +90,42 @@
                 <span class="dot dot-inactive"></span> No active campaign
             </div>
 
-            <!-- Voicemail Settings -->
-            <div class="card stagger-2">
-                <div class="card-title">
-                    <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                    Voicemail Settings
+            <div class="settings-grid">
+                <!-- Voicemail Settings -->
+                <div class="card stagger-2">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                        Voicemail Settings
+                    </div>
+                    <label>Voicemail Audio URL</label>
+                    <div class="vm-settings-row">
+                        <input type="text" id="vmUrlInput" class="input-full" placeholder="https://example.com/voicemail.mp3 or .wav">
+                        <button type="button" class="btn btn-save-vm" id="saveVmBtn">Save</button>
+                    </div>
+                    <div class="vm-preview" id="vmPreview" style="display:none;">
+                        <label>Audio Preview</label>
+                        <audio id="vmAudioPlayer" controls preload="metadata"></audio>
+                        <div class="vm-duration" id="vmDuration"></div>
+                    </div>
+                    <div id="vmSaveResult"></div>
                 </div>
-                <label>Voicemail Audio URL</label>
-                <div class="vm-settings-row">
-                    <input type="text" id="vmUrlInput" class="input-full" placeholder="https://example.com/voicemail.mp3 or .wav">
-                    <button type="button" class="btn btn-save-vm" id="saveVmBtn">Save</button>
-                </div>
-                <div class="vm-preview" id="vmPreview" style="display:none;">
-                    <label>Audio Preview</label>
-                    <audio id="vmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:4px;"></audio>
-                    <div class="vm-duration" id="vmDuration"></div>
-                </div>
-                <div id="vmSaveResult"></div>
-            </div>
 
-            <!-- Test Call -->
-            <div class="card stagger-3">
-                <div class="card-title">
-                    <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                    Test Your Dialer
-                </div>
-                <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
-                <div class="test-call-row">
-                    <input type="text" id="testNumber" class="input-phone" placeholder="Number to call: +15551234567" maxlength="16">
-                    <input type="text" id="testTransferNumber" class="input-phone" placeholder="Transfer to: +15559876543" maxlength="16">
-                    <button type="button" class="btn btn-test" id="testCallBtn">Start Test Call</button>
-                </div>
-                <div class="test-results-box" id="testResultsBox" style="display:none;">
-                    <div class="test-results-title">Test Results</div>
-                    <div id="testResult" class="test-result-status">Status: Idle</div>
+                <!-- Test Call -->
+                <div class="card stagger-3">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        Test Your Dialer
+                    </div>
+                    <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
+                    <div class="test-call-row">
+                        <input type="text" id="testNumber" class="input-phone" placeholder="Number to call: +15551234567" maxlength="16">
+                        <input type="text" id="testTransferNumber" class="input-phone" placeholder="Transfer to: +15559876543" maxlength="16">
+                        <button type="button" class="btn btn-test" id="testCallBtn">Start Test Call</button>
+                    </div>
+                    <div class="test-results-box" id="testResultsBox" style="display:none;">
+                        <div class="test-results-title">Test Results</div>
+                        <div id="testResult" class="test-result-status">Status: Idle</div>
+                    </div>
                 </div>
             </div>
 
