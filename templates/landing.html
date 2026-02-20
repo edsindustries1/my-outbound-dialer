@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Human - Power Sales Assistant | AI-Powered Outbound Dialer</title>
+  <meta name="description" content="Boost your connect rates by 10x with Open Human's AI-powered outbound dialer. Personalized voicemail drops, live transcription, hot lead detection, and more.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+</head>
+<body>
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">🧠</span>
+        <span class="logo-text">Open Human</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/login" class="btn-login">Log In</a>
+        <a href="#pricing" class="btn-cta-nav">Start Free Trial</a>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-particles" id="heroParticles"></div>
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          AI-Powered Sales Assistant
+        </div>
+        <h1>Boost Your Connect Rates by <span class="gradient-text">10x</span> with AI Automated Dialing</h1>
+        <p class="hero-subtitle">Drop personalized voicemails, detect hot leads instantly, and transcribe every call in real-time. Get back 10 hours of your time every week.</p>
+        <div class="hero-cta">
+          <a href="#pricing" class="btn-primary btn-lg">
+            Start Free Trial
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#how-it-works" class="btn-secondary btn-lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+            See How It Works
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number" data-target="10">0</span><span class="stat-suffix">x</span>
+            <span class="stat-label">More Connections</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="10">0</span><span class="stat-suffix">hrs</span>
+            <span class="stat-label">Saved Weekly</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-number" data-target="95">0</span><span class="stat-suffix">%</span>
+            <span class="stat-label">VM Delivery Rate</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dots"><span></span><span></span><span></span></div>
+            <div class="mockup-url">app.openhuman.ai/dashboard</div>
+          </div>
+          <img src="/static/images/dashboard-preview.png" alt="Open Human Dashboard" class="mockup-image" loading="lazy">
+        </div>
+        <div class="floating-card card-calls">
+          <div class="fc-icon">📞</div>
+          <div class="fc-text">
+            <span class="fc-number">247</span>
+            <span class="fc-label">Calls Today</span>
+          </div>
+        </div>
+        <div class="floating-card card-leads">
+          <div class="fc-icon">🔥</div>
+          <div class="fc-text">
+            <span class="fc-number">18</span>
+            <span class="fc-label">Hot Leads</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0,64 C360,120 720,0 1080,64 C1260,96 1380,80 1440,64 L1440,120 L0,120 Z" fill="#ffffff"/></svg>
+    </div>
+  </section>
+
+  <section class="social-proof">
+    <div class="container">
+      <p class="sp-text">Trusted by forward-thinking sales teams and agencies</p>
+      <div class="sp-logos">
+        <div class="sp-logo-item">Sales Teams</div>
+        <div class="sp-logo-item">Real Estate</div>
+        <div class="sp-logo-item">Insurance</div>
+        <div class="sp-logo-item">Solar</div>
+        <div class="sp-logo-item">Home Services</div>
+        <div class="sp-logo-item">Agencies</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Features</span>
+        <h2>Your Complete Sales Toolkit to <span class="gradient-text">Triple Conversations</span></h2>
+        <p class="section-desc">Everything you need to turn cold lists into warm conversations, all in one powerful platform.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card feature-highlight">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">📞</div>
+          </div>
+          <h3>Power Dialer</h3>
+          <p>Make focused, sequential calls with automatic progression. Two modes: sequential (1 call at a time) or simultaneous (up to 50 parallel calls). Zero dead time between dials.</p>
+          <div class="feature-tag">Core Feature</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">📧</div>
+          </div>
+          <h3>Ringless Voicemail Drop</h3>
+          <p>Drop voicemails directly into inboxes without ringing phones. Automatic machine detection triggers instant voicemail delivery. Perfect for high-volume outreach.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">🎤</div>
+          </div>
+          <h3>AI Personalized Voicemail</h3>
+          <p>Generate unique, human-sounding voicemails for every contact using AI voice cloning. Template scripts with CSV data merge. Each prospect hears their name, company, and custom details.</p>
+          <div class="feature-tag tag-ai">AI Powered</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">📝</div>
+          </div>
+          <h3>Live Call Transcription</h3>
+          <p>Real-time speech-to-text for every connected call. See what your reps and prospects are saying as it happens. Full transcripts stored for review and coaching.</p>
+          <div class="feature-tag tag-ai">AI Powered</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">🔥</div>
+          </div>
+          <h3>Hot Lead Detection</h3>
+          <p>Instant alerts when a human picks up. Automatic live transfer to your sales team. iOS-style notifications with sound alerts so you never miss a hot prospect.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap">
+            <div class="feature-icon">📊</div>
+          </div>
+          <h3>Real-Time Analytics</h3>
+          <p>Comprehensive dashboards with call analytics, AMD results, hourly patterns, and campaign performance. Automated daily email reports with actionable insights.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">How It Works</span>
+        <h2>Get Started in <span class="gradient-text">3 Simple Steps</span></h2>
+        <p class="section-desc">From upload to results in minutes, not days.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Upload Your List</h3>
+            <p>Upload a CSV file with your contacts. Our smart parser automatically identifies phone numbers and merges contact data for personalization.</p>
+          </div>
+          <div class="step-visual">
+            <div class="step-mock">
+              <div class="mock-row"><span class="mock-name">John Smith</span><span class="mock-phone">+1 (555) 123-4567</span></div>
+              <div class="mock-row"><span class="mock-name">Jane Cooper</span><span class="mock-phone">+1 (555) 987-6543</span></div>
+              <div class="mock-row"><span class="mock-name">Mike Johnson</span><span class="mock-phone">+1 (555) 456-7890</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Configure & Launch</h3>
+            <p>Choose your dialing mode, select a voicemail template (or create a personalized AI voice), set your transfer number, and hit launch.</p>
+          </div>
+          <div class="step-visual">
+            <div class="step-mock config-mock">
+              <div class="config-item"><span class="config-label">Mode</span><span class="config-value">Simultaneous (10)</span></div>
+              <div class="config-item"><span class="config-label">Voicemail</span><span class="config-value">AI Personalized</span></div>
+              <div class="config-item"><span class="config-label">Transfer</span><span class="config-value">+1 (555) 000-0000</span></div>
+              <div class="config-btn">Launch Campaign</div>
+            </div>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Monitor & Convert</h3>
+            <p>Watch calls happen in real-time. Get instant hot lead alerts. Review transcripts and analytics. Close deals faster than ever.</p>
+          </div>
+          <div class="step-visual">
+            <div class="step-mock monitor-mock">
+              <div class="monitor-stat"><span class="monitor-label">Dialed</span><span class="monitor-value">127/200</span></div>
+              <div class="monitor-bar"><div class="monitor-fill" style="width:63%"></div></div>
+              <div class="monitor-alert">🔥 Hot Lead: John Smith answered!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="product-showcase">
+    <div class="container">
+      <div class="showcase-grid">
+        <div class="showcase-content">
+          <span class="section-badge">AI Voice Technology</span>
+          <h2>Personalize Your Voicemails with <span class="gradient-text">AI Voice Cloning</span></h2>
+          <p>Record once, personalize forever. Our AI generates unique voicemail messages for every contact on your list. Each prospect hears their own name, company, and custom details in a natural, human voice.</p>
+          <ul class="showcase-list">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Human-like speech with micro-hesitations and breath pauses
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Template library with CSV data merge fields
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Multiple AI voice models and fine-tuned controls
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Generated at campaign launch for maximum freshness
+            </li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <img src="/static/images/feature-voicemail.png" alt="AI Personalized Voicemail" loading="lazy">
+        </div>
+      </div>
+      <div class="showcase-grid reverse">
+        <div class="showcase-content">
+          <span class="section-badge">Real-Time Intelligence</span>
+          <h2>Live Transcription & <span class="gradient-text">Hot Lead Alerts</span></h2>
+          <p>Never miss a moment. Every call is transcribed in real-time, showing both sides of the conversation. When a human answers, you get instant iOS-style notifications with sound alerts.</p>
+          <ul class="showcase-list">
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Real-time speech-to-text for agent and customer
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Automatic live transfer to your sales team
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Campaign auto-pause during active transfers
+            </li>
+            <li>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#e8f5e9"/><path d="M8 12l3 3 5-5" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round"/></svg>
+              Full transcript history for coaching and review
+            </li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <img src="/static/images/feature-transcription.png" alt="Live Transcription" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="why-us">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Why Open Human</span>
+        <h2>The Only Dialer That Gives You <span class="gradient-text">Power, AI & Scale</span></h2>
+      </div>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon">⚡</div>
+          <h3>More Conversations, Less Work</h3>
+          <p>Intelligent dialing eliminates wasted time. Your reps stay in flow, focused on real conversations instead of manual dialing.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🎯</div>
+          <h3>Boost Answer Rates</h3>
+          <p>Smart answering machine detection ensures your voicemails land perfectly. Human calls transfer instantly to your team.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🤖</div>
+          <h3>AI-Powered Everything</h3>
+          <p>From personalized voicemails to live transcription, AI works alongside your team to close more deals.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🔄</div>
+          <h3>Flexible Dial Modes</h3>
+          <p>Switch between sequential and simultaneous modes based on your campaign. From 1 call at a time to 50 parallel dials.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">📱</div>
+          <h3>All-In-One Dashboard</h3>
+          <p>Manage campaigns, track performance, monitor live calls, and review analytics from a single, intuitive interface.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🚀</div>
+          <h3>Setup in Minutes</h3>
+          <p>No complex integrations required. Upload your leads, configure your campaign, and start dialing immediately.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="comparison">
+    <div class="container">
+      <div class="section-header">
+        <h2>See How We <span class="gradient-text">Compare</span></h2>
+      </div>
+      <div class="comparison-table-wrap">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight-col">
+                <span class="table-logo">🧠 Open Human</span>
+              </th>
+              <th>Power Dialer<br><small>Competitors</small></th>
+              <th>Basic Dialers</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dialing Modes</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Sequential + Simultaneous (1-50)</td>
+              <td><span class="check">&#10003;</span> Power + Parallel</td>
+              <td><span class="check">&#10003;</span> Sequential only</td>
+            </tr>
+            <tr>
+              <td>AI Personalized Voicemail</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Included (AI Voice Cloning)</td>
+              <td><span class="cross">&#10007;</span> Not available</td>
+              <td><span class="cross">&#10007;</span> Not available</td>
+            </tr>
+            <tr>
+              <td>Live Transcription</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Real-time, both sides</td>
+              <td><span class="partial">~</span> Post-call only</td>
+              <td><span class="cross">&#10007;</span> Not available</td>
+            </tr>
+            <tr>
+              <td>Hot Lead Alerts</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Instant transfer + sound alerts</td>
+              <td><span class="partial">~</span> Basic notifications</td>
+              <td><span class="cross">&#10007;</span> Manual monitoring</td>
+            </tr>
+            <tr>
+              <td>Voicemail Drop</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Auto-detect + instant drop</td>
+              <td><span class="check">&#10003;</span> Available</td>
+              <td><span class="partial">~</span> Manual</td>
+            </tr>
+            <tr>
+              <td>Analytics Dashboard</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Real-time + daily email reports</td>
+              <td><span class="check">&#10003;</span> Standard</td>
+              <td><span class="partial">~</span> Basic</td>
+            </tr>
+            <tr>
+              <td>Template Library</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Voicemail templates + scripts</td>
+              <td><span class="partial">~</span> Limited</td>
+              <td><span class="cross">&#10007;</span> None</td>
+            </tr>
+            <tr>
+              <td>Setup Time</td>
+              <td class="highlight-col"><span class="check">&#10003;</span> Under 5 minutes</td>
+              <td><span class="partial">~</span> 30+ minutes</td>
+              <td><span class="partial">~</span> 1+ hours</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">Pricing</span>
+        <h2>Simple, Transparent <span class="gradient-text">Pricing</span></h2>
+        <p class="section-desc">No hidden fees. No per-user charges. Scale your team without scaling costs.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>Starter</h3>
+            <p class="pricing-desc">Perfect for small teams getting started</p>
+          </div>
+          <div class="pricing-amount">
+            <span class="price-dollar">$</span>
+            <span class="price-value">99</span>
+            <span class="price-period">/month</span>
+          </div>
+          <ul class="pricing-features">
+            <li><span class="pf-check">&#10003;</span> Up to 1,000 calls/month</li>
+            <li><span class="pf-check">&#10003;</span> Sequential dialing mode</li>
+            <li><span class="pf-check">&#10003;</span> Voicemail drop</li>
+            <li><span class="pf-check">&#10003;</span> Basic analytics dashboard</li>
+            <li><span class="pf-check">&#10003;</span> Hot lead alerts</li>
+            <li class="pf-disabled"><span class="pf-cross">&#10007;</span> AI personalized voicemail</li>
+            <li class="pf-disabled"><span class="pf-cross">&#10007;</span> Live transcription</li>
+          </ul>
+          <a href="#" class="btn-pricing">Get Started</a>
+        </div>
+        <div class="pricing-card pricing-popular">
+          <div class="popular-badge">Most Popular</div>
+          <div class="pricing-header">
+            <h3>Professional</h3>
+            <p class="pricing-desc">For growing teams that need AI power</p>
+          </div>
+          <div class="pricing-amount">
+            <span class="price-dollar">$</span>
+            <span class="price-value">249</span>
+            <span class="price-period">/month</span>
+          </div>
+          <ul class="pricing-features">
+            <li><span class="pf-check">&#10003;</span> Up to 5,000 calls/month</li>
+            <li><span class="pf-check">&#10003;</span> Sequential + Simultaneous modes</li>
+            <li><span class="pf-check">&#10003;</span> Voicemail drop</li>
+            <li><span class="pf-check">&#10003;</span> Full analytics + email reports</li>
+            <li><span class="pf-check">&#10003;</span> Hot lead alerts + live transfer</li>
+            <li><span class="pf-check">&#10003;</span> AI personalized voicemail</li>
+            <li><span class="pf-check">&#10003;</span> Live call transcription</li>
+          </ul>
+          <a href="#" class="btn-pricing btn-pricing-primary">Get Started</a>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>Enterprise</h3>
+            <p class="pricing-desc">Unlimited power for large operations</p>
+          </div>
+          <div class="pricing-amount">
+            <span class="price-dollar">$</span>
+            <span class="price-value">499</span>
+            <span class="price-period">/month</span>
+          </div>
+          <ul class="pricing-features">
+            <li><span class="pf-check">&#10003;</span> Unlimited calls</li>
+            <li><span class="pf-check">&#10003;</span> All dialing modes (up to 50 parallel)</li>
+            <li><span class="pf-check">&#10003;</span> Voicemail drop + AI personalization</li>
+            <li><span class="pf-check">&#10003;</span> Advanced analytics + custom reports</li>
+            <li><span class="pf-check">&#10003;</span> Priority hot lead routing</li>
+            <li><span class="pf-check">&#10003;</span> Dedicated account manager</li>
+            <li><span class="pf-check">&#10003;</span> Custom API access</li>
+          </ul>
+          <a href="#" class="btn-pricing">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-badge">FAQ</span>
+        <h2>Frequently Asked <span class="gradient-text">Questions</span></h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>How does the AI personalized voicemail work?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>You create a voicemail script template with placeholders like {first_name} and {company}. When you upload your CSV contact list and launch a campaign, our AI generates a unique audio voicemail for each contact using advanced voice cloning technology. Each prospect hears their own name and personalized details, making your outreach feel genuine and personal.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>What happens when a human answers the phone?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>When our system detects a human voice (not a machine), it immediately triggers a live transfer to your sales team's phone number. You'll get an instant notification with sound alert. The campaign automatically pauses so your team can focus on the live conversation, then resumes when the call ends.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>How does answering machine detection work?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>We use advanced speech pattern analysis to detect whether a call is answered by a human or a machine. When a machine is detected, the system automatically plays your voicemail message (either a pre-recorded file or an AI-generated personalized message). This happens seamlessly without any manual intervention.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Can I use my own phone numbers?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Yes! You can configure your own Telnyx phone numbers and connection IDs. The system supports any Telnyx-provisioned number as your caller ID. For enterprise customers, we can help set up multiple numbers for local presence dialing.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Is there a free trial available?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Yes! We offer a 14-day free trial on all plans. No credit card required to start. You'll get full access to all features in your selected tier so you can experience the full power of Open Human before committing.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>What kind of reporting is available?</span>
+            <svg class="faq-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Open Human provides comprehensive analytics including call outcome charts, hourly calling patterns, daily trends, and campaign performance metrics. Professional and Enterprise plans include automated daily email reports with hot lead summaries, failed call analysis, and voicemail delivery stats.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <h2>Ready to 10x Your Outbound Sales?</h2>
+        <p>Join forward-thinking sales teams who are closing more deals with less effort. Start your free trial today.</p>
+        <div class="cta-buttons">
+          <a href="#pricing" class="btn-primary btn-lg">Start Free Trial</a>
+          <a href="mailto:sales@openhuman.ai" class="btn-secondary btn-lg">Talk to Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-icon">🧠</span>
+            <span class="logo-text">Open Human</span>
+          </a>
+          <p>AI-powered outbound dialing platform that helps sales teams connect with more prospects, drop personalized voicemails, and close deals faster.</p>
+        </div>
+        <div class="footer-links">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="footer-links">
+          <h4>Company</h4>
+          <a href="#">About Us</a>
+          <a href="#">Careers</a>
+          <a href="#">Blog</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-links">
+          <h4>Legal</h4>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">TCPA Compliance</a>
+          <a href="#">DNC Policy</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Open Human. All rights reserved.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const navbar = document.getElementById('navbar');
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      navbar.classList.toggle('scrolled', scrollY > 50);
+      lastScroll = scrollY;
+    });
+
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('navLinks');
+    mobileBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      mobileBtn.classList.toggle('active');
+    });
+
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        mobileBtn.classList.remove('active');
+      });
+    });
+
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const wasActive = item.classList.contains('active');
+      document.querySelectorAll('.faq-item.active').forEach(i => i.classList.remove('active'));
+      if (!wasActive) item.classList.add('active');
+    }
+
+    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .step-card, .why-card, .pricing-card, .faq-item, .showcase-grid').forEach(el => {
+      el.classList.add('animate-in');
+      observer.observe(el);
+    });
+
+    const statNumbers = document.querySelectorAll('.stat-number');
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target);
+          let current = 0;
+          const duration = 1500;
+          const step = target / (duration / 16);
+          const counter = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(counter); }
+            el.textContent = Math.floor(current);
+          }, 16);
+          statsObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    statNumbers.forEach(el => statsObserver.observe(el));
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          const navHeight = navbar.offsetHeight;
+          const targetPosition = target.getBoundingClientRect().top + window.scrollY - navHeight - 20;
+          window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

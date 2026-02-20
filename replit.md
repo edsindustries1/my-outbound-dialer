@@ -8,9 +8,12 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **telnyx_client.py** - Wrapper around Telnyx Call Control REST API
 - **call_manager.py** - Queue-based dialing system with rate limiting
 - **storage.py** - In-memory call state management, campaign config, and persistent call history (JSON)
-- **templates/index.html** - Dashboard UI with animated splash screen and polling
+- **templates/landing.html** - Public landing page (marketing/sales site)
+- **templates/index.html** - Dashboard UI with animated splash screen and polling (auth-protected at /dashboard)
 - **templates/login.html** - Password-protected login page
-- **static/style.css** - Dual-theme CSS with blue/cyan gradient branding
+- **static/landing.css** - Landing page styles (hero, features, pricing, FAQ, footer)
+- **static/style.css** - Dual-theme CSS with blue/cyan gradient branding (dashboard)
+- **static/images/** - Landing page images (dashboard-preview, feature illustrations, hero-bg)
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
 - **personalized_vm.py** - Personalized voicemail system (CSV parsing, template rendering, advanced human-like speech processing with micro-hesitations/breath pauses/conversational smoothing, ElevenLabs TTS with SSML break tags for compatible models, full voice controls, multi-model support)
 - **gmail_client.py** - Gmail API integration via Replit connector for sending emails

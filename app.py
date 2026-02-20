@@ -127,20 +127,28 @@ def login_required(f):
     return decorated
 
 
+# ---- Landing Page ----
+@app.route("/")
+def landing():
+    """Serve the public landing page."""
+    _detect_and_set_base_url()
+    return render_template("landing.html")
+
+
 # ---- Login Route ----
 @app.route("/login", methods=["GET", "POST"])
 def login():
     _detect_and_set_base_url()
     if not APP_PASSWORD:
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard"))
     if session.get("authenticated"):
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard"))
     error = None
     if request.method == "POST":
         pw = request.form.get("password", "")
         if pw == APP_PASSWORD:
             session["authenticated"] = True
-            return redirect(url_for("index"))
+            return redirect(url_for("dashboard"))
         error = "Incorrect password"
     return render_template("login.html", error=error)
 
@@ -148,7 +156,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("authenticated", None)
-    return redirect(url_for("login"))
+    return redirect(url_for("landing"))
 
 
 def _detect_and_set_base_url():
@@ -173,10 +181,10 @@ def _detect_and_set_base_url():
 
 
 # ---- Dashboard Route ----
-@app.route("/")
+@app.route("/dashboard")
 @login_required
-def index():
-    """Serve the main dashboard page."""
+def dashboard():
+    """Serve the main dashboard page (requires authentication)."""
     _detect_and_set_base_url()
     return render_template("index.html")
 
