@@ -287,7 +287,8 @@ def _humanize_date(text):
         raw = match.group(0)
         try:
             for fmt in ("%m/%d/%Y", "%m-%d-%Y", "%Y-%m-%d", "%m/%d/%y", "%m-%d-%y",
-                        "%d/%m/%Y", "%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y",
+                        "%d/%m/%Y", "%d-%m-%Y", "%d/%m/%y", "%d-%m-%y",
+                        "%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%d %b %Y",
                         "%B %d %Y", "%b %d %Y"):
                 try:
                     dt = datetime.strptime(raw.strip(), fmt)
