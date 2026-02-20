@@ -51,6 +51,11 @@ from storage import (
     save_template,
     get_templates,
     delete_template,
+    save_vm_template,
+    get_vm_templates,
+    update_vm_template,
+    delete_vm_template,
+    mark_vm_template_used,
     validate_phone_numbers,
     get_report_settings,
     save_report_settings,
@@ -554,6 +559,59 @@ def api_template_delete(template_id):
         logger.info(f"Template deleted: {template_id}")
         return jsonify({"message": "Template deleted"})
     return jsonify({"error": "Template not found"}), 404
+
+
+# ---- Voicemail Templates API ----
+
+@app.route("/api/vm-templates", methods=["GET"])
+@login_required
+def api_vm_templates_list():
+    return jsonify({"templates": get_vm_templates()})
+
+
+@app.route("/api/vm-templates", methods=["POST"])
+@login_required
+def api_vm_template_create():
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    ttype = data.get("type", "")
+    content = data.get("content", "").strip()
+    if not name:
+        return jsonify({"error": "Template name is required"}), 400
+    if ttype not in ("audio_url", "script"):
+        return jsonify({"error": "Type must be 'audio_url' or 'script'"}), 400
+    if not content:
+        return jsonify({"error": "Content is required"}), 400
+    template = save_vm_template({"name": name, "type": ttype, "content": content})
+    logger.info(f"VM template created: {name} ({template['id']})")
+    return jsonify({"template": template})
+
+
+@app.route("/api/vm-templates/<template_id>", methods=["PUT"])
+@login_required
+def api_vm_template_update(template_id):
+    data = request.get_json() or {}
+    updated = update_vm_template(template_id, data)
+    if updated:
+        logger.info(f"VM template updated: {template_id}")
+        return jsonify({"template": updated})
+    return jsonify({"error": "Template not found"}), 404
+
+
+@app.route("/api/vm-templates/<template_id>", methods=["DELETE"])
+@login_required
+def api_vm_template_delete(template_id):
+    if delete_vm_template(template_id):
+        logger.info(f"VM template deleted: {template_id}")
+        return jsonify({"message": "Template deleted"})
+    return jsonify({"error": "Template not found"}), 404
+
+
+@app.route("/api/vm-templates/<template_id>/use", methods=["POST"])
+@login_required
+def api_vm_template_mark_used(template_id):
+    mark_vm_template_used(template_id)
+    return jsonify({"message": "ok"})
 
 
 # ---- Number Validation API ----

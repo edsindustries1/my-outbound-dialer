@@ -300,7 +300,17 @@
                                     <button type="button" class="wiz-vm-tab" onclick="wizSwitchVmType('personalized')">Personalized (AI)</button>
                                 </div>
                                 <div id="wizVmStandard">
-                                    <p class="wiz-vm-desc">Same voicemail audio for all contacts. Upload a file, paste a URL, or use your saved default.</p>
+                                    <div class="wiz-vm-template-select" id="wizVmTemplateSelect">
+                                        <label>Use Saved Template</label>
+                                        <div class="gads-input-row">
+                                            <select id="wizVmTemplateDropdown" class="gads-select" onchange="wizSelectVmTemplate()">
+                                                <option value="">-- None (manual upload) --</option>
+                                            </select>
+                                        </div>
+                                        <div id="wizVmTemplatePreview" class="wiz-vm-template-preview" style="display:none;"></div>
+                                    </div>
+                                    <div class="wiz-vm-divider"><span>or upload manually</span></div>
+                                    <p class="wiz-vm-desc">Upload a file, paste a URL, or use your saved default.</p>
                                     <div class="drop-zone" id="audioDropZone">
                                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                         <span>Drag &amp; drop audio here or <label for="audioFile" class="drop-zone-browse">browse</label></span>
@@ -405,11 +415,73 @@
                 <div class="gads-page" id="page-voicemails" style="display:none">
                     <div class="gads-page-header">
                         <h2>Voicemail Library</h2>
+                        <button type="button" class="gads-btn gads-btn-primary" onclick="vmtOpenCreate()">+ Create Template</button>
                     </div>
 
-                    <div class="gads-card">
+                    <div class="gads-card" id="vmtListCard">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Voicemail Settings</h3>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Saved Templates</h3>
+                        </div>
+                        <div id="vmtList" class="vmt-grid">
+                            <div class="gads-empty">Loading templates...</div>
+                        </div>
+                    </div>
+
+                    <div class="gads-card vmt-form-card" id="vmtFormCard" style="display:none;">
+                        <div class="gads-card-header">
+                            <h3 id="vmtFormTitle">Create Voicemail Template</h3>
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtCloseForm()">&times; Cancel</button>
+                        </div>
+                        <div class="vmt-form">
+                            <input type="hidden" id="vmtEditId" value="">
+                            <div class="vmt-form-group">
+                                <label>Template Name</label>
+                                <input type="text" id="vmtName" class="gads-input" placeholder="e.g. Debt Reminder, Follow Up Call">
+                            </div>
+                            <div class="vmt-form-group">
+                                <label>Template Type</label>
+                                <div class="vmt-type-toggle">
+                                    <button type="button" class="vmt-type-btn active" data-type="audio_url" onclick="vmtSwitchType('audio_url')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                        Audio URL
+                                    </button>
+                                    <button type="button" class="vmt-type-btn" data-type="script" onclick="vmtSwitchType('script')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        Script Template
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="vmtAudioUrlSection">
+                                <div class="vmt-form-group">
+                                    <label>Audio URL</label>
+                                    <input type="text" id="vmtAudioUrl" class="gads-input" placeholder="https://example.com/voicemail.mp3">
+                                    <p class="vmt-hint">Paste a public URL to an MP3 or WAV file</p>
+                                </div>
+                            </div>
+                            <div id="vmtScriptSection" style="display:none;">
+                                <div class="vmt-form-group">
+                                    <label>Voicemail Script</label>
+                                    <p class="vmt-hint">Click tags to insert placeholders into your script.</p>
+                                    <div class="pvm-placeholders">
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('first_name')">{first_name}</span>
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('last_name')">{last_name}</span>
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('amount')">{amount}</span>
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('date')">{date}</span>
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('email')">{email}</span>
+                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('address')">{address}</span>
+                                    </div>
+                                    <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
+                                </div>
+                            </div>
+                            <div class="vmt-form-actions">
+                                <button type="button" class="gads-btn gads-btn-primary" onclick="vmtSave()">Save Template</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Default Voicemail URL</h3>
                         </div>
                         <label>Voicemail Audio URL</label>
                         <div class="gads-input-row">
@@ -845,6 +917,7 @@
             }
             if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
+                if (typeof vmtLoad === 'function') vmtLoad();
                 if (typeof pvmInit === 'function') pvmInit();
             }
             if (page === 'campaigns') {
@@ -860,6 +933,7 @@
 
         function openWizard() {
             document.getElementById('wizardOverlay').style.display = '';
+            if (typeof vmtLoad === 'function') vmtLoad();
         }
 
         function closeWizard() {
@@ -1319,6 +1393,149 @@
                     vmSaveResult.innerHTML = '<span style="color:var(--gads-error);">Failed to save</span>';
                 });
             });
+
+            // ---- Voicemail Templates ----
+            var vmtTemplates = [];
+            function vmtLoad() {
+                apiFetch("/api/vm-templates")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        vmtTemplates = data.templates || [];
+                        vmtRenderList();
+                        vmtPopulateWizardDropdown();
+                    })
+                    .catch(function() {});
+            }
+            function vmtRenderList() {
+                var el = document.getElementById("vmtList");
+                if (vmtTemplates.length === 0) {
+                    el.innerHTML = '<div class="gads-empty">No voicemail templates yet. Click "+ Create Template" to add one.</div>';
+                    return;
+                }
+                var html = '';
+                vmtTemplates.forEach(function(t) {
+                    var typeLabel = t.type === 'audio_url' ? 'Audio URL' : 'Script';
+                    var typeIcon = t.type === 'audio_url'
+                        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>'
+                        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+                    var preview = '';
+                    if (t.type === 'audio_url') {
+                        preview = '<audio controls preload="none" style="width:100%;margin-top:8px;height:32px;"><source src="' + t.content + '"></audio>';
+                    } else {
+                        var script = t.content.length > 120 ? t.content.substring(0, 120) + '...' : t.content;
+                        preview = '<div class="vmt-script-preview">' + script.replace(/\{(\w+)\}/g, '<span class="pvm-placeholder-tag" style="cursor:default;font-size:11px;padding:1px 4px;">$&</span>') + '</div>';
+                    }
+                    var lastUsed = t.last_used ? new Date(t.last_used).toLocaleDateString() : 'Never';
+                    html += '<div class="vmt-card">';
+                    html += '<div class="vmt-card-header"><div class="vmt-card-name">' + t.name + '</div><div class="vmt-card-type">' + typeIcon + ' ' + typeLabel + '</div></div>';
+                    html += preview;
+                    html += '<div class="vmt-card-meta">Created: ' + new Date(t.created_at).toLocaleDateString() + ' &bull; Last used: ' + lastUsed + '</div>';
+                    html += '<div class="vmt-card-actions">';
+                    html += '<button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtEdit(\'' + t.id + '\')">Edit</button>';
+                    html += '<button type="button" class="gads-btn gads-btn-sm" style="color:var(--gads-error);" onclick="vmtDelete(\'' + t.id + '\')">Delete</button>';
+                    html += '</div>';
+                    html += '</div>';
+                });
+                el.innerHTML = html;
+            }
+            function vmtOpenCreate() {
+                document.getElementById("vmtEditId").value = "";
+                document.getElementById("vmtFormTitle").textContent = "Create Voicemail Template";
+                document.getElementById("vmtName").value = "";
+                document.getElementById("vmtAudioUrl").value = "";
+                document.getElementById("vmtScriptText").value = "";
+                vmtSwitchType("audio_url");
+                document.getElementById("vmtFormCard").style.display = "";
+                document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });
+            }
+            function vmtCloseForm() {
+                document.getElementById("vmtFormCard").style.display = "none";
+            }
+            function vmtSwitchType(type) {
+                document.querySelectorAll(".vmt-type-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.type === type); });
+                document.getElementById("vmtAudioUrlSection").style.display = type === "audio_url" ? "" : "none";
+                document.getElementById("vmtScriptSection").style.display = type === "script" ? "" : "none";
+            }
+            function vmtInsertTag(field) {
+                var ta = document.getElementById("vmtScriptText");
+                var start = ta.selectionStart;
+                var end = ta.selectionEnd;
+                var text = ta.value;
+                var insert = "{" + field + "}";
+                ta.value = text.substring(0, start) + insert + text.substring(end);
+                ta.focus();
+                ta.selectionStart = ta.selectionEnd = start + insert.length;
+            }
+            function vmtSave() {
+                var id = document.getElementById("vmtEditId").value;
+                var name = document.getElementById("vmtName").value.trim();
+                var activeType = document.querySelector(".vmt-type-btn.active");
+                var type = activeType ? activeType.dataset.type : "audio_url";
+                var content = type === "audio_url" ? document.getElementById("vmtAudioUrl").value.trim() : document.getElementById("vmtScriptText").value.trim();
+                if (!name) { alert("Please enter a template name"); return; }
+                if (!content) { alert("Please enter " + (type === "audio_url" ? "an audio URL" : "a script")); return; }
+                var url = id ? "/api/vm-templates/" + id : "/api/vm-templates";
+                var method = id ? "PUT" : "POST";
+                apiFetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name, type: type, content: content }) })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.error) { alert(data.error); return; }
+                        vmtCloseForm();
+                        vmtLoad();
+                        showToast("Template " + (id ? "updated" : "created") + ": " + name, "success");
+                    })
+                    .catch(function(e) { if (e.message === "auth") return; alert("Failed to save template"); });
+            }
+            function vmtEdit(id) {
+                var t = vmtTemplates.find(function(x) { return x.id === id; });
+                if (!t) return;
+                document.getElementById("vmtEditId").value = t.id;
+                document.getElementById("vmtFormTitle").textContent = "Edit Template";
+                document.getElementById("vmtName").value = t.name;
+                vmtSwitchType(t.type);
+                if (t.type === "audio_url") {
+                    document.getElementById("vmtAudioUrl").value = t.content;
+                } else {
+                    document.getElementById("vmtScriptText").value = t.content;
+                }
+                document.getElementById("vmtFormCard").style.display = "";
+                document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });
+            }
+            function vmtDelete(id) {
+                if (!confirm("Delete this voicemail template?")) return;
+                apiFetch("/api/vm-templates/" + id, { method: "DELETE" })
+                    .then(function(r) { return r.json(); })
+                    .then(function() { vmtLoad(); showToast("Template deleted", "success"); })
+                    .catch(function(e) { if (e.message === "auth") return; });
+            }
+            function vmtPopulateWizardDropdown() {
+                var dd = document.getElementById("wizVmTemplateDropdown");
+                if (!dd) return;
+                var val = dd.value;
+                dd.innerHTML = '<option value="">-- None (manual upload) --</option>';
+                vmtTemplates.forEach(function(t) {
+                    var typeLabel = t.type === 'audio_url' ? '[Audio]' : '[Script]';
+                    dd.innerHTML += '<option value="' + t.id + '">' + typeLabel + ' ' + t.name + '</option>';
+                });
+                dd.value = val;
+            }
+            function wizSelectVmTemplate() {
+                var dd = document.getElementById("wizVmTemplateDropdown");
+                var preview = document.getElementById("wizVmTemplatePreview");
+                var id = dd.value;
+                if (!id) { preview.style.display = "none"; document.getElementById("audioUrl").value = ""; return; }
+                var t = vmtTemplates.find(function(x) { return x.id === id; });
+                if (!t) { preview.style.display = "none"; return; }
+                if (t.type === "audio_url") {
+                    preview.innerHTML = '<div class="vmt-preview-label">Audio URL template selected:</div><audio controls preload="metadata" style="width:100%;height:32px;"><source src="' + t.content + '"></audio>';
+                    document.getElementById("audioUrl").value = t.content;
+                } else {
+                    var script = t.content.length > 200 ? t.content.substring(0, 200) + '...' : t.content;
+                    preview.innerHTML = '<div class="vmt-preview-label">Script template selected:</div><div class="vmt-script-preview">' + script.replace(/\{(\w+)\}/g, '<span class="pvm-placeholder-tag" style="cursor:default;font-size:11px;padding:1px 4px;">$&</span>') + '</div><p class="vmt-hint" style="margin-top:6px;">This script will be used with personalized voicemail generation.</p>';
+                }
+                preview.style.display = "";
+                apiFetch("/api/vm-templates/" + id + "/use", { method: "POST" }).catch(function() {});
+            }
 
             // ---- Saved Transfer Number ----
             (function() {

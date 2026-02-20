@@ -716,6 +716,82 @@ def get_webhook_stats():
         return stats
 
 
+# ── Voicemail Templates ──────────────────────────────────────────────────
+
+VM_TEMPLATES_FILE = os.path.join(LOGS_DIR, "vm_templates.json")
+
+def _load_vm_templates():
+    try:
+        if os.path.exists(VM_TEMPLATES_FILE):
+            with open(VM_TEMPLATES_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+def _save_vm_templates(templates):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(VM_TEMPLATES_FILE, "w") as f:
+            json.dump(templates, f, indent=2)
+    except Exception:
+        pass
+
+def save_vm_template(data):
+    import uuid
+    template = {
+        "id": str(uuid.uuid4())[:8],
+        "name": data.get("name", "Untitled"),
+        "type": data.get("type", "audio_url"),
+        "content": data.get("content", ""),
+        "created_at": datetime.utcnow().isoformat(),
+        "last_used": None,
+    }
+    with _file_lock:
+        templates = _load_vm_templates()
+        templates.append(template)
+        _save_vm_templates(templates)
+    return template
+
+def get_vm_templates():
+    with _file_lock:
+        return _load_vm_templates()
+
+def update_vm_template(template_id, data):
+    with _file_lock:
+        templates = _load_vm_templates()
+        for t in templates:
+            if t.get("id") == template_id:
+                if "name" in data:
+                    t["name"] = data["name"]
+                if "type" in data:
+                    t["type"] = data["type"]
+                if "content" in data:
+                    t["content"] = data["content"]
+                _save_vm_templates(templates)
+                return t
+    return None
+
+def delete_vm_template(template_id):
+    with _file_lock:
+        templates = _load_vm_templates()
+        updated = [t for t in templates if t.get("id") != template_id]
+        if len(updated) < len(templates):
+            _save_vm_templates(updated)
+            return True
+        return False
+
+def mark_vm_template_used(template_id):
+    with _file_lock:
+        templates = _load_vm_templates()
+        for t in templates:
+            if t.get("id") == template_id:
+                t["last_used"] = datetime.utcnow().isoformat()
+                _save_vm_templates(templates)
+                return True
+    return False
+
+
 # ── Campaign Templates ────────────────────────────────────────────────────
 
 TEMPLATES_FILE = os.path.join(LOGS_DIR, "campaign_templates.json")
