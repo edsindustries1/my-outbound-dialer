@@ -1484,6 +1484,9 @@
         <span class="oh-powered-pulse"></span>
     </div>
 
+    <!-- FLOATING IPHONE BALL -->
+    <button class="iphone-fab" id="iphoneFab" title="Open Live Dialer">&#63743;</button>
+
     <!-- FLOATING NOTEPAD -->
     <button class="notepad-fab" id="notepadFab" title="Open Notepad">N</button>
     <div class="notepad-window" id="notepadWindow">
@@ -1566,6 +1569,14 @@
         var restThreshold = 0.08;
         var idleDriftSpeed = 0.25;
 
+        var iFab = document.getElementById("iphoneFab");
+        var iFabSize = 56;
+        var iFabX = 0, iFabY = 0, iFabVX = 0, iFabVY = 0;
+        var iFabDragging = false, iFabClicked = false;
+        var iFabDragOffX = 0, iFabDragOffY = 0;
+        var iFabTrailX = [], iFabTrailY = [], iFabTrailT = [];
+        var iFabActive = false;
+
         function initFabPos() {
             var rect = fab.getBoundingClientRect();
             fabX = rect.left;
@@ -1579,48 +1590,99 @@
             fab.style.right = "auto";
         }
 
-        function physicsTick() {
-            if (!isFloating || fab.classList.contains("hidden") || fabDragging) {
-                fabAnim = requestAnimationFrame(physicsTick);
-                return;
-            }
+        function initIFabPos() {
+            var rect = iFab.getBoundingClientRect();
+            iFabX = rect.left;
+            iFabY = rect.top;
+        }
 
-            fabVX *= friction;
-            fabVY *= friction;
-            fabVY += gravity;
+        function applyIFabPos() {
+            iFab.style.left = iFabX + "px";
+            iFab.style.top = iFabY + "px";
+            iFab.style.bottom = "auto";
+            iFab.style.right = "auto";
+        }
 
-            fabX += fabVX;
-            fabY += fabVY;
-
-            var maxX = window.innerWidth - fabSize;
-            var maxY = window.innerHeight - fabSize;
-
-            if (fabY >= maxY) {
-                fabY = maxY;
-                fabVY = -Math.abs(fabVY) * bounceDamp;
-                fabVX *= 0.98;
-                if (Math.abs(fabVY) < 1.5) {
-                    fabVY = 0;
-                    if (Math.abs(fabVX) < restThreshold) {
-                        fabVX = (Math.random() > 0.5 ? 1 : -1) * idleDriftSpeed;
-                        fabVY = -(1 + Math.random() * 2);
+        function ballWallBounce(bx, by, bvx, bvy, sz) {
+            var maxX = window.innerWidth - sz;
+            var maxY = window.innerHeight - sz;
+            if (by >= maxY) {
+                by = maxY;
+                bvy = -Math.abs(bvy) * bounceDamp;
+                bvx *= 0.98;
+                if (Math.abs(bvy) < 1.5) {
+                    bvy = 0;
+                    if (Math.abs(bvx) < restThreshold) {
+                        bvx = (Math.random() > 0.5 ? 1 : -1) * idleDriftSpeed;
+                        bvy = -(1 + Math.random() * 2);
                     }
                 }
             }
-            if (fabY <= 0) {
-                fabY = 0;
-                fabVY = Math.abs(fabVY) * bounceDamp;
+            if (by <= 0) { by = 0; bvy = Math.abs(bvy) * bounceDamp; }
+            if (bx <= 0) { bx = 0; bvx = Math.abs(bvx) * bounceDamp; }
+            if (bx >= maxX) { bx = maxX; bvx = -Math.abs(bvx) * bounceDamp; }
+            return {x: bx, y: by, vx: bvx, vy: bvy};
+        }
+
+        function collideBalls() {
+            if (!iFabActive || !isFloating) return;
+            if (fab.classList.contains("hidden")) return;
+            var r1 = fabSize / 2, r2 = iFabSize / 2;
+            var cx1 = fabX + r1, cy1 = fabY + r1;
+            var cx2 = iFabX + r2, cy2 = iFabY + r2;
+            var dx = cx2 - cx1, dy = cy2 - cy1;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var minDist = r1 + r2;
+            if (dist < minDist && dist > 0.01) {
+                var nx = dx / dist, ny = dy / dist;
+                var overlap = minDist - dist;
+                fabX -= nx * overlap * 0.5;
+                fabY -= ny * overlap * 0.5;
+                iFabX += nx * overlap * 0.5;
+                iFabY += ny * overlap * 0.5;
+                var dvx = fabVX - iFabVX, dvy = fabVY - iFabVY;
+                var dvDotN = dvx * nx + dvy * ny;
+                if (dvDotN < 0) {
+                    var restitution = 0.85;
+                    var impulse = -(1 + restitution) * dvDotN * 0.5;
+                    fabVX += impulse * nx;
+                    fabVY += impulse * ny;
+                    iFabVX -= impulse * nx;
+                    iFabVY -= impulse * ny;
+                    fabVX += (Math.random() - 0.5) * 0.3;
+                    fabVY += (Math.random() - 0.5) * 0.3;
+                    iFabVX += (Math.random() - 0.5) * 0.3;
+                    iFabVY += (Math.random() - 0.5) * 0.3;
+                }
             }
-            if (fabX <= 0) {
-                fabX = 0;
-                fabVX = Math.abs(fabVX) * bounceDamp;
-            }
-            if (fabX >= maxX) {
-                fabX = maxX;
-                fabVX = -Math.abs(fabVX) * bounceDamp;
+        }
+
+        function physicsTick() {
+            if (!isFloating || fab.classList.contains("hidden") || fabDragging) {
+            } else {
+                fabVX *= friction;
+                fabVY *= friction;
+                fabVY += gravity;
+                fabX += fabVX;
+                fabY += fabVY;
+                var nw = ballWallBounce(fabX, fabY, fabVX, fabVY, fabSize);
+                fabX = nw.x; fabY = nw.y; fabVX = nw.vx; fabVY = nw.vy;
+                applyFabPos();
             }
 
-            applyFabPos();
+            if (iFabActive && !iFabDragging) {
+                iFabVX *= friction;
+                iFabVY *= friction;
+                iFabVY += gravity;
+                iFabX += iFabVX;
+                iFabY += iFabVY;
+                var iw = ballWallBounce(iFabX, iFabY, iFabVX, iFabVY, iFabSize);
+                iFabX = iw.x; iFabY = iw.y; iFabVX = iw.vx; iFabVY = iw.vy;
+                applyIFabPos();
+            }
+
+            collideBalls();
+
             fabAnim = requestAnimationFrame(physicsTick);
         }
 
@@ -1723,6 +1785,103 @@
         document.addEventListener("touchend", function() {
             if (fabDragging) fabEndDrag();
         });
+
+        function iFabStartDrag(cx, cy) {
+            iFabDragging = true;
+            iFabClicked = true;
+            var rect = iFab.getBoundingClientRect();
+            iFabDragOffX = cx - rect.left;
+            iFabDragOffY = cy - rect.top;
+            iFabVX = 0; iFabVY = 0;
+            iFabTrailX = [cx]; iFabTrailY = [cy]; iFabTrailT = [Date.now()];
+            iFab.style.cursor = "grabbing";
+        }
+        function iFabMoveDrag(cx, cy) {
+            if (!iFabDragging) return;
+            iFabClicked = false;
+            iFabX = cx - iFabDragOffX;
+            iFabY = cy - iFabDragOffY;
+            iFabX = Math.max(0, Math.min(iFabX, window.innerWidth - iFabSize));
+            iFabY = Math.max(0, Math.min(iFabY, window.innerHeight - iFabSize));
+            applyIFabPos();
+            var now = Date.now();
+            iFabTrailX.push(cx); iFabTrailY.push(cy); iFabTrailT.push(now);
+            if (iFabTrailX.length > 6) { iFabTrailX.shift(); iFabTrailY.shift(); iFabTrailT.shift(); }
+        }
+        function iFabEndDrag() {
+            if (!iFabDragging) return;
+            iFabDragging = false;
+            iFab.style.cursor = "";
+            var now = Date.now();
+            var tvx = 0, tvy = 0;
+            if (iFabTrailX.length >= 2) {
+                var idx = 0;
+                for (var k = iFabTrailT.length - 1; k >= 0; k--) {
+                    if (now - iFabTrailT[k] > 120) break;
+                    idx = k;
+                }
+                var dt = (now - iFabTrailT[idx]) || 1;
+                tvx = (iFabTrailX[iFabTrailX.length - 1] - iFabTrailX[idx]) / dt * 16;
+                tvy = (iFabTrailY[iFabTrailY.length - 1] - iFabTrailY[idx]) / dt * 16;
+                var mx = 30;
+                tvx = Math.max(-mx, Math.min(mx, tvx));
+                tvy = Math.max(-mx, Math.min(mx, tvy));
+            }
+            iFabVX = tvx;
+            iFabVY = tvy;
+        }
+
+        iFab.addEventListener("mousedown", function(e) {
+            if (!iFabActive) return;
+            e.preventDefault();
+            iFabStartDrag(e.clientX, e.clientY);
+        });
+        document.addEventListener("mousemove", function(e) {
+            if (iFabDragging) { e.preventDefault(); iFabMoveDrag(e.clientX, e.clientY); }
+        });
+        document.addEventListener("mouseup", function() {
+            if (iFabDragging) iFabEndDrag();
+        });
+        iFab.addEventListener("touchstart", function(e) {
+            if (!iFabActive) return;
+            var t = e.touches[0];
+            iFabStartDrag(t.clientX, t.clientY);
+        }, {passive: true});
+        document.addEventListener("touchmove", function(e) {
+            if (iFabDragging) { var t = e.touches[0]; iFabMoveDrag(t.clientX, t.clientY); }
+        }, {passive: true});
+        document.addEventListener("touchend", function() {
+            if (iFabDragging) iFabEndDrag();
+        });
+
+        iFab.addEventListener("click", function(e) {
+            if (!iFabActive) return;
+            if (!iFabClicked) return;
+            e.stopPropagation();
+            if (typeof iphoneToggleMinimize === "function") {
+                iphoneToggleMinimize();
+            }
+        });
+
+        window.ballsStartIphone = function() {
+            iFabActive = true;
+            iFab.classList.add("floating");
+            setTimeout(function() {
+                initIFabPos();
+                iFabVX = (Math.random() - 0.5) * 4;
+                iFabVY = -(3 + Math.random() * 4);
+            }, 50);
+        };
+
+        window.ballsStopIphone = function() {
+            iFabActive = false;
+            iFabVX = 0;
+            iFabVY = 0;
+            iFab.style.left = "";
+            iFab.style.top = "";
+            iFab.style.bottom = "";
+            iFab.style.right = "";
+        };
 
         if (isFloating) {
             fab.classList.add("floating");
@@ -2875,46 +3034,20 @@
             })();
 
             var iphoneMinimized = false;
-            var iphoneAnimating = false;
             function iphoneToggleMinimize() {
-                if (iphoneAnimating) return;
                 var dialer = document.getElementById("iphoneDialer");
-                var body3d = document.getElementById("iphone3dBody");
-                iphoneAnimating = true;
-
-                if (!iphoneMinimized) {
-                    body3d.classList.remove("phone-picking-up");
-                    void body3d.offsetWidth;
-                    body3d.classList.add("phone-putting-down");
-                    dialer.classList.add("minimized");
-                    body3d.addEventListener("animationend", function handler() {
-                        body3d.removeEventListener("animationend", handler);
-                        iphoneMinimized = true;
-                        iphoneAnimating = false;
-                    });
+                var iFab = document.getElementById("iphoneFab");
+                iphoneMinimized = !iphoneMinimized;
+                if (iphoneMinimized) {
+                    dialer.style.display = "none";
+                    iFab.classList.add("visible");
+                    if (typeof ballsStartIphone === "function") ballsStartIphone();
                 } else {
-                    body3d.classList.remove("phone-putting-down");
-                    void body3d.offsetWidth;
-                    body3d.classList.add("phone-picking-up");
-                    body3d.addEventListener("animationend", function handler() {
-                        body3d.removeEventListener("animationend", handler);
-                        body3d.classList.remove("phone-picking-up");
-                        dialer.classList.remove("minimized");
-                        iphoneMinimized = false;
-                        iphoneAnimating = false;
-                    });
+                    dialer.style.display = "";
+                    iFab.classList.remove("visible", "floating");
+                    if (typeof ballsStopIphone === "function") ballsStopIphone();
                 }
             }
-            (function() {
-                var dialer = document.getElementById("iphoneDialer");
-                if (dialer) {
-                    dialer.addEventListener("click", function(e) {
-                        if (iphoneMinimized && !iphoneAnimating) {
-                            iphoneToggleMinimize();
-                        }
-                    });
-                }
-            })();
 
             function iphoneFormatNumber(num) {
                 if (!num) return "";

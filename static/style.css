@@ -1709,6 +1709,39 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ============ FLOATING NOTEPAD ============ */
+.iphone-fab {
+    position: fixed;
+    bottom: 28px;
+    right: 96px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #E8E8ED, #C8C8CD, #B0B0B5, #D0D0D5);
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.1);
+    z-index: 9998;
+    transition: box-shadow 0.25s;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    color: #555;
+    letter-spacing: 0;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+}
+.iphone-fab:hover {
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.iphone-fab.visible {
+    display: flex;
+}
+.iphone-fab.floating {
+    cursor: grab;
+}
+
 .notepad-fab {
     position: fixed;
     bottom: 28px;
@@ -3550,10 +3583,6 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     animation: iphoneSlideIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.iphone-3d-wrapper.minimized {
-    cursor: pointer;
-}
-
 .iphone-3d-body {
     width: 270px;
     height: 580px;
@@ -3562,89 +3591,8 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     transform-origin: center bottom;
 }
 
-.iphone-3d-body.phone-putting-down {
-    animation: phonePutDown 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.iphone-3d-body.phone-picking-up {
-    animation: phonePickUp 1.2s cubic-bezier(0.3, 0, 0.2, 1) forwards;
-}
-
-@keyframes phonePutDown {
-    0% {
-        transform: rotateX(0deg) rotateY(0deg) scale(1);
-    }
-    18% {
-        transform: rotateX(25deg) rotateY(0deg) scale(0.95);
-    }
-    40% {
-        transform: rotateX(70deg) rotateY(-60deg) scale(0.7);
-    }
-    65% {
-        transform: rotateX(85deg) rotateY(-160deg) scale(0.55);
-    }
-    85% {
-        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
-    }
-    100% {
-        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
-    }
-}
-
-@keyframes phonePickUp {
-    0% {
-        transform: rotateX(88deg) rotateY(-180deg) scale(0.5);
-    }
-    10% {
-        transform: rotateX(86deg) rotateY(-180deg) scale(0.52);
-    }
-    35% {
-        transform: rotateX(70deg) rotateY(-120deg) scale(0.7);
-    }
-    60% {
-        transform: rotateX(30deg) rotateY(-40deg) scale(0.9);
-    }
-    80% {
-        transform: rotateX(5deg) rotateY(-5deg) scale(0.98);
-    }
-    92% {
-        transform: rotateX(-2deg) rotateY(2deg) scale(1.01);
-    }
-    100% {
-        transform: rotateX(0deg) rotateY(0deg) scale(1);
-    }
-}
-
 .iphone-resting-shadow {
-    position: absolute;
-    bottom: -8px;
-    left: -10%;
-    width: 120%;
-    height: 24px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.12) 40%, transparent 70%);
-    opacity: 0;
-    pointer-events: none;
-    transition: none;
-}
-
-.iphone-3d-body.phone-putting-down ~ .iphone-resting-shadow {
-    animation: shadowAppear 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.iphone-3d-body.phone-picking-up ~ .iphone-resting-shadow {
-    animation: shadowDisappear 0.6s ease forwards;
-}
-
-@keyframes shadowAppear {
-    0%, 50% { opacity: 0; transform: scaleX(1) scaleY(1); }
-    75% { opacity: 0.6; transform: scaleX(1.6) scaleY(0.2); }
-    100% { opacity: 1; transform: scaleX(2) scaleY(0.15) translateY(-2px); }
-}
-
-@keyframes shadowDisappear {
-    0% { opacity: 1; transform: scaleX(2) scaleY(0.15) translateY(-2px); }
-    100% { opacity: 0; transform: scaleX(1) scaleY(1); }
+    display: none;
 }
 
 .iphone-front,
@@ -4416,13 +4364,6 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     color: #fff;
 }
 
-.iphone-3d-wrapper.minimized .iphone-minimize-btn {
-    display: none;
-}
-
-.iphone-3d-wrapper.minimized .iphone-drag-handle {
-    display: none;
-}
 
 .iphone-3d-wrapper.dragging .iphone-front .iphone-frame {
     box-shadow:
