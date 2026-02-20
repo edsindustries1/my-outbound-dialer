@@ -169,8 +169,8 @@ ADDRESS_ABBREVIATIONS = [
     (r'\bTpke\b\.?', 'Turnpike'), (r'\bTer\b\.?', 'Terrace'),
     (r'\bSq\b\.?', 'Square'), (r'\bTrl\b\.?', 'Trail'), (r'\bExpy\b\.?', 'Expressway'),
     (r'\bFwy\b\.?', 'Freeway'), (r'\bCres\b\.?', 'Crescent'),
-    (r'\bN\b\.?(?=\s+[A-Z])', 'North'), (r'\bS\b\.?(?=\s+[A-Z])', 'South'),
-    (r'\bE\b\.?(?=\s+[A-Z])', 'East'), (r'\bW\b\.?(?=\s+[A-Z])', 'West'),
+    (r'(?<![\'\'`\w])N\.?(?=\s+[A-Z])', 'North'), (r'(?<![\'\'`\w])S\.?(?=\s+[A-Z])', 'South'),
+    (r'(?<![\'\'`\w])E\.?(?=\s+[A-Z])', 'East'), (r'(?<![\'\'`\w])W\.?(?=\s+[A-Z])', 'West'),
     (r'\bNE\b\.?(?=\s+[A-Z])', 'Northeast'), (r'\bNW\b\.?(?=\s+[A-Z])', 'Northwest'),
     (r'\bSE\b\.?(?=\s+[A-Z])', 'Southeast'), (r'\bSW\b\.?(?=\s+[A-Z])', 'Southwest'),
 ]
@@ -440,7 +440,7 @@ DEFAULT_VOICE_SETTINGS = {
     "stability": 0.5,
     "similarity_boost": 0.75,
     "style": 0.0,
-    "speed": 1.0,
+    "speed": 0.85,
     "use_speaker_boost": True,
 }
 
