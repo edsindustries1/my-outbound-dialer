@@ -509,10 +509,10 @@ body.is-fullscreen #fullscreenToggle .icon-shrink {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 10px;
+    padding: 9px;
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.15);
+    border-radius: 12px;
     color: var(--text-secondary);
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -523,7 +523,7 @@ body.is-fullscreen #fullscreenToggle .icon-shrink {
     position: relative;
     text-align: left;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
     justify-content: center;
 }
 
@@ -553,21 +553,26 @@ body.is-fullscreen #fullscreenToggle .icon-shrink {
     width: 22px;
     height: 22px;
     min-width: 22px;
-    stroke: var(--accent);
-    filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 0.4));
+    color: #60A5FA;
+    stroke: #60A5FA;
+    stroke-width: 2.2;
+    filter: drop-shadow(0 0 5px rgba(96, 165, 250, 0.5));
 }
 
 .sidebar-btn:hover svg {
     opacity: 1;
     transform: scale(1.15) !important;
-    stroke: var(--accent-hover);
-    filter: drop-shadow(0 0 8px rgba(var(--accent-rgb), 0.5));
+    color: #93C5FD;
+    stroke: #93C5FD;
+    filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.7));
 }
 
 .sidebar-btn.active svg {
     opacity: 1;
+    color: #fff;
     stroke: #fff;
-    filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));
+    stroke-width: 2.2;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.5));
 }
 
 /* ---- Sidebar Icon Animations (per-icon looping) ---- */
