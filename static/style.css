@@ -3048,5 +3048,17 @@ label {
    ============================================================ */
 .stagger-1 { animation: fadeIn 0.2s ease; }
 
+/* Contact Tags */
+.contact-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 500;
+    background: var(--gads-primary-light);
+    color: var(--gads-primary);
+    margin: 1px 2px;
+}
+
 /* Hidden compat elements */
 #viewDashboard, #viewWizard, #viewMonitor, #dashPanelWrap { display: none !important; }

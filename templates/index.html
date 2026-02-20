@@ -569,6 +569,60 @@
 
                     <div class="gads-card">
                         <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> Contact Manager</h3>
+                            <div class="gads-card-actions">
+                                <span id="contactsTotalBadge" class="gads-badge">0 contacts</span>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadContacts()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                            <div style="flex:1;min-width:200px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Import CSV</label>
+                                <input type="file" id="contactsCsvFile" accept=".csv,.txt" class="gads-input" style="padding:6px;">
+                            </div>
+                            <div style="min-width:150px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Group</label>
+                                <input type="text" id="contactsImportGroup" class="gads-input" placeholder="e.g. Real Estate" maxlength="30">
+                            </div>
+                            <div style="min-width:150px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Tags (comma-sep)</label>
+                                <input type="text" id="contactsImportTags" class="gads-input" placeholder="e.g. lead, warm" maxlength="60">
+                            </div>
+                            <div style="display:flex;align-items:flex-end;">
+                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="importContactsCsv()">Import</button>
+                            </div>
+                        </div>
+                        <div id="contactsImportResult" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;font-size:12px;"></div>
+
+                        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+                            <select id="contactsGroupFilter" class="gads-select gads-select-sm" onchange="loadContacts()" style="width:160px;">
+                                <option value="">All Groups</option>
+                            </select>
+                            <select id="contactsTagFilter" class="gads-select gads-select-sm" onchange="loadContacts()" style="width:160px;">
+                                <option value="">All Tags</option>
+                            </select>
+                            <input type="text" id="contactsSearch" class="gads-input" placeholder="Search contacts..." style="flex:1;min-width:150px;" oninput="filterContactsTable()">
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="deleteSelectedContacts()" id="deleteSelectedBtn" style="display:none;">Delete Selected</button>
+                        </div>
+
+                        <div class="gads-table-wrap" style="max-height:400px;overflow-y:auto;">
+                            <table class="gads-table" id="contactsTable">
+                                <thead><tr><th style="width:30px;"><input type="checkbox" id="contactsSelectAll" onchange="toggleSelectAllContacts()"></th><th>Phone</th><th>Name</th><th>Company</th><th>Group</th><th>Tags</th><th>Calls</th><th>Last Result</th></tr></thead>
+                                <tbody id="contactsBody"><tr><td colspan="8" class="gads-empty">No contacts yet. Import a CSV to get started.</td></tr></tbody>
+                            </table>
+                        </div>
+
+                        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                            <div id="contactsGroupsList" style="font-size:12px;color:var(--gads-text-secondary);"></div>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
                             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Do Not Call List</h3>
                         </div>
                         <div class="gads-input-row">
@@ -622,8 +676,8 @@
                         </div>
                         <div class="gads-table-wrap">
                             <table class="gads-table" id="callTable">
-                                <thead><tr><th>Date/Time</th><th>Destination</th><th>Caller ID</th><th>Status Description</th><th>Ring</th><th>Machine?</th><th>Transferred</th><th>Voicemail</th><th>Transcript</th></tr></thead>
-                                <tbody id="callBody"><tr><td colspan="9" class="gads-empty">No calls yet</td></tr></tbody>
+                                <thead><tr><th>Date/Time</th><th>Destination</th><th>Caller ID</th><th>Status Description</th><th>Ring</th><th>Machine?</th><th>Transferred</th><th>Voicemail</th><th>Recording</th><th>Transcript</th></tr></thead>
+                                <tbody id="callBody"><tr><td colspan="10" class="gads-empty">No calls yet</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -895,6 +949,7 @@
             }
             if (page === 'contacts') {
                 if (typeof loadDNC === 'function') loadDNC();
+                if (typeof loadContacts === 'function') loadContacts();
             }
             if (page === 'settings') {
                 if (typeof loadSchedules === 'function') loadSchedules();
@@ -1647,7 +1702,7 @@
                             alert(data.error);
                             return;
                         }
-                        callBody.innerHTML = '<tr><td colspan="9" class="gads-empty">No calls yet</td></tr>';
+                        callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No calls yet</td></tr>';
                         callCount.textContent = "0 calls";
                         showToast("Call logs cleared", "info");
                     })
@@ -1845,6 +1900,7 @@
             var isActive = false;
             var prevActiveState = false;
             var prevVmCount = 0;
+            var prevHotLeadCount = 0;
             var initialPollDone = false;
             var expandedTranscripts = {};
             var prevCallDataHash = "";
@@ -1930,6 +1986,14 @@
                         }
                         prevVmCount = newVmCount;
 
+                        if (hotLeads > prevHotLeadCount && prevHotLeadCount >= 0) {
+                            var newHotCalls = calls.filter(function(c){ return c.transferred; });
+                            if (newHotCalls.length > 0) {
+                                sendHotLeadNotification(newHotCalls[0].number);
+                            }
+                        }
+                        prevHotLeadCount = hotLeads;
+
                         if (prevActiveState && !data.active && !data.stop_requested) {
                             showToast("Campaign complete!", "success");
                             document.getElementById("wizCampaignComplete").style.display = "";
@@ -2009,6 +2073,14 @@
                                 html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
                                 html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
 
+                                if (c.recording_url) {
+                                    html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';
+                                } else if (isLive) {
+                                    html += '<td><span style="font-size:11px;color:var(--gads-text-secondary);">Recording...</span></td>';
+                                } else {
+                                    html += "<td>-</td>";
+                                }
+
                                 var hasTranscript = c.transcript && c.transcript.length > 0;
                                 var trId = "tr_" + (c.call_id || c.number || idx);
                                 var trKey = c.call_id || c.number || ("idx_" + idx);
@@ -2029,7 +2101,7 @@
 
                                 if (isLive) {
                                     expandedTranscripts[trKey] = true;
-                                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" data-trkey="' + trKey + '" style="display:table-row;"><td colspan="9"><div class="transcript-box transcript-box-live">';
+                                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" data-trkey="' + trKey + '" style="display:table-row;"><td colspan="10"><div class="transcript-box transcript-box-live">';
                                     html += '<div class="transcript-header-live"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Live Transcription <span class="live-dot"></span></div>';
                                     html += '<div class="transcript-lines">';
                                     if (hasTranscript) {
@@ -2045,7 +2117,7 @@
                                     html += '</div></div></td></tr>';
                                 } else if (hasTranscript) {
                                     var wasOpen = expandedTranscripts[trKey] === true;
-                                    html += '<tr class="transcript-row" id="' + trId + '" data-trkey="' + trKey + '" style="display:' + (wasOpen ? "table-row" : "none") + ';"><td colspan="9"><div class="transcript-box"><div class="transcript-lines">';
+                                    html += '<tr class="transcript-row" id="' + trId + '" data-trkey="' + trKey + '" style="display:' + (wasOpen ? "table-row" : "none") + ';"><td colspan="10"><div class="transcript-box"><div class="transcript-lines">';
                                     c.transcript.forEach(function(t) {
                                         var speaker = t.track === "outbound" ? "Agent" : "Caller";
                                         var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
@@ -2062,10 +2134,10 @@
                                     box.scrollTop = box.scrollHeight;
                                 });
                             } else {
-                                callBody.innerHTML = '<tr><td colspan="9" class="gads-empty">No matching calls</td></tr>';
+                                callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No matching calls</td></tr>';
                             }
                         } else if (structureChanged && count === 0) {
-                            callBody.innerHTML = '<tr><td colspan="9" class="gads-empty">No calls yet</td></tr>';
+                            callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No calls yet</td></tr>';
                         }
 
                         // Update dashboard recent activity (mirror last 20 rows)
@@ -2622,6 +2694,200 @@
             function iphoneToggleMinimize(){var dialer=document.getElementById("iphoneDialer");var iFab=document.getElementById("iphoneFab");iphoneMinimized=!iphoneMinimized;if(iphoneMinimized){dialer.classList.remove("hotlead-expand","hotlead-collapse");dialer.style.display="none";iFab.classList.add("visible");if(typeof ballsStartIphone==="function")ballsStartIphone();}else{dialer.classList.remove("hotlead-expand","hotlead-collapse");dialer.style.display="";dialer.style.transform="scale(1)";dialer.style.opacity="1";iFab.classList.remove("visible","floating");if(typeof ballsStopIphone==="function")ballsStopIphone();}}
             function hotleadDismiss(){var dialer=document.getElementById("iphoneDialer");var hlScreen=document.getElementById("iphoneHotLeadScreen");hlScreen.style.display="none";dialer.classList.remove("hotlead-expand");dialer.classList.add("hotlead-collapse");hotleadAnimating=false;if(hotleadAutoMinTimer){clearTimeout(hotleadAutoMinTimer);hotleadAutoMinTimer=null;}setTimeout(function(){dialer.classList.remove("hotlead-collapse","hotlead-expand");dialer.style.display="none";dialer.style.transform="";dialer.style.opacity="";iphoneMinimized=true;var iFab=document.getElementById("iphoneFab");iFab.classList.add("visible");if(typeof ballsStartIphone==="function")ballsStartIphone();},400);}
             function iphoneUpdateDialer(calls,campaignActive){var dialer=document.getElementById("iphoneDialer");var idleScreen=document.getElementById("iphoneIdleScreen");var callScreen=document.getElementById("iphoneCallScreen");var hlScreen=document.getElementById("iphoneHotLeadScreen");if(!campaignActive){callScreen.style.display="none";hlScreen.style.display="none";idleScreen.style.display="";return;}if(!calls||calls.length===0)return;var liveStatuses=["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing","transferred","connected"];var liveCall=null;for(var i=0;i<calls.length;i++){if(liveStatuses.indexOf(calls[i].status)!==-1){liveCall=calls[i];break;}}if(liveCall&&liveCall.transferred&&!hotleadShownIds[liveCall.call_id||liveCall.number]){hotleadShownIds[liveCall.call_id||liveCall.number]=true;callScreen.style.display="none";idleScreen.style.display="none";hlScreen.style.display="";document.getElementById("hotleadNumber").textContent=liveCall.number||"Unknown";if(iphoneMinimized){iphoneMinimized=false;dialer.style.display="";dialer.style.opacity="1";var iFab=document.getElementById("iphoneFab");iFab.classList.remove("visible","floating");if(typeof ballsStopIphone==="function")ballsStopIphone();}dialer.classList.remove("hotlead-collapse");dialer.classList.add("hotlead-expand");hotleadAnimating=true;playHotLeadSound();if(hotleadAutoMinTimer)clearTimeout(hotleadAutoMinTimer);hotleadAutoMinTimer=setTimeout(function(){hotleadDismiss();},8000);}else if(liveCall){idleScreen.style.display="none";callScreen.style.display="";hlScreen.style.display="none";document.getElementById("iphoneCallNumber").textContent=liveCall.number||"";var statusText=liveCall.status_description||formatStatus(liveCall.status);document.getElementById("iphoneCallStatusText").textContent=statusText;document.getElementById("iphoneCallLabel").textContent=liveCall.status==="initiated"?"calling...":"on call";var badge=document.getElementById("iphoneCallBadge");var colorMap={green:"#30D158",red:"#FF453A",yellow:"#FFD60A",blue:"#0A84FF"};badge.style.background=colorMap[liveCall.status_color]||"#0A84FF";var amdDiv=document.getElementById("iphoneCallAmd");if(liveCall.machine_detected!==null){amdDiv.style.display="";document.getElementById("iphoneAmdIcon").textContent=liveCall.machine_detected?"&#129302;":"&#128100;";document.getElementById("iphoneAmdText").textContent=liveCall.machine_detected?"Machine Detected":"Human Detected";}else{amdDiv.style.display="none";}var trDiv=document.getElementById("iphoneCallTranscript");if(liveCall.transcript&&liveCall.transcript.length>0){trDiv.style.display="";var trHtml="";liveCall.transcript.slice(-3).forEach(function(t){var speaker=t.track==="outbound"?"Agent":"Caller";trHtml+='<div class="iphone-tr-line"><strong>'+speaker+':</strong> '+((t.text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"))+'</div>';});document.getElementById("iphoneTranscriptContent").innerHTML=trHtml;}else{trDiv.style.display="none";}if(liveCall.call_id!==iphonePrevCallId){iphonePrevCallId=liveCall.call_id;iphoneCallStart=Date.now();if(iphoneCallTimerInterval)clearInterval(iphoneCallTimerInterval);iphoneCallTimerInterval=setInterval(function(){var elapsed=Math.floor((Date.now()-iphoneCallStart)/1000);var mm=String(Math.floor(elapsed/60)).padStart(2,"0");var ss=String(elapsed%60).padStart(2,"0");document.getElementById("iphoneCallTimer").textContent=mm+":"+ss;},1000);}}else{callScreen.style.display="none";hlScreen.style.display="none";idleScreen.style.display="";if(iphoneCallTimerInterval){clearInterval(iphoneCallTimerInterval);iphoneCallTimerInterval=null;}}var logEntries=document.getElementById("iphoneLogEntries");var recent=calls.slice(0,5);var logHtml="";recent.forEach(function(c){var ts="-";if(c.timestamp){try{var d=new Date(c.timestamp);ts=d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});}catch(e){}}var icon=c.transferred?"&#128293;":c.voicemail_dropped?"&#128232;":"&#128222;";logHtml+='<div class="iphone-log-entry"><span class="iphone-log-icon">'+icon+'</span><span class="iphone-log-number">'+(c.number||"-")+'</span><span class="iphone-log-time">'+ts+'</span></div>';});logEntries.innerHTML=logHtml;}
+            // ---- Browser Push Notifications ----
+            var _notifPermission = Notification ? Notification.permission : "denied";
+            function requestNotifPermission() {
+                if (!("Notification" in window)) return;
+                if (Notification.permission === "default") {
+                    Notification.requestPermission().then(function(p) { _notifPermission = p; });
+                }
+            }
+            requestNotifPermission();
+
+            function sendHotLeadNotification(number) {
+                if (!("Notification" in window) || Notification.permission !== "granted") return;
+                try {
+                    var n = new Notification("Hot Lead Detected!", {
+                        body: "Human answered: " + (number || "Unknown"),
+                        icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
+                        tag: "hotlead-" + number,
+                        requireInteraction: true,
+                    });
+                    n.onclick = function() { window.focus(); n.close(); };
+                    setTimeout(function() { n.close(); }, 15000);
+                } catch(e) {}
+            }
+
+            // ---- Recording Playback ----
+            var _recordingModal = null;
+            function playRecording(url) {
+                if (_recordingModal) { _recordingModal.remove(); }
+                var modal = document.createElement("div");
+                modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;";
+                modal.innerHTML = '<div style="background:var(--gads-card-bg,#fff);border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+                    '<h3 style="margin:0;font-size:16px;">Call Recording</h3>' +
+                    '<button onclick="closeRecordingModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gads-text-secondary);">&times;</button></div>' +
+                    '<audio controls autoplay style="width:100%;border-radius:8px;" src="' + url.replace(/"/g, '&quot;') + '"></audio>' +
+                    '<div style="margin-top:12px;text-align:right;"><a href="' + url.replace(/"/g, '&quot;') + '" download style="font-size:12px;color:var(--gads-primary);text-decoration:none;">Download Recording</a></div></div>';
+                modal.onclick = function(e) { if (e.target === modal) closeRecordingModal(); };
+                document.body.appendChild(modal);
+                _recordingModal = modal;
+            }
+            function closeRecordingModal() {
+                if (_recordingModal) { _recordingModal.remove(); _recordingModal = null; }
+            }
+
+            // ---- Contact List Management ----
+            var _contactsData = [];
+            function loadContacts() {
+                var group = document.getElementById("contactsGroupFilter").value;
+                var tag = document.getElementById("contactsTagFilter").value;
+                var url = "/api/contacts?group=" + encodeURIComponent(group) + "&tag=" + encodeURIComponent(tag);
+                apiFetch(url).then(function(r){return r.json();}).then(function(data) {
+                    _contactsData = data.contacts || [];
+                    document.getElementById("contactsTotalBadge").textContent = data.total + " contacts";
+
+                    var groupSel = document.getElementById("contactsGroupFilter");
+                    var curGroup = groupSel.value;
+                    var gHtml = '<option value="">All Groups</option>';
+                    var groups = data.groups || {};
+                    Object.keys(groups).forEach(function(g) {
+                        gHtml += '<option value="' + g.replace(/"/g,'&quot;') + '"' + (g===curGroup?' selected':'') + '>' + g + ' (' + groups[g] + ')</option>';
+                    });
+                    groupSel.innerHTML = gHtml;
+
+                    var tagSel = document.getElementById("contactsTagFilter");
+                    var curTag = tagSel.value;
+                    var tHtml = '<option value="">All Tags</option>';
+                    var tags = data.tags || {};
+                    Object.keys(tags).forEach(function(t) {
+                        tHtml += '<option value="' + t.replace(/"/g,'&quot;') + '"' + (t===curTag?' selected':'') + '>' + t + ' (' + tags[t] + ')</option>';
+                    });
+                    tagSel.innerHTML = tHtml;
+
+                    renderContactsTable(_contactsData);
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function renderContactsTable(contacts) {
+                var body = document.getElementById("contactsBody");
+                if (!contacts || contacts.length === 0) {
+                    body.innerHTML = '<tr><td colspan="8" class="gads-empty">No contacts found. Import a CSV to get started.</td></tr>';
+                    document.getElementById("deleteSelectedBtn").style.display = "none";
+                    return;
+                }
+                var searchVal = (document.getElementById("contactsSearch").value || "").toLowerCase();
+                var filtered = contacts;
+                if (searchVal) {
+                    filtered = contacts.filter(function(c) {
+                        return (c.phone||"").toLowerCase().indexOf(searchVal) !== -1 ||
+                               (c.first_name||"").toLowerCase().indexOf(searchVal) !== -1 ||
+                               (c.last_name||"").toLowerCase().indexOf(searchVal) !== -1 ||
+                               (c.company||"").toLowerCase().indexOf(searchVal) !== -1;
+                    });
+                }
+                var html = "";
+                filtered.forEach(function(c) {
+                    var name = ((c.first_name||"") + " " + (c.last_name||"")).trim() || "-";
+                    var tagsHtml = (c.tags||[]).map(function(t){ return '<span class="contact-tag">' + t + '</span>'; }).join(" ");
+                    var lastResult = c.last_result || "-";
+                    var lastResultColor = "var(--gads-text-secondary)";
+                    if (lastResult.indexOf("transferred") !== -1 || lastResult.indexOf("human") !== -1) lastResultColor = "var(--gads-success)";
+                    else if (lastResult.indexOf("failed") !== -1 || lastResult.indexOf("busy") !== -1) lastResultColor = "var(--gads-error)";
+                    html += '<tr>';
+                    html += '<td><input type="checkbox" class="contact-select" data-id="' + c.id + '"></td>';
+                    html += '<td class="td-mono">' + (c.phone||"-") + '</td>';
+                    html += '<td>' + name + '</td>';
+                    html += '<td>' + (c.company||"-") + '</td>';
+                    html += '<td>' + (c.group||"-") + '</td>';
+                    html += '<td>' + (tagsHtml||"-") + '</td>';
+                    html += '<td>' + (c.call_count||0) + '</td>';
+                    html += '<td style="font-size:11px;color:' + lastResultColor + ';">' + lastResult + '</td>';
+                    html += '</tr>';
+                });
+                body.innerHTML = html || '<tr><td colspan="8" class="gads-empty">No matching contacts</td></tr>';
+                updateDeleteBtn();
+            }
+
+            function filterContactsTable() {
+                renderContactsTable(_contactsData);
+            }
+
+            function toggleSelectAllContacts() {
+                var checked = document.getElementById("contactsSelectAll").checked;
+                document.querySelectorAll(".contact-select").forEach(function(cb) { cb.checked = checked; });
+                updateDeleteBtn();
+            }
+
+            function updateDeleteBtn() {
+                var selected = document.querySelectorAll(".contact-select:checked");
+                var btn = document.getElementById("deleteSelectedBtn");
+                btn.style.display = selected.length > 0 ? "" : "none";
+                btn.textContent = "Delete Selected (" + selected.length + ")";
+                document.querySelectorAll(".contact-select").forEach(function(cb) {
+                    cb.addEventListener("change", updateDeleteBtn);
+                });
+            }
+
+            function deleteSelectedContacts() {
+                var selected = document.querySelectorAll(".contact-select:checked");
+                var ids = [];
+                selected.forEach(function(cb) { ids.push(cb.getAttribute("data-id")); });
+                if (ids.length === 0) return;
+                if (!confirm("Delete " + ids.length + " contacts?")) return;
+                apiFetch("/api/contacts/delete", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ids: ids})
+                }).then(function(r){return r.json();}).then(function(data) {
+                    showToast(data.removed + " contacts deleted", "success");
+                    loadContacts();
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function importContactsCsv() {
+                var fileInput = document.getElementById("contactsCsvFile");
+                var file = fileInput.files[0];
+                if (!file) { alert("Please select a CSV file"); return; }
+
+                var group = document.getElementById("contactsImportGroup").value.trim();
+                var tags = document.getElementById("contactsImportTags").value.trim();
+
+                var formData = new FormData();
+                formData.append("csv_file", file);
+                if (group) formData.append("group", group);
+                if (tags) formData.append("tags", tags);
+
+                var resultDiv = document.getElementById("contactsImportResult");
+                resultDiv.style.display = "";
+                resultDiv.style.background = "var(--gads-bg)";
+                resultDiv.style.color = "var(--gads-text)";
+                resultDiv.textContent = "Importing...";
+
+                apiFetch("/api/contacts/import", { method: "POST", body: formData })
+                .then(function(r){return r.json();}).then(function(data) {
+                    if (data.error) {
+                        resultDiv.style.background = "#FEE2E2";
+                        resultDiv.style.color = "#991B1B";
+                        resultDiv.textContent = data.error;
+                    } else {
+                        resultDiv.style.background = "#D1FAE5";
+                        resultDiv.style.color = "#065F46";
+                        resultDiv.textContent = data.added + " contacts added, " + data.duplicates + " duplicates skipped. Total: " + data.total;
+                        fileInput.value = "";
+                        showToast(data.added + " contacts imported", "success");
+                        loadContacts();
+                    }
+                    setTimeout(function(){ resultDiv.style.display = "none"; }, 5000);
+                }).catch(function(e){
+                    if(e.message==="auth") return;
+                    resultDiv.style.background = "#FEE2E2";
+                    resultDiv.style.color = "#991B1B";
+                    resultDiv.textContent = "Import failed";
+                });
+            }
+
     </script>
 
 </body>

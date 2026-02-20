@@ -267,6 +267,27 @@ def start_transcription(call_control_id):
         return False
 
 
+def start_recording(call_control_id):
+    """Start recording on an active call."""
+    payload = {
+        "format": "mp3",
+        "channels": "dual",
+    }
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/record_start",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Recording started on call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to start recording on call {call_control_id}: {e}")
+        return False
+
+
 def hangup_call(call_control_id):
     """Hang up an active call."""
     try:

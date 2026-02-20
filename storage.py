@@ -121,6 +121,7 @@ def persist_call_log(call_control_id):
             "amd_result": state.get("amd_result"),
             "hangup_cause": state.get("hangup_cause"),
             "transcript": state.get("transcript", []),
+            "recording_url": state.get("recording_url"),
         }
     cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
@@ -389,6 +390,7 @@ def get_all_statuses():
                 "amd_result": state.get("amd_result"),
                 "hangup_cause": state.get("hangup_cause"),
                 "transcript": state.get("transcript", []),
+                "recording_url": state.get("recording_url"),
             })
             live_cids.add(cid)
 
@@ -415,6 +417,7 @@ def get_all_statuses():
             "amd_result": entry.get("amd_result"),
             "hangup_cause": entry.get("hangup_cause"),
             "transcript": entry.get("transcript", []),
+            "recording_url": entry.get("recording_url"),
         })
 
     combined = live_results + history_results
@@ -990,3 +993,167 @@ def get_campaign_history_summary():
     for r in result:
         r["success_rate"] = round(((r["transferred"] + r["voicemail"]) / r["total"]) * 100, 1) if r["total"] > 0 else 0
     return result
+
+
+# ── Contact List Management ──────────────────────────────────────────────
+
+CONTACTS_FILE = os.path.join(LOGS_DIR, "contacts.json")
+
+def _load_contacts():
+    try:
+        if os.path.exists(CONTACTS_FILE):
+            with open(CONTACTS_FILE, "r") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return []
+
+def _save_contacts(contacts):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    try:
+        with open(CONTACTS_FILE, "w") as f:
+            json.dump(contacts, f, indent=2)
+    except Exception:
+        pass
+
+def _normalize_phone(number):
+    digits = re.sub(r'[^\d+]', '', number.strip())
+    if not digits.startswith("+"):
+        if len(digits) == 10:
+            digits = "+1" + digits
+        elif len(digits) == 11 and digits.startswith("1"):
+            digits = "+" + digits
+        else:
+            digits = "+" + digits
+    return digits
+
+def get_contacts(tag=None, group=None):
+    with _file_lock:
+        contacts = _load_contacts()
+    if tag:
+        contacts = [c for c in contacts if tag in c.get("tags", [])]
+    if group:
+        contacts = [c for c in contacts if c.get("group", "") == group]
+    return contacts
+
+def add_contacts(new_contacts, group="", tags=None):
+    import uuid
+    with _file_lock:
+        existing = _load_contacts()
+        existing_phones = {}
+        for c in existing:
+            existing_phones[c.get("phone_normalized", "")] = c
+
+        added = 0
+        duplicates = 0
+        for nc in new_contacts:
+            phone = nc.get("phone", "").strip()
+            if not phone:
+                continue
+            normalized = _normalize_phone(phone)
+            if normalized in existing_phones:
+                duplicates += 1
+                continue
+
+            contact = {
+                "id": str(uuid.uuid4())[:8],
+                "phone": phone,
+                "phone_normalized": normalized,
+                "first_name": nc.get("first_name", ""),
+                "last_name": nc.get("last_name", ""),
+                "email": nc.get("email", ""),
+                "company": nc.get("company", ""),
+                "group": group or nc.get("group", ""),
+                "tags": tags or nc.get("tags", []),
+                "added_at": datetime.utcnow().isoformat(),
+                "call_count": 0,
+                "last_called": None,
+                "last_result": None,
+                "campaigns_included": 0,
+            }
+            existing.append(contact)
+            existing_phones[normalized] = contact
+            added += 1
+
+        _save_contacts(existing)
+        return {"added": added, "duplicates": duplicates, "total": len(existing)}
+
+def update_contact(contact_id, updates):
+    with _file_lock:
+        contacts = _load_contacts()
+        for c in contacts:
+            if c.get("id") == contact_id:
+                for key in ("first_name", "last_name", "email", "company", "group", "tags"):
+                    if key in updates:
+                        c[key] = updates[key]
+                _save_contacts(contacts)
+                return c
+    return None
+
+def delete_contacts(contact_ids):
+    with _file_lock:
+        contacts = _load_contacts()
+        id_set = set(contact_ids)
+        updated = [c for c in contacts if c.get("id") not in id_set]
+        removed = len(contacts) - len(updated)
+        _save_contacts(updated)
+        return removed
+
+def get_contact_groups():
+    with _file_lock:
+        contacts = _load_contacts()
+    groups = {}
+    for c in contacts:
+        g = c.get("group", "") or "Ungrouped"
+        if g not in groups:
+            groups[g] = 0
+        groups[g] += 1
+    return groups
+
+def get_contact_tags():
+    with _file_lock:
+        contacts = _load_contacts()
+    tags = {}
+    for c in contacts:
+        for t in c.get("tags", []):
+            tags[t] = tags.get(t, 0) + 1
+    return tags
+
+def record_contact_called(phone, result):
+    normalized = _normalize_phone(phone)
+    with _file_lock:
+        contacts = _load_contacts()
+        for c in contacts:
+            if c.get("phone_normalized", "") == normalized:
+                c["call_count"] = c.get("call_count", 0) + 1
+                c["last_called"] = datetime.utcnow().isoformat()
+                c["last_result"] = result
+                break
+        _save_contacts(contacts)
+
+def clear_contacts():
+    with _file_lock:
+        _save_contacts([])
+
+
+# ── Call Recording URLs ──────────────────────────────────────────────────
+
+def store_recording_url(call_control_id, recording_url):
+    with lock:
+        state = call_states.get(call_control_id)
+        if state:
+            state["recording_url"] = recording_url
+
+def get_recording_urls():
+    history = get_call_history()
+    recordings = []
+    for h in history:
+        if h.get("recording_url"):
+            recordings.append({
+                "call_id": h.get("call_id", ""),
+                "number": h.get("number", ""),
+                "timestamp": h.get("timestamp", ""),
+                "recording_url": h["recording_url"],
+                "status": h.get("status", ""),
+            })
+    return recordings

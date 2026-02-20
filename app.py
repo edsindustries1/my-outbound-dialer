@@ -63,8 +63,17 @@ from storage import (
     get_report_settings,
     save_report_settings,
     mark_report_sent,
+    get_contacts,
+    add_contacts,
+    update_contact,
+    delete_contacts,
+    get_contact_groups,
+    get_contact_tags,
+    record_contact_called,
+    clear_contacts,
+    store_recording_url,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription
+from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription, start_recording
 from call_manager import start_dialer
 from personalized_vm import (
     parse_csv as pvm_parse_csv,
@@ -753,6 +762,123 @@ def api_validate_numbers():
     return jsonify(results)
 
 
+# ---- Contact Management API ----
+@app.route("/api/contacts", methods=["GET"])
+@login_required
+def api_contacts_list():
+    tag = request.args.get("tag", "")
+    group = request.args.get("group", "")
+    contacts = get_contacts(tag=tag or None, group=group or None)
+    groups = get_contact_groups()
+    tags = get_contact_tags()
+    return jsonify({"contacts": contacts, "groups": groups, "tags": tags, "total": len(contacts)})
+
+
+@app.route("/api/contacts", methods=["POST"])
+@login_required
+def api_contacts_add():
+    data = request.get_json() or {}
+    new_contacts = data.get("contacts", [])
+    group = data.get("group", "")
+    tags = data.get("tags", [])
+
+    if not new_contacts:
+        return jsonify({"error": "No contacts provided"}), 400
+
+    result = add_contacts(new_contacts, group=group, tags=tags)
+    logger.info(f"Contacts added: {result['added']} new, {result['duplicates']} duplicates, {result['total']} total")
+    return jsonify(result)
+
+
+@app.route("/api/contacts/import", methods=["POST"])
+@login_required
+def api_contacts_import():
+    group = request.form.get("group", "")
+    tags_str = request.form.get("tags", "")
+    tags = [t.strip() for t in tags_str.split(",") if t.strip()] if tags_str else []
+
+    csv_file = request.files.get("csv_file")
+    if not csv_file:
+        return jsonify({"error": "No CSV file provided"}), 400
+
+    content = csv_file.read().decode("utf-8", errors="replace")
+    reader = csv.DictReader(io.StringIO(content))
+    fieldnames = reader.fieldnames or []
+    norm_fields = {f: f.strip().lower().replace(" ", "_") for f in fieldnames}
+
+    phone_col = None
+    first_name_col = None
+    last_name_col = None
+    email_col = None
+    company_col = None
+
+    for orig, norm in norm_fields.items():
+        if norm in ("phone", "phone_number", "phonenumber", "mobile", "cell", "telephone", "tel", "number"):
+            phone_col = orig
+        elif norm in ("first_name", "firstname", "first", "fname"):
+            first_name_col = orig
+        elif norm in ("last_name", "lastname", "last", "lname", "surname"):
+            last_name_col = orig
+        elif norm in ("email", "email_address", "emailaddress"):
+            email_col = orig
+        elif norm in ("company", "organization", "org", "business"):
+            company_col = orig
+
+    if not phone_col:
+        return jsonify({"error": "No phone column found in CSV. Expected: phone, phone_number, mobile, cell, etc."}), 400
+
+    contacts = []
+    for row in reader:
+        phone = (row.get(phone_col) or "").strip()
+        if not phone:
+            continue
+        contact = {"phone": phone}
+        if first_name_col:
+            contact["first_name"] = (row.get(first_name_col) or "").strip()
+        if last_name_col:
+            contact["last_name"] = (row.get(last_name_col) or "").strip()
+        if email_col:
+            contact["email"] = (row.get(email_col) or "").strip()
+        if company_col:
+            contact["company"] = (row.get(company_col) or "").strip()
+        contacts.append(contact)
+
+    if not contacts:
+        return jsonify({"error": "No valid contacts found in CSV"}), 400
+
+    result = add_contacts(contacts, group=group, tags=tags)
+    logger.info(f"CSV import: {result['added']} new, {result['duplicates']} duplicates")
+    return jsonify(result)
+
+
+@app.route("/api/contacts/<contact_id>", methods=["PUT"])
+@login_required
+def api_contact_update(contact_id):
+    data = request.get_json() or {}
+    updated = update_contact(contact_id, data)
+    if updated:
+        return jsonify({"contact": updated})
+    return jsonify({"error": "Contact not found"}), 404
+
+
+@app.route("/api/contacts/delete", methods=["POST"])
+@login_required
+def api_contacts_delete():
+    data = request.get_json() or {}
+    ids = data.get("ids", [])
+    if not ids:
+        return jsonify({"error": "No contact IDs provided"}), 400
+    removed = delete_contacts(ids)
+    return jsonify({"removed": removed})
+
+
+@app.route("/api/contacts/clear", methods=["POST"])
+@login_required
+def api_contacts_clear():
+    clear_contacts()
+    return jsonify({"message": "All contacts cleared"})
+
+
 # ---- Email Report Settings API ----
 @app.route("/api/report-settings", methods=["GET"])
 @login_required
@@ -1096,6 +1222,11 @@ def webhook():
         except Exception as e:
             logger.error(f"Failed to start transcription: {e}")
 
+        try:
+            start_recording(call_control_id)
+        except Exception as e:
+            logger.error(f"Failed to start recording: {e}")
+
         def _amd_fallback(ccid):
             """If AMD event never arrives, treat as human and transfer."""
             state = get_call_state(ccid)
@@ -1296,6 +1427,19 @@ def webhook():
             append_transcript(call_control_id, transcript_text, track, is_final=is_final)
             logger.info(f"Transcript stored [{track}] for {call_control_id}: {transcript_text[:100]}")
 
+    # ---- call.recording.saved ----
+    elif event_type == "call.recording.saved":
+        recording_urls = payload.get("recording_urls", {})
+        recording_url = recording_urls.get("mp3") or recording_urls.get("wav") or ""
+        if not recording_url:
+            public_url = payload.get("public_recording_urls", {})
+            recording_url = public_url.get("mp3") or public_url.get("wav") or ""
+        if recording_url:
+            store_recording_url(call_control_id, recording_url)
+            logger.info(f"Recording saved for {call_control_id}: {recording_url[:80]}")
+        else:
+            logger.warning(f"Recording saved event but no URL found for {call_control_id}")
+
     # ---- call.hangup ----
     elif event_type == "call.hangup":
         timer = _amd_timers.pop(call_control_id, None)
@@ -1361,6 +1505,13 @@ def webhook():
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
         persist_call_log(call_control_id)
         signal_call_complete(call_control_id)
+
+        if state:
+            try:
+                result_desc = state.get("status_description", state.get("status", "unknown"))
+                record_contact_called(state.get("number", ""), result_desc)
+            except Exception:
+                pass
 
     return "", 200
 
