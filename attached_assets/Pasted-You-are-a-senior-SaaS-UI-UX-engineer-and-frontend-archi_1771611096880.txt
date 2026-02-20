@@ -1,0 +1,271 @@
+You are a senior SaaS UI/UX engineer and frontend architect.
+
+You are redesigning an existing working application called:
+
+Open Human — Power Sales Assistant
+
+IMPORTANT RULES:
+
+DO NOT change backend logic
+
+DO NOT modify API routes
+
+DO NOT modify dialing behavior
+
+DO NOT modify voicemail generation logic
+
+DO NOT modify CSV processing
+
+DO NOT modify Telnyx / ElevenLabs integration
+
+DO NOT rename database fields
+
+DO NOT break campaign execution
+
+Your job is ONLY:
+Redesign the interface to look and behave like Google Ads UI/UX
+
+This is a visual + structural redesign only.
+
+The app must feel like:
+Google Ads + modern outbound call center dashboard
+
+Clean, minimal, data-focused, professional SaaS.
+
+DESIGN SYSTEM
+
+Adopt Google-like design language:
+
+Layout:
+
+Left permanent navigation sidebar
+
+Top metrics summary bar
+
+Main content workspace panel
+
+Floating action create button (+ New Campaign)
+
+Style:
+
+Rounded cards
+
+Light gray background (#f1f3f4)
+
+White card containers
+
+Subtle shadows
+
+Blue primary color (#1a73e8)
+
+Green success (#1e8e3e)
+
+Red error (#d93025)
+
+Gray labels (#5f6368)
+
+Typography:
+
+Inter or Roboto font
+
+Clear hierarchy (Google style density)
+
+Numbers large + bold
+
+Labels small uppercase
+
+Spacing:
+
+Dense but readable
+
+Table heavy interface
+
+GLOBAL LAYOUT
+
+Create a fixed sidebar:
+
+Dashboard
+Campaigns
+Voicemails
+Contacts / Lists
+Live Calls
+Reports
+Settings
+
+Top right:
+Account icon
+Balance
+Active lines indicator
+
+DASHBOARD (HOME PAGE)
+
+Top KPI CARDS (like Google Ads):
+
+Today’s Calls
+Connected Calls
+Voicemails Dropped
+Human Transfers
+Answer Rate
+Cost / Credit Usage
+
+Below that:
+
+LIVE ACTIVITY PANEL (REAL TIME TABLE)
+
+Columns:
+Date/Time
+Destination
+Caller ID
+Status Description
+Ring Duration
+Machine Detected
+Transferred
+Voicemail Left
+Live Transcript
+
+Table auto refresh every 3 seconds
+
+CAMPAIGNS PAGE
+
+Show table like Google Ads campaigns:
+
+Columns:
+Campaign Name
+Type
+Mode
+Status
+Daily Limit
+Numbers Loaded
+Calls Made Today
+Answer Rate
+Actions
+
+Status badges:
+Active (green)
+Paused (gray)
+Completed (blue)
+
+Top right button:
+
+New Campaign
+
+CREATE CAMPAIGN FLOW (IMPORTANT)
+
+Use a STEP-BY-STEP wizard like Google Ads
+
+STEP 1 — Choose Campaign Type
+
+Call Only Campaign
+Outbound Dialer Campaign
+
+STEP 2 — Choose Calling Mode
+
+Generic Calling
+Personalized Calling
+
+STEP 3 — Upload Contact List
+
+Upload CSV
+Auto detect fields:
+first_name
+last_name
+phone
+email
+address
+date
+amount
+
+Show preview table before continue
+
+STEP 4 — Voicemail Selection
+
+Select Existing Voicemail
+OR
+Create New Voicemail
+
+VOICEMAIL SECTION
+
+Voicemail Library Page:
+
+Each voicemail appears as a card:
+
+Name
+Duration
+Type: Generic / Personalized
+Last Used
+Play Button
+Edit
+Delete
+
+Create Voicemail Options:
+
+Record microphone
+
+Upload audio file
+
+Paste audio URL
+
+Generate personalized voicemail template
+
+CAMPAIGN SETTINGS PANEL
+
+Inside each campaign page:
+
+Dial interval (seconds)
+Max daily calls
+Working hours scheduler
+Timezone selector
+AMD Human Transfer Number
+Retry attempts
+Voicemail drop enabled toggle
+
+LIVE CALL MONITOR PAGE
+
+Real-time monitoring console
+
+Show live calls as streaming rows
+
+Highlight states:
+
+Ringing — yellow
+Human — green
+Machine — orange
+Transferred — blue
+Voicemail — purple
+Failed — red
+
+Show live transcript expanding panel
+
+UX BEHAVIOR RULES
+
+Everything should feel like an ad manager platform:
+
+No popups → use slide panels
+No page reloads → SPA behavior
+Instant feedback
+Inline editing
+Tables sortable
+Filters on every table
+Search bars everywhere
+
+PERFORMANCE
+
+UI must remain fast even with:
+10,000 contacts
+Active live calls updating
+Multiple campaigns running
+
+Use pagination + virtualization for tables
+
+FINAL RESULT EXPECTATION
+
+The tool should visually feel like:
+
+Google Ads but for outbound calling & voicemail automation.
+
+A new user should instantly understand:
+Create Campaign → Upload List → Select Voicemail → Launch → Monitor Live Calls
+
+You are not rewriting backend — only building a professional SaaS interface layer on top of existing endpoints.
+
+Return updated frontend structure and component architecture.
