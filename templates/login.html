@@ -4,12 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Human - Login</title>
-    <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         (function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);})();
     </script>
     <style>
+        :root {
+            --login-bg: #0f172a;
+            --login-surface: rgba(255,255,255,0.06);
+            --login-border: rgba(255,255,255,0.1);
+            --login-text: #e2e8f0;
+            --login-text-dim: #94a3b8;
+            --login-accent: #3b82f6;
+            --login-accent-2: #06b6d4;
+        }
+        [data-theme="light"] {
+            --login-bg: #f1f3f4;
+            --login-surface: rgba(255,255,255,0.85);
+            --login-border: rgba(0,0,0,0.08);
+            --login-text: #1e293b;
+            --login-text-dim: #64748b;
+            --login-accent: #1a73e8;
+            --login-accent-2: #0891b2;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--login-bg);
+            color: var(--login-text);
+            min-height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .login-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+        .login-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .login-orb-1 {
+            width: 600px; height: 600px;
+            background: var(--login-accent);
+            top: -200px; left: -100px;
+            animation-delay: 0s;
+        }
+        .login-orb-2 {
+            width: 500px; height: 500px;
+            background: var(--login-accent-2);
+            bottom: -150px; right: -100px;
+            animation-delay: -7s;
+        }
+        .login-orb-3 {
+            width: 300px; height: 300px;
+            background: #8b5cf6;
+            top: 50%; left: 60%;
+            animation-delay: -14s;
+            opacity: 0.08;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -20px) scale(1.05); }
+            50% { transform: translate(-20px, 30px) scale(0.95); }
+            75% { transform: translate(20px, 10px) scale(1.02); }
+        }
+
+        .login-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+        }
+        [data-theme="light"] .login-grid {
+            background-image:
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+        }
+
+        canvas#bgCanvas {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.25;
+        }
+        [data-theme="light"] canvas#bgCanvas { opacity: 0.12; }
+
         .login-wrap {
             min-height: 100vh;
             display: flex;
@@ -17,107 +106,230 @@
             justify-content: center;
             padding: 24px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
+
         .login-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 40px 36px;
+            background: var(--login-surface);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid var(--login-border);
+            border-radius: 24px;
+            padding: 48px 40px;
             width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow-card);
+            max-width: 420px;
             text-align: center;
-            transform-style: preserve-3d;
-            animation: sectionIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 20px 50px -12px rgba(0,0,0,0.25),
+                0 0 100px -20px rgba(59,130,246,0.15);
         }
+        [data-theme="light"] .login-card {
+            box-shadow:
+                0 0 0 1px rgba(0,0,0,0.03),
+                0 20px 50px -12px rgba(0,0,0,0.08),
+                0 0 80px -20px rgba(26,115,232,0.1);
+        }
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-logo-icon {
+            width: 64px; height: 64px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--login-accent), var(--login-accent-2));
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+            box-shadow: 0 8px 24px -4px rgba(59,130,246,0.3);
+        }
+        .login-logo-icon svg { width: 32px; height: 32px; stroke: #fff; fill: none; stroke-width: 2; }
+
         .login-text-logo {
-            font-family: 'Sora', sans-serif;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
-            letter-spacing: -1px;
-            color: var(--text-primary);
-            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--login-text) 0%, var(--login-text-dim) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s backwards;
         }
         .login-subtitle {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 28px;
+            font-size: 14px;
+            color: var(--login-text-dim);
+            margin-bottom: 32px;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
         }
-        .login-card label {
+
+        .login-form {
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s backwards;
+        }
+        .login-form label {
+            display: block;
             text-align: left;
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--login-text-dim);
             letter-spacing: 0.5px;
             text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .login-input-wrap {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .login-input-wrap svg {
+            position: absolute;
+            left: 14px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px;
+            stroke: var(--login-text-dim);
+            pointer-events: none;
+            transition: stroke 0.2s;
+        }
+        .login-input-wrap input:focus ~ svg {
+            stroke: var(--login-accent);
         }
         .login-card input[type="password"] {
             width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-input);
-            border-radius: 12px;
-            color: var(--text-primary);
+            padding: 14px 16px 14px 44px;
+            background: rgba(0,0,0,0.15);
+            border: 1px solid var(--login-border);
+            border-radius: 14px;
+            color: var(--login-text);
             font-size: 15px;
             font-family: inherit;
-            transition: all 0.2s ease;
-            margin-bottom: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+        [data-theme="light"] .login-card input[type="password"] {
+            background: rgba(0,0,0,0.03);
         }
         .login-card input[type="password"]:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+            border-color: var(--login-accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15), 0 0 20px -4px rgba(59,130,246,0.2);
+            background: rgba(0,0,0,0.2);
+        }
+        [data-theme="light"] .login-card input[type="password"]:focus {
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+            background: rgba(0,0,0,0.02);
         }
         .login-card input[type="password"]::placeholder {
-            color: var(--text-placeholder);
+            color: var(--login-text-dim);
+            opacity: 0.5;
         }
+
         .login-btn {
             width: 100%;
-            padding: 13px 24px;
-            background: var(--accent-gradient);
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--login-accent), var(--login-accent-2));
             color: #fff;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
             font-family: inherit;
-            box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px -2px rgba(59,130,246,0.4);
         }
         .login-btn:hover {
-            box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.45);
+            box-shadow: 0 8px 30px -4px rgba(59,130,246,0.5);
             transform: translateY(-2px);
         }
         .login-btn:active {
-            transform: scale(0.97);
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 8px rgba(59,130,246,0.3);
         }
+        .login-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .login-btn:hover::after {
+            left: 100%;
+        }
+
         .login-error {
-            background: var(--danger-bg);
-            color: var(--danger);
-            padding: 10px 16px;
-            border-radius: 10px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            color: #f87171;
+            padding: 12px 16px;
+            border-radius: 12px;
             font-size: 13px;
             font-weight: 500;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            animation: shakeX 0.5s ease;
         }
+        [data-theme="light"] .login-error {
+            background: rgba(220,38,38,0.06);
+            border-color: rgba(220,38,38,0.15);
+            color: #dc2626;
+        }
+        @keyframes shakeX {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
         .login-theme-toggle {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 24px; right: 24px;
             z-index: 10;
+        }
+        .login-theme-toggle button {
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--login-surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--login-border);
+            border-radius: 12px;
+            color: var(--login-text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .login-theme-toggle button:hover {
+            background: rgba(255,255,255,0.12);
+            transform: rotate(20deg);
+        }
+        .login-theme-toggle button svg { width: 20px; height: 20px; }
+        [data-theme="light"] .icon-sun { display: none; }
+        [data-theme="dark"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-moon { display: block; }
+        [data-theme="dark"] .icon-sun { display: block; }
+
+        .login-footer {
+            margin-top: 28px;
+            font-size: 12px;
+            color: var(--login-text-dim);
+            opacity: 0.5;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
+        }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 36px 24px; margin: 0 8px; }
         }
     </style>
 </head>
 <body>
-    <div class="bg-glow bg-glow-1"></div>
-    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="login-bg">
+        <div class="login-orb login-orb-1"></div>
+        <div class="login-orb login-orb-2"></div>
+        <div class="login-orb login-orb-3"></div>
+    </div>
+    <div class="login-grid"></div>
 
     <div class="login-theme-toggle">
-        <button type="button" class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <button type="button" id="themeToggle" title="Toggle theme">
             <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
@@ -127,6 +339,9 @@
 
     <div class="login-wrap">
         <div class="login-card">
+            <div class="login-logo-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </div>
             <div class="login-text-logo">Open Human</div>
             <div class="login-subtitle">Enter your password to access the dashboard</div>
 
@@ -134,17 +349,21 @@
             <div class="login-error">{{ error }}</div>
             {% endif %}
 
-            <form method="POST" action="/login">
+            <form method="POST" action="/login" class="login-form">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Enter password" autofocus required>
+                <div class="login-input-wrap">
+                    <input type="password" name="password" placeholder="Enter password" autofocus required>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                </div>
                 <button type="submit" class="login-btn">Unlock Dashboard</button>
             </form>
+
+            <div class="login-footer">Intelligent Communication at Scale</div>
         </div>
     </div>
 
     <script>
-        var themeToggle = document.getElementById("themeToggle");
-        themeToggle.addEventListener("click", function() {
+        document.getElementById("themeToggle").addEventListener("click", function() {
             var current = document.documentElement.getAttribute("data-theme") || "dark";
             var next = current === "dark" ? "light" : "dark";
             document.documentElement.setAttribute("data-theme", next);
@@ -157,27 +376,18 @@
         if (!canvas) return;
         var ctx = canvas.getContext("2d");
         var W, H, particles = [], mouseX = -1000, mouseY = -1000;
-        var PARTICLE_COUNT = 60;
-        var CONNECTION_DIST = 150;
-        var MOUSE_DIST = 180;
-
-        function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-        }
+        var PARTICLE_COUNT = 50;
+        var CONNECTION_DIST = 140;
+        var MOUSE_DIST = 160;
+        function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
         resize();
         window.addEventListener("resize", resize);
         document.addEventListener("mousemove", function(e) { mouseX = e.clientX; mouseY = e.clientY; });
-
         function Particle() {
-            this.x = Math.random() * W;
-            this.y = Math.random() * H;
-            this.z = Math.random();
-            this.vx = (Math.random() - 0.5) * 0.4;
-            this.vy = (Math.random() - 0.5) * 0.4;
-            this.vz = (Math.random() - 0.5) * 0.005;
-            this.baseSize = 1.5 + Math.random() * 2;
-            this.hue = Math.random() > 0.5 ? 264 : 187;
+            this.x = Math.random() * W; this.y = Math.random() * H; this.z = Math.random();
+            this.vx = (Math.random() - 0.5) * 0.3; this.vy = (Math.random() - 0.5) * 0.3;
+            this.vz = (Math.random() - 0.5) * 0.005; this.baseSize = 1.5 + Math.random() * 2;
+            this.hue = Math.random() > 0.5 ? 220 : 187;
         }
         Particle.prototype.update = function() {
             this.x += this.vx; this.y += this.vy; this.z += this.vz;
@@ -187,18 +397,17 @@
             if (this.x > W) { this.x = W; this.vx *= -1; }
             if (this.y < 0) { this.y = 0; this.vy *= -1; }
             if (this.y > H) { this.y = H; this.vy *= -1; }
-            var dx = mouseX - this.x, dy = mouseY - this.y;
-            var dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < MOUSE_DIST) { var f = (MOUSE_DIST - dist) / MOUSE_DIST * 0.02; this.vx -= dx * f; this.vy -= dy * f; }
-            var spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-            if (spd > 1.5) { this.vx *= 0.98; this.vy *= 0.98; }
+            var dx = mouseX - this.x, dy = mouseY - this.y, dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < MOUSE_DIST) { var f = (MOUSE_DIST - dist) / MOUSE_DIST * 0.015; this.vx -= dx * f; this.vy -= dy * f; }
+            var spd = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+            if (spd > 1.2) { this.vx *= 0.98; this.vy *= 0.98; }
         };
         Particle.prototype.draw = function() {
-            var s = this.baseSize * (0.5 + this.z * 0.8), a = 0.2 + this.z * 0.6;
+            var s = this.baseSize * (0.5 + this.z * 0.8), a = 0.2 + this.z * 0.5;
             ctx.beginPath(); ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
-            ctx.fillStyle = this.hue === 264 ? "rgba(37,99,235," + a + ")" : "rgba(6,182,212," + a + ")";
+            ctx.fillStyle = this.hue === 220 ? "rgba(59,130,246," + a + ")" : "rgba(6,182,212," + a + ")";
             ctx.fill();
-            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 264 ? "rgba(37,99,235," + (a * 0.08) + ")" : "rgba(6,182,212," + (a * 0.08) + ")"; ctx.fill(); }
+            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 220 ? "rgba(59,130,246," + (a*0.06) + ")" : "rgba(6,182,212," + (a*0.06) + ")"; ctx.fill(); }
         };
         for (var i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
         function animate() {
@@ -206,11 +415,11 @@
             for (var i = 0; i < particles.length; i++) particles[i].update();
             for (var i = 0; i < particles.length; i++) {
                 for (var j = i + 1; j < particles.length; j++) {
-                    var a = particles[i], b = particles[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.15 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(37,99,235," + al + ")"); g.addColorStop(1, "rgba(6,182,212," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.8; ctx.stroke(); }
+                    var a = particles[i], b = particles[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx*dx + dy*dy);
+                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.12 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(59,130,246," + al + ")"); g.addColorStop(1, "rgba(6,182,212," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.6; ctx.stroke(); }
                 }
             }
-            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx * dx + dy * dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / MOUSE_DIST) * 0.25) + ")"; ctx.lineWidth = 0.8; ctx.stroke(); } } }
+            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx*dx + dy*dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / MOUSE_DIST) * 0.2) + ")"; ctx.lineWidth = 0.6; ctx.stroke(); } } }
             for (var i = 0; i < particles.length; i++) particles[i].draw();
             requestAnimationFrame(animate);
         }

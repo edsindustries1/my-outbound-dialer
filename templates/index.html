@@ -985,9 +985,26 @@
 
             // ---- Splash Screen ----
             setTimeout(function() {
-                document.getElementById("splash").classList.add("hide");
+                var sp = document.getElementById("splash");
+                sp.classList.add("fade-out");
+                setTimeout(function() { sp.classList.add("hide"); }, 500);
                 document.getElementById("app").classList.add("show");
             }, 2900);
+
+            // ---- Global Ripple Effect ----
+            document.addEventListener("click", function(e) {
+                var btn = e.target.closest(".gads-btn, .gads-btn-primary, .gads-nav-item, .wiz-type-card, .download-preset");
+                if (!btn) return;
+                var rect = btn.getBoundingClientRect();
+                var ripple = document.createElement("span");
+                ripple.className = "ripple";
+                var size = Math.max(rect.width, rect.height) * 2;
+                ripple.style.width = ripple.style.height = size + "px";
+                ripple.style.left = (e.clientX - rect.left - size / 2) + "px";
+                ripple.style.top = (e.clientY - rect.top - size / 2) + "px";
+                btn.appendChild(ripple);
+                setTimeout(function() { ripple.remove(); }, 500);
+            });
 
             // ---- Hot Lead Sound ----
             function playHotLeadSound() {
@@ -1042,13 +1059,11 @@
                 var toast = document.createElement("div");
                 toast.className = "toast toast-" + type;
                 var icons = {success: "&#10003;", error: "&#10007;", info: "&#9432;", warning: "&#9888;"};
-                toast.innerHTML = '<span class="toast-icon">' + (icons[type] || icons.info) + '</span><span class="toast-msg">' + message + '</span>';
+                toast.innerHTML = '<span style="font-size:16px;">' + (icons[type] || icons.info) + '</span><span>' + message + '</span>';
                 container.appendChild(toast);
-                requestAnimationFrame(function(){ toast.classList.add("toast-show"); });
                 setTimeout(function(){
-                    toast.classList.remove("toast-show");
-                    toast.classList.add("toast-hide");
-                    setTimeout(function(){ toast.remove(); }, 400);
+                    toast.classList.add("toast-exit");
+                    setTimeout(function(){ toast.remove(); }, 300);
                 }, 3500);
             }
 
