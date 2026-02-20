@@ -3652,7 +3652,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     position: relative;
     z-index: 2;
     background: #000;
-    border-radius: 50px 50px 0 0;
+    border-radius: 49px 49px 0 0;
 }
 
 .iphone-dynamic-island {
@@ -3723,6 +3723,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     flex: 1;
     min-height: 0;
     background: #000;
+    border-radius: 0 0 49px 49px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -4026,7 +4027,7 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
     height: 4px;
     background: rgba(255,255,255,0.3);
     border-radius: 3px;
-    margin: 4px auto 6px;
+    margin: 6px auto 10px;
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -4302,7 +4303,10 @@ tbody tr:hover { background: rgba(var(--accent-rgb), 0.06); }
         border-radius: 44px;
     }
     .iphone-notch-area {
-        border-radius: 42px 42px 0 0;
+        border-radius: 41px 41px 0 0;
+    }
+    .iphone-screen {
+        border-radius: 0 0 41px 41px;
     }
     .iphone-action-icon {
         width: 38px;
