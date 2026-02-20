@@ -369,6 +369,82 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .lead-success h3{font-size:1.3rem;font-weight:700;color:var(--text)}
 .lead-success p{font-size:.88rem;color:var(--text-muted);line-height:1.6;max-width:300px}
 
+/* ---- LOGO TRUST STRIP ---- */
+.logo-strip{padding:48px 0 56px;background:#0a0a1a;border-bottom:1px solid rgba(99,102,241,0.08);position:relative;overflow:hidden}
+.logo-strip::before{content:'';position:absolute;left:0;top:0;bottom:0;width:120px;background:linear-gradient(90deg,#0a0a1a,transparent);z-index:2;pointer-events:none}
+.logo-strip::after{content:'';position:absolute;right:0;top:0;bottom:0;width:120px;background:linear-gradient(270deg,#0a0a1a,transparent);z-index:2;pointer-events:none}
+.logo-strip-label{text-align:center;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:3px;color:rgba(255,255,255,0.25);margin-bottom:28px}
+.logo-marquee{display:flex;gap:64px;animation:marqueeScroll 30s linear infinite;width:max-content}
+.logo-marquee:hover{animation-play-state:paused}
+.logo-item{display:flex;align-items:center;gap:10px;white-space:nowrap;opacity:.35;transition:opacity .3s;flex-shrink:0}
+.logo-item:hover{opacity:.7}
+.logo-item svg{flex-shrink:0}
+.logo-item span{font-size:.95rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+@keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ---- ANIMATED GRADIENT BORDER (Featured Pricing) ---- */
+.p-card-featured{border:none;position:relative;background:var(--bg);z-index:1}
+.p-card-featured::before{content:'';position:absolute;inset:-2px;border-radius:calc(var(--radius-lg) + 2px);background:conic-gradient(from var(--border-angle,0deg),#6366f1,#818cf8,#a78bfa,#c4b5fd,#818cf8,#6366f1);z-index:-1;animation:rotateBorder 4s linear infinite}
+.p-card-featured::after{content:'';position:absolute;inset:0;border-radius:var(--radius-lg);background:var(--bg);z-index:-1}
+@property --border-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes rotateBorder{to{--border-angle:360deg}}
+
+/* ---- GLASSMORPHISM STATS ---- */
+.stats-bar{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(99,102,241,0.1)}
+
+/* ---- ANIMATED GRADIENT EYEBROWS ---- */
+.section-eyebrow{background:linear-gradient(90deg,#6366f1,#818cf8,#a78bfa,#6366f1);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:eyebrowShift 4s ease-in-out infinite}
+@keyframes eyebrowShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* ---- SECTION DIVIDERS ---- */
+.section-divider{width:100%;line-height:0;overflow:hidden;pointer-events:none;margin-top:-1px}
+.section-divider svg{display:block;width:100%;height:auto}
+.divider-flip{transform:scaleY(-1);margin-top:0;margin-bottom:-1px}
+
+/* ---- WORKFLOW PROGRESS LINE ---- */
+.wf-connector{display:flex;align-items:center;padding-top:28px;opacity:1}
+.wf-connector svg line{stroke-dasharray:0 40;animation:dashDraw 1.5s ease forwards;animation-play-state:paused}
+.wf-connector.in-view svg line{animation-play-state:running}
+@keyframes dashDraw{to{stroke-dasharray:40 0}}
+
+/* ---- BACK TO TOP BUTTON ---- */
+.back-to-top{position:fixed;bottom:32px;right:32px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:90;opacity:0;transform:translateY(20px);transition:all .3s;box-shadow:0 4px 16px rgba(99,102,241,0.3);pointer-events:none}
+.back-to-top.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.back-to-top:hover{background:var(--accent-hover);transform:translateY(-3px);box-shadow:0 8px 28px rgba(99,102,241,0.4)}
+.back-to-top svg{transition:transform .2s}
+.back-to-top:hover svg{transform:translateY(-2px)}
+
+/* ---- FOOTER SOCIAL ---- */
+.footer-social{display:flex;gap:12px;margin-top:20px}
+.footer-social a{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all .25s}
+.footer-social a:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);transform:translateY(-2px)}
+
+/* ---- FINAL CTA PARTICLES ---- */
+.cta-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
+
+/* ---- ENHANCED HOVER MICRO-INTERACTIONS ---- */
+.bento-card{will-change:transform}
+.bento-card:hover .bento-feat-icon{background:var(--accent);color:#fff;transform:scale(1.1);box-shadow:0 4px 16px var(--accent-glow)}
+.bento-feat-icon{transition:all .35s cubic-bezier(.25,.46,.45,.94)}
+.btn-primary{position:relative;overflow:hidden}
+.btn-primary::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.15);border-radius:50%;transform:translate(-50%,-50%);transition:width .5s,height .5s}
+.btn-primary:hover::after{width:300px;height:300px}
+.p-cta{position:relative;overflow:hidden}
+.p-cta::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,0.1);border-radius:50%;transform:translate(-50%,-50%);transition:width .4s,height .4s}
+.p-cta:hover::after{width:250px;height:250px}
+
+/* ---- SMOOTH CARD TILT EFFECT ---- */
+.t-card{transition:all .4s cubic-bezier(.25,.46,.45,.94)}
+.t-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(99,102,241,0.12)}
+
+/* ---- BLOG CARD SHIMMER ---- */
+.blog-card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(99,102,241,0.04),transparent);transition:left .6s;pointer-events:none;z-index:1}
+.blog-card:hover::before{left:150%}
+.blog-card{position:relative}
+
+/* ---- NAV PROGRESS INDICATOR ---- */
+.nav-progress{position:absolute;bottom:0;left:0;height:2px;background:var(--accent-gradient);transition:width .1s linear;z-index:10}
+
 /* ---- RESPONSIVE ---- */
 @media(max-width:1024px){
   .bento-large{grid-template-columns:1fr}
@@ -385,8 +461,10 @@ a{text-decoration:none;color:inherit;transition:color .2s}
   .footer-top{grid-template-columns:1fr;gap:32px}
   .workflow-steps{flex-wrap:wrap;gap:0}
   .wf-connector{display:none}
+  .logo-strip-label{font-size:.65rem}
 }
 @media(max-width:768px){
+  .back-to-top{bottom:20px;right:20px;width:42px;height:42px}
   .nav-links{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,10,26,0.97);flex-direction:column;align-items:center;justify-content:center;gap:32px;z-index:99}
   .nav-links.open{display:flex}
   .nav-links a{font-size:1.2rem;color:#fff !important}

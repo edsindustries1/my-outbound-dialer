@@ -11,7 +11,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **templates/landing.html** - Public landing page (marketing/sales site)
 - **templates/index.html** - Dashboard UI with animated splash screen and polling (auth-protected at /dashboard)
 - **templates/login.html** - Password-protected login page
-- **static/landing.css** - Landing page styles (hero, features, pricing, FAQ, footer)
+- **static/landing.css** - Landing page styles (hero, features, pricing, FAQ, footer, animations, visual effects)
 - **static/style.css** - Dual-theme CSS with blue/cyan gradient branding (dashboard)
 - **static/images/** - Landing page images (dashboard-preview, feature illustrations, hero-bg)
 - **static/videos/bg-loop-new.mp4** - Fiber optic video background
@@ -57,6 +57,25 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **Cards**: White with subtle shadows
 - **Font**: Inter (UI), system sans-serif fallback
 - **Favicon**: Brain emoji
+
+## Landing Page Visual Effects
+- **Hero**: Dark immersive bg (#0a0a1a), 60-particle canvas with connecting lines, 3 floating gradient orbs, grid overlay, word-by-word title reveal with 3D rotation
+- **Logo Trust Strip**: Infinite scroll marquee with 8 company logos, fade edges, pause-on-hover
+- **Section Dividers**: Wavy SVG shapes between sections for smooth transitions
+- **Animated Gradient Eyebrows**: Section labels with shifting gradient text animation
+- **Featured Pricing Border**: Rotating conic gradient border using CSS @property
+- **Glassmorphism Stats Bar**: Frosted glass effect with backdrop-filter
+- **CTA Section Particles**: 40 floating sparkle particles on canvas, fade in/out lifecycle
+- **Testimonial Auto-Play**: 5-second auto-advance carousel with pause-on-hover
+- **Workflow Dash Animation**: Connecting line dash-draw triggered on scroll
+- **Nav Progress Indicator**: Indigo gradient bar showing scroll progress at top of nav
+- **Back-to-Top Button**: Floating indigo circle, appears after 600px scroll
+- **Button Ripple Effects**: White circle expansion on hover for CTA buttons
+- **Blog Card Shimmer**: Diagonal light sweep on hover
+- **Bento Icon Highlight**: Icon bg changes to indigo on card hover
+- **Footer Social Icons**: Twitter, LinkedIn, YouTube with hover lift effects
+- **Lead Capture Modal**: Split-layout form with floating orb animation, success checkmark pop
+- **Performance**: Scroll handler uses requestAnimationFrame throttling
 
 ## UI/UX - Google Ads Style SaaS Interface
 - **Layout**: Fixed left sidebar (220px) + top bar (56px) + main content area
