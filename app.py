@@ -100,6 +100,7 @@ _detected_base_url = None
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
+os.makedirs("uploads/personalized", exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
