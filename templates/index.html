@@ -90,9 +90,54 @@
         <div class="gads-main" id="gadsMain">
             <!-- TOP BAR -->
             <div class="gads-topbar">
-                <h1 class="gads-page-title" id="gadsPageTitle">Dashboard</h1>
+                <div class="gads-topbar-left">
+                    <div class="gads-breadcrumb" id="gadsBreadcrumb">
+                        <a class="gads-breadcrumb-item gads-breadcrumb-root" onclick="navigateTo('dashboard')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        </a>
+                        <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        <span class="gads-breadcrumb-item gads-breadcrumb-current" id="breadcrumbCurrent">Dashboard</span>
+                    </div>
+                    <h1 class="gads-page-title" id="gadsPageTitle">Dashboard</h1>
+                </div>
+
+                <div class="gads-topbar-center">
+                    <div class="gads-search-wrap" id="gadsSearchWrap">
+                        <svg class="gads-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="gads-search-input" id="gadsSearchInput" placeholder="Search campaigns, contacts, calls..." autocomplete="off">
+                        <kbd class="gads-search-kbd">/</kbd>
+                        <div class="gads-search-results" id="gadsSearchResults"></div>
+                    </div>
+                </div>
+
                 <div class="gads-topbar-right">
-                    <span class="gads-status-indicator"><span class="gads-status-dot"></span> Active</span>
+                    <div class="gads-campaign-chip" id="gadsCampaignChip" style="display:none;" onclick="navigateTo('campaigns')">
+                        <span class="gads-campaign-chip-dot"></span>
+                        <span class="gads-campaign-chip-text" id="campaignChipText">Campaign Active</span>
+                        <span class="gads-campaign-chip-count" id="campaignChipCount">0/0</span>
+                    </div>
+
+                    <button type="button" class="gads-topbar-action-btn" id="quickNewCampaign" onclick="navigateTo('campaigns'); setTimeout(function(){ openWizard(); }, 100);" title="New Campaign">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span class="gads-action-btn-label">New Campaign</span>
+                    </button>
+
+                    <div class="gads-notification-wrap" id="gadsNotificationWrap">
+                        <button type="button" class="gads-topbar-btn" id="notificationBell" onclick="toggleNotifications()" title="Notifications">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                            <span class="gads-notification-badge" id="notifBadge" style="display:none;">0</span>
+                        </button>
+                        <div class="gads-notification-panel" id="notifPanel">
+                            <div class="gads-notif-header">
+                                <span class="gads-notif-title">Notifications</span>
+                                <button class="gads-notif-clear" onclick="clearNotifications()">Clear all</button>
+                            </div>
+                            <div class="gads-notif-list" id="notifList">
+                                <div class="gads-notif-empty">No new notifications</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="button" class="gads-topbar-btn" id="fullscreenToggle" title="Toggle fullscreen">
                         <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                         <svg class="icon-shrink" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
@@ -103,15 +148,23 @@
                     </button>
                     <div class="gads-avatar-wrap">
                         <div class="gads-avatar" id="avatarBtn" onclick="toggleAvatarMenu()">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span class="gads-avatar-letter">A</span>
                         </div>
                         <div class="gads-avatar-menu" id="avatarMenu">
                             <div class="gads-avatar-menu-header">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                <span>Admin</span>
+                                <div class="gads-avatar-menu-avatar">A</div>
+                                <div>
+                                    <div class="gads-avatar-menu-name">Admin</div>
+                                    <div class="gads-avatar-menu-role">Account Owner</div>
+                                </div>
                             </div>
                             <div class="gads-avatar-menu-divider"></div>
-                            <a class="gads-avatar-menu-item" href="/logout">
+                            <a class="gads-avatar-menu-item" onclick="navigateTo('settings')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                                <span>Settings</span>
+                            </a>
+                            <div class="gads-avatar-menu-divider"></div>
+                            <a class="gads-avatar-menu-item gads-avatar-menu-signout" href="/logout">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                                 <span>Sign Out</span>
                             </a>
@@ -1035,6 +1088,9 @@
             var title = document.getElementById('gadsPageTitle');
             if (title) title.textContent = _gadsPageTitles[page] || page;
 
+            var breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
+            if (breadcrumbCurrent) breadcrumbCurrent.textContent = _gadsPageTitles[page] || page;
+
             if (page === 'reports') {
                 if (typeof loadAnalytics === 'function') loadAnalytics();
                 if (typeof loadCampaignHistory === 'function') loadCampaignHistory();
@@ -1100,6 +1156,147 @@
                 navigateTo(hash);
             }
         });
+
+        /* ===== GLOBAL SEARCH ===== */
+        var _searchPages = [
+            { page: 'dashboard', label: 'Dashboard', sub: 'Overview & KPIs', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>' },
+            { page: 'campaigns', label: 'Campaigns', sub: 'Manage & launch campaigns', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
+            { page: 'voicemails', label: 'Voicemails', sub: 'Voicemail settings & PVM', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>' },
+            { page: 'contacts', label: 'Contacts & Lists', sub: 'DNC lists & number validation', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' },
+            { page: 'phonenumbers', label: 'Phone Numbers', sub: 'Search, buy & manage numbers', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
+            { page: 'livecalls', label: 'Live Calls', sub: 'Call logs & real-time status', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' },
+            { page: 'reports', label: 'Reports', sub: 'Analytics & email reports', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
+            { page: 'settings', label: 'Settings', sub: 'Test dialer, webhooks, templates', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }
+        ];
+        var _searchQuickActions = [
+            { label: 'New Campaign', sub: 'Launch a new campaign', action: function(){ navigateTo('campaigns'); setTimeout(openWizard, 100); }, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' },
+            { label: 'Test Call', sub: 'Make a test call', action: function(){ navigateTo('settings'); }, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>' }
+        ];
+
+        (function() {
+            var input = document.getElementById('gadsSearchInput');
+            var results = document.getElementById('gadsSearchResults');
+            if (!input || !results) return;
+
+            input.addEventListener('input', function() {
+                var q = this.value.toLowerCase().trim();
+                if (!q) { results.classList.remove('open'); results.innerHTML = ''; return; }
+                var html = '';
+                _searchQuickActions.forEach(function(a, i) {
+                    if (a.label.toLowerCase().indexOf(q) !== -1 || a.sub.toLowerCase().indexOf(q) !== -1) {
+                        html += '<div class="gads-search-result-item" data-action-idx="' + i + '"><div class="gads-search-result-icon">' + a.icon + '</div><div class="gads-search-result-text"><div class="gads-search-result-label">' + a.label + '</div><div class="gads-search-result-sub">' + a.sub + '</div></div></div>';
+                    }
+                });
+                _searchPages.forEach(function(p) {
+                    if (p.label.toLowerCase().indexOf(q) !== -1 || p.sub.toLowerCase().indexOf(q) !== -1) {
+                        html += '<div class="gads-search-result-item" data-page="' + p.page + '"><div class="gads-search-result-icon">' + p.icon + '</div><div class="gads-search-result-text"><div class="gads-search-result-label">' + p.label + '</div><div class="gads-search-result-sub">' + p.sub + '</div></div></div>';
+                    }
+                });
+                if (!html) html = '<div class="gads-search-no-results">No results found</div>';
+                results.innerHTML = html;
+                results.classList.add('open');
+                results.querySelectorAll('.gads-search-result-item').forEach(function(el) {
+                    el.addEventListener('click', function() {
+                        var pg = this.getAttribute('data-page');
+                        var ai = this.getAttribute('data-action-idx');
+                        if (pg) navigateTo(pg);
+                        else if (ai !== null) _searchQuickActions[parseInt(ai)].action();
+                        input.value = '';
+                        results.classList.remove('open');
+                    });
+                });
+            });
+
+            input.addEventListener('focus', function() {
+                if (this.value.trim()) this.dispatchEvent(new Event('input'));
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!document.getElementById('gadsSearchWrap').contains(e.target)) {
+                    results.classList.remove('open');
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    input.focus();
+                }
+                if (e.key === 'Escape') {
+                    input.blur();
+                    results.classList.remove('open');
+                }
+            });
+        })();
+
+        /* ===== NOTIFICATIONS ===== */
+        var _notifications = [];
+
+        function toggleNotifications() {
+            var panel = document.getElementById('notifPanel');
+            panel.classList.toggle('open');
+            var avatarMenu = document.getElementById('avatarMenu');
+            if (avatarMenu) avatarMenu.classList.remove('open');
+        }
+
+        function addNotification(type, message) {
+            var icons = { success: '&#10003;', warning: '&#9888;', error: '&#10007;', info: '&#8505;' };
+            var now = new Date();
+            var timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+            _notifications.unshift({ type: type, message: message, time: timeStr });
+            if (_notifications.length > 20) _notifications.pop();
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            var list = document.getElementById('notifList');
+            var badge = document.getElementById('notifBadge');
+            if (!list) return;
+            if (_notifications.length === 0) {
+                list.innerHTML = '<div class="gads-notif-empty">No new notifications</div>';
+                if (badge) badge.style.display = 'none';
+                return;
+            }
+            var html = '';
+            _notifications.forEach(function(n) {
+                html += '<div class="gads-notif-item"><div class="gads-notif-icon gads-notif-icon-' + n.type + '">' + ({success:'&#10003;',warning:'&#9888;',error:'&#10007;',info:'&#8505;'}[n.type] || '&#8505;') + '</div><div class="gads-notif-body"><div class="gads-notif-msg">' + n.message + '</div><div class="gads-notif-time">' + n.time + '</div></div></div>';
+            });
+            list.innerHTML = html;
+            if (badge) {
+                badge.textContent = _notifications.length;
+                badge.style.display = 'flex';
+            }
+        }
+
+        function clearNotifications() {
+            _notifications = [];
+            renderNotifications();
+        }
+
+        document.addEventListener('click', function(e) {
+            var wrap = document.getElementById('gadsNotificationWrap');
+            var panel = document.getElementById('notifPanel');
+            if (wrap && panel && !wrap.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        /* ===== CAMPAIGN STATUS CHIP ===== */
+        function updateCampaignChip(data) {
+            var chip = document.getElementById('gadsCampaignChip');
+            var text = document.getElementById('campaignChipText');
+            var count = document.getElementById('campaignChipCount');
+            if (!chip) return;
+            if (data && data.campaign_active) {
+                chip.style.display = 'flex';
+                var dialed = data.dialed || 0;
+                var total = data.total || 0;
+                text.textContent = 'Campaign Live';
+                count.textContent = dialed + '/' + total;
+            } else {
+                chip.style.display = 'none';
+            }
+        }
     </script>
 
     <!-- ===== MAIN APPLICATION SCRIPT (preserved from original) ===== -->
@@ -1223,6 +1420,10 @@
                     toast.classList.add("toast-exit");
                     setTimeout(function(){ toast.remove(); }, 300);
                 }, 3500);
+                if (typeof addNotification === 'function') {
+                    var notifType = type === 'info' ? 'info' : type;
+                    addNotification(notifType, message);
+                }
             }
 
             // ---- Campaign History ----
@@ -2057,6 +2258,10 @@
                             document.getElementById("progressFill").style.width = percent + "%";
                         } else {
                             progressWrap.style.display = "none";
+                        }
+
+                        if (typeof updateCampaignChip === 'function') {
+                            updateCampaignChip({ campaign_active: data.active, dialed: data.dialed_count, total: data.total });
                         }
 
                         var hasLiveCalls = false;

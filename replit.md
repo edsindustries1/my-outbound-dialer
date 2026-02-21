@@ -82,8 +82,9 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 
 ## UI/UX - Google Ads Style SaaS Interface
 - **Layout**: Fixed left sidebar (256px) + top bar (56px) + main content area
+- **Top Bar Header**: Redesigned with breadcrumb navigation (Home > Current Page), global search bar with "/" keyboard shortcut and dropdown results, "+ New Campaign" quick action button, notification bell with badge count and dropdown panel (auto-fed from toast events), live campaign status chip showing progress (dialed/total), fullscreen & theme toggles, and improved profile avatar menu with avatar letter, name, role, settings link, and sign-out
 - **Navigation**: SPA-style with 8 pages: Dashboard, Campaigns, Voicemails, Contacts, Phone Numbers, Live Calls, Reports, Settings
-- **Page switching**: navigateTo() function toggles page containers, updates sidebar active state and page title
+- **Page switching**: navigateTo() function toggles page containers, updates sidebar active state, page title, and breadcrumb
 - **Dual-theme system**: Light (default, Google Ads style) and Dark modes with toggle in top bar
 - **Theme persisted**: localStorage ("vb_theme") with inline head script to prevent flash
 - **Sidebar**: White bg, nav items with 22px SVG icons, active item has Google Blue text + light blue bg, collapsible via toggle button
