@@ -37,6 +37,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - Adaptive polling: 1s during active calls, 3s when idle
 - All API fetch calls use credentials: "include" and X-Requested-With header for proper auth on published URL
 - Real-time call transcription using Telnyx STT (Telnyx engine, $0.025/min), started on call.answered, stored per-call
+- Telnyx number management: Users can search, buy, and manage phone numbers directly from the dashboard. Auto-provisioning creates a Call Control Application with webhook URLs and assigns numbers automatically. Uses Telnyx API as source of truth (no local storage for number data). Per-campaign caller ID selection supported.
 
 ## Voicemail Settings
 - Default voicemail URL pre-loaded from Cloudinary
@@ -79,7 +80,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 
 ## UI/UX - Google Ads Style SaaS Interface
 - **Layout**: Fixed left sidebar (220px) + top bar (56px) + main content area
-- **Navigation**: SPA-style with 7 pages: Dashboard, Campaigns, Voicemails, Contacts, Live Calls, Reports, Settings
+- **Navigation**: SPA-style with 8 pages: Dashboard, Campaigns, Voicemails, Contacts, Phone Numbers, Live Calls, Reports, Settings
 - **Page switching**: navigateTo() function toggles page containers, updates sidebar active state and page title
 - **Dual-theme system**: Light (default, Google Ads style) and Dark modes with toggle in top bar
 - **Theme persisted**: localStorage ("vb_theme") with inline head script to prevent flash
@@ -89,6 +90,7 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **Campaign Wizard**: 5-step overlay (Campaign Type, Calling Mode, Upload Contacts, Select Voicemail, Settings & Launch) with stepper navigation
 - **Voicemails page**: Voicemail Settings card (saved URL, player, update) + Personalized Voicemail section with full PVM controls
 - **Contacts page**: DNC List management + Number Validation tool
+- **Phone Numbers page**: Search available numbers (by area code/region/type), purchase numbers with auto-provisioning (creates Call Control App, assigns webhooks), manage owned numbers (view, release), caller ID selection in campaign wizard
 - **Live Calls page**: Full call logs table with status filter, search, clear logs, download report with date range picker
 - **Reports page**: Call Analytics with Chart.js charts (AMD doughnut, hourly bar, daily line, hangup doughnut), stat cards, campaign history, email reports
 - **Settings page**: Test Dialer, Webhook Monitor, Campaign Templates, Campaign Scheduler
