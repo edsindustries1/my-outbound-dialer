@@ -5,6 +5,7 @@ Persists completed call logs to JSON file for historical reporting.
 """
 
 import os
+import re
 import json
 import threading
 from datetime import datetime, timedelta
@@ -691,8 +692,6 @@ def delete_schedule(schedule_id):
 
 # ── Webhook Status Monitor ────────────────────────────────────────────────
 
-import re
-
 _webhook_stats = {
     "total_received": 0,
     "last_received_at": None,
@@ -931,6 +930,81 @@ def validate_phone_numbers(numbers_text):
     results["total_valid"] = len(results["valid"])
     results["total_invalid"] = len(results["invalid"])
     return results
+
+
+_E164_PATTERN = re.compile(r'^\+?1?\d{10,15}$')
+
+INVALID_NANP_AREA_CODES = {
+    "000", "100", "200", "211", "311", "411", "511", "611", "711", "811", "911",
+    "555",
+}
+
+def is_valid_phone_number(number):
+    cleaned = number.lstrip("+").replace("-", "").replace(" ", "").replace("(", "").replace(")", "").replace(".", "")
+    if not cleaned or not cleaned.isdigit():
+        return False, "Invalid format - contains non-numeric characters"
+    if len(cleaned) < 10:
+        return False, "Too short - must be at least 10 digits"
+    if len(cleaned) > 15:
+        return False, "Too long - exceeds 15 digits"
+    if not _E164_PATTERN.match(cleaned) and not _E164_PATTERN.match("+" + cleaned):
+        return False, "Invalid phone number format"
+    if cleaned.startswith("1") and len(cleaned) == 11:
+        area_code = cleaned[1:4]
+    elif len(cleaned) == 10:
+        area_code = cleaned[0:3]
+    else:
+        area_code = None
+    if area_code and area_code in INVALID_NANP_AREA_CODES:
+        return False, f"Invalid area code ({area_code})"
+    if area_code and area_code[0] in ("0", "1"):
+        return False, f"Invalid area code ({area_code}) - cannot start with 0 or 1"
+    return True, "Valid"
+
+
+def log_invalid_number(number, reason, campaign_name=""):
+    entry = {
+        "call_id": f"invalid_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{number}",
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        "number": number,
+        "from_number": "",
+        "status": "skipped",
+        "machine_detected": False,
+        "transferred": False,
+        "voicemail_dropped": False,
+        "ring_duration": None,
+        "status_description": f"Invalid number - {reason}",
+        "status_color": "red",
+        "amd_result": None,
+        "hangup_cause": "INVALID_NUMBER_FORMAT",
+        "transcript": [],
+        "recording_url": None,
+        "invalid_reason": reason,
+        "campaign_name": campaign_name,
+    }
+    cutoff_dt = datetime.utcnow() - timedelta(days=7)
+    with _file_lock:
+        history = _load_call_history()
+        history.append(entry)
+        cleaned = []
+        for h in history:
+            h_dt = _parse_ts(h.get("timestamp", ""))
+            if h_dt is None or h_dt >= cutoff_dt:
+                cleaned.append(h)
+        _save_call_history(cleaned)
+    return entry
+
+
+def get_invalid_numbers(hours=24):
+    cutoff = (datetime.utcnow() - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
+    history = _load_call_history()
+    invalid = []
+    for entry in history:
+        if entry.get("hangup_cause") == "INVALID_NUMBER_FORMAT" and entry.get("status") == "skipped":
+            ts = entry.get("timestamp", "")
+            if ts >= cutoff:
+                invalid.append(entry)
+    return invalid
 
 
 # ── Email Report Settings ─────────────────────────────────────────────────

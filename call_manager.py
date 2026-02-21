@@ -17,6 +17,8 @@ from storage import (
     is_transfer_paused,
     wait_if_transfer_paused,
     is_dnc,
+    is_valid_phone_number,
+    log_invalid_number,
 )
 from telnyx_client import make_call
 
@@ -86,6 +88,13 @@ def _dial_sequential(numbers, dial_delay=2, from_number=None):
 
         if is_dnc(number):
             logger.info(f"Skipping DNC number [{i+1}/{len(numbers)}]: {number}")
+            increment_dialed()
+            continue
+
+        is_valid, reason = is_valid_phone_number(number)
+        if not is_valid:
+            logger.info(f"Skipping invalid number [{i+1}/{len(numbers)}]: {number} ({reason})")
+            log_invalid_number(number, reason)
             increment_dialed()
             continue
 
@@ -159,6 +168,11 @@ def _place_single_call(number, from_number=None):
     """Place a single call and create its state entry."""
     if is_dnc(number):
         logger.info(f"Skipping DNC number: {number}")
+        return
+    is_valid, reason = is_valid_phone_number(number)
+    if not is_valid:
+        logger.info(f"Skipping invalid number: {number} ({reason})")
+        log_invalid_number(number, reason)
         return
     call_control_id = make_call(number, from_number_override=from_number)
     if call_control_id:

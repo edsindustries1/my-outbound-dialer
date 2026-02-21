@@ -61,6 +61,9 @@ from storage import (
     delete_vm_template,
     mark_vm_template_used,
     validate_phone_numbers,
+    is_valid_phone_number,
+    log_invalid_number,
+    get_invalid_numbers,
     get_report_settings,
     save_report_settings,
     mark_report_sent,
@@ -433,6 +436,25 @@ def start():
 
     if not numbers:
         return jsonify({"error": "No phone numbers provided"}), 400
+
+    valid_numbers = []
+    invalid_count = 0
+    for num in numbers:
+        is_valid, reason = is_valid_phone_number(num)
+        if is_valid:
+            valid_numbers.append(num)
+        else:
+            invalid_count += 1
+            log_invalid_number(num, reason)
+            logger.info(f"Skipping invalid number: {num} ({reason})")
+
+    if not valid_numbers:
+        return jsonify({"error": f"All {len(numbers)} numbers are invalid. No valid numbers to dial."}), 400
+
+    if invalid_count > 0:
+        logger.info(f"Number validation: {len(valid_numbers)} valid, {invalid_count} invalid (skipped)")
+
+    numbers = valid_numbers
 
     # ---- Handle audio ----
     audio_url = None
