@@ -323,13 +323,21 @@ def _detect_and_set_base_url():
             _detected_base_url = detected
             set_webhook_base_url(detected)
             logger.info(f"Auto-detected public base URL from request: {detected}")
-        else:
-            env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-            if env_url:
-                _detected_base_url = env_url
-                set_webhook_base_url(env_url)
+            return
     except Exception:
         pass
+    env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    if env_url:
+        _detected_base_url = env_url
+        set_webhook_base_url(env_url)
+        return
+    domains = os.environ.get("REPLIT_DOMAINS", "")
+    if domains:
+        domain = domains.split(",")[0].strip()
+        if domain:
+            _detected_base_url = f"https://{domain}"
+            set_webhook_base_url(_detected_base_url)
+            logger.info(f"Using REPLIT_DOMAINS for base URL: {_detected_base_url}")
 
 
 # ---- Dashboard Route ----
