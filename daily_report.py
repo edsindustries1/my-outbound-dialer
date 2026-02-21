@@ -8,7 +8,7 @@ import io
 import logging
 from datetime import datetime, timedelta
 
-from storage import get_call_history, get_report_settings, get_invalid_numbers
+from storage import get_call_history, get_report_settings, get_invalid_numbers, get_unreachable_numbers
 from gmail_client import send_email
 
 logger = logging.getLogger("voicemail_app")
@@ -47,9 +47,13 @@ def _classify_calls(history):
     voicemails = []
     invalid_numbers = []
 
+    unreachable_numbers = []
+
     for entry in history:
         if entry.get("status") == "skipped" and entry.get("hangup_cause") == "INVALID_NUMBER_FORMAT":
             invalid_numbers.append(entry)
+        elif entry.get("status") == "skipped" and entry.get("hangup_cause") == "NUMBER_UNREACHABLE":
+            unreachable_numbers.append(entry)
         elif entry.get("transferred"):
             hot_leads.append(entry)
         elif entry.get("voicemail_dropped"):
@@ -66,7 +70,7 @@ def _classify_calls(history):
             ) or (hangup and hangup != "NORMAL_CLEARING"):
                 failed_calls.append(entry)
 
-    return hot_leads, failed_calls, voicemails, invalid_numbers
+    return hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers
 
 
 def _format_time(ts_str):
@@ -96,7 +100,7 @@ def _format_phone(number):
     return number
 
 
-def _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers=None):
+def _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers=None, unreachable_numbers=None):
     total = len(history)
     success = len(hot_leads) + len(voicemails)
     success_rate = round((success / total) * 100, 1) if total > 0 else 0
@@ -106,6 +110,7 @@ def _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers
         "failed_calls": len(failed_calls),
         "voicemails_left": len(voicemails),
         "invalid_numbers": len(invalid_numbers) if invalid_numbers else 0,
+        "unreachable_numbers": len(unreachable_numbers) if unreachable_numbers else 0,
         "success_rate": success_rate,
     }
 
@@ -130,10 +135,12 @@ def _generate_csv_attachment(history):
     return output.getvalue()
 
 
-def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers=None):
+def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers=None, unreachable_numbers=None):
     now_str = datetime.utcnow().strftime("%B %d, %Y")
     if invalid_numbers is None:
         invalid_numbers = []
+    if unreachable_numbers is None:
+        unreachable_numbers = []
 
     hot_leads_rows = ""
     for i, lead in enumerate(hot_leads, 1):
@@ -274,6 +281,18 @@ def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_num
     {"<table width='100%' cellpadding='0' cellspacing='0' style='border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;font-size:13px;'><tr style='background:#F8FAFC;'><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>#</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Phone Number</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Time</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Reason</th></tr>" + ''.join([f"<tr><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{i}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;font-weight:600;'>{_format_phone(inv.get('number', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{_format_time(inv.get('timestamp', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'><span style='background:#F59E0B;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;'>{inv.get('invalid_reason', inv.get('status_description', 'Invalid'))}</span></td></tr>" for i, inv in enumerate(invalid_numbers, 1)]) + "</table>" if invalid_numbers else "<div style='background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:20px;text-align:center;color:#94A3B8;font-size:13px;'>No invalid numbers detected in the last 24 hours</div>"}
 </td></tr>
 
+<!-- Section 5: Unreachable Numbers (Carrier Check) -->
+<tr><td style="padding:16px 32px 8px;">
+    <div style="display:flex;align-items:center;">
+        <div style="background:#EF4444;width:4px;height:24px;border-radius:2px;display:inline-block;vertical-align:middle;"></div>
+        <h2 style="margin:0 0 0 12px;font-size:18px;color:#1E293B;display:inline-block;vertical-align:middle;">&#128242; Unreachable Numbers ({len(unreachable_numbers)})</h2>
+    </div>
+    <p style="margin:6px 0 0 16px;font-size:12px;color:#64748B;">Numbers flagged by carrier lookup as disconnected or out of service - remove from your data to protect account health</p>
+</td></tr>
+<tr><td style="padding:0 32px 20px;">
+    {"<table width='100%' cellpadding='0' cellspacing='0' style='border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;font-size:13px;'><tr style='background:#F8FAFC;'><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>#</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Phone Number</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Time</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Reason</th></tr>" + ''.join([f"<tr><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{i}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;font-weight:600;'>{_format_phone(unr.get('number', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{_format_time(unr.get('timestamp', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'><span style='background:#EF4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;'>{unr.get('invalid_reason', unr.get('status_description', 'Unreachable'))}</span></td></tr>" for i, unr in enumerate(unreachable_numbers, 1)]) + "</table>" if unreachable_numbers else "<div style='background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:20px;text-align:center;color:#94A3B8;font-size:13px;'>No unreachable numbers detected in the last 24 hours</div>"}
+</td></tr>
+
 <!-- Footer -->
 <tr><td style="background:#F8FAFC;padding:24px 32px;border-top:1px solid #E2E8F0;text-align:center;">
     <p style="margin:0;font-size:12px;color:#94A3B8;">This is an automated report from <strong>Open Human</strong></p>
@@ -301,13 +320,13 @@ def generate_and_send_report():
         return False
 
     history = _get_last_24h_history()
-    hot_leads, failed_calls, voicemails, invalid_numbers = _classify_calls(history)
-    summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers)
+    hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers = _classify_calls(history)
+    summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
 
     now_str = datetime.utcnow().strftime("%B %d, %Y")
-    subject = f"Open Human Daily Report - {now_str} | {summary['hot_leads']} Hot Leads, {summary['failed_calls']} Failed, {summary['voicemails_left']} VMs, {summary['invalid_numbers']} Invalid"
+    subject = f"Open Human Daily Report - {now_str} | {summary['hot_leads']} Hot Leads, {summary['failed_calls']} Failed, {summary['voicemails_left']} VMs"
 
-    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers)
+    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
 
     text_body = f"""Open Human Daily Report - {now_str}
 
@@ -317,6 +336,7 @@ Summary:
 - Failed Calls: {summary['failed_calls']}
 - Voicemails Left: {summary['voicemails_left']}
 - Invalid Numbers: {summary['invalid_numbers']}
+- Unreachable Numbers: {summary['unreachable_numbers']}
 - Success Rate: {summary['success_rate']}%
 
 See the HTML version for detailed tables and the attached CSV for raw data."""
@@ -348,13 +368,13 @@ def send_test_report(recipient_email=None):
         return {"success": False, "error": "No recipient email configured"}
 
     history = _get_last_24h_history()
-    hot_leads, failed_calls, voicemails, invalid_numbers = _classify_calls(history)
-    summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers)
+    hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers = _classify_calls(history)
+    summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
 
     now_str = datetime.utcnow().strftime("%B %d, %Y")
     subject = f"[TEST] Open Human Daily Report - {now_str}"
 
-    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers)
+    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
     csv_data = _generate_csv_attachment(history)
     csv_filename = f"open_human_test_report_{datetime.utcnow().strftime('%Y%m%d')}.csv"
 

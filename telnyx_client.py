@@ -520,6 +520,127 @@ def list_call_control_apps():
         return {"success": False, "error": str(e)}
 
 
+def lookup_number(phone_number):
+    """
+    Perform a Telnyx Number Lookup to check carrier info and line status.
+    Returns carrier name, line type, and whether the number is reachable.
+    Cost: $0.0015 per lookup.
+    """
+    normalized = _normalize_number(phone_number)
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/number_lookup/{normalized}",
+            params={"type": "carrier"},
+            headers=_headers(),
+            timeout=15,
+        )
+        if resp.status_code == 404:
+            return {
+                "valid": False,
+                "phone_number": normalized,
+                "carrier": None,
+                "line_type": None,
+                "reason": "Number not found - likely disconnected or invalid",
+            }
+        if resp.status_code == 422:
+            return {
+                "valid": False,
+                "phone_number": normalized,
+                "carrier": None,
+                "line_type": None,
+                "reason": "Invalid phone number format",
+            }
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        carrier = data.get("carrier", {})
+        carrier_name = carrier.get("name", "")
+        line_type = carrier.get("type", "")
+        mobile_country_code = carrier.get("mobile_country_code", "")
+        mobile_network_code = carrier.get("mobile_network_code", "")
+
+        is_valid = True
+        reason = "Reachable"
+
+        if not carrier_name and not line_type:
+            is_valid = False
+            reason = "No carrier data - number may be disconnected"
+
+        return {
+            "valid": is_valid,
+            "phone_number": data.get("phone_number", normalized),
+            "carrier": carrier_name,
+            "line_type": line_type,
+            "mobile_country_code": mobile_country_code,
+            "mobile_network_code": mobile_network_code,
+            "reason": reason,
+        }
+    except requests.exceptions.HTTPError as e:
+        error_msg = str(e)
+        try:
+            error_msg = e.response.json().get("errors", [{}])[0].get("detail", str(e))
+        except Exception:
+            pass
+        logger.error(f"Number lookup failed for {normalized}: {error_msg}")
+        return {
+            "valid": None,
+            "phone_number": normalized,
+            "carrier": None,
+            "line_type": None,
+            "reason": f"Lookup failed: {error_msg}",
+        }
+    except Exception as e:
+        logger.error(f"Number lookup failed for {normalized}: {e}")
+        return {
+            "valid": None,
+            "phone_number": normalized,
+            "carrier": None,
+            "line_type": None,
+            "reason": f"Lookup error: {str(e)}",
+        }
+
+
+def lookup_numbers_batch(phone_numbers, max_concurrent=5):
+    """
+    Validate a batch of phone numbers using Telnyx Number Lookup.
+    Returns dict with 'reachable', 'unreachable', and 'unknown' lists.
+    Rate-limits to max_concurrent lookups at a time.
+    """
+    import concurrent.futures
+    import time as _time
+
+    results = {"reachable": [], "unreachable": [], "unknown": [], "total": len(phone_numbers)}
+
+    def _lookup_single(number):
+        result = lookup_number(number)
+        _time.sleep(0.1)
+        return result
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent) as executor:
+        futures = {executor.submit(_lookup_single, num): num for num in phone_numbers}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                result = future.result()
+                if result["valid"] is True:
+                    results["reachable"].append(result)
+                elif result["valid"] is False:
+                    results["unreachable"].append(result)
+                else:
+                    results["unknown"].append(result)
+            except Exception as e:
+                num = futures[future]
+                logger.error(f"Lookup thread error for {num}: {e}")
+                results["unknown"].append({
+                    "valid": None,
+                    "phone_number": num,
+                    "carrier": None,
+                    "line_type": None,
+                    "reason": f"Thread error: {str(e)}",
+                })
+
+    logger.info(f"Batch lookup complete: {len(results['reachable'])} reachable, {len(results['unreachable'])} unreachable, {len(results['unknown'])} unknown out of {results['total']}")
+    return results
+
+
 def get_number_order_status(order_id):
     try:
         resp = requests.get(

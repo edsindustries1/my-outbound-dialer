@@ -995,6 +995,53 @@ def log_invalid_number(number, reason, campaign_name=""):
     return entry
 
 
+def log_unreachable_number(number, reason, carrier=None, line_type=None, campaign_name=""):
+    entry = {
+        "call_id": f"unreachable_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{number}",
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        "number": number,
+        "from_number": "",
+        "status": "skipped",
+        "machine_detected": False,
+        "transferred": False,
+        "voicemail_dropped": False,
+        "ring_duration": None,
+        "status_description": f"Unreachable - {reason}",
+        "status_color": "amber",
+        "amd_result": None,
+        "hangup_cause": "NUMBER_UNREACHABLE",
+        "transcript": [],
+        "recording_url": None,
+        "invalid_reason": reason,
+        "carrier": carrier,
+        "line_type": line_type,
+        "campaign_name": campaign_name,
+    }
+    cutoff_dt = datetime.utcnow() - timedelta(days=7)
+    with _file_lock:
+        history = _load_call_history()
+        history.append(entry)
+        cleaned = []
+        for h in history:
+            h_dt = _parse_ts(h.get("timestamp", ""))
+            if h_dt is None or h_dt >= cutoff_dt:
+                cleaned.append(h)
+        _save_call_history(cleaned)
+    return entry
+
+
+def get_unreachable_numbers(hours=24):
+    cutoff = (datetime.utcnow() - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
+    history = _load_call_history()
+    unreachable = []
+    for entry in history:
+        if entry.get("hangup_cause") == "NUMBER_UNREACHABLE" and entry.get("status") == "skipped":
+            ts = entry.get("timestamp", "")
+            if ts >= cutoff:
+                unreachable.append(entry)
+    return unreachable
+
+
 def get_invalid_numbers(hours=24):
     cutoff = (datetime.utcnow() - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
     history = _load_call_history()

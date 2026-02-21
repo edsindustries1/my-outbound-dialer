@@ -64,6 +64,8 @@ from storage import (
     is_valid_phone_number,
     log_invalid_number,
     get_invalid_numbers,
+    log_unreachable_number,
+    get_unreachable_numbers,
     get_report_settings,
     save_report_settings,
     mark_report_sent,
@@ -83,6 +85,7 @@ from telnyx_client import (
     search_available_numbers, purchase_number, create_call_control_app,
     assign_number_to_app, list_owned_numbers, release_number,
     list_call_control_apps, get_number_order_status,
+    lookup_number, lookup_numbers_batch,
 )
 from call_manager import start_dialer
 from personalized_vm import (
@@ -452,7 +455,43 @@ def start():
         return jsonify({"error": f"All {len(numbers)} numbers are invalid. No valid numbers to dial."}), 400
 
     if invalid_count > 0:
-        logger.info(f"Number validation: {len(valid_numbers)} valid, {invalid_count} invalid (skipped)")
+        logger.info(f"Format validation: {len(valid_numbers)} valid, {invalid_count} invalid (skipped)")
+
+    skip_carrier_check = request.form.get("skip_carrier_check", "false").lower() == "true"
+    carrier_check_done = False
+    unreachable_count = 0
+    reachable_numbers = []
+    unknown_numbers = []
+    if not skip_carrier_check and len(valid_numbers) <= 500:
+        logger.info(f"Running carrier lookup on {len(valid_numbers)} numbers...")
+        try:
+            lookup_results = lookup_numbers_batch(valid_numbers, max_concurrent=5)
+            unreachable_count = len(lookup_results.get("unreachable", []))
+
+            for entry in lookup_results.get("unreachable", []):
+                log_unreachable_number(
+                    entry.get("phone_number", ""),
+                    entry.get("reason", "Unreachable"),
+                    carrier=entry.get("carrier"),
+                    line_type=entry.get("line_type"),
+                )
+                logger.info(f"Skipping unreachable number: {entry.get('phone_number', '')} ({entry.get('reason', 'Unreachable')})")
+
+            reachable_numbers = [r.get("phone_number", "") for r in lookup_results.get("reachable", []) if r.get("phone_number")]
+            unknown_numbers = [r.get("phone_number", "") for r in lookup_results.get("unknown", []) if r.get("phone_number")]
+            valid_numbers = reachable_numbers + unknown_numbers
+
+            if not valid_numbers:
+                return jsonify({"error": f"All numbers are unreachable or disconnected. {unreachable_count} numbers filtered out."}), 400
+
+            carrier_check_done = True
+            logger.info(f"Carrier validation: {len(reachable_numbers)} reachable, {len(unknown_numbers)} unknown (will dial), {unreachable_count} unreachable (skipped)")
+        except Exception as e:
+            logger.error(f"Carrier lookup failed, proceeding without it: {e}")
+    elif skip_carrier_check:
+        logger.info("Carrier lookup skipped by user request")
+    elif len(valid_numbers) > 500:
+        logger.info(f"Carrier lookup skipped - too many numbers ({len(valid_numbers)} > 500 limit)")
 
     numbers = valid_numbers
 
@@ -559,7 +598,22 @@ def start():
             logger.info(f"PVM generation started for {len(contacts)} contacts during campaign launch")
 
     start_dialer()
-    return jsonify({"message": f"Campaign started with {len(numbers)} numbers", "voicemail_type": voicemail_type})
+
+    response_data = {
+        "message": f"Campaign started with {len(numbers)} numbers",
+        "voicemail_type": voicemail_type,
+        "validation": {
+            "total_input": len(numbers) + invalid_count,
+            "format_invalid": invalid_count,
+            "dialing": len(numbers),
+        },
+    }
+    if carrier_check_done:
+        response_data["validation"]["carrier_unreachable"] = unreachable_count
+        response_data["validation"]["carrier_reachable"] = len(reachable_numbers)
+        response_data["validation"]["carrier_unknown"] = len(unknown_numbers)
+
+    return jsonify(response_data)
 
 
 # ---- Test Call ----
@@ -935,6 +989,31 @@ def api_validate_numbers():
     if not numbers_text.strip():
         return jsonify({"error": "No numbers provided"}), 400
     results = validate_phone_numbers(numbers_text)
+    return jsonify(results)
+
+
+@app.route("/api/lookup-number", methods=["POST"])
+@login_required
+def api_lookup_number():
+    data = request.get_json() or {}
+    number = data.get("number", "").strip()
+    if not number:
+        return jsonify({"error": "No number provided"}), 400
+    result = lookup_number(number)
+    return jsonify(result)
+
+
+@app.route("/api/lookup-numbers-batch", methods=["POST"])
+@login_required
+def api_lookup_numbers_batch():
+    data = request.get_json() or {}
+    numbers_text = data.get("numbers", "").strip()
+    if not numbers_text:
+        return jsonify({"error": "No numbers provided"}), 400
+    numbers = [n.strip() for n in numbers_text.split("\n") if n.strip()]
+    if len(numbers) > 500:
+        return jsonify({"error": f"Maximum 500 numbers for batch lookup. You provided {len(numbers)}."}), 400
+    results = lookup_numbers_batch(numbers, max_concurrent=5)
     return jsonify(results)
 
 

@@ -111,6 +111,17 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - iPhone 17 Pro Max Live Dialer Widget with 3D rotation, live call status, Hot Lead notification
 - Floating Physics Balls: Notepad + iPhone balls with gravity, collision, drag-throw physics
 
+## Phone Number Health Check
+- **Format Validation** (free): Checks digit length, valid area codes, proper E.164 format before dialing
+- **Carrier Lookup** (Telnyx Number Lookup API, $0.0015/lookup): Pre-campaign carrier-level check for reachability
+- Runs automatically before every campaign (up to 500 numbers)
+- Invalid format numbers: logged with "INVALID_NUMBER_FORMAT" hangup cause
+- Unreachable/disconnected numbers: logged with "NUMBER_UNREACHABLE" hangup cause
+- Both categories appear in call logs and daily email report
+- Campaign start response includes validation stats (format invalid, carrier unreachable, reachable)
+- API endpoints: `/api/lookup-number` (single), `/api/lookup-numbers-batch` (batch up to 500)
+- Optional skip via `skip_carrier_check=true` form parameter
+
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key
 - `TELNYX_CONNECTION_ID` - Telnyx Call Control connection ID
