@@ -1799,19 +1799,21 @@ def _get_current_webhook_url():
     return "https://example.com/webhook"
 
 
-# ---- Main Entry Point ----
-if __name__ == "__main__":
+# ---- Startup initialization (runs for both direct and gunicorn) ----
+def _init_app():
     print("=" * 60)
     print("  VOICEMAIL DROP SYSTEM - Starting Up")
     print("=" * 60)
     print(f"  Dashboard: http://0.0.0.0:5000")
     print(f"  Webhook URL: <PUBLIC_BASE_URL>/webhook")
     print("=" * 60)
-
     conn_id = validate_connection_id()
     print(f"  Using Connection ID: {conn_id}")
     print("=" * 60)
-
     start_scheduler()
 
+_init_app()
+
+# ---- Main Entry Point ----
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
