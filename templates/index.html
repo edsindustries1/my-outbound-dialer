@@ -502,6 +502,17 @@
                                     </div>
                                     <div class="dial-mode-desc" id="dialModeDesc">Calls are placed one at a time with a configurable delay between each call.</div>
                                 </div>
+                                <div class="wiz-settings-group">
+                                    <label>Number Health Check</label>
+                                    <p class="wiz-settings-hint">Run a carrier lookup before dialing to filter out disconnected/unreachable numbers. Costs $0.0015 per number. Max 500 numbers.</p>
+                                    <div class="carrier-check-toggle" style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+                                        <label class="gads-toggle" style="margin:0;">
+                                            <input type="checkbox" name="enable_carrier_check" id="enableCarrierCheck" value="true">
+                                            <span class="gads-toggle-slider"></span>
+                                        </label>
+                                        <span id="carrierCheckLabel" style="font-size:13px;color:var(--gads-text-secondary);">Disabled</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Step 5: Review & Launch -->
@@ -513,6 +524,7 @@
                                     <div class="wiz-review-card"><div class="wiz-review-label">Voicemail</div><div class="wiz-review-value" id="wizReviewVm">Standard</div></div>
                                     <div class="wiz-review-card"><div class="wiz-review-label">Transfer Number</div><div class="wiz-review-value" id="wizReviewTransfer">-</div></div>
                                     <div class="wiz-review-card"><div class="wiz-review-label">Dial Mode</div><div class="wiz-review-value" id="wizReviewMode">Sequential</div></div>
+                                    <div class="wiz-review-card"><div class="wiz-review-label">Number Health Check</div><div class="wiz-review-value" id="wizReviewCarrier">Disabled</div></div>
                                 </div>
                                 <div class="wiz-launch-wrap">
                                     <button type="submit" class="gads-btn gads-btn-primary gads-btn-lg" id="startBtn">
@@ -1645,6 +1657,8 @@
                 var mode = document.getElementById("dialModeInput").value;
                 var modeText = mode === "simultaneous" ? "Simultaneous (batch: " + document.getElementById("batchSize").value + ")" : "Sequential (delay: " + document.getElementById("dialDelay").value + " min)";
                 document.getElementById("wizReviewMode").textContent = modeText;
+                var carrierCheck = document.getElementById("enableCarrierCheck");
+                document.getElementById("wizReviewCarrier").textContent = (carrierCheck && carrierCheck.checked) ? "Enabled ($0.0015/number)" : "Disabled";
             }
 
             function wizUpdateNumberCount() {
@@ -1972,6 +1986,10 @@
 
             modeSeq.addEventListener("click", function() { setDialMode("sequential"); });
             modeSimul.addEventListener("click", function() { setDialMode("simultaneous"); });
+
+            document.getElementById("enableCarrierCheck").addEventListener("change", function() {
+                document.getElementById("carrierCheckLabel").textContent = this.checked ? "Enabled" : "Disabled";
+            });
 
             // ---- Download Report ----
             var downloadBtn = document.getElementById("downloadReportBtn");

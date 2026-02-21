@@ -114,13 +114,14 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 ## Phone Number Health Check
 - **Format Validation** (free): Checks digit length, valid area codes, proper E.164 format before dialing
 - **Carrier Lookup** (Telnyx Number Lookup API, $0.0015/lookup): Pre-campaign carrier-level check for reachability
-- Runs automatically before every campaign (up to 500 numbers)
+- **Format validation** runs automatically (free, always on)
+- **Carrier lookup** is opt-in via toggle in campaign wizard Step 4 (Settings). Off by default to keep normal behavior.
 - Invalid format numbers: logged with "INVALID_NUMBER_FORMAT" hangup cause
 - Unreachable/disconnected numbers: logged with "NUMBER_UNREACHABLE" hangup cause
 - Both categories appear in call logs and daily email report
 - Campaign start response includes validation stats (format invalid, carrier unreachable, reachable)
 - API endpoints: `/api/lookup-number` (single), `/api/lookup-numbers-batch` (batch up to 500)
-- Optional skip via `skip_carrier_check=true` form parameter
+- Campaign wizard sends `enable_carrier_check=true` form parameter when toggle is on
 
 ## Environment Variables
 - `TELNYX_API_KEY` - Telnyx API key

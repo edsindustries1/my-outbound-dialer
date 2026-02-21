@@ -457,12 +457,12 @@ def start():
     if invalid_count > 0:
         logger.info(f"Format validation: {len(valid_numbers)} valid, {invalid_count} invalid (skipped)")
 
-    skip_carrier_check = request.form.get("skip_carrier_check", "false").lower() == "true"
+    enable_carrier_check = request.form.get("enable_carrier_check", "false").lower() == "true"
     carrier_check_done = False
     unreachable_count = 0
     reachable_numbers = []
     unknown_numbers = []
-    if not skip_carrier_check and len(valid_numbers) <= 500:
+    if enable_carrier_check and len(valid_numbers) <= 500:
         logger.info(f"Running carrier lookup on {len(valid_numbers)} numbers...")
         try:
             lookup_results = lookup_numbers_batch(valid_numbers, max_concurrent=5)
@@ -488,8 +488,8 @@ def start():
             logger.info(f"Carrier validation: {len(reachable_numbers)} reachable, {len(unknown_numbers)} unknown (will dial), {unreachable_count} unreachable (skipped)")
         except Exception as e:
             logger.error(f"Carrier lookup failed, proceeding without it: {e}")
-    elif skip_carrier_check:
-        logger.info("Carrier lookup skipped by user request")
+    elif not enable_carrier_check:
+        logger.info("Carrier lookup not enabled for this campaign")
     elif len(valid_numbers) > 500:
         logger.info(f"Carrier lookup skipped - too many numbers ({len(valid_numbers)} > 500 limit)")
 
