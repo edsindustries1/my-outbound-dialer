@@ -101,16 +101,21 @@
                     <h1 class="gads-page-title" id="gadsPageTitle">Dashboard</h1>
                 </div>
 
-                <div class="gads-topbar-center">
-                    <div class="gads-search-wrap" id="gadsSearchWrap">
-                        <svg class="gads-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" class="gads-search-input" id="gadsSearchInput" placeholder="Search campaigns, contacts, calls..." autocomplete="off">
-                        <kbd class="gads-search-kbd">/</kbd>
-                        <div class="gads-search-results" id="gadsSearchResults"></div>
-                    </div>
-                </div>
-
                 <div class="gads-topbar-right">
+                    <div class="gads-search-toggle-wrap" id="gadsSearchWrap">
+                        <button type="button" class="gads-topbar-btn gads-search-toggle-btn" id="searchToggleBtn" onclick="toggleSearch()" title="Search (/)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </button>
+                        <div class="gads-search-expandable" id="gadsSearchExpandable">
+                            <svg class="gads-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" class="gads-search-input" id="gadsSearchInput" placeholder="Search campaigns, contacts, calls..." autocomplete="off">
+                            <button type="button" class="gads-search-close" onclick="toggleSearch()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                            <div class="gads-search-results" id="gadsSearchResults"></div>
+                        </div>
+                    </div>
+
                     <div class="gads-campaign-chip" id="gadsCampaignChip" style="display:none;" onclick="navigateTo('campaigns')">
                         <span class="gads-campaign-chip-dot"></span>
                         <span class="gads-campaign-chip-text" id="campaignChipText">Campaign Active</span>
@@ -1158,6 +1163,28 @@
         });
 
         /* ===== GLOBAL SEARCH ===== */
+        var _searchOpen = false;
+        function toggleSearch() {
+            var expandable = document.getElementById('gadsSearchExpandable');
+            var btn = document.getElementById('searchToggleBtn');
+            var input = document.getElementById('gadsSearchInput');
+            var results = document.getElementById('gadsSearchResults');
+            _searchOpen = !_searchOpen;
+            if (_searchOpen) {
+                expandable.classList.add('open');
+                btn.style.opacity = '0';
+                btn.style.pointerEvents = 'none';
+                setTimeout(function() { input.focus(); }, 450);
+            } else {
+                expandable.classList.remove('open');
+                btn.style.opacity = '';
+                btn.style.pointerEvents = '';
+                input.value = '';
+                results.classList.remove('open');
+                results.innerHTML = '';
+            }
+        }
+
         var _searchPages = [
             { page: 'dashboard', label: 'Dashboard', sub: 'Overview & KPIs', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>' },
             { page: 'campaigns', label: 'Campaigns', sub: 'Manage & launch campaigns', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' },
@@ -1212,19 +1239,19 @@
             });
 
             document.addEventListener('click', function(e) {
-                if (!document.getElementById('gadsSearchWrap').contains(e.target)) {
-                    results.classList.remove('open');
+                var wrap = document.getElementById('gadsSearchWrap');
+                if (wrap && !wrap.contains(e.target) && _searchOpen) {
+                    toggleSearch();
                 }
             });
 
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                     e.preventDefault();
-                    input.focus();
+                    if (!_searchOpen) toggleSearch();
                 }
-                if (e.key === 'Escape') {
-                    input.blur();
-                    results.classList.remove('open');
+                if (e.key === 'Escape' && _searchOpen) {
+                    toggleSearch();
                 }
             });
         })();
