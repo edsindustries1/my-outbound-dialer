@@ -61,6 +61,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                     <span>Contacts</span>
                 </a>
+                <a class="gads-nav-item" data-page="phonenumbers" onclick="navigateTo('phonenumbers')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    <span>Phone Numbers</span>
+                </a>
                 <a class="gads-nav-item" data-page="livecalls" onclick="navigateTo('livecalls')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                     <span>Live Calls</span>
@@ -390,6 +394,14 @@
                             <div class="wiz-step-content" id="wizContent4" style="display:none;">
                                 <h2 class="wiz-step-title">Campaign Settings</h2>
                                 <div class="wiz-settings-group">
+                                    <label>Caller ID Number</label>
+                                    <p class="wiz-settings-hint">Select which phone number to use for outbound calls.</p>
+                                    <select id="campaignFromNumber" class="gads-select" style="max-width:320px;">
+                                        <option value="">Default ({{ telnyx_from }})</option>
+                                    </select>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadCampaignNumbers()" style="margin-top:4px;font-size:11px;">Refresh Numbers</button>
+                                </div>
+                                <div class="wiz-settings-group">
                                     <label>Transfer Number <span style="font-size:11px;color:var(--gads-text-secondary);">(required)</span></label>
                                     <p class="wiz-settings-hint">If a human answers, transfer the call to this number.</p>
                                     <div class="transfer-row">
@@ -645,6 +657,87 @@
                         <div id="validationResults" style="display:none;margin-top:12px;">
                             <div class="validation-summary" id="validationSummary"></div>
                             <div id="validationDetails"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== PAGE: PHONE NUMBERS ==================== -->
+                <div class="gads-page" id="page-phonenumbers" style="display:none">
+                    <div class="gads-page-header"><h2>Phone Numbers</h2></div>
+
+                    <div class="gads-card">
+                        <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search &amp; Buy Numbers</h3>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:flex-end;">
+                            <div style="min-width:100px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Country</label>
+                                <select id="numSearchCountry" class="gads-select" style="width:100px;">
+                                    <option value="US">US</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="GB">UK</option>
+                                </select>
+                            </div>
+                            <div style="min-width:100px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Area Code</label>
+                                <input type="text" id="numSearchAreaCode" class="gads-input" placeholder="e.g. 312" maxlength="5" style="width:100px;">
+                            </div>
+                            <div style="min-width:120px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">State</label>
+                                <input type="text" id="numSearchState" class="gads-input" placeholder="e.g. IL" maxlength="2" style="width:80px;">
+                            </div>
+                            <div style="min-width:140px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">City</label>
+                                <input type="text" id="numSearchCity" class="gads-input" placeholder="e.g. Chicago" style="width:140px;">
+                            </div>
+                            <div style="min-width:120px;">
+                                <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Type</label>
+                                <select id="numSearchType" class="gads-select" style="width:120px;">
+                                    <option value="local">Local</option>
+                                    <option value="toll_free">Toll-Free</option>
+                                </select>
+                            </div>
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="numSearchBtn" onclick="searchNumbers()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                Search
+                            </button>
+                        </div>
+                        <div id="numSearchStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;font-size:13px;"></div>
+                        <div class="gads-table-wrap" style="max-height:360px;overflow-y:auto;">
+                            <table class="gads-table" id="numSearchTable">
+                                <thead><tr><th>Phone Number</th><th>Region</th><th>Type</th><th>Monthly</th><th>Action</th></tr></thead>
+                                <tbody id="numSearchBody"><tr><td colspan="5" class="gads-empty">Search for available numbers above</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> My Numbers</h3>
+                            <div class="gads-card-actions">
+                                <span id="ownedNumbersCount" class="gads-badge">0 numbers</span>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadOwnedNumbers()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="gads-table-wrap" style="max-height:360px;overflow-y:auto;">
+                            <table class="gads-table" id="ownedNumbersTable">
+                                <thead><tr><th>Phone Number</th><th>Status</th><th>Voice App</th><th>Type</th><th>Actions</th></tr></thead>
+                                <tbody id="ownedNumbersBody"><tr><td colspan="5" class="gads-empty">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Voice Apps</h3>
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoiceApps()">Refresh</button>
+                        </div>
+                        <div id="voiceAppsList" style="font-size:13px;color:var(--gads-text-secondary);">Loading...</div>
+                        <div style="margin-top:12px;">
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="createVoiceApp()">+ Create Voice App</button>
                         </div>
                     </div>
                 </div>
@@ -917,6 +1010,7 @@
             campaigns: 'Campaigns',
             voicemails: 'Voicemails',
             contacts: 'Contacts & Lists',
+            phonenumbers: 'Phone Numbers',
             livecalls: 'Live Calls',
             reports: 'Reports',
             settings: 'Settings'
@@ -961,6 +1055,10 @@
                 if (typeof loadVmSettings === 'function') loadVmSettings();
                 if (typeof vmtLoad === 'function') vmtLoad();
                 if (typeof pvmInit === 'function') pvmInit();
+            }
+            if (page === 'phonenumbers') {
+                if (typeof loadOwnedNumbers === 'function') loadOwnedNumbers();
+                if (typeof loadVoiceApps === 'function') loadVoiceApps();
             }
             if (page === 'campaigns') {
                 if (typeof loadCampaignHistory === 'function') loadCampaignHistory();
@@ -1221,6 +1319,7 @@
 
                 if (step === 5) { wizPopulateReview(); if (wizVmType === "personalized") wizPvmSyncHiddenFields(); }
                 if (step === 3 && wizVmType === "personalized") { wizPvmLoadScriptTemplates(); wizPvmLoadVoices(); }
+                if (step === 4) { if (typeof loadCampaignNumbers === 'function') loadCampaignNumbers(); }
             }
 
             function wizardNext() {
@@ -1816,6 +1915,8 @@
 
             function doStartCampaign() {
                 var formData = new FormData(form);
+                var fromNum = document.getElementById("campaignFromNumber").value;
+                if (fromNum) formData.append("from_number", fromNum);
                 startBtn.disabled = true;
                 startBtn.textContent = "Starting...";
                 apiFetch("/start", { method: "POST", body: formData })
@@ -2844,6 +2945,213 @@
                     showToast(data.removed + " contacts deleted", "success");
                     loadContacts();
                 }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function searchNumbers() {
+                var btn = document.getElementById("numSearchBtn");
+                btn.disabled = true;
+                btn.textContent = "Searching...";
+                var statusDiv = document.getElementById("numSearchStatus");
+                statusDiv.style.display = "none";
+                var params = new URLSearchParams();
+                params.set("country", document.getElementById("numSearchCountry").value);
+                var ac = document.getElementById("numSearchAreaCode").value.trim();
+                if (ac) params.set("area_code", ac);
+                var st = document.getElementById("numSearchState").value.trim();
+                if (st) params.set("state", st);
+                var city = document.getElementById("numSearchCity").value.trim();
+                if (city) params.set("city", city);
+                params.set("number_type", document.getElementById("numSearchType").value);
+                params.set("limit", "20");
+                apiFetch("/api/numbers/search?" + params.toString()).then(function(r){return r.json();}).then(function(data) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search';
+                    if (data.error) {
+                        statusDiv.style.display = "block";
+                        statusDiv.style.background = "#FEE2E2";
+                        statusDiv.style.color = "#991B1B";
+                        statusDiv.textContent = data.error;
+                        return;
+                    }
+                    var nums = data.numbers || [];
+                    var body = document.getElementById("numSearchBody");
+                    if (nums.length === 0) {
+                        body.innerHTML = '<tr><td colspan="5" class="gads-empty">No numbers found. Try different search criteria.</td></tr>';
+                        return;
+                    }
+                    statusDiv.style.display = "block";
+                    statusDiv.style.background = "#D1FAE5";
+                    statusDiv.style.color = "#065F46";
+                    statusDiv.textContent = "Found " + nums.length + " available numbers";
+                    var html = "";
+                    nums.forEach(function(n) {
+                        html += '<tr>';
+                        html += '<td class="td-mono" style="font-weight:600;">' + n.phone_number + '</td>';
+                        html += '<td>' + (n.region || n.rate_center || "-") + '</td>';
+                        html += '<td><span class="gads-badge">' + (n.number_type || "local") + '</span></td>';
+                        html += '<td>$' + (n.monthly_cost || "1.00") + '/mo</td>';
+                        html += '<td><button class="gads-btn gads-btn-primary gads-btn-sm" onclick="buyNumber(\'' + n.phone_number + '\')">Buy</button></td>';
+                        html += '</tr>';
+                    });
+                    body.innerHTML = html;
+                }).catch(function(e){
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search';
+                    if(e.message==="auth")return;
+                    statusDiv.style.display = "block";
+                    statusDiv.style.background = "#FEE2E2";
+                    statusDiv.style.color = "#991B1B";
+                    statusDiv.textContent = "Search failed: " + e.message;
+                });
+            }
+
+            function buyNumber(phoneNumber) {
+                if (!confirm("Purchase " + phoneNumber + "?\n\nThis will:\n1. Buy the number from Telnyx\n2. Auto-create/assign a Voice App\n3. Configure webhooks\n\nYour Telnyx account will be charged.")) return;
+                showToast("Purchasing " + phoneNumber + "...", "info");
+                apiFetch("/api/numbers/buy", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({phone_number: phoneNumber, auto_setup: true})
+                }).then(function(r){return r.json();}).then(function(data) {
+                    if (data.error) {
+                        showToast("Purchase failed: " + data.error, "error");
+                        return;
+                    }
+                    showToast(data.message || "Number purchased!", "success");
+                    loadOwnedNumbers();
+                    loadVoiceApps();
+                }).catch(function(e){if(e.message==="auth")return;showToast("Purchase failed","error");});
+            }
+
+            function loadOwnedNumbers() {
+                apiFetch("/api/numbers/owned").then(function(r){return r.json();}).then(function(data) {
+                    var body = document.getElementById("ownedNumbersBody");
+                    var badge = document.getElementById("ownedNumbersCount");
+                    if (data.error) {
+                        body.innerHTML = '<tr><td colspan="5" class="gads-empty">Failed to load: ' + data.error + '</td></tr>';
+                        return;
+                    }
+                    var nums = data.numbers || [];
+                    badge.textContent = nums.length + " number" + (nums.length !== 1 ? "s" : "");
+                    if (nums.length === 0) {
+                        body.innerHTML = '<tr><td colspan="5" class="gads-empty">No numbers yet. Search and buy above.</td></tr>';
+                        return;
+                    }
+                    var html = "";
+                    nums.forEach(function(n) {
+                        var statusClass = n.status === "active" ? "gads-badge-success" : "gads-badge-warning";
+                        html += '<tr>';
+                        html += '<td class="td-mono" style="font-weight:600;">' + n.phone_number + '</td>';
+                        html += '<td><span class="gads-badge ' + statusClass + '">' + n.status + '</span></td>';
+                        html += '<td style="font-size:12px;">' + (n.connection_name || '<span style="color:var(--gads-text-muted);">Not assigned</span>') + '</td>';
+                        html += '<td><span class="gads-badge">' + (n.number_type || "-") + '</span></td>';
+                        html += '<td>';
+                        if (!n.connection_id) {
+                            html += '<button class="gads-btn gads-btn-outline gads-btn-sm" onclick="autoAssignNumber(\'' + n.phone_number + '\')">Setup</button> ';
+                        }
+                        html += '<button class="gads-btn gads-btn-sm" style="color:var(--gads-error);border:1px solid var(--gads-error);background:transparent;font-size:11px;" onclick="releaseNumber(\'' + n.id + '\',\'' + n.phone_number + '\')">Release</button>';
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+                    body.innerHTML = html;
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function releaseNumber(id, number) {
+                if (!confirm("Release " + number + "?\n\nThis will permanently remove this number from your account. This cannot be undone.")) return;
+                apiFetch("/api/numbers/release", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({phone_number_id: id})
+                }).then(function(r){return r.json();}).then(function(data) {
+                    if (data.error) { showToast("Release failed: " + data.error, "error"); return; }
+                    showToast("Number released", "success");
+                    loadOwnedNumbers();
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function autoAssignNumber(phoneNumber) {
+                showToast("Setting up " + phoneNumber + "...", "info");
+                apiFetch("/api/numbers/apps").then(function(r){return r.json();}).then(function(data) {
+                    if (!data.apps || data.apps.length === 0) {
+                        showToast("No voice apps found. Creating one...", "info");
+                        return apiFetch("/api/numbers/create-app", {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json"},
+                            body: JSON.stringify({app_name: "Open Human Dialer"})
+                        }).then(function(r){return r.json();}).then(function(appData) {
+                            if (appData.error) throw new Error(appData.error);
+                            return appData.app_id;
+                        });
+                    }
+                    return data.apps[0].id;
+                }).then(function(appId) {
+                    return apiFetch("/api/numbers/assign", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({phone_number: phoneNumber, connection_id: appId})
+                    }).then(function(r){return r.json();});
+                }).then(function(result) {
+                    if (result.error) { showToast("Setup failed: " + result.error, "error"); return; }
+                    showToast("Number configured!", "success");
+                    loadOwnedNumbers();
+                    loadVoiceApps();
+                }).catch(function(e){if(e.message==="auth")return;showToast("Setup failed: " + e.message, "error");});
+            }
+
+            function loadVoiceApps() {
+                apiFetch("/api/numbers/apps").then(function(r){return r.json();}).then(function(data) {
+                    var container = document.getElementById("voiceAppsList");
+                    if (data.error) { container.textContent = "Failed to load: " + data.error; return; }
+                    var apps = data.apps || [];
+                    if (apps.length === 0) {
+                        container.innerHTML = '<span style="color:var(--gads-text-muted);">No voice apps yet. Create one or buy a number with auto-setup.</span>';
+                        return;
+                    }
+                    var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+                    apps.forEach(function(a) {
+                        html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--gads-bg);border-radius:8px;border:1px solid var(--gads-border);">';
+                        html += '<div style="flex:1;"><strong>' + a.name + '</strong>';
+                        html += '<div style="font-size:11px;color:var(--gads-text-muted);margin-top:2px;">ID: ' + a.id + '</div>';
+                        html += '<div style="font-size:11px;color:var(--gads-text-muted);">Webhook: ' + (a.webhook_url || "Not set") + '</div>';
+                        html += '</div>';
+                        html += '<span class="gads-badge gads-badge-success">Active</span>';
+                        html += '</div>';
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function loadCampaignNumbers() {
+                var sel = document.getElementById("campaignFromNumber");
+                var current = sel.value;
+                apiFetch("/api/numbers/owned").then(function(r){return r.json();}).then(function(data) {
+                    var nums = (data.numbers || []).filter(function(n){ return n.status === "active"; });
+                    sel.innerHTML = '<option value="">Default ({{ telnyx_from }})</option>';
+                    nums.forEach(function(n) {
+                        var opt = document.createElement("option");
+                        opt.value = n.phone_number;
+                        opt.textContent = n.phone_number + (n.connection_name ? " (" + n.connection_name + ")" : "");
+                        sel.appendChild(opt);
+                    });
+                    if (current) sel.value = current;
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            function createVoiceApp() {
+                var name = prompt("Enter a name for the new voice app:", "Open Human Dialer");
+                if (!name) return;
+                showToast("Creating voice app...", "info");
+                apiFetch("/api/numbers/create-app", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({app_name: name})
+                }).then(function(r){return r.json();}).then(function(data) {
+                    if (data.error) { showToast("Failed: " + data.error, "error"); return; }
+                    showToast("Voice app created!", "success");
+                    loadVoiceApps();
+                }).catch(function(e){if(e.message==="auth")return;showToast("Failed to create app","error");});
             }
 
             function importContactsCsv() {

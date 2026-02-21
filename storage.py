@@ -196,7 +196,7 @@ def reset_campaign():
         call_states.clear()
 
 
-def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2):
+def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None):
     with lock:
         campaign["active"] = True
         campaign["audio_url"] = audio_url
@@ -207,6 +207,7 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
         campaign["dial_mode"] = dial_mode
         campaign["batch_size"] = max(1, min(int(batch_size), 50))
         campaign["dial_delay"] = max(1, min(10, int(dial_delay)))
+        campaign["from_number"] = from_number
         call_states.clear()
 
 

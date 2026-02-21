@@ -103,13 +103,13 @@ def validate_connection_id():
     return env_id
 
 
-def make_call(number):
+def make_call(number, from_number_override=None):
     """
     Place an outbound call with answering machine detection enabled.
     Returns the call_control_id on success, or None on failure.
     """
     connection_id = _get_connection_id()
-    from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
+    from_number = from_number_override or os.environ.get("TELNYX_FROM_NUMBER", "")
     webhook_url = _get_webhook_url()
 
     number = _normalize_number(number)
@@ -303,3 +303,243 @@ def hangup_call(call_control_id):
     except Exception as e:
         logger.error(f"Failed to hangup call {call_control_id}: {e}")
         return False
+
+
+def search_available_numbers(country_code="US", area_code=None, state=None, city=None, number_type="local", limit=20):
+    params = {
+        "filter[country_code]": country_code,
+        "filter[features][]": "voice",
+        "filter[limit]": min(limit, 40),
+    }
+    if area_code:
+        params["filter[national_destination_code]"] = area_code
+    if state:
+        params["filter[administrative_area]"] = state
+    if city:
+        params["filter[locality]"] = city
+    if number_type:
+        params["filter[number_type]"] = number_type
+
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/available_phone_numbers",
+            params=params,
+            headers=_headers(),
+            timeout=20,
+        )
+        resp.raise_for_status()
+        data = resp.json().get("data", [])
+        results = []
+        for n in data:
+            cost = n.get("cost_information", {})
+            results.append({
+                "phone_number": n.get("phone_number", ""),
+                "region": n.get("region_information", [{}])[0].get("region_name", "") if n.get("region_information") else "",
+                "rate_center": n.get("region_information", [{}])[0].get("rate_center", "") if n.get("region_information") else "",
+                "monthly_cost": cost.get("monthly_cost", "1.00"),
+                "upfront_cost": cost.get("upfront_cost", "1.00"),
+                "currency": cost.get("currency", "USD"),
+                "number_type": n.get("phone_number_type", "local"),
+                "features": n.get("features", []),
+            })
+        logger.info(f"Found {len(results)} available numbers")
+        return {"success": True, "numbers": results}
+    except Exception as e:
+        logger.error(f"Number search failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def purchase_number(phone_number, connection_id=None):
+    payload = {
+        "phone_numbers": [{"phone_number": phone_number}],
+    }
+    if connection_id:
+        payload["connection_id"] = connection_id
+
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/number_orders",
+            json=payload,
+            headers=_headers(),
+            timeout=30,
+        )
+        resp.raise_for_status()
+        order = resp.json().get("data", {})
+        logger.info(f"Number order created: {order.get('id')} for {phone_number}")
+        return {
+            "success": True,
+            "order_id": order.get("id"),
+            "status": order.get("status", "pending"),
+            "phone_numbers": [pn.get("phone_number", "") for pn in order.get("phone_numbers", [])],
+        }
+    except requests.exceptions.HTTPError as e:
+        error_body = ""
+        try:
+            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
+        except Exception:
+            error_body = str(e)
+        logger.error(f"Number purchase failed: {error_body}")
+        return {"success": False, "error": error_body}
+    except Exception as e:
+        logger.error(f"Number purchase failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def create_call_control_app(app_name, webhook_url):
+    payload = {
+        "application_name": app_name,
+        "webhook_event_url": webhook_url,
+        "webhook_api_version": "2",
+        "first_command_timeout": True,
+        "first_command_timeout_secs": 30,
+        "dtmf_type": "RFC 2833",
+        "outbound": {
+            "channel_limit": 50,
+        },
+    }
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/call_control_applications",
+            json=payload,
+            headers=_headers(),
+            timeout=20,
+        )
+        resp.raise_for_status()
+        app_data = resp.json().get("data", {})
+        logger.info(f"Call Control App created: {app_data.get('id')} - {app_name}")
+        return {
+            "success": True,
+            "app_id": app_data.get("id"),
+            "app_name": app_data.get("application_name"),
+        }
+    except requests.exceptions.HTTPError as e:
+        error_body = ""
+        try:
+            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
+        except Exception:
+            error_body = str(e)
+        logger.error(f"App creation failed: {error_body}")
+        return {"success": False, "error": error_body}
+    except Exception as e:
+        logger.error(f"App creation failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def assign_number_to_app(phone_number_id, connection_id):
+    payload = {"connection_id": connection_id}
+    try:
+        resp = requests.patch(
+            f"{TELNYX_API_BASE}/phone_numbers/{phone_number_id}",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        logger.info(f"Number {phone_number_id} assigned to app {connection_id}")
+        return {"success": True, "phone_number": data.get("phone_number"), "connection_id": data.get("connection_id")}
+    except Exception as e:
+        logger.error(f"Failed to assign number: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def list_owned_numbers():
+    try:
+        all_numbers = []
+        page = 1
+        while True:
+            resp = requests.get(
+                f"{TELNYX_API_BASE}/phone_numbers",
+                params={"page[number]": page, "page[size]": 50},
+                headers=_headers(),
+                timeout=20,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            numbers = data.get("data", [])
+            if not numbers:
+                break
+            for n in numbers:
+                all_numbers.append({
+                    "id": n.get("id", ""),
+                    "phone_number": n.get("phone_number", ""),
+                    "status": n.get("status", ""),
+                    "connection_id": n.get("connection_id", ""),
+                    "connection_name": n.get("connection_name", ""),
+                    "number_type": n.get("phone_number_type", ""),
+                    "created_at": n.get("created_at", ""),
+                })
+            meta = data.get("meta", {})
+            total_pages = meta.get("total_pages", 1)
+            if page >= total_pages:
+                break
+            page += 1
+        logger.info(f"Found {len(all_numbers)} owned numbers")
+        return {"success": True, "numbers": all_numbers}
+    except Exception as e:
+        logger.error(f"Failed to list owned numbers: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def release_number(phone_number_id):
+    try:
+        resp = requests.delete(
+            f"{TELNYX_API_BASE}/phone_numbers/{phone_number_id}",
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Number {phone_number_id} released")
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to release number: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def list_call_control_apps():
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/call_control_applications",
+            params={"page[size]": 50},
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        apps = resp.json().get("data", [])
+        results = []
+        for a in apps:
+            results.append({
+                "id": a.get("id", ""),
+                "name": a.get("application_name", ""),
+                "webhook_url": a.get("webhook_event_url", ""),
+                "created_at": a.get("created_at", ""),
+            })
+        return {"success": True, "apps": results}
+    except Exception as e:
+        logger.error(f"Failed to list apps: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def get_number_order_status(order_id):
+    try:
+        resp = requests.get(
+            f"{TELNYX_API_BASE}/number_orders/{order_id}",
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        order = resp.json().get("data", {})
+        return {
+            "success": True,
+            "status": order.get("status", ""),
+            "phone_numbers": [
+                {
+                    "phone_number": pn.get("phone_number", ""),
+                    "status": pn.get("status", ""),
+                }
+                for pn in order.get("phone_numbers", [])
+            ],
+        }
+    except Exception as e:
+        logger.error(f"Failed to check order status: {e}")
+        return {"success": False, "error": str(e)}

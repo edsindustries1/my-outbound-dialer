@@ -74,7 +74,13 @@ from storage import (
     clear_contacts,
     store_recording_url,
 )
-from telnyx_client import transfer_call, play_audio, hangup_call, make_call, validate_connection_id, set_webhook_base_url, start_transcription, start_recording
+from telnyx_client import (
+    transfer_call, play_audio, hangup_call, make_call, validate_connection_id,
+    set_webhook_base_url, start_transcription, start_recording,
+    search_available_numbers, purchase_number, create_call_control_app,
+    assign_number_to_app, list_owned_numbers, release_number,
+    list_call_control_apps, get_number_order_status,
+)
 from call_manager import start_dialer
 from personalized_vm import (
     parse_csv as pvm_parse_csv,
@@ -332,7 +338,8 @@ def _detect_and_set_base_url():
 def dashboard():
     """Serve the main dashboard page (requires authentication)."""
     _detect_and_set_base_url()
-    return render_template("index.html")
+    telnyx_from = os.environ.get("TELNYX_FROM_NUMBER", "Not set")
+    return render_template("index.html", telnyx_from=telnyx_from)
 
 
 # ---- Audio File Serving ----
@@ -458,10 +465,11 @@ def start():
         dial_delay = 2
 
     voicemail_type = request.form.get("voicemail_type", "standard").strip()
+    campaign_from_number = request.form.get("from_number", "").strip() or None
 
     # ---- Start the campaign ----
-    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}")
-    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay)
+    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}")
+    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number)
 
     if voicemail_type == "personalized":
         pvm_template_id = request.form.get("pvm_template_id", "").strip()
@@ -1651,6 +1659,144 @@ def webhook():
                 pass
 
     return "", 200
+
+
+# ---- Phone Number Management API ----
+@app.route("/api/numbers/search", methods=["GET"])
+@login_required
+def api_numbers_search():
+    country = request.args.get("country", "US")
+    area_code = request.args.get("area_code", "").strip() or None
+    state = request.args.get("state", "").strip() or None
+    city = request.args.get("city", "").strip() or None
+    number_type = request.args.get("number_type", "local")
+    limit = int(request.args.get("limit", 20))
+    result = search_available_numbers(country, area_code, state, city, number_type, limit)
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/buy", methods=["POST"])
+@login_required
+def api_numbers_buy():
+    data = request.get_json() or {}
+    phone_number = data.get("phone_number", "").strip()
+    if not phone_number:
+        return jsonify({"error": "Phone number is required"}), 400
+
+    auto_setup = data.get("auto_setup", True)
+    app_name = data.get("app_name", "Open Human Dialer")
+
+    webhook_url = _get_current_webhook_url()
+
+    connection_id = None
+    created_app = None
+    if auto_setup:
+        apps_result = list_call_control_apps()
+        if apps_result.get("success") and apps_result.get("apps"):
+            connection_id = apps_result["apps"][0]["id"]
+            created_app = apps_result["apps"][0]
+        else:
+            app_result = create_call_control_app(app_name, webhook_url)
+            if not app_result.get("success"):
+                return jsonify({"error": f"Failed to create voice app: {app_result.get('error')}"}), 400
+            connection_id = app_result["app_id"]
+            created_app = app_result
+
+    order_result = purchase_number(phone_number, connection_id)
+    if not order_result.get("success"):
+        return jsonify({"error": f"Failed to purchase number: {order_result.get('error')}"}), 400
+
+    if auto_setup and connection_id and not data.get("skip_assign"):
+        import time
+        time.sleep(2)
+        assign_result = assign_number_to_app(phone_number, connection_id)
+        if not assign_result.get("success"):
+            logger.warning(f"Number purchased but assignment failed: {assign_result.get('error')}")
+
+    return jsonify({
+        "success": True,
+        "order": order_result,
+        "voice_app": created_app,
+        "message": f"Number {phone_number} purchased and configured successfully",
+    })
+
+
+@app.route("/api/numbers/owned", methods=["GET"])
+@login_required
+def api_numbers_owned():
+    result = list_owned_numbers()
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/release", methods=["POST"])
+@login_required
+def api_numbers_release():
+    data = request.get_json() or {}
+    phone_number_id = data.get("phone_number_id", "").strip()
+    if not phone_number_id:
+        return jsonify({"error": "Phone number ID is required"}), 400
+    result = release_number(phone_number_id)
+    if result.get("success"):
+        return jsonify({"success": True, "message": "Number released"})
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/apps", methods=["GET"])
+@login_required
+def api_numbers_apps():
+    result = list_call_control_apps()
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/assign", methods=["POST"])
+@login_required
+def api_numbers_assign():
+    data = request.get_json() or {}
+    phone_number = data.get("phone_number", "").strip()
+    connection_id = data.get("connection_id", "").strip()
+    if not phone_number or not connection_id:
+        return jsonify({"error": "Phone number and connection ID are required"}), 400
+    result = assign_number_to_app(phone_number, connection_id)
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/create-app", methods=["POST"])
+@login_required
+def api_numbers_create_app():
+    data = request.get_json() or {}
+    app_name = data.get("app_name", "Open Human Dialer").strip()
+    webhook_url = data.get("webhook_url", "").strip() or _get_current_webhook_url()
+    result = create_call_control_app(app_name, webhook_url)
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+@app.route("/api/numbers/order-status/<order_id>", methods=["GET"])
+@login_required
+def api_numbers_order_status(order_id):
+    result = get_number_order_status(order_id)
+    if result.get("success"):
+        return jsonify(result)
+    return jsonify(result), 400
+
+
+def _get_current_webhook_url():
+    global _detected_base_url
+    if _detected_base_url:
+        return _detected_base_url.rstrip("/") + "/webhook"
+    base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    if base:
+        return base + "/webhook"
+    return "https://example.com/webhook"
 
 
 # ---- Main Entry Point ----

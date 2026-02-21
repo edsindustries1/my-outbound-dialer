@@ -48,19 +48,20 @@ def _dial_worker():
     dial_mode = campaign.get("dial_mode", "sequential")
     batch_size = campaign.get("batch_size", 5)
     dial_delay = campaign.get("dial_delay", 2)
+    from_number = campaign.get("from_number")
 
-    logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}, delay={dial_delay}min")
+    logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}, delay={dial_delay}min, from={from_number or 'default'}")
 
     if dial_mode == "simultaneous":
-        _dial_simultaneous(numbers, batch_size)
+        _dial_simultaneous(numbers, batch_size, from_number)
     else:
-        _dial_sequential(numbers, dial_delay)
+        _dial_sequential(numbers, dial_delay, from_number)
 
     mark_campaign_complete()
     logger.info("Dialer finished processing all numbers")
 
 
-def _dial_sequential(numbers, dial_delay=2):
+def _dial_sequential(numbers, dial_delay=2, from_number=None):
     """Dial numbers one at a time, waiting for each call to complete then delay before the next.
     
     dial_delay: minutes to wait between calls (1-10).
@@ -89,7 +90,7 @@ def _dial_sequential(numbers, dial_delay=2):
             continue
 
         logger.info(f"Dialing [{i+1}/{len(numbers)}]: {number}")
-        call_control_id = make_call(number)
+        call_control_id = make_call(number, from_number_override=from_number)
 
         if call_control_id:
             complete_event = register_call_complete_event(call_control_id)
@@ -109,7 +110,7 @@ def _dial_sequential(numbers, dial_delay=2):
                 time.sleep(1)
 
 
-def _dial_simultaneous(numbers, batch_size):
+def _dial_simultaneous(numbers, batch_size, from_number=None):
     """Dial numbers in batches of batch_size simultaneously."""
     total = len(numbers)
     i = 0
@@ -139,7 +140,7 @@ def _dial_simultaneous(numbers, batch_size):
 
         threads = []
         for number in batch_nums:
-            t = threading.Thread(target=_place_single_call, args=(number,), daemon=True)
+            t = threading.Thread(target=_place_single_call, args=(number, from_number), daemon=True)
             threads.append(t)
             t.start()
             time.sleep(0.3)
@@ -154,12 +155,12 @@ def _dial_simultaneous(numbers, batch_size):
         time.sleep(2)
 
 
-def _place_single_call(number):
+def _place_single_call(number, from_number=None):
     """Place a single call and create its state entry."""
     if is_dnc(number):
         logger.info(f"Skipping DNC number: {number}")
         return
-    call_control_id = make_call(number)
+    call_control_id = make_call(number, from_number_override=from_number)
     if call_control_id:
         create_call_state(call_control_id, number)
         logger.info(f"Call state created for {number}")
