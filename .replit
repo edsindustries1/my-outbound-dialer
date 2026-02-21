@@ -43,6 +43,9 @@ externalPort = 8080
 
 [userenv.shared]
 
+[userenv.production]
+PUBLIC_BASE_URL = "https://voice-blast.replit.app"
+
 [deployment]
 deploymentTarget = "vm"
-run = ["gunicorn", "--bind=0.0.0.0:5000", "--workers=2", "--reuse-port", "--timeout=120", "app:app"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--workers=2", "--timeout=120", "app:app"]
