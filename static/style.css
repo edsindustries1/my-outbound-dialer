@@ -143,7 +143,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     box-shadow: 2px 0 12px rgba(0,0,0,0.03);
 }
 [data-theme="dark"] .gads-sidebar {
-    background: linear-gradient(180deg, #131d30 0%, #0f1926 100%);
+    background: var(--gads-surface);
     box-shadow: 2px 0 20px rgba(0,0,0,0.2);
 }
 .gads-sidebar-collapsed { width: 56px; }
@@ -222,8 +222,8 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     background: rgba(138,180,248,0.12);
 }
 .gads-nav-item.active::before { transform: scaleY(1); }
-.gads-nav-item svg { flex-shrink: 0; transition: transform 0.25s var(--gads-transition); }
-.gads-nav-item:hover svg { transform: scale(1.15) rotate(-3deg); }
+.gads-nav-item svg { flex-shrink: 0; width: 22px; height: 22px; transition: transform 0.25s var(--gads-transition); }
+.gads-nav-item:hover svg { transform: scale(1.1); }
 .gads-nav-item.active svg { stroke: var(--gads-primary); }
 
 .gads-sidebar-footer {

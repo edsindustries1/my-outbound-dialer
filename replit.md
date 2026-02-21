@@ -50,14 +50,16 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 ## Branding & Design
 - **Brand**: Open Human
 - **Tagline**: Power Sales Assistant
-- **Primary color**: Indigo (#6366f1) - consistent across landing, login, and dashboard
-- **Success**: Green (#10b981)
-- **Error**: Red (#ef4444)
-- **Warning**: Amber (#f59e0b)
+- **Primary color**: Google Blue (#1a73e8) - consistent across landing, login, and dashboard
+- **Secondary blue**: #4285f4 (lighter accents)
+- **Success**: Google Green (#0f9d58)
+- **Error**: Google Red (#d93025)
+- **Warning**: Google Yellow (#f9ab00)
 - **Background**: Light gray (#f8f9fa)
 - **Cards**: White with subtle shadows
-- **Font**: Inter (UI), system sans-serif fallback
+- **Font**: Google Sans / Inter (UI), system sans-serif fallback
 - **Favicon**: Brain emoji
+- **Dark theme**: Google-style dark (#1f1f1f bg, #292929 surface, #8ab4f8 primary)
 
 ## Landing Page Visual Effects
 - **Hero**: Dark immersive bg (#0a0a1a), 60-particle canvas with connecting lines, 3 floating gradient orbs, grid overlay, word-by-word title reveal with 3D rotation
@@ -79,12 +81,12 @@ A production-ready outbound voicemail drop web application branded as "Open Huma
 - **Performance**: Scroll handler uses requestAnimationFrame throttling
 
 ## UI/UX - Google Ads Style SaaS Interface
-- **Layout**: Fixed left sidebar (220px) + top bar (56px) + main content area
+- **Layout**: Fixed left sidebar (256px) + top bar (56px) + main content area
 - **Navigation**: SPA-style with 8 pages: Dashboard, Campaigns, Voicemails, Contacts, Phone Numbers, Live Calls, Reports, Settings
 - **Page switching**: navigateTo() function toggles page containers, updates sidebar active state and page title
 - **Dual-theme system**: Light (default, Google Ads style) and Dark modes with toggle in top bar
 - **Theme persisted**: localStorage ("vb_theme") with inline head script to prevent flash
-- **Sidebar**: White bg, nav items with SVG icons, active item has indigo text + light indigo bg, collapsible via toggle button
+- **Sidebar**: White bg, nav items with 22px SVG icons, active item has Google Blue text + light blue bg, collapsible via toggle button
 - **Dashboard page**: 6 KPI metric cards (Total Calls, Connected, Voicemails, Hot Leads, Success Rate, Campaign Status) + Recent Activity table (last 20 calls auto-refreshing)
 - **Campaigns page**: Active campaign status card with progress bar + Campaign History table + "+ New Campaign" button opens wizard overlay
 - **Campaign Wizard**: 5-step overlay (Campaign Type, Calling Mode, Upload Contacts, Select Voicemail, Settings & Launch) with stepper navigation

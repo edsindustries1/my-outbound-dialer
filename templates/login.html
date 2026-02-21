@@ -15,19 +15,19 @@
             --login-bg: #f8f9fa;
             --login-surface: rgba(255,255,255,0.95);
             --login-border: rgba(0,0,0,0.08);
-            --login-text: #111827;
-            --login-text-dim: #4b5563;
-            --login-accent: #6366f1;
-            --login-accent-2: #8b5cf6;
+            --login-text: #202124;
+            --login-text-dim: #5f6368;
+            --login-accent: #1a73e8;
+            --login-accent-2: #4285f4;
         }
         [data-theme="dark"] {
-            --login-bg: #0f172a;
+            --login-bg: #1f1f1f;
             --login-surface: rgba(255,255,255,0.06);
             --login-border: rgba(255,255,255,0.1);
-            --login-text: #f1f5f9;
-            --login-text-dim: #94a3b8;
-            --login-accent: #818cf8;
-            --login-accent-2: #c4b5fd;
+            --login-text: #e8eaed;
+            --login-text-dim: #9aa0a6;
+            --login-accent: #8ab4f8;
+            --login-accent-2: #aecbfa;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -64,7 +64,7 @@
         }
         .login-orb-3 {
             width: 300px; height: 300px;
-            background: #a78bfa;
+            background: #4285f4;
             top: 50%; left: 60%;
             animation-delay: -14s;
             opacity: 0.08;
@@ -79,15 +79,15 @@
         .login-grid {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image:
-                linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+                linear-gradient(rgba(26,115,232,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26,115,232,0.03) 1px, transparent 1px);
             background-size: 60px 60px;
             z-index: 0;
         }
         [data-theme="dark"] .login-grid {
             background-image:
-                linear-gradient(rgba(129,140,248,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(129,140,248,0.03) 1px, transparent 1px);
+                linear-gradient(rgba(138,180,248,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138,180,248,0.03) 1px, transparent 1px);
         }
 
         canvas#bgCanvas {
@@ -123,13 +123,13 @@
             box-shadow:
                 0 0 0 1px rgba(0,0,0,0.03),
                 0 20px 50px -12px rgba(0,0,0,0.08),
-                0 0 80px -20px rgba(99,102,241,0.1);
+                0 0 80px -20px rgba(26,115,232,0.1);
         }
         [data-theme="dark"] .login-card {
             box-shadow:
                 0 0 0 1px rgba(255,255,255,0.05),
                 0 20px 50px -12px rgba(0,0,0,0.25),
-                0 0 100px -20px rgba(99,102,241,0.15);
+                0 0 100px -20px rgba(26,115,232,0.15);
         }
         @keyframes cardEntrance {
             from { opacity: 0; transform: translateY(30px) scale(0.96); }
@@ -143,7 +143,7 @@
             border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
             animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
-            box-shadow: 0 8px 24px -4px rgba(99,102,241,0.3);
+            box-shadow: 0 8px 24px -4px rgba(26,115,232,0.3);
         }
         .login-logo-icon svg { width: 32px; height: 32px; stroke: #fff; fill: none; stroke-width: 2; }
 
@@ -210,11 +210,11 @@
         }
         .login-card input[type="password"]:focus {
             border-color: var(--login-accent);
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
             background: rgba(0,0,0,0.02);
         }
         [data-theme="dark"] .login-card input[type="password"]:focus {
-            box-shadow: 0 0 0 3px rgba(129,140,248,0.15), 0 0 20px -4px rgba(129,140,248,0.2);
+            box-shadow: 0 0 0 3px rgba(138,180,248,0.15), 0 0 20px -4px rgba(138,180,248,0.2);
             background: rgba(0,0,0,0.2);
         }
         .login-card input[type="password"]::placeholder {
@@ -236,16 +236,16 @@
             position: relative;
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 16px -2px rgba(99,102,241,0.4);
+            box-shadow: 0 4px 16px -2px rgba(26,115,232,0.4);
         }
         .login-btn:hover {
-            background: #4f46e5;
-            box-shadow: 0 8px 30px -4px rgba(99,102,241,0.5);
+            background: #1557b0;
+            box-shadow: 0 8px 30px -4px rgba(26,115,232,0.5);
             transform: translateY(-2px);
         }
         .login-btn:active {
             transform: translateY(0) scale(0.98);
-            box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+            box-shadow: 0 2px 8px rgba(26,115,232,0.3);
         }
         .login-btn::after {
             content: '';
@@ -387,7 +387,7 @@
             this.x = Math.random() * W; this.y = Math.random() * H; this.z = Math.random();
             this.vx = (Math.random() - 0.5) * 0.3; this.vy = (Math.random() - 0.5) * 0.3;
             this.vz = (Math.random() - 0.5) * 0.005; this.baseSize = 1.5 + Math.random() * 2;
-            this.hue = Math.random() > 0.5 ? 239 : 270;
+            this.hue = Math.random() > 0.5 ? 217 : 210;
         }
         Particle.prototype.update = function() {
             this.x += this.vx; this.y += this.vy; this.z += this.vz;
@@ -405,9 +405,9 @@
         Particle.prototype.draw = function() {
             var s = this.baseSize * (0.5 + this.z * 0.8), a = 0.2 + this.z * 0.5;
             ctx.beginPath(); ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
-            ctx.fillStyle = this.hue === 239 ? "rgba(99,102,241," + a + ")" : "rgba(139,92,246," + a + ")";
+            ctx.fillStyle = this.hue === 217 ? "rgba(26,115,232," + a + ")" : "rgba(66,133,244," + a + ")";
             ctx.fill();
-            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 239 ? "rgba(99,102,241," + (a*0.06) + ")" : "rgba(139,92,246," + (a*0.06) + ")"; ctx.fill(); }
+            if (s > 2) { ctx.beginPath(); ctx.arc(this.x, this.y, s * 3, 0, Math.PI * 2); ctx.fillStyle = this.hue === 217 ? "rgba(26,115,232," + (a*0.06) + ")" : "rgba(66,133,244," + (a*0.06) + ")"; ctx.fill(); }
         };
         for (var i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
         function animate() {
@@ -416,10 +416,10 @@
             for (var i = 0; i < particles.length; i++) {
                 for (var j = i + 1; j < particles.length; j++) {
                     var a = particles[i], b = particles[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx*dx + dy*dy);
-                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.12 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(99,102,241," + al + ")"); g.addColorStop(1, "rgba(139,92,246," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.6; ctx.stroke(); }
+                    if (d < CONNECTION_DIST) { var al = (1 - d / CONNECTION_DIST) * 0.12 * Math.min(a.z, b.z); var g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, "rgba(26,115,232," + al + ")"); g.addColorStop(1, "rgba(66,133,244," + al + ")"); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.strokeStyle = g; ctx.lineWidth = 0.5 + Math.min(a.z, b.z) * 0.6; ctx.stroke(); }
                 }
             }
-            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx*dx + dy*dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(129,140,248," + ((1 - d / MOUSE_DIST) * 0.2) + ")"; ctx.lineWidth = 0.6; ctx.stroke(); } } }
+            if (mouseX > 0) { for (var i = 0; i < particles.length; i++) { var p = particles[i], dx = mouseX - p.x, dy = mouseY - p.y, d = Math.sqrt(dx*dx + dy*dy); if (d < MOUSE_DIST) { ctx.beginPath(); ctx.moveTo(mouseX, mouseY); ctx.lineTo(p.x, p.y); ctx.strokeStyle = "rgba(138,180,248," + ((1 - d / MOUSE_DIST) * 0.2) + ")"; ctx.lineWidth = 0.6; ctx.stroke(); } } }
             for (var i = 0; i < particles.length; i++) particles[i].draw();
             requestAnimationFrame(animate);
         }
