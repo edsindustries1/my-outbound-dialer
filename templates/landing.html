@@ -656,7 +656,7 @@
           nav.classList.toggle('scrolled', window.scrollY > 20);
           backToTop.classList.toggle('visible', window.scrollY > 600);
           const scrollH = document.documentElement.scrollHeight - window.innerHeight;
-          if (scrollH > 0) navProgress.style.width = (window.scrollY / scrollH * 100) + '%';
+          if (scrollH > 0) navProgress.style.transform = 'scaleX(' + (window.scrollY / scrollH) + ')';
           scrollTick = false;
         });
         scrollTick = true;
@@ -686,74 +686,26 @@
       });
     });
 
-    // Hero particle canvas (pauses when off-screen)
+    // Hero: static dots rendered once (no animation loop)
     const canvas = document.getElementById('heroCanvas');
     if (canvas) {
       const ctx = canvas.getContext('2d');
-      let w, h, particles = [], heroAnimId = null, heroVisible = true;
-      function resizeCanvas() {
-        w = canvas.width = canvas.parentElement.offsetWidth;
-        h = canvas.height = canvas.parentElement.offsetHeight;
-      }
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-      class Particle {
-        constructor() { this.reset(); }
-        reset() {
-          this.x = Math.random() * w;
-          this.y = Math.random() * h;
-          this.size = Math.random() * 2 + 0.5;
-          this.speedX = (Math.random() - 0.5) * 0.4;
-          this.speedY = (Math.random() - 0.5) * 0.4;
-          this.opacity = Math.random() * 0.5 + 0.1;
-          this.pulse = Math.random() * Math.PI * 2;
-        }
-        update() {
-          this.x += this.speedX;
-          this.y += this.speedY;
-          this.pulse += 0.02;
-          if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
-        }
-        draw() {
-          const o = this.opacity * (0.5 + 0.5 * Math.sin(this.pulse));
+      function drawStaticParticles() {
+        const w = canvas.width = canvas.parentElement.offsetWidth;
+        const h = canvas.height = canvas.parentElement.offsetHeight;
+        for (let i = 0; i < 40; i++) {
+          const x = Math.random() * w, y = Math.random() * h;
+          const size = Math.random() * 2 + 0.5;
+          const opacity = Math.random() * 0.35 + 0.05;
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(99,102,241,${o})`;
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(99,102,241,${opacity})`;
           ctx.fill();
         }
       }
-      for (let i = 0; i < 35; i++) particles.push(new Particle());
-      function drawLines() {
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const distSq = dx * dx + dy * dy;
-            if (distSq < 14400) {
-              const dist = Math.sqrt(distSq);
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(99,102,241,${0.06 * (1 - dist / 120)})`;
-              ctx.lineWidth = 0.5;
-              ctx.stroke();
-            }
-          }
-        }
-      }
-      function animateParticles() {
-        if (!heroVisible) { heroAnimId = null; return; }
-        ctx.clearRect(0, 0, w, h);
-        particles.forEach(p => { p.update(); p.draw(); });
-        drawLines();
-        heroAnimId = requestAnimationFrame(animateParticles);
-      }
-      const heroObs = new IntersectionObserver(entries => {
-        heroVisible = entries[0].isIntersecting;
-        if (heroVisible && !heroAnimId) animateParticles();
-      }, { threshold: 0 });
-      heroObs.observe(canvas.parentElement);
-      animateParticles();
+      drawStaticParticles();
+      let resizeTimer;
+      window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawStaticParticles, 200); });
     }
 
     // Title word reveal animation
@@ -853,55 +805,23 @@
       }, 5000);
     });
 
-    // CTA section floating particles (pauses when off-screen)
+    // CTA section: static sparkle dots rendered once
     const ctaCanvas = document.getElementById('ctaCanvas');
     if (ctaCanvas) {
       const ctxCta = ctaCanvas.getContext('2d');
-      let cw, ch, ctaParticles = [], ctaAnimId = null, ctaVisible = false;
-      function resizeCta() {
-        cw = ctaCanvas.width = ctaCanvas.parentElement.offsetWidth;
-        ch = ctaCanvas.height = ctaCanvas.parentElement.offsetHeight;
-      }
-      resizeCta();
-      window.addEventListener('resize', resizeCta);
-      class CtaParticle {
-        constructor() { this.reset(); }
-        reset() {
-          this.x = Math.random() * cw;
-          this.y = Math.random() * ch;
-          this.size = Math.random() * 2.5 + 0.5;
-          this.speedY = -(Math.random() * 0.5 + 0.2);
-          this.speedX = (Math.random() - 0.5) * 0.3;
-          this.opacity = Math.random() * 0.4 + 0.1;
-          this.life = 0;
-          this.maxLife = Math.random() * 200 + 100;
-        }
-        update() {
-          this.x += this.speedX;
-          this.y += this.speedY;
-          this.life++;
-          if (this.life > this.maxLife || this.y < 0 || this.x < 0 || this.x > cw) this.reset();
-        }
-        draw() {
-          const fade = this.life < 30 ? this.life / 30 : this.life > this.maxLife - 30 ? (this.maxLife - this.life) / 30 : 1;
+      function drawCtaDots() {
+        const cw = ctaCanvas.width = ctaCanvas.parentElement.offsetWidth;
+        const ch = ctaCanvas.height = ctaCanvas.parentElement.offsetHeight;
+        for (let i = 0; i < 25; i++) {
           ctxCta.beginPath();
-          ctxCta.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctxCta.fillStyle = `rgba(255,255,255,${this.opacity * fade})`;
+          ctxCta.arc(Math.random() * cw, Math.random() * ch, Math.random() * 2 + 0.5, 0, Math.PI * 2);
+          ctxCta.fillStyle = `rgba(255,255,255,${Math.random() * 0.25 + 0.05})`;
           ctxCta.fill();
         }
       }
-      for (let i = 0; i < 20; i++) ctaParticles.push(new CtaParticle());
-      function animateCta() {
-        if (!ctaVisible) { ctaAnimId = null; return; }
-        ctxCta.clearRect(0, 0, cw, ch);
-        ctaParticles.forEach(p => { p.update(); p.draw(); });
-        ctaAnimId = requestAnimationFrame(animateCta);
-      }
-      const ctaObs = new IntersectionObserver(entries => {
-        ctaVisible = entries[0].isIntersecting;
-        if (ctaVisible && !ctaAnimId) animateCta();
-      }, { threshold: 0 });
-      ctaObs.observe(ctaCanvas.parentElement);
+      drawCtaDots();
+      let ctaResizeTimer;
+      window.addEventListener('resize', () => { clearTimeout(ctaResizeTimer); ctaResizeTimer = setTimeout(drawCtaDots, 200); });
     }
 
     // Lead form modal
