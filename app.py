@@ -130,7 +130,7 @@ logger = logging.getLogger("voicemail_app")
 
 # ---- Flask App ----
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+app.secret_key = os.environ.get("SESSION_SECRET")
 
 # ---- Database & Auth Setup ----
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
@@ -444,11 +444,29 @@ def paypal_create_order():
         return jsonify({"error": "Failed to create order"}), 500
 
 
+def _get_or_create_user_by_email(email):
+    email = (email or "").strip().lower()
+    if not email:
+        return None
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        import secrets
+        user = User(email=email, profile_name=email.split("@")[0])
+        temp_password = secrets.token_urlsafe(16)
+        user.set_password(temp_password)
+        db.session.add(user)
+        db.session.commit()
+        ensure_user_instance(user.id)
+        logger.info(f"Created guest user {user.id} for email {email}")
+    return user
+
+
 @app.route("/api/paypal/capture-order", methods=["POST"])
 def paypal_capture_order():
     data = request.get_json() or {}
     order_id = data.get("order_id")
     plan = (data.get("plan") or "").lower().strip()
+    checkout_email = (data.get("email") or "").strip()
     if not order_id:
         return jsonify({"error": "order_id is required"}), 400
     try:
@@ -463,6 +481,15 @@ def paypal_capture_order():
             custom_id = pu.get("custom_id")
         if status == "COMPLETED":
             target_user_id = custom_id if custom_id and custom_id != "guest" else None
+
+            payer_email = resp.get("payer", {}).get("email_address")
+            resolved_email = checkout_email or payer_email
+            if not target_user_id and resolved_email:
+                guest_user = _get_or_create_user_by_email(resolved_email)
+                if guest_user:
+                    target_user_id = guest_user.id
+                    checkout_email = resolved_email
+
             if target_user_id:
                 if plan in PLAN_MATRIX:
                     matrix = PLAN_MATRIX[plan]
@@ -474,10 +501,19 @@ def paypal_capture_order():
             else:
                 credited = amount_val
 
+            send_to_email = None
+            send_to_name = None
             if current_user.is_authenticated:
+                send_to_email = current_user.email
+                send_to_name = current_user.profile_name
+            elif checkout_email:
+                send_to_email = checkout_email
+                send_to_name = checkout_email.split("@")[0]
+
+            if send_to_email:
                 def _send_masterpiece():
                     try:
-                        _send_masterpiece_email(current_user.email, current_user.profile_name)
+                        _send_masterpiece_email(send_to_email, send_to_name)
                     except Exception as e:
                         logger.error(f"Masterpiece email failed: {e}")
                 threading.Thread(target=_send_masterpiece, daemon=True).start()
