@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Open Humana</title>
+  <meta name="description" content="Insights on AI-powered outbound sales and digital employment from Open Humana.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/blog.css">
+</head>
+<body class="subpage" style="background:#ffffff;color:#111827">
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:146px;width:auto;">
+      </a>
+      <div class="nav-links">
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/about">About</a>
+        <a href="/help">Help</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/login" class="nav-login">Log in</a>
+        <a href="/register" class="nav-cta">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="blog-hero">
+    <h1>Blog</h1>
+    <p>Insights, strategies, and guides on AI-powered outbound sales and the future of digital employment.</p>
+  </section>
+
+  <div class="blog-filter-bar">
+    <a href="/blog" class="blog-filter-btn {{ 'active' if not active_category }}">All</a>
+    {% for cat in categories %}
+    <a href="/blog?category={{ cat }}" class="blog-filter-btn {{ 'active' if active_category == cat }}">{{ cat }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="blog-list">
+    {% for post in posts %}
+    <a href="/blog/{{ post.slug }}" class="blog-card" data-category="{{ post.category }}">
+      <div class="blog-card-body">
+        <div class="blog-card-meta">
+          <span class="blog-card-category">{{ post.category }}</span>
+          <span class="blog-card-dot"></span>
+          <span>{{ post.date }}</span>
+        </div>
+        <h2>{{ post.title }}</h2>
+        <p class="blog-card-excerpt">{{ post.excerpt }}</p>
+        <span class="blog-card-read">Read article <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+      <div class="blog-card-side">{{ post.reading_time }}</div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <footer class="footer">
+    <div class="footer-glow"></div>
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="/" class="footer-logo-link">
+          <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
+        </a>
+        <span class="footer-copy">&copy; 2026 Open Humana</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="/about">About</a>
+        <a href="/blog">Blog</a>
+        <a href="/help">Help</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/compliance">TCPA</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <div class="footer-right">
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+</body>
+</html>

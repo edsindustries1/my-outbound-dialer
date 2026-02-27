@@ -629,8 +629,31 @@ def about_page():
     return render_template("about.html")
 
 @app.route("/blog-page")
-def blog_page():
-    return render_template("blog_page.html")
+def blog_page_redirect():
+    return redirect(url_for("blog_listing"))
+
+@app.route("/blog")
+def blog_listing():
+    from blog_data import get_all_posts
+    all_posts = get_all_posts()
+    category = request.args.get("category", "")
+    categories = list(dict.fromkeys(p["category"] for p in all_posts))
+    if category and category in categories:
+        posts = [p for p in all_posts if p["category"] == category]
+    else:
+        category = ""
+        posts = all_posts
+    return render_template("blog.html", posts=posts, categories=categories, active_category=category)
+
+@app.route("/blog/<slug>")
+def blog_post(slug):
+    from blog_data import get_all_posts, get_post_by_slug
+    post = get_post_by_slug(slug)
+    if not post:
+        return redirect(url_for("blog_listing"))
+    all_posts = get_all_posts()
+    related = [p for p in all_posts if p["slug"] != slug][:3]
+    return render_template("blog_post.html", post=post, related=related)
 
 @app.route("/help")
 def help_page():
