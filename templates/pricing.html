@@ -1,68 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pricing - Open Humana</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <style>
-        body{background:radial-gradient(circle at 20% 20%,rgba(99,102,241,0.12),transparent 35%),#0b1021;color:#e5e7eb;font-family:'Inter',sans-serif;min-height:100vh;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;}
-        .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;width:100%;max-width:1100px;margin-top:40px;}
-        .price-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px;text-align:center;transition:transform 0.3s ease, border-color 0.3s ease;}
-        .price-card:hover{transform:translateY(-10px);border-color:rgba(99,102,241,0.5);background:rgba(255,255,255,0.06);}
-        .price-card.featured{border:2px solid #6366f1;position:relative;}
-        .badge{position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:#6366f1;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;}
-        h2{font-size:24px;margin:0;color:#fff;}
-        .price{font-size:48px;font-weight:800;margin:20px 0;color:#fff;}
-        .price span{font-size:16px;color:rgba(255,255,255,0.5);}
-        ul{list-style:none;padding:0;margin:30px 0;text-align:left;color:rgba(255,255,255,0.7);line-height:2;}
-        .btn-pricing{display:block;width:100%;padding:16px;border-radius:12px;text-decoration:none;font-weight:700;transition:all 0.2s;}
-        .btn-starter{background:rgba(255,255,255,0.1);color:#fff;}
-        .btn-business{background:linear-gradient(120deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 10px 25px rgba(99,102,241,0.4);}
-        .btn-starter:hover{background:rgba(255,255,255,0.2);}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — Open Humana</title>
+  <meta name="description" content="Simple, transparent pricing for your digital sales team. Hire one employee, a full team, or build a custom agency.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/pricing.css">
 </head>
 <body>
-    <h1 style="font-size:42px;margin:0;">Ready to hire Alex?</h1>
-    <p style="color:rgba(255,255,255,0.6);margin-top:10px;">Select a plan to provision your AI employees instantly.</p>
+  <nav class="pricing-nav">
+    <div class="pricing-nav-inner">
+      <a href="/" class="pricing-nav-brand">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:40px;width:auto;">
+      </a>
+      <div class="pricing-nav-links">
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/pricing" class="active">Pricing</a>
+      </div>
+      <div class="pricing-nav-right">
+        <a href="/login" class="pricing-nav-login">Log in</a>
+        <a href="/login" class="pricing-nav-cta">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pricing-main">
+    <div class="pricing-header">
+      <p class="pricing-eyebrow">Pricing</p>
+      <h1 class="pricing-title">Simple, transparent pricing</h1>
+      <p class="pricing-subtitle">No hidden fees. No contracts. Cancel anytime.</p>
+    </div>
 
     <div class="pricing-grid">
-        <div class="price-card">
-            <h2>Starter</h2>
-            <div class="price">$99<span>/mo</span></div>
-            <ul>
-                <li>✓ 1 AI Employee (Alex)</li>
-                <li>✓ Unlimited Inbound Handling</li>
-                <li>✓ Basic Outbound Automation</li>
-                <li>✓ Email Onboarding</li>
-            </ul>
-            <a href="/billing?plan=starter" class="btn-pricing btn-starter">Get Started</a>
+      <div class="pricing-card">
+        <div class="pricing-card-top">
+          <h2 class="plan-name">Hire One Employee</h2>
+          <p class="plan-description">Perfect for solo operators and small teams getting started with AI-powered outbound.</p>
+          <div class="plan-price">
+            <span class="plan-currency">$</span>
+            <span class="plan-amount">99</span>
+            <span class="plan-period">/month</span>
+          </div>
         </div>
+        <ul class="plan-features">
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            1 Digital Employee (Alex)
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            500+ dials per day
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            AI personalized voicemails
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Live call transfer
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Real-time transcription
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Email onboarding support
+          </li>
+        </ul>
+        <div class="plan-cta-area">
+          <button class="plan-btn plan-btn-outline" data-plan="starter" data-amount="99">
+            <span class="btn-label">Get Started</span>
+          </button>
+        </div>
+      </div>
 
-        <div class="price-card featured">
-            <div class="badge">Most Popular</div>
-            <h2>Business</h2>
-            <div class="price">$399<span>/mo</span></div>
-            <ul>
-                <li>✓ 5 AI Employees</li>
-                <li>✓ Priority Voice Processing</li>
-                <li>✓ Advanced CRM Integration</li>
-                <li>✓ 24/7 Dedicated Alex Instances</li>
-            </ul>
-            <a href="/billing?plan=business" class="btn-pricing btn-business">Scale Now</a>
+      <div class="pricing-card pricing-card-featured">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-card-top">
+          <h2 class="plan-name">Hire a Team</h2>
+          <p class="plan-description">Scale your outbound with a squad of digital employees working around the clock.</p>
+          <div class="plan-price">
+            <span class="plan-currency">$</span>
+            <span class="plan-amount">399</span>
+            <span class="plan-period">/month</span>
+          </div>
         </div>
+        <ul class="plan-features">
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            5 Digital Employees
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            2,500+ dials per day
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Priority voice processing
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            AI personalized voicemails
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Advanced CRM integration
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            24/7 dedicated instances
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Priority support
+          </li>
+        </ul>
+        <div class="plan-cta-area">
+          <button class="plan-btn plan-btn-fill" data-plan="business" data-amount="399">
+            <span class="btn-label">Get Started</span>
+          </button>
+        </div>
+      </div>
 
-        <div class="price-card">
-            <h2>Agency</h2>
-            <div class="price">Custom</div>
-            <ul>
-                <li>✓ Unlimited AI Employees</li>
-                <li>✓ Full White-Label Rights</li>
-                <li>✓ Custom Voice Cloning</li>
-                <li>✓ API Webhook Access</li>
-            </ul>
-            <a href="mailto:sales@openhumana.com" class="btn-pricing btn-starter">Contact Sales</a>
+      <div class="pricing-card">
+        <div class="pricing-card-top">
+          <h2 class="plan-name">Hire an Agency</h2>
+          <p class="plan-description">Enterprise-grade deployment with unlimited capacity, custom integrations, and a dedicated manager.</p>
+          <div class="plan-price-custom">Custom</div>
         </div>
+        <ul class="plan-features">
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Unlimited Digital Employees
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Unlimited daily dials
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Full white-label rights
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Custom voice cloning
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            API &amp; webhook access
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Dedicated account manager
+          </li>
+          <li>
+            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            Enterprise SLA
+          </li>
+        </ul>
+        <div class="plan-cta-area">
+          <button class="plan-btn plan-btn-outline" id="contactUsBtn">
+            <span class="btn-label">Contact Us</span>
+          </button>
+        </div>
+      </div>
     </div>
+
+    <div class="pricing-faq">
+      <h2 class="faq-title">Frequently asked questions</h2>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h3>Can I switch plans later?</h3>
+          <p>Yes. Upgrade or downgrade at any time. Changes take effect on your next billing cycle.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is there a contract or commitment?</h3>
+          <p>No contracts. All plans are month-to-month. Cancel anytime with no penalties.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What payment methods do you accept?</h3>
+          <p>We accept all major credit and debit cards through our secure payment processor.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Do you offer refunds?</h3>
+          <p>We offer a 7-day money-back guarantee on all plans. No questions asked.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="payment-overlay" id="paymentOverlay">
+    <div class="payment-backdrop" id="paymentBackdrop"></div>
+    <div class="payment-modal" id="paymentModal">
+      <button class="payment-close" id="paymentClose">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="payment-inner">
+        <div class="payment-header">
+          <h3 id="paymentTitle">Complete Your Purchase</h3>
+          <p class="payment-plan-info">
+            <span id="paymentPlanName">Plan</span>
+            <span class="payment-plan-price" id="paymentPlanPrice">$0/mo</span>
+          </p>
+        </div>
+        <div class="payment-body">
+          <div id="paypalContainer"></div>
+          <div class="payment-loading" id="paymentLoading">
+            <div class="payment-spinner"></div>
+            <span>Preparing secure checkout...</span>
+          </div>
+        </div>
+        <div class="payment-success" id="paymentSuccess">
+          <div class="success-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>Payment Successful</h3>
+          <p>Your subscription is now active. Redirecting to your dashboard...</p>
+        </div>
+        <p class="payment-security">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Payments are secure and encrypted
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-overlay" id="contactOverlay">
+    <div class="contact-backdrop" id="contactBackdrop"></div>
+    <div class="contact-modal" id="contactModal">
+      <button class="payment-close" id="contactClose">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="contact-inner">
+        <h3>Let's build your custom plan</h3>
+        <p>Tell us about your needs and we'll craft a solution that fits.</p>
+        <form class="contact-form" id="contactForm">
+          <div class="contact-row">
+            <div class="contact-field">
+              <label>Full Name *</label>
+              <input type="text" name="name" required placeholder="John Smith">
+            </div>
+            <div class="contact-field">
+              <label>Email *</label>
+              <input type="email" name="email" required placeholder="john@company.com">
+            </div>
+          </div>
+          <div class="contact-row">
+            <div class="contact-field">
+              <label>Phone</label>
+              <input type="tel" name="phone" placeholder="+1 (555) 000-0000">
+            </div>
+            <div class="contact-field">
+              <label>Company</label>
+              <input type="text" name="company" placeholder="Acme Corp">
+            </div>
+          </div>
+          <div class="contact-field">
+            <label>Tell us about your needs</label>
+            <textarea name="message" rows="3" placeholder="How many employees do you need? Any specific integrations?"></textarea>
+          </div>
+          <button type="submit" class="contact-submit" id="contactSubmit">
+            <span>Send Message</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+        <div class="contact-success" id="contactSuccess">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <h3>Message Sent</h3>
+          <p>Our team will reach out within 24 hours to discuss your custom plan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="pricing-footer">
+    <div class="pricing-footer-inner">
+      <p>&copy; 2026 Open Humana. All rights reserved.</p>
+      <div class="pricing-footer-links">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/compliance">Compliance</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD&intent=capture&components=buttons&disable-funding=paylater,credit,card" data-namespace="paypal_sdk"></script>
+  <script src="/static/pricing.js"></script>
 </body>
 </html>

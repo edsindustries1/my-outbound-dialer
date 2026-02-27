@@ -40,10 +40,12 @@
     if (!trigger) return;
 
     trigger.addEventListener('click', function (e) {
-      e.preventDefault();
+      var href = trigger.getAttribute('href');
+      var isPageLink = href && href.charAt(0) === '/' && href.length > 1;
+      if (!isPageLink) e.preventDefault();
       var wasActive = dd.classList.contains('active');
       document.querySelectorAll('.nav-dropdown.active').forEach(function (d) { d.classList.remove('active'); });
-      if (!wasActive) dd.classList.add('active');
+      if (!wasActive && !isPageLink) dd.classList.add('active');
     });
 
     dd.querySelectorAll('.mega-item[data-target]').forEach(function (item) {
