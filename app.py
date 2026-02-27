@@ -405,14 +405,13 @@ def _verify_webhook(transmission_id, timestamp, webhook_id, event_body, cert_url
 
 
 @app.route("/billing")
-@login_required
 def billing_page():
     plan = (request.args.get("plan") or "").lower().strip()
     if plan not in PLAN_MATRIX:
         plan = ""
     return render_template(
         "billing.html",
-        user=current_user,
+        user=current_user if current_user.is_authenticated else None,
         default_refill=float(DEFAULT_REFILL),
         min_refill=float(MIN_REFILL),
         processor_id=PAYPAL_CLIENT_ID,
@@ -428,7 +427,6 @@ def pricing():
 
 
 @app.route("/api/paypal/create-order", methods=["POST"])
-@login_required
 def paypal_create_order():
     data = request.get_json() or {}
     plan = (data.get("plan") or "").lower().strip()
@@ -437,8 +435,9 @@ def paypal_create_order():
         amount = PLAN_MATRIX[plan]["amount"]
     if amount < MIN_REFILL and plan not in PLAN_MATRIX:
         return jsonify({"error": f"Minimum refill is ${MIN_REFILL:.2f}"}), 400
+    user_id = current_user.id if current_user.is_authenticated else "guest"
     try:
-        order = _create_paypal_order(amount, current_user.id, meta={"plan": plan or "refill"})
+        order = _create_paypal_order(amount, user_id, meta={"plan": plan or "refill"})
         return jsonify(order), 200
     except Exception as e:
         logger.error(f"Create order failed: {e}")
@@ -446,7 +445,6 @@ def paypal_create_order():
 
 
 @app.route("/api/paypal/capture-order", methods=["POST"])
-@login_required
 def paypal_capture_order():
     data = request.get_json() or {}
     order_id = data.get("order_id")
@@ -464,22 +462,25 @@ def paypal_capture_order():
             amount_val = Decimal(str(pu.get("amount", {}).get("value", "0")))
             custom_id = pu.get("custom_id")
         if status == "COMPLETED":
-            target_user_id = custom_id or current_user.id
-            if plan in PLAN_MATRIX:
-                matrix = PLAN_MATRIX[plan]
-                amount_val = matrix["amount"]
-                _set_employee_instances(target_user_id, matrix["instances"])
-                credited = _credit_user(target_user_id, amount_val)
+            target_user_id = custom_id if custom_id and custom_id != "guest" else None
+            if target_user_id:
+                if plan in PLAN_MATRIX:
+                    matrix = PLAN_MATRIX[plan]
+                    amount_val = matrix["amount"]
+                    _set_employee_instances(target_user_id, matrix["instances"])
+                    credited = _credit_user(target_user_id, amount_val)
+                else:
+                    credited = _credit_user(target_user_id, amount_val)
             else:
-                credited = _credit_user(target_user_id, amount_val)
+                credited = amount_val
 
-            def _send_masterpiece():
-                try:
-                    _send_masterpiece_email(current_user.email, current_user.profile_name)
-                except Exception as e:
-                    logger.error(f"Masterpiece email failed: {e}")
-
-            threading.Thread(target=_send_masterpiece, daemon=True).start()
+            if current_user.is_authenticated:
+                def _send_masterpiece():
+                    try:
+                        _send_masterpiece_email(current_user.email, current_user.profile_name)
+                    except Exception as e:
+                        logger.error(f"Masterpiece email failed: {e}")
+                threading.Thread(target=_send_masterpiece, daemon=True).start()
 
             return jsonify({
                 "status": status,
