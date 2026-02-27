@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["python311", "gcc"]
 
 [phases.install]
-cmds = ["npm ci --production || npm install --production"]
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "node server.js"
+cmd = "gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 2 main:app"

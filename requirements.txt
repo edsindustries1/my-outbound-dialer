@@ -15,5 +15,3 @@ google-generativeai
 sqlalchemy
 APScheduler
 telnyx
-APScheduler
-telnyx
