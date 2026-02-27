@@ -332,8 +332,8 @@
     function createOrderHandler() {
         const email = getEmail();
         if (!email || !validateEmail(email)) {
-            showError('Please enter a valid email address.');
-            throw new Error('Invalid email');
+            showError('Please enter a valid email address before paying.');
+            return Promise.reject(new Error('Invalid email'));
         }
         return fetch('/api/paypal/create-order', {
             method: 'POST',
@@ -341,7 +341,9 @@
             body: JSON.stringify({ amount: plan.amount, plan: selectedPlan, email: email })
         }).then(r => r.json()).then(json => {
             if (json.error) throw new Error(json.error);
-            return json.id || json.result?.id;
+            const oid = json.id || (json.result && json.result.id);
+            if (!oid) throw new Error('Missing order ID');
+            return oid;
         });
     }
 
@@ -417,7 +419,13 @@
             style: { color: 'black', shape: 'rect', label: 'pay', height: 48 },
             createOrder: createOrderHandler,
             onApprove: captureOrderHandler,
-            onError: function () { showError('An error occurred during payment processing.'); }
+            onError: function (err) {
+                console.error('Payment error:', err);
+                if (!document.querySelector('.error-bar[style*="block"]')) {
+                    showError('Payment could not be processed. Please try again.');
+                }
+            },
+            onCancel: function () {}
         });
 
         if (cardBtn.isEligible()) {
@@ -427,7 +435,13 @@
                 style: { layout: 'vertical', color: 'black', shape: 'rect', label: 'pay', height: 48, tagline: false },
                 createOrder: createOrderHandler,
                 onApprove: captureOrderHandler,
-                onError: function () { showError('An error occurred during payment processing.'); }
+                onError: function (err) {
+                    console.error('Payment error:', err);
+                    if (!document.querySelector('.error-bar[style*="block"]')) {
+                        showError('Payment could not be processed. Please try again.');
+                    }
+                },
+                onCancel: function () {}
             }).render('#paypal-button-container');
         }
     }
