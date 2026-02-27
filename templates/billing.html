@@ -43,6 +43,12 @@
             letter-spacing: -0.02em;
         }
 
+        .brand-header p {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
         .card {
             background: #111827;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -64,7 +70,6 @@
             display: block;
         }
 
-        /* Stripe-like Inputs */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -78,12 +83,10 @@
             padding: 12px 14px;
             transition: border-color 0.2s, box-shadow 0.2s;
             min-height: 46px;
-            /* explicitly size for paypal iframe */
             display: flex;
             align-items: center;
         }
 
-        /* The div holding the paypal iframe must expand */
         .stripe-field {
             width: 100%;
             height: 20px;
@@ -103,17 +106,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-        }
-
-        /* Standard text inputs for amounts */
-        input.standard-input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 15px;
-            font-family: inherit;
-            outline: none;
         }
 
         .btn-primary {
@@ -150,7 +142,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 0;
         }
 
         .plan-btn {
@@ -172,13 +164,48 @@
             color: #fff;
         }
 
+        .plan-btn:hover:not(.active) {
+            border-color: #4b5563;
+        }
+
+        .order-summary {
+            background: rgba(99, 102, 241, 0.06);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-plan-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e5e7eb;
+        }
+
+        .order-plan-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .order-period {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+
         .divider {
             height: 1px;
             background: #374151;
             margin: 24px 0;
         }
 
-        /* Success State */
         .success-view {
             display: none;
             text-align: center;
@@ -248,17 +275,35 @@
             text-align: center;
             font-size: 12px;
             color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .footer svg {
+            opacity: 0.5;
+        }
+
+        #paypal-button-container {
+            display: none;
+            margin-bottom: 0;
+        }
+
+        #paypal-button-container > div {
+            max-height: 55px;
+            overflow: hidden;
         }
     </style>
-    <!-- We request components=buttons,card-fields to get the Advanced Credit and Debit Card fields -->
     <script
-        src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&vault=false"></script>
+        src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&vault=false&enable-funding=card&disable-funding=paylater,credit"></script>
 </head>
 
 <body>
     <div class="checkout-container">
         <div class="brand-header">
             <h1>Open Humana</h1>
+            <p>Secure checkout</p>
         </div>
 
         <div class="card" id="checkout-card">
@@ -266,37 +311,31 @@
             <div class="form-section">
                 <label class="field-label">Select Plan</label>
                 <div class="plan-selector">
-                    <div class="plan-btn" data-plan="starter">
-                        <div style="font-weight:600;margin-bottom:4px;font-size:14px;">Starter</div>
+                    <div class="plan-btn" data-plan="starter" data-name="Hire One Employee" data-price="99">
+                        <div style="font-weight:600;margin-bottom:4px;font-size:14px;">Hire One Employee</div>
                         <div>$99/mo</div>
                     </div>
-                    <div class="plan-btn" data-plan="business">
-                        <div style="font-weight:600;margin-bottom:4px;font-size:14px;">Business</div>
+                    <div class="plan-btn" data-plan="business" data-name="Hire a Team" data-price="399">
+                        <div style="font-weight:600;margin-bottom:4px;font-size:14px;">Hire a Team</div>
                         <div>$399/mo</div>
                     </div>
                 </div>
             </div>
 
-            <div class="form-section">
-                <label class="field-label">Refill Amount</label>
-                <div class="input-wrapper">
-                    <span style="color:#9ca3af;margin-right:8px;">$</span>
-                    <input id="refillAmount" class="standard-input" type="number" min="{{ min_refill }}" step="0.01"
-                        value="{{ default_refill }}" />
+            <div class="order-summary" id="orderSummary">
+                <div class="order-row">
+                    <span class="order-plan-name" id="orderPlanName">Hire One Employee</span>
+                    <span class="order-plan-price" id="orderPlanPrice">$99<span class="order-period">/mo</span></span>
                 </div>
             </div>
 
-            <div class="divider"></div>
-
             <div class="form-section">
-                <label class="field-label">Payment Details</label>
+                <label class="field-label">Card Information</label>
 
-                <!-- PayPal Smart Buttons Fallback Container (Hidden by default, shown if card-fields fail or user chooses PayPal) -->
-                <div id="paypal-button-container" style="display:none;margin-bottom:16px;"></div>
+                <div id="paypal-button-container"></div>
 
                 <div class="input-group" id="advanced-card-form">
                     <div class="input-wrapper" id="wrapper-number">
-                        <!-- PayPal will inject the iframe here -->
                         <div id="card-number" class="stripe-field"></div>
                     </div>
 
@@ -330,7 +369,8 @@
         </div>
 
         <div class="footer">
-            Powered securely
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Secured with 256-bit SSL encryption
         </div>
     </div>
 
@@ -339,30 +379,34 @@
         const btnText = document.getElementById('btnText');
         const btnSpinner = document.getElementById('btnSpinner');
         const payError = document.getElementById('payError');
-        const refillAmountInput = document.getElementById('refillAmount');
-        const minRefill = parseFloat("{{ '%.2f' % min_refill }}");
-        const defaultRefill = parseFloat("{{ '%.2f' % default_refill }}");
         const planButtons = document.querySelectorAll('.plan-btn');
+        const orderPlanName = document.getElementById('orderPlanName');
+        const orderPlanPrice = document.getElementById('orderPlanPrice');
 
         const checkoutCard = document.getElementById('checkout-card');
         const successCard = document.getElementById('success-card');
         const advancedCardForm = document.getElementById('advanced-card-form');
         const paypalBtnContainer = document.getElementById('paypal-button-container');
 
+        const planData = {
+            starter: { name: 'Hire One Employee', price: 99 },
+            business: { name: 'Hire a Team', price: 399 }
+        };
+
         let selectedPlan = ("{{ selected_plan or '' }}" || localStorage.getItem('selected_plan') || 'starter').toLowerCase();
+        if (!planData[selectedPlan]) selectedPlan = 'starter';
         let cardFieldsInstance = null;
         let isProcessing = false;
 
-        // Plan Selection Logic
         function updatePlanSelection() {
             planButtons.forEach(btn => {
-                if (btn.dataset.plan === selectedPlan) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.toggle('active', btn.dataset.plan === selectedPlan);
             });
             localStorage.setItem('selected_plan', selectedPlan);
+            const plan = planData[selectedPlan];
+            orderPlanName.textContent = plan.name;
+            orderPlanPrice.innerHTML = '$' + plan.price + '<span class="order-period">/mo</span>';
+            btnText.textContent = 'Pay $' + plan.price;
         }
 
         planButtons.forEach(btn => {
@@ -382,8 +426,7 @@
         function showSuccess() {
             checkoutCard.style.display = 'none';
             successCard.style.display = 'block';
-            // Redirect after 4 seconds so they can read the message
-            setTimeout(() => { window.location.href = '/dashboard'; }, 4000);
+            setTimeout(() => { window.location.href = '/'; }, 4000);
         }
 
         function setLoading(loading) {
@@ -393,29 +436,24 @@
             btnSpinner.style.display = loading ? 'block' : 'none';
         }
 
-        // Initialize PayPal SDK
+        function getAmount() {
+            return planData[selectedPlan]?.price || 99;
+        }
+
         const processor = window.paypal;
 
-        // Try initializing CardFields (Advanced form)
-        if (processor.CardFields) {
+        if (processor && processor.CardFields) {
             try {
                 const cardFields = processor.CardFields({
                     createOrder: async function (data) {
-                        const amount = parseFloat(refillAmountInput.value || defaultRefill);
-                        if (isNaN(amount) || amount < minRefill) {
-                            showError(`Minimum refill is $${minRefill.toFixed(2)}`);
-                            throw new Error('Invalid amount');
-                        }
                         const orderRes = await fetch('/api/paypal/create-order', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                            body: JSON.stringify({ amount, plan: selectedPlan })
+                            body: JSON.stringify({ amount: getAmount(), plan: selectedPlan })
                         });
                         const orderJson = await orderRes.json();
-                        if (!orderRes.ok) { throw new Error(orderJson.error || 'Create order failed'); }
-                        const orderId = orderJson.id || orderJson.result?.id;
-                        if (!orderId) throw new Error('Missing order id');
-                        return orderId;
+                        if (!orderRes.ok) throw new Error(orderJson.error || 'Create order failed');
+                        return orderJson.id || orderJson.result?.id;
                     },
                     onApprove: async function (data) {
                         try {
@@ -448,7 +486,6 @@
                 });
 
                 if (cardFields.isEligible()) {
-                    // Render fields into our wrappers
                     const numberField = cardFields.NumberField();
                     const expiryField = cardFields.ExpiryField();
                     const cvvField = cardFields.CVVField();
@@ -457,7 +494,6 @@
                     expiryField.render('#card-expiry');
                     cvvField.render('#card-cvv');
 
-                    // Add focus styles to our wrappers based on iframe events
                     [
                         { field: numberField, wrapperId: 'wrapper-number' },
                         { field: expiryField, wrapperId: 'wrapper-expiry' },
@@ -479,78 +515,68 @@
                     fallbackToButtons();
                 }
             } catch (error) {
-                console.warn("CardFields initialization failed:", error);
+                console.warn("Card form init failed:", error);
                 fallbackToButtons();
             }
         } else {
             fallbackToButtons();
         }
 
-        function fallbackToButtons() {
-            // Hide the custom card form and standard submit button
-            advancedCardForm.style.display = 'none';
-            payBtn.style.display = 'none';
-            // Show the standard PayPal buttons container
-            paypalBtnContainer.style.display = 'block';
-
-            processor.Buttons({
-                style: {
-                    layout: 'vertical',
-                    color: 'white', // Stripe-like aesthetic prefers 'white' or 'black' over gold
-                    shape: 'rect',
-                    label: 'checkout'
-                },
-                createOrder: async function (data, actions) {
-                    const amount = parseFloat(refillAmountInput.value || defaultRefill);
-                    if (isNaN(amount) || amount < minRefill) {
-                        showError(`Minimum refill is $${minRefill.toFixed(2)}`);
-                        throw new Error('Invalid amount');
-                    }
-                    const orderRes = await fetch('/api/paypal/create-order', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                        body: JSON.stringify({ amount, plan: selectedPlan })
-                    });
-                    const orderJson = await orderRes.json();
-                    if (!orderRes.ok) { throw new Error(orderJson.error || 'Create order failed'); }
-                    return orderJson.id || orderJson.result?.id;
-                },
-                onApprove: async function (data, actions) {
-                    try {
-                        const capRes = await fetch('/api/paypal/capture-order', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                            body: JSON.stringify({ order_id: data.orderID, plan: selectedPlan })
-                        });
-                        const capJson = await capRes.json();
-                        if (!capRes.ok) { throw new Error(capJson.error || 'Capture failed'); }
-                        showSuccess();
-                    } catch (err) {
-                        showError(err.message || 'Payment failed');
-                    }
-                },
-                onError: function (err) {
-                    showError('An error occurred during payment processing.');
-                }
-            }).render('#paypal-button-container');
+        function createOrderHandler(data, actions) {
+            return fetch('/api/paypal/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ amount: getAmount(), plan: selectedPlan })
+            }).then(r => r.json()).then(json => {
+                if (json.error) throw new Error(json.error);
+                return json.id || json.result?.id;
+            });
         }
 
-        // Handle submission for the Advanced Card Fields
+        function captureOrderHandler(data) {
+            return fetch('/api/paypal/capture-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ order_id: data.orderID, plan: selectedPlan })
+            }).then(r => r.json()).then(json => {
+                if (json.error) throw new Error(json.error);
+                showSuccess();
+            }).catch(err => showError(err.message || 'Payment failed'));
+        }
+
+        function fallbackToButtons() {
+            advancedCardForm.style.display = 'none';
+            payBtn.style.display = 'none';
+            paypalBtnContainer.style.display = 'block';
+
+            const FUNDING = processor.FUNDING;
+            const cardBtn = processor.Buttons({
+                fundingSource: FUNDING.CARD,
+                style: { color: 'black', shape: 'rect', label: 'pay', height: 48 },
+                createOrder: createOrderHandler,
+                onApprove: captureOrderHandler,
+                onError: function () { showError('An error occurred during payment processing.'); }
+            });
+
+            if (cardBtn.isEligible()) {
+                cardBtn.render('#paypal-button-container');
+            } else {
+                processor.Buttons({
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', label: 'pay', height: 48, tagline: false },
+                    createOrder: createOrderHandler,
+                    onApprove: captureOrderHandler,
+                    onError: function () { showError('An error occurred during payment processing.'); }
+                }).render('#paypal-button-container');
+            }
+        }
+
         payBtn.addEventListener('click', async () => {
             if (isProcessing) return;
             payError.style.display = 'none';
 
-            const amount = parseFloat(refillAmountInput.value || defaultRefill);
-            if (isNaN(amount) || amount < minRefill) {
-                showError(`Minimum refill is $${minRefill.toFixed(2)}`);
-                return;
-            }
-
             if (cardFieldsInstance) {
                 setLoading(true);
                 try {
-                    // CardFields submission internally creates the order and approves it
-                    // The createOrder and onApprove callbacks we defined in processor.CardFields() will handle the backend calls
                     await cardFieldsInstance.submit({ contingencies: ['SCA_ALWAYS'] });
                 } catch (err) {
                     showError(err.message || "Payment attempt failed.");
