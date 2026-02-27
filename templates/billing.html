@@ -45,8 +45,8 @@
         .payment-panel{background:#ffffff;padding:48px 56px;display:flex;flex-direction:column;justify-content:center}
         .payment-inner{max-width:420px}
 
-        .pay-heading{font-size:18px;font-weight:700;color:#111827;margin-bottom:4px}
-        .pay-subheading{font-size:14px;color:#6b7280;margin-bottom:28px}
+        .pay-heading{font-size:20px;font-weight:700;color:#111827;margin-bottom:4px}
+        .pay-subheading{font-size:14px;color:#6b7280;margin-bottom:24px}
 
         .form-label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
 
@@ -54,33 +54,20 @@
         .text-input:focus{border-color:#111827;box-shadow:0 0 0 1px #111827}
         .text-input::placeholder{color:#9ca3af}
 
-        .form-group{margin-bottom:18px}
+        .form-group{margin-bottom:20px}
 
-        .card-fields-group{margin-bottom:18px}
-        .card-field-wrapper{border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;min-height:42px;display:flex;align-items:center;transition:border-color .2s,box-shadow .2s;background:#fff}
-        .card-field-wrapper.focused{border-color:#111827;box-shadow:0 0 0 1px #111827}
-        .card-field-wrapper.invalid{border-color:#ef4444}
-        .card-hosted-field{width:100%;height:20px}
-        .card-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+        .or-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#9ca3af;font-size:13px}
+        .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
 
-        .card-icons{display:flex;align-items:center;gap:6px;margin-bottom:10px}
-        .card-icons img{height:20px}
+        #paypal-buttons-area{min-height:48px;margin-bottom:4px}
 
-        #paypal-button-container{display:none;margin-bottom:0}
-        #paypal-button-container>div{max-height:55px;overflow:hidden}
-
-        .pay-btn{width:100%;padding:14px;border:none;border-radius:8px;background:#111827;color:#fff;font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
-        .pay-btn:hover{background:#1f2937}
-        .pay-btn:active{transform:scale(0.98)}
-        .pay-btn:disabled{opacity:.6;cursor:not-allowed}
-
-        .pay-btn .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin .7s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-
-        .error-bar{display:none;color:#ef4444;font-size:13px;margin-top:12px;background:#fef2f2;padding:10px 14px;border-radius:8px;border:1px solid #fecaca}
+        .error-bar{display:none;color:#dc2626;font-size:13px;margin-top:12px;background:#fef2f2;padding:10px 14px;border-radius:8px;border:1px solid #fecaca}
 
         .secure-footer{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:24px;font-size:12px;color:#9ca3af}
         .secure-footer svg{opacity:.6}
+
+        .accepted-cards{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+        .accepted-cards span{font-size:12px;color:#9ca3af}
 
         .success-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
         .success-overlay.show{display:flex}
@@ -100,7 +87,6 @@
             .payment-inner{max-width:none}
         }
     </style>
-    <script src="https://www.paypal.com/sdk/js?components=buttons,card-fields&client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&vault=false&enable-funding=card&disable-funding=paylater,credit"></script>
 </head>
 <body>
 
@@ -119,32 +105,7 @@
 
             <div class="value-section">
                 <div class="value-title">What you get</div>
-                <ul class="value-list" id="valueList">
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>1 Digital Employee (Alex)</span>
-                    </li>
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>500+ automated dials per day</span>
-                    </li>
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>AI personalized voicemails</span>
-                    </li>
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>Live call transfer to your team</span>
-                    </li>
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>Real-time call transcription</span>
-                    </li>
-                    <li>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                        <span>Email onboarding support</span>
-                    </li>
-                </ul>
+                <ul class="value-list" id="valueList"></ul>
             </div>
 
             <div class="savings-card" id="savingsCard">
@@ -165,62 +126,22 @@
 
     <div class="payment-panel">
         <div class="payment-inner">
-            <div class="pay-heading">Pay with card</div>
-            <div class="pay-subheading">Enter your payment details below.</div>
+            <div class="pay-heading">Complete your purchase</div>
+            <div class="pay-subheading">Choose your preferred payment method.</div>
 
             <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label">Email <span style="color:#9ca3af;font-weight:400">(optional — for receipt)</span></label>
                 <input type="email" id="customerEmail" class="text-input" placeholder="you@company.com" {% if user %}value="{{ user.email }}"{% endif %}>
             </div>
 
-            <div class="card-fields-group">
-                <label class="form-label">Card information</label>
-                <div class="card-icons">
-                    <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#1A1F71"/><path d="M15.7 16.2l2.2-10.4h2.5l-2.2 10.4h-2.5zm10.8-10.1c-.5-.2-1.3-.4-2.3-.4-2.5 0-4.3 1.3-4.3 3.2 0 1.4 1.3 2.2 2.3 2.6 1 .5 1.3.8 1.3 1.2 0 .7-.8 1-1.5 1-1 0-1.5-.1-2.4-.5l-.3-.2-.4 2.2c.6.3 1.7.5 2.8.5 2.7 0 4.4-1.3 4.4-3.3 0-1.1-.7-1.9-2.2-2.6-.9-.4-1.5-.7-1.5-1.2 0-.4.5-.8 1.5-.8.9 0 1.5.2 2 .4l.2.1.4-2.2zM30.2 5.8h-2c-.6 0-1.1.2-1.3.8l-3.8 9.6h2.7l.5-1.5h3.3l.3 1.5H32L30.2 5.8zm-3.3 7l1-2.9.3-.9.2.9.6 2.9h-2.1zM13.3 5.8l-2.5 7.1-.3-1.3c-.5-1.6-2-3.4-3.6-4.2l2.3 8.8h2.7l4-10.4h-2.6z" fill="#fff"/><path d="M9 5.8H5l0 .2C8.2 6.8 10.3 8.8 11 11.2l-.8-3.6c-.1-.6-.6-.8-1.2-.8z" fill="#F9A533"/></svg>
-                    <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#fff" stroke="#e5e7eb"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 7.3a7 7 0 010 9.4 7 7 0 000-9.4z" fill="#FF5F00"/></svg>
-                    <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#016FD0"/><path d="M19 20.5l-2-2.2h4L19 20.5zM8 10h3.2l.6 1.3.6-1.3H16v6.7l-1.8-2.2-1.8 2.2H8V10zm2 1.2v1.2h2.4v1.2H10v1.2h2.8v1.2H9.2v-4.8H12.8v1.2H10zm6.3 0l-1.8 2.3 1.8 2.4h-1.6l-1-1.4-1 1.4h-1.5l1.8-2.4-1.8-2.3h1.5l1 1.4 1-1.4h1.6zm1.2-.1h1.3v4.6h-1.3v-4.6zm3.8 0c1.5 0 2.3 1 2.3 2.3 0 1.4-.8 2.4-2.3 2.4h-2V11h2zm0 3.5c.6 0 1-.5 1-1.2 0-.6-.4-1.1-1-1.1h-.7v2.3h.7zm5.2-3.5h1.3v4.6h-1.3v-4.6z" fill="#fff"/></svg>
-                </div>
-
-                <div id="paypal-button-container"></div>
-
-                <div id="advanced-card-form">
-                    <div class="card-field-wrapper" id="wrapper-number">
-                        <div id="card-number" class="card-hosted-field"></div>
-                    </div>
-                    <div class="card-split">
-                        <div class="card-field-wrapper" id="wrapper-expiry">
-                            <div id="card-expiry" class="card-hosted-field"></div>
-                        </div>
-                        <div class="card-field-wrapper" id="wrapper-cvv">
-                            <div id="card-cvv" class="card-hosted-field"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="accepted-cards">
+                <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#1A1F71"/><path d="M15.7 16.2l2.2-10.4h2.5l-2.2 10.4h-2.5zm10.8-10.1c-.5-.2-1.3-.4-2.3-.4-2.5 0-4.3 1.3-4.3 3.2 0 1.4 1.3 2.2 2.3 2.6 1 .5 1.3.8 1.3 1.2 0 .7-.8 1-1.5 1-1 0-1.5-.1-2.4-.5l-.3-.2-.4 2.2c.6.3 1.7.5 2.8.5 2.7 0 4.4-1.3 4.4-3.3 0-1.1-.7-1.9-2.2-2.6-.9-.4-1.5-.7-1.5-1.2 0-.4.5-.8 1.5-.8.9 0 1.5.2 2 .4l.2.1.4-2.2zM30.2 5.8h-2c-.6 0-1.1.2-1.3.8l-3.8 9.6h2.7l.5-1.5h3.3l.3 1.5H32L30.2 5.8zm-3.3 7l1-2.9.3-.9.2.9.6 2.9h-2.1zM13.3 5.8l-2.5 7.1-.3-1.3c-.5-1.6-2-3.4-3.6-4.2l2.3 8.8h2.7l4-10.4h-2.6z" fill="#fff"/><path d="M9 5.8H5l0 .2C8.2 6.8 10.3 8.8 11 11.2l-.8-3.6c-.1-.6-.6-.8-1.2-.8z" fill="#F9A533"/></svg>
+                <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#fff" stroke="#e5e7eb"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 7.3a7 7 0 010 9.4 7 7 0 000-9.4z" fill="#FF5F00"/></svg>
+                <svg width="38" height="24" viewBox="0 0 38 24" fill="none"><rect width="38" height="24" rx="4" fill="#016FD0"/><path d="M19 20.5l-2-2.2h4L19 20.5zM8 10h3.2l.6 1.3.6-1.3H16v6.7l-1.8-2.2-1.8 2.2H8V10zm2 1.2v1.2h2.4v1.2H10v1.2h2.8v1.2H9.2v-4.8H12.8v1.2H10zm6.3 0l-1.8 2.3 1.8 2.4h-1.6l-1-1.4-1 1.4h-1.5l1.8-2.4-1.8-2.3h1.5l1 1.4 1-1.4h1.6zm1.2-.1h1.3v4.6h-1.3v-4.6zm3.8 0c1.5 0 2.3 1 2.3 2.3 0 1.4-.8 2.4-2.3 2.4h-2V11h2zm0 3.5c.6 0 1-.5 1-1.2 0-.6-.4-1.1-1-1.1h-.7v2.3h.7zm5.2-3.5h1.3v4.6h-1.3v-4.6z" fill="#fff"/></svg>
+                <span>& more</span>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Name on card</label>
-                <input type="text" id="cardholderName" class="text-input" placeholder="Full name on card">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Country or region</label>
-                <select id="cardCountry" class="text-input" style="appearance:auto">
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
-                    <option value="IN">India</option>
-                    <option value="OTHER">Other</option>
-                </select>
-            </div>
-
-            <button class="pay-btn" id="payBtn">
-                <span id="btnText">Pay $99</span>
-                <div class="spinner" id="btnSpinner"></div>
-            </button>
+            <div id="paypal-buttons-area"></div>
 
             <div class="error-bar" id="payError"></div>
 
@@ -243,10 +164,10 @@
     </div>
 </div>
 
+<script src="https://www.paypal.com/sdk/js?client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&disable-funding=paylater,credit"></script>
 <script>
     const PLANS = {
         starter: {
-            label: 'Subscribe to',
             title: 'Hire One Employee',
             amount: 99,
             features: [
@@ -261,7 +182,6 @@
             savingsText: 'saved every day on outbound dialing. Alex handles 500+ calls while you focus on closing deals.'
         },
         business: {
-            label: 'Subscribe to',
             title: 'Hire a Team',
             amount: 399,
             features: [
@@ -281,192 +201,82 @@
     const selectedPlan = ("{{ selected_plan or '' }}" || 'starter').toLowerCase();
     const plan = PLANS[selectedPlan] || PLANS.starter;
 
-    document.getElementById('planLabel').textContent = plan.label;
     document.getElementById('planTitle').textContent = plan.title;
     document.getElementById('planAmount').textContent = plan.amount;
     document.getElementById('savingsHours').textContent = plan.savingsHours;
     document.getElementById('savingsText').textContent = plan.savingsText;
-    document.getElementById('btnText').textContent = 'Pay $' + plan.amount;
 
     const checkSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
-    const valueList = document.getElementById('valueList');
-    valueList.innerHTML = plan.features.map(f => '<li>' + checkSvg + '<span>' + f + '</span></li>').join('');
+    document.getElementById('valueList').innerHTML = plan.features.map(function(f) { return '<li>' + checkSvg + '<span>' + f + '</span></li>'; }).join('');
 
-    const payBtn = document.getElementById('payBtn');
-    const btnText = document.getElementById('btnText');
-    const btnSpinner = document.getElementById('btnSpinner');
-    const payError = document.getElementById('payError');
-    const emailInput = document.getElementById('customerEmail');
-    const advancedCardForm = document.getElementById('advanced-card-form');
-    const paypalBtnContainer = document.getElementById('paypal-button-container');
-    let cardFieldsInstance = null;
-    let isProcessing = false;
+    var payError = document.getElementById('payError');
+    var emailInput = document.getElementById('customerEmail');
 
     function showError(msg) {
         payError.style.display = 'block';
         payError.textContent = msg;
-        setLoading(false);
+    }
+
+    function hideError() {
+        payError.style.display = 'none';
     }
 
     function showSuccess() {
         document.getElementById('successOverlay').classList.add('show');
     }
 
-    function setLoading(loading) {
-        isProcessing = loading;
-        payBtn.disabled = loading;
-        btnText.style.display = loading ? 'none' : 'inline';
-        btnSpinner.style.display = loading ? 'inline-block' : 'none';
-    }
-
     function getEmail() {
         return (emailInput.value || '').trim();
     }
 
-    function validateEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    const processor = window.paypal;
-
-    function createOrderHandler() {
-        const email = getEmail();
-        if (!email || !validateEmail(email)) {
-            showError('Please enter a valid email address before paying.');
-            return Promise.reject(new Error('Invalid email'));
-        }
-        return fetch('/api/paypal/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ amount: plan.amount, plan: selectedPlan, email: email })
-        }).then(r => r.json()).then(json => {
-            if (json.error) throw new Error(json.error);
-            const oid = json.id || (json.result && json.result.id);
-            if (!oid) throw new Error('Missing order ID');
-            return oid;
-        });
-    }
-
-    function captureOrderHandler(data) {
-        const email = getEmail();
-        return fetch('/api/paypal/capture-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ order_id: data.orderID, plan: selectedPlan, email: email })
-        }).then(r => r.json()).then(json => {
-            if (json.error && !json.status) throw new Error(json.error);
-            showSuccess();
-        }).catch(err => showError(err.message || 'Payment failed'));
-    }
-
-    if (processor && processor.CardFields) {
-        try {
-            const cardFields = processor.CardFields({
-                createOrder: createOrderHandler,
-                onApprove: captureOrderHandler,
-                onError: function () { showError('An error occurred. Your card was not charged.'); },
-                style: {
-                    input: {
-                        'font-size': '14px',
-                        'font-family': 'Inter, sans-serif',
-                        'color': '#111827',
-                        'letter-spacing': '0.01em'
-                    },
-                    '.invalid': { 'color': '#ef4444' }
-                }
+    paypal.Buttons({
+        style: {
+            layout: 'vertical',
+            color: 'black',
+            shape: 'rect',
+            label: 'pay',
+            height: 50,
+            tagline: false
+        },
+        createOrder: function(data, actions) {
+            hideError();
+            return fetch('/api/paypal/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: plan.amount, plan: selectedPlan, email: getEmail() })
+            }).then(function(r) { return r.json(); }).then(function(json) {
+                if (json.error) { showError(json.error); return actions.reject(); }
+                var oid = json.id || (json.result && json.result.id);
+                if (!oid) { showError('Could not create order'); return actions.reject(); }
+                return oid;
+            }).catch(function(err) {
+                showError('Network error. Please try again.');
+                return actions.reject();
             });
-
-            if (cardFields.isEligible()) {
-                const numberField = cardFields.NumberField({ placeholder: '1234 1234 1234 1234' });
-                const expiryField = cardFields.ExpiryField({ placeholder: 'MM / YY' });
-                const cvvField = cardFields.CVVField({ placeholder: 'CVC' });
-
-                numberField.render('#card-number');
-                expiryField.render('#card-expiry');
-                cvvField.render('#card-cvv');
-
-                [
-                    { field: numberField, wrapperId: 'wrapper-number' },
-                    { field: expiryField, wrapperId: 'wrapper-expiry' },
-                    { field: cvvField, wrapperId: 'wrapper-cvv' }
-                ].forEach(item => {
-                    item.field.on('focus', () => document.getElementById(item.wrapperId).classList.add('focused'));
-                    item.field.on('blur', () => document.getElementById(item.wrapperId).classList.remove('focused'));
-                    item.field.on('validityChange', (event) => {
-                        document.getElementById(item.wrapperId).classList.toggle('invalid', !event.isValid && !event.isEmpty);
-                    });
-                });
-
-                cardFieldsInstance = cardFields;
-            } else {
-                fallbackToButtons();
-            }
-        } catch (error) {
-            fallbackToButtons();
-        }
-    } else {
-        fallbackToButtons();
-    }
-
-    function fallbackToButtons() {
-        advancedCardForm.style.display = 'none';
-        payBtn.style.display = 'none';
-        paypalBtnContainer.style.display = 'block';
-
-        const FUNDING = processor.FUNDING;
-        const cardBtn = processor.Buttons({
-            fundingSource: FUNDING.CARD,
-            style: { color: 'black', shape: 'rect', label: 'pay', height: 48 },
-            createOrder: createOrderHandler,
-            onApprove: captureOrderHandler,
-            onError: function (err) {
-                console.error('Payment error:', err);
-                if (!document.querySelector('.error-bar[style*="block"]')) {
-                    showError('Payment could not be processed. Please try again.');
+        },
+        onApprove: function(data, actions) {
+            hideError();
+            return fetch('/api/paypal/capture-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order_id: data.orderID, plan: selectedPlan, email: getEmail() })
+            }).then(function(r) { return r.json(); }).then(function(json) {
+                if (json.status === 'COMPLETED') {
+                    showSuccess();
+                } else {
+                    showError(json.error || 'Payment was not completed. Please try again.');
                 }
-            },
-            onCancel: function () {}
-        });
-
-        if (cardBtn.isEligible()) {
-            cardBtn.render('#paypal-button-container');
-        } else {
-            processor.Buttons({
-                style: { layout: 'vertical', color: 'black', shape: 'rect', label: 'pay', height: 48, tagline: false },
-                createOrder: createOrderHandler,
-                onApprove: captureOrderHandler,
-                onError: function (err) {
-                    console.error('Payment error:', err);
-                    if (!document.querySelector('.error-bar[style*="block"]')) {
-                        showError('Payment could not be processed. Please try again.');
-                    }
-                },
-                onCancel: function () {}
-            }).render('#paypal-button-container');
+            }).catch(function(err) {
+                showError('Could not verify payment. Please contact support.');
+            });
+        },
+        onCancel: function() {
+            hideError();
+        },
+        onError: function(err) {
+            console.error('PayPal error:', err);
         }
-    }
-
-    payBtn.addEventListener('click', async () => {
-        if (isProcessing) return;
-        payError.style.display = 'none';
-
-        const email = getEmail();
-        if (!email || !validateEmail(email)) {
-            showError('Please enter a valid email address.');
-            return;
-        }
-
-        if (cardFieldsInstance) {
-            setLoading(true);
-            try {
-                await cardFieldsInstance.submit({ contingencies: ['SCA_ALWAYS'] });
-            } catch (err) {
-                showError(err.message || 'Payment attempt failed.');
-            }
-        } else {
-            showError('Payment processor is loading. Please wait or refresh.');
-        }
-    });
+    }).render('#paypal-buttons-area');
 </script>
 </body>
 </html>
