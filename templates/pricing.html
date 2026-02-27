@@ -195,42 +195,6 @@
     </div>
   </main>
 
-  <div class="payment-overlay" id="paymentOverlay">
-    <div class="payment-backdrop" id="paymentBackdrop"></div>
-    <div class="payment-modal" id="paymentModal">
-      <button class="payment-close" id="paymentClose">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-      <div class="payment-inner">
-        <div class="payment-header">
-          <h3 id="paymentTitle">Complete Your Purchase</h3>
-          <p class="payment-plan-info">
-            <span id="paymentPlanName">Plan</span>
-            <span class="payment-plan-price" id="paymentPlanPrice">$0/mo</span>
-          </p>
-        </div>
-        <div class="payment-body">
-          <div id="paypalContainer"></div>
-          <div class="payment-loading" id="paymentLoading">
-            <div class="payment-spinner"></div>
-            <span>Preparing secure checkout...</span>
-          </div>
-        </div>
-        <div class="payment-success" id="paymentSuccess">
-          <div class="success-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          </div>
-          <h3>Payment Successful</h3>
-          <p>Your subscription is now active. Redirecting to your dashboard...</p>
-        </div>
-        <p class="payment-security">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          Payments are secure and encrypted
-        </p>
-      </div>
-    </div>
-  </div>
-
   <div class="contact-overlay" id="contactOverlay">
     <div class="contact-backdrop" id="contactBackdrop"></div>
     <div class="contact-modal" id="contactModal">
@@ -290,7 +254,6 @@
     </div>
   </footer>
 
-  <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD&intent=capture&components=buttons&disable-funding=paylater,credit,card" data-namespace="paypal_sdk"></script>
   <script src="/static/pricing.js"></script>
 </body>
 </html>

@@ -125,9 +125,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .contact-success h3{font-size:1.1rem;font-weight:700;margin-top:16px;margin-bottom:8px}
 .contact-success p{font-size:.88rem;color:var(--text-secondary)}
 
-#paypalContainer .paypal-buttons{position:relative}
-#paypalContainer iframe{border-radius:10px!important}
-
 @media(max-width:900px){
   .pricing-grid{grid-template-columns:1fr;max-width:420px;margin-left:auto;margin-right:auto}
   .pricing-card-featured{order:-1}

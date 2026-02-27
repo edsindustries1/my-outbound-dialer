@@ -424,7 +424,7 @@ def billing_page():
 @app.route("/pricing")
 def pricing():
     logger.info("PRICING ROUTE LOADED")
-    return render_template("pricing.html", paypal_client_id=PAYPAL_CLIENT_ID)
+    return render_template("pricing.html")
 
 
 @app.route("/api/paypal/create-order", methods=["POST"])
