@@ -18,8 +18,8 @@
         .order-inner{max-width:420px;margin-left:auto}
 
         .brand-mark{display:flex;align-items:center;gap:12px;margin-bottom:40px}
-        .brand-mark img{height:36px;width:auto}
-        .brand-mark span{font-size:20px;font-weight:700;color:#111827;letter-spacing:-0.03em}
+        .brand-mark img{height:50px;width:auto}
+        .brand-mark span{font-size:22px;font-weight:700;color:#111827;letter-spacing:-0.03em}
 
         .plan-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;margin-bottom:6px}
         .plan-title{font-size:28px;font-weight:800;color:#111827;letter-spacing:-0.03em;margin-bottom:4px}
@@ -130,7 +130,7 @@
             <div class="pay-subheading">Choose your preferred payment method.</div>
 
             <div class="form-group">
-                <label class="form-label">Email <span style="color:#9ca3af;font-weight:400">(optional — for receipt)</span></label>
+                <label class="form-label">Email</label>
                 <input type="email" id="customerEmail" class="text-input" placeholder="you@company.com" {% if user %}value="{{ user.email }}"{% endif %}>
             </div>
 
