@@ -1,0 +1,49 @@
+Act as a Senior Conversion Strategist and Full-Stack Developer. I need to pivot the branding of my landing page from a 'SaaS tool' to a 'Digital Employee Agency' called Open Humana. Please implement the following changes to the frontend while keeping all backend functionality (Auth, Database, Railway logic) intact:
+
+1. THE CORE BRANDING PIVOT:
+
+Company Name: Open Humana.
+
+Headline: "Stop Hiring Staff. Start Scaling with Digital Super-Employees."
+
+Sub-headline: "Hire 'Alex'—a high-performance Digital BDR that handles 500 dials a day, speaks 50 languages, and never takes a lunch break. For a $99 monthly salary, get a teammate with superpowers."
+
+Main CTA Button: "Hire Your First Employee"
+
+2. THE 'HUMAN VS. DIGITAL' COMPARISON SECTION:
+Add a high-converting comparison table (Modern, clean UI) that shows:
+
+Monthly Salary: Human ($4,000) vs. Open Humana ($99 + usage).
+
+Daily Dials: Human (50-80) vs. Open Humana (500+ Instant).
+
+Training: Human (2-4 Weeks) vs. Open Humana (10 Minutes).
+
+Availability: Human (9-5 Mon-Fri) vs. Open Humana (24/7/365).
+
+Consistency: Human (Depends on mood) vs. Open Humana (Perfect Performance).
+
+3. PRODUCT TERMINOLOGY OVERHAUL:
+Search the entire frontend and replace these terms:
+
+Replace 'Subscription' with 'Monthly Salary'.
+
+Replace 'App' or 'Software' with 'Workforce' or 'Digital Teammate'.
+
+Replace 'User Dashboard' with 'Employer Portal'.
+
+Replace 'Bot/AI' with 'Digital Employee'.
+
+4. SUPERPOWERS SECTION:
+Create a section featuring these 3 'Superpowers':
+
+Instant Speed-to-Lead: Alex calls your new leads within 5 seconds of a form fill.
+
+Infinite Memory: Your digital employee remembers every lead detail and follow-up history forever.
+
+Zero Management Overhead: No HR, no payroll taxes, no drama. Just results.
+
+5. PRICING SECTION:
+Simplify the pricing card to show: "$99/mo Salary + Pay-as-you-go Usage. No long-term contracts. Fire or Hire instantly."
+
+Final Instruction: Ensure the UI remains professional, using a clean 'Dark Mode' or 'Premium Tech' aesthetic. Ensure all 'Buy' buttons still point to my existing checkout/payment logic."

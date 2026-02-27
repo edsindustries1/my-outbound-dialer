@@ -1,0 +1,15 @@
+flask
+requests
+python-dotenv
+werkzeug
+gunicorn
+bcrypt
+email-validator
+flask-login
+flask-sqlalchemy
+oauthlib
+psycopg2-binary
+Pillow
+supabase
+google-generativeai
+paypalcheckoutsdk==1.0.3

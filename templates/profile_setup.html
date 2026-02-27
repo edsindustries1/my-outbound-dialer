@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Human - Profile Setup</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);})();
+    </script>
+    <style>
+        :root {
+            --login-bg: #f8f9fa;
+            --login-surface: rgba(255,255,255,0.95);
+            --login-border: rgba(0,0,0,0.08);
+            --login-text: #202124;
+            --login-text-dim: #5f6368;
+            --login-accent: #1a73e8;
+            --login-accent-2: #4285f4;
+        }
+        [data-theme="dark"] {
+            --login-bg: #1f1f1f;
+            --login-surface: rgba(255,255,255,0.06);
+            --login-border: rgba(255,255,255,0.1);
+            --login-text: #e8eaed;
+            --login-text-dim: #9aa0a6;
+            --login-accent: #8ab4f8;
+            --login-accent-2: #aecbfa;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--login-bg);
+            color: var(--login-text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        .setup-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .setup-card {
+            background: var(--login-surface);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--login-border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 480px;
+            animation: fadeIn 0.6s ease;
+            box-shadow: 0 20px 50px -12px rgba(0,0,0,0.08);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .setup-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .setup-header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .setup-header p {
+            font-size: 14px;
+            color: var(--login-text-dim);
+        }
+        .avatar-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--login-accent), var(--login-accent-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .avatar-preview:hover { transform: scale(1.05); }
+        .avatar-preview img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .avatar-upload label {
+            font-size: 13px;
+            color: var(--login-accent);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .avatar-upload label:hover { text-decoration: underline; }
+        .avatar-upload input[type="file"] { display: none; }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--login-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.03);
+            border: 1px solid var(--login-border);
+            border-radius: 14px;
+            color: var(--login-text);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s;
+        }
+        [data-theme="dark"] .form-group input { background: rgba(0,0,0,0.15); }
+        .form-group input:focus {
+            border-color: var(--login-accent);
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: var(--login-text-dim);
+            margin-top: 6px;
+        }
+        .setup-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+        .btn-primary {
+            flex: 1;
+            padding: 14px 24px;
+            background: var(--login-accent);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px -2px rgba(26,115,232,0.4);
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+            transform: translateY(-2px);
+        }
+        .btn-skip {
+            padding: 14px 20px;
+            background: transparent;
+            border: 1px solid var(--login-border);
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            color: var(--login-text-dim);
+            transition: all 0.2s;
+        }
+        .btn-skip:hover {
+            background: rgba(0,0,0,0.03);
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-wrap">
+        <div class="setup-card">
+            <div class="setup-header">
+                <h1>Complete Your Profile</h1>
+                <p>Add a name and photo so your team knows who you are</p>
+            </div>
+            <form method="POST" action="/profile-setup" enctype="multipart/form-data">
+                <div class="avatar-upload">
+                    <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('profileImage').click()">
+                        {% if user.profile_image_url %}
+                        <img src="{{ user.profile_image_url }}" alt="Profile">
+                        {% elif user.profile_name %}
+                        {{ user.profile_name[0]|upper }}
+                        {% else %}
+                        ?
+                        {% endif %}
+                    </div>
+                    <label for="profileImage">Upload Photo</label>
+                    <input type="file" id="profileImage" name="profile_image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" name="name" value="{{ user.profile_name or '' }}" placeholder="How should we call you?">
+                    <div class="hint">This will be shown in the dashboard</div>
+                </div>
+                <div class="setup-actions">
+                    <a href="/dashboard" class="btn-skip">Skip for now</a>
+                    <button type="submit" class="btn-primary">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById("profileImage").addEventListener("change", function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var preview = document.getElementById("avatarPreview");
+                    preview.innerHTML = '<img src="' + ev.target.result + '" alt="Profile">';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+Voice Blast – Add Detailed Call Status Descriptions with Telnyx AMD Integration
+Do not change any existing functionality. Only add a new feature to track and display detailed call disposition/status descriptions in the Call Logs using Telnyx's Answering Machine Detection (AMD) and call event webhooks.
+
+Overview:
+Integrate Telnyx AMD (Answering Machine Detection) and call status webhooks to automatically capture and display human-readable descriptions of what happened on each call. Every call in the Call Logs should show exactly what occurred: voicemail dropped, transferred to human, hung up, voicemail full, requires pressing #, etc.
+
+Step 1: Update Telnyx Call Initiation
+When initiating calls through Telnyx API, add the following parameters to EVERY outbound call:
+javascript{
+  "answering_machine_detection": "detect_beep",  // or "detect" - enables AMD
+  "answering_machine_detection_config": {
+    "total_analysis_time": 5000,
+    "after_greeting_silence": 800,
+    "between_words_silence": 50,
+    "initial_silence": 3500,
+    "maximum_number_of_words": 6,
+    "maximum_word_length": 3500,
+    "silence_threshold": 256
+  },
+  "webhook_url": "YOUR_WEBHOOK_ENDPOINT_URL",  // your app's webhook receiver
+  "webhook_url_method": "POST"
+}
+
+Step 2: Create Webhook Endpoint to Receive Telnyx Events
+Create a new API endpoint in your application to receive Telnyx webhooks. This endpoint should handle these event types:
+Events to Listen For:
+
+call.initiated - Call has started
+call.answered - Call was answered
+call.machine.detection.ended - AMD detection completed
+call.machine.premium.detection.ended - Premium AMD (if using)
+call.hangup - Call was hung up
+call.speak.ended - Voicemail playback completed
+call.dtmf.received - User pressed a key
+call.playback.ended - Audio playback finished
+
+Webhook Endpoint Structure:
+javascriptapp.post('/webhooks/telnyx-events', async (req, res) => {
+  const event = req.body.data;
+  const eventType = req.body.data.event_type;
+  const callControlId = req.body.data.payload.call_control_id;
+  const callLegId = req.body.data.payload.call_leg_id;
+  
+  // Process each event type and update call status
+  // Store status in database
+  
+  res.status(200).send('OK');
+});
+
+Step 3: Parse AMD Results and Map to Status Descriptions
+When you receive the call.machine.detection.ended event, parse the result:
+AMD Result Mapping:
+javascriptconst detectionResult = event.payload.result;
+
+if (detectionResult === "human") {
+  status = "Call answered by human - transferred";
+  color = "green";
+}
+else if (detectionResult === "machine") {
+  status = "Voicemail dropped successfully";
+  color = "green";
+}
+else if (detectionResult === "not_sure") {
+  status = "Unable to detect voicemail status";
+  color = "yellow";
+}
+else if (detectionResult === "fax") {
+  status = "Fax machine detected";
+  color = "red";
+}
+
+Step 4: Detect Additional Call Scenarios
+Use Telnyx call status codes and event analysis to detect:
+Busy Signal:
+
+Event: call.hangup with hangup_cause: "BUSY"
+Status: "Line busy"
+
+No Answer:
+
+Event: call.hangup with hangup_cause: "NO_ANSWER"
+Status: "No answer - rang X seconds" (calculate from call duration)
+
+Invalid/Disconnected Number:
+
+Event: call.hangup with hangup_cause: "INVALID_NUMBER" or "UNALLOCATED_NUMBER"
+Status: "Invalid or disconnected number"
+
+Call Failed:
+
+Event: call.hangup with hangup_cause: "NORMAL_TEMPORARY_FAILURE" or "SERVICE_UNAVAILABLE"
+Status: "Call failed - network error"
+
+Customer Hung Up:
+
+Event: call.hangup with hangup_cause: "NORMAL_CLEARING" and duration < expected
+Status: "Call disconnected by customer"
+
+Voicemail Box Full:
+
+Detect by analyzing call audio or SIP response codes
+Look for hangup_cause or specific carrier messages
+Status: "Voicemail box is full - message not left"
+
+No Voicemail Setup:
+
+Call rings for extended period (30+ seconds) with no answer and no AMD detection
+Status: "No voicemail system detected"
+
+DTMF Required (Press # or 1):
+
+If your voicemail script includes "Press # to continue" instructions
+Track if DTMF was required but not detected as successful
+Status: "Voicemail detected - requires # press" or "Voicemail detected - requires pressing 1"
+
+
+Step 5: Database Schema Update
+Add these new columns to your call logs database table:
+sqlALTER TABLE call_logs ADD COLUMN call_status_description TEXT;
+ALTER TABLE call_logs ADD COLUMN call_status_color VARCHAR(20);
+ALTER TABLE call_logs ADD COLUMN amd_result VARCHAR(50);
+ALTER TABLE call_logs ADD COLUMN hangup_cause VARCHAR(100);
+ALTER TABLE call_logs ADD COLUMN call_duration_seconds INT;
+ALTER TABLE call_logs ADD COLUMN detection_confidence VARCHAR(20);
+
+Step 6: Real-Time Status Updates
+Implement real-time status tracking:
+Initial Status (when call starts):
+
+"Call initiated"
+
+While Ringing:
+
+"Call in progress - ringing X seconds" (update every second)
+
+Final Status (when call completes):
+
+One of the final status descriptions based on AMD result and hangup cause
+
+Store all status changes with timestamps for debugging.
+
+Step 7: Update Call Logs UI
+Add New Column:
+
+Column header: "Status Description"
+Display the call_status_description field
+Apply color coding based on call_status_color:
+
+Green: successful outcomes (voicemail dropped, transferred)
+Yellow: warnings (voicemail full, requires key press, complex menu)
+Red: failures (hung up, invalid number, no voicemail)
+Blue: in progress
+
+
+
+Status Badge Styling:
+css.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-green { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+.status-yellow { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+.status-red { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
+.status-blue { background: rgba(124, 58, 237, 0.15); color: #7C3AED; }
+
+Step 8: Add Filter Dropdown
+Add a filter dropdown above the Call Logs table:
+html<select id="statusFilter">
+  <option value="all">All Calls</option>
+  <option value="success">Successful Voicemail Drops</option>
+  <option value="transferred">Transferred to Human</option>
+  <option value="failed">Failed/Disconnected</option>
+  <option value="issues">Voicemail Issues</option>
+  <option value="invalid">Invalid Numbers</option>
+  <option value="progress">In Progress</option>
+</select>
+Filter the table based on selected status category.
+
+Step 9: Export Functionality
+When exporting Call Logs to CSV, include these columns:
+
+Date/Time
+Destination Number
+Caller ID / From Number
+Ring Duration (seconds)
+Call Status Description ← NEW
+AMD Result
+Hangup Cause
+
+
+Step 10: Error Handling
+Add robust error handling:
+
+If Telnyx webhook fails, log error and mark call as "Status unknown - webhook error"
+If AMD times out, mark as "AMD detection timeout"
+If no webhook received within 60 seconds of call initiation, mark as "Status pending"
+Retry logic for failed webhook processing
+
+
+Step 11: Testing Requirements
+After implementation, test these scenarios:
+
+Call a number with standard voicemail → verify "Voicemail dropped successfully"
+Call and have someone answer → verify "Call answered by human - transferred"
+Call a busy number → verify "Line busy"
+Call a disconnected number → verify "Invalid or disconnected number"
+Call a number with full voicemail → verify "Voicemail box is full"
+Let a call ring with no answer → verify "No answer - rang X seconds"
+Monitor a live call → verify "Call in progress - ringing X seconds" updates in real-time
+
+
+Important Notes:
+
+Use the existing Telnyx API credentials already configured in the app
+Make sure your webhook endpoint URL is publicly accessible (use ngrok for local testing)
+Set the webhook URL in your Telnyx dashboard: Telnyx Portal → Voice → Call Control Applications → Your App → Webhook URL
+AMD adds ~5 seconds to call analysis time — this is normal
+Keep all existing call functionality working — this is purely additive
+
+
+Success Criteria:
+✅ Every call shows a clear, human-readable status description
+✅ Status updates in real-time as calls progress
+✅ Color-coded badges make it easy to scan results
+✅ Filter allows quick access to specific call outcomes
+✅ Export includes all status information
+✅ No existing functionality is broken

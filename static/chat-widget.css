@@ -1,0 +1,44 @@
+.alex-chat-bubble{position:fixed;bottom:28px;right:28px;width:60px;height:60px;background:#0a0a1a;border-radius:50%;cursor:pointer;z-index:9998;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.25);transition:transform .2s,box-shadow .2s}
+.alex-chat-bubble:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(0,0,0,0.35)}
+.alex-chat-bubble svg{width:28px;height:28px;color:#fff}
+.alex-chat-bubble .alex-badge{position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid #fff}
+
+.alex-chat-window{position:fixed;bottom:100px;right:28px;width:400px;max-height:560px;background:#ffffff;border-radius:16px;box-shadow:0 12px 48px rgba(0,0,0,0.18);z-index:9999;display:none;flex-direction:column;overflow:hidden;border:1px solid #e5e5ea;font-family:'Helvetica Neue',Arial,sans-serif}
+.alex-chat-window.open{display:flex}
+
+.alex-chat-header{background:#0a0a1a;padding:18px 20px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.alex-chat-avatar{width:40px;height:40px;background:linear-gradient(135deg,#333 0%,#555 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:1px}
+.alex-chat-header-info{flex:1}
+.alex-chat-header-name{font-size:15px;font-weight:700;color:#fff}
+.alex-chat-header-status{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;display:flex;align-items:center;gap:6px}
+.alex-chat-header-status::before{content:'';width:6px;height:6px;background:#22c55e;border-radius:50%;flex-shrink:0}
+.alex-chat-close{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:4px;transition:color .2s;flex-shrink:0}
+.alex-chat-close:hover{color:#fff}
+
+.alex-chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;min-height:300px;max-height:380px;background:#fafafa}
+.alex-chat-messages::-webkit-scrollbar{width:4px}
+.alex-chat-messages::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+
+.alex-msg{max-width:82%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.65;word-wrap:break-word}
+.alex-msg.bot{background:#0a0a1a;color:rgba(255,255,255,0.9);align-self:flex-start;border-bottom-left-radius:4px}
+.alex-msg.user{background:#e8e8ed;color:#111;align-self:flex-end;border-bottom-right-radius:4px}
+.alex-msg.bot .typing-indicator{display:inline-flex;gap:4px;padding:4px 0}
+.alex-msg.bot .typing-indicator span{width:6px;height:6px;background:rgba(255,255,255,0.4);border-radius:50%;animation:typingBounce .6s infinite}
+.alex-msg.bot .typing-indicator span:nth-child(2){animation-delay:.15s}
+.alex-msg.bot .typing-indicator span:nth-child(3){animation-delay:.3s}
+@keyframes typingBounce{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+.alex-chat-input-area{padding:14px 16px;border-top:1px solid #e8e8ed;display:flex;gap:10px;align-items:center;background:#fff;flex-shrink:0}
+.alex-chat-input{flex:1;border:1px solid #e0e0e5;border-radius:10px;padding:11px 16px;font-size:14px;font-family:'Helvetica Neue',Arial,sans-serif;outline:none;background:#fafafa;color:#111;transition:border-color .2s}
+.alex-chat-input:focus{border-color:#0a0a1a;background:#fff}
+.alex-chat-input::placeholder{color:#aaa}
+.alex-chat-send{width:38px;height:38px;background:#0a0a1a;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,transform .15s;flex-shrink:0}
+.alex-chat-send:hover{background:#222;transform:scale(1.05)}
+.alex-chat-send:disabled{opacity:.4;cursor:default;transform:none}
+.alex-chat-send svg{width:18px;height:18px;color:#fff}
+
+@media(max-width:480px){
+  .alex-chat-window{right:0;left:0;bottom:0;width:100%;max-height:100vh;border-radius:16px 16px 0 0}
+  .alex-chat-messages{max-height:calc(100vh - 180px)}
+  .alex-chat-bubble{bottom:20px;right:20px}
+}

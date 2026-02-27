@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Open Humana</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body{background:radial-gradient(circle at 20% 20%,rgba(99,102,241,0.12),transparent 35%),#0b1021;color:#e5e7eb;font-family:'Inter',sans-serif;min-height:100vh;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;}
+        .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:24px;width:100%;max-width:1100px;margin-top:40px;}
+        .price-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:40px;text-align:center;transition:transform 0.3s ease, border-color 0.3s ease;}
+        .price-card:hover{transform:translateY(-10px);border-color:rgba(99,102,241,0.5);background:rgba(255,255,255,0.06);}
+        .price-card.featured{border:2px solid #6366f1;position:relative;}
+        .badge{position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:#6366f1;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;}
+        h2{font-size:24px;margin:0;color:#fff;}
+        .price{font-size:48px;font-weight:800;margin:20px 0;color:#fff;}
+        .price span{font-size:16px;color:rgba(255,255,255,0.5);}
+        ul{list-style:none;padding:0;margin:30px 0;text-align:left;color:rgba(255,255,255,0.7);line-height:2;}
+        .btn-pricing{display:block;width:100%;padding:16px;border-radius:12px;text-decoration:none;font-weight:700;transition:all 0.2s;}
+        .btn-starter{background:rgba(255,255,255,0.1);color:#fff;}
+        .btn-business{background:linear-gradient(120deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 10px 25px rgba(99,102,241,0.4);}
+        .btn-starter:hover{background:rgba(255,255,255,0.2);}
+    </style>
+</head>
+<body>
+    <h1 style="font-size:42px;margin:0;">Ready to hire Alex?</h1>
+    <p style="color:rgba(255,255,255,0.6);margin-top:10px;">Select a plan to provision your AI employees instantly.</p>
+
+    <div class="pricing-grid">
+        <div class="price-card">
+            <h2>Starter</h2>
+            <div class="price">$99<span>/mo</span></div>
+            <ul>
+                <li>✓ 1 AI Employee (Alex)</li>
+                <li>✓ Unlimited Inbound Handling</li>
+                <li>✓ Basic Outbound Automation</li>
+                <li>✓ Email Onboarding</li>
+            </ul>
+            <a href="/billing?plan=starter" class="btn-pricing btn-starter">Get Started</a>
+        </div>
+
+        <div class="price-card featured">
+            <div class="badge">Most Popular</div>
+            <h2>Business</h2>
+            <div class="price">$399<span>/mo</span></div>
+            <ul>
+                <li>✓ 5 AI Employees</li>
+                <li>✓ Priority Voice Processing</li>
+                <li>✓ Advanced CRM Integration</li>
+                <li>✓ 24/7 Dedicated Alex Instances</li>
+            </ul>
+            <a href="/billing?plan=business" class="btn-pricing btn-business">Scale Now</a>
+        </div>
+
+        <div class="price-card">
+            <h2>Agency</h2>
+            <div class="price">Custom</div>
+            <ul>
+                <li>✓ Unlimited AI Employees</li>
+                <li>✓ Full White-Label Rights</li>
+                <li>✓ Custom Voice Cloning</li>
+                <li>✓ API Webhook Access</li>
+            </ul>
+            <a href="mailto:sales@openhumana.com" class="btn-pricing btn-starter">Contact Sales</a>
+        </div>
+    </div>
+</body>
+</html>

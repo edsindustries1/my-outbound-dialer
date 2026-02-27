@@ -1,0 +1,52 @@
+modules = ["python-3.11", "postgresql-16"]
+
+[agent]
+expertMode = true
+integrations = ["elevenlabs:1.0.0", "google-mail:1.0.0"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "rustc", "tcl", "tk", "zlib"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://dzcqljtikqgebtmmagsj.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_FLLXqJ93AYCkYdRlN2H_EQ_THAsxVJq"
+GMAIL_ADDRESS = "openhumana@gmail.com"
+
+[userenv.production]
+PUBLIC_BASE_URL = "https://voice-blast.replit.app"
+
+[deployment]
+deploymentTarget = "vm"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--workers=2", "--timeout=120", "app:app"]
+build = ["bash", "-c", "pip install -r requirements.txt"]

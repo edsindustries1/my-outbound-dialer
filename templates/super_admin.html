@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin — Open Humana</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0d0d0d; color: #fff; min-height: 100vh; }
+    .admin-header { background: #111; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .admin-header h1 { font-size: 1.3rem; font-weight: 700; }
+    .admin-header h1 span { color: #10b981; }
+    .admin-header .back-link { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .admin-header .back-link:hover { color: #10b981; }
+    .admin-body { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: #141414; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 20px 24px; }
+    .stat-card .stat-label { font-size: 0.78rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .table-wrap { background: #141414; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+    .table-wrap table { width: 100%; border-collapse: collapse; }
+    .table-wrap th { text-align: left; padding: 14px 20px; font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.08); background: #111; }
+    .table-wrap td { padding: 14px 20px; font-size: 0.9rem; color: rgba(255,255,255,0.75); border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .table-wrap tr:last-child td { border-bottom: none; }
+    .table-wrap tr:hover td { background: rgba(16,185,129,0.03); }
+    .btn-view { padding: 6px 14px; background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.25); border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .btn-view:hover { background: rgba(16,185,129,0.2); border-color: #10b981; }
+    .number-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; }
+    .number-badge.active { background: rgba(16,185,129,0.12); color: #10b981; }
+    .number-badge.none { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.35); }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1.3rem; padding: 4px; }
+    .modal-close:hover { color: #fff; }
+    .modal-body { padding: 24px; }
+    .activity-stat { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .activity-stat:last-child { border-bottom: none; }
+    .activity-stat .label { color: rgba(255,255,255,0.5); font-size: 0.88rem; }
+    .activity-stat .value { font-weight: 600; color: #fff; font-size: 0.9rem; }
+    .activity-calls { margin-top: 16px; }
+    .activity-calls h3 { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+    .call-entry { padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 6px; font-size: 0.82rem; color: rgba(255,255,255,0.6); display: flex; justify-content: space-between; }
+    .call-entry .call-number { color: #fff; font-weight: 500; }
+    .call-entry .call-status { font-weight: 500; }
+    .call-entry .call-status.completed { color: #10b981; }
+    .call-entry .call-status.failed { color: #ef4444; }
+    .loading { text-align: center; padding: 32px; color: rgba(255,255,255,0.4); }
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .table-wrap { overflow-x: auto; }
+      .table-wrap table { min-width: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-header">
+    <h1><span>Super</span> Admin Portal</h1>
+    <a href="/dashboard" class="back-link">Back to Dashboard</a>
+  </div>
+
+  <div class="admin-body">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ users|length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Leads</div>
+        <div class="stat-value">{{ users|sum(attribute='leads') }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Lines</div>
+        <div class="stat-value">{{ users|selectattr('active_number', 'ne', 'None')|list|length }}</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Leads</th>
+            <th>Calls</th>
+            <th>Active Number</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td style="font-weight:600;color:#fff;">{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.leads }}</td>
+            <td>{{ u.calls }}</td>
+            <td>
+              {% if u.active_number != 'None' %}
+              <span class="number-badge active">{{ u.active_number }}</span>
+              {% else %}
+              <span class="number-badge none">None</span>
+              {% endif %}
+            </td>
+            <td>{{ u.created_at }}</td>
+            <td><button class="btn-view" onclick="viewActivity({{ u.id }})">View Activity</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="activityModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">User Activity</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function viewActivity(uid) {
+      var modal = document.getElementById('activityModal');
+      var body = document.getElementById('modalBody');
+      var title = document.getElementById('modalTitle');
+      modal.classList.add('active');
+      body.innerHTML = '<div class="loading">Loading activity...</div>';
+
+      fetch('/api/admin/user-activity/' + uid)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          title.textContent = (data.user.name || data.user.email) + ' — Activity';
+          var html = '';
+          html += '<div class="activity-stat"><span class="label">Total Calls</span><span class="value">' + data.total_calls + '</span></div>';
+          html += '<div class="activity-stat"><span class="label">Total Leads</span><span class="value">' + data.total_leads + '</span></div>';
+          if (data.numbers && data.numbers.length > 0) {
+            for (var i = 0; i < data.numbers.length; i++) {
+              html += '<div class="activity-stat"><span class="label">Number (' + data.numbers[i].status + ')</span><span class="value">' + data.numbers[i].phone + '</span></div>';
+            }
+          }
+          if (data.recent_calls && data.recent_calls.length > 0) {
+            html += '<div class="activity-calls"><h3>Recent Calls (last 20)</h3>';
+            for (var j = 0; j < data.recent_calls.length; j++) {
+              var c = data.recent_calls[j];
+              var statusClass = (c.status === 'completed' || c.status === 'voicemail_dropped') ? 'completed' : 'failed';
+              html += '<div class="call-entry"><span class="call-number">' + c.number + '</span><span class="call-status ' + statusClass + '">' + c.status + '</span></div>';
+            }
+            html += '</div>';
+          } else {
+            html += '<div style="margin-top:16px;color:rgba(255,255,255,0.35);font-size:0.88rem;">No call activity yet.</div>';
+          }
+          body.innerHTML = html;
+        })
+        .catch(function() {
+          body.innerHTML = '<div class="loading">Failed to load activity.</div>';
+        });
+    }
+
+    function closeModal() {
+      document.getElementById('activityModal').classList.remove('active');
+    }
+
+    document.getElementById('activityModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+I need to overhaul the automated 'Welcome Email' sent to new users. I want it to look exactly like a formal job application and resume sent by a human applicant. The email should be sent from 'Alex - Your New Digital Teammate'. Use the following structure and content:
+
+1. THE SUBJECT LINE:
+
+"Application for Sales Force Expansion - Alex (Open Humana Digital Employee)"
+
+2. THE EMAIL BODY (The Cover Letter):
+
+Greeting: "Dear Hiring Manager,"
+
+The Pitch: "I am writing to formally apply for the position of Lead Outbound Specialist at your firm. Having reviewed your lead volume, I am confident that my unique capabilities will allow me to outperform any traditional hire while significantly reducing your overhead."
+
+The 'Digital Superpowers' (Experience Section):
+
+Availability: 24/7/365. I never take sick days, lunch breaks, or holidays.
+
+Productivity: I handle 500+ dials per hour and manage up to 50 simultaneous conversations without fatigue.
+
+Efficiency: I bridge live humans to you instantly and leave hyper-personalized voicemails for those who don't answer.
+
+Benefits: I require $0 in health insurance, no payroll taxes, no 401k matching, and no office space.
+
+3. THE ATTACHED 'RESUME' LOOK:
+Design the bottom half of the email to look like a clean, professional resume layout:
+
+Skills: High-Velocity Dialing, Multi-lingual (50+ languages), CRM Data Entry, Objection Handling, Hyper-Personalized Voicemail Messaging.
+
+References: Integrated with Telnyx, Twilio, and Open Humana’s proprietary bridging tech.
+
+4. THE CALL TO ACTION:
+
+"I am ready to begin my first shift immediately. Please click below to finalize my hiring and 'onboard' me into your sales workflow."
+
+Button Text: [Finalize Hiring & Start First Shift]
+
+5. STYLING INSTRUCTIONS:
+
+Use a clean, 'Email-safe' layout (no heavy graphics).
+
+Use a professional serif font if possible to mimic a formal document.
+
+Ensure the footer mentions: 'Open Humana - Providing the Silicon-Based Workforce of the Future.'
+
+Technical Goal: Update the email template in the code

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Humana - Verify Email</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);})();
+    </script>
+    <style>
+        :root {
+            --login-bg: #fafafa;
+            --login-surface: rgba(255,255,255,0.97);
+            --login-border: rgba(0,0,0,0.08);
+            --login-text: #1a1a1a;
+            --login-text-dim: #666666;
+            --login-accent: #1a1a1a;
+            --login-accent-2: #333333;
+        }
+        [data-theme="dark"] {
+            --login-bg: #0a0a0a;
+            --login-surface: rgba(255,255,255,0.05);
+            --login-border: rgba(255,255,255,0.1);
+            --login-text: #f0f0f0;
+            --login-text-dim: #999999;
+            --login-accent: #ffffff;
+            --login-accent-2: #cccccc;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--login-bg);
+            color: var(--login-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .verify-container {
+            background: var(--login-surface);
+            border: 1px solid var(--login-border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        .verify-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .verify-icon svg { width: 32px; height: 32px; fill: #fff; }
+        .verify-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .verify-subtitle {
+            font-size: 14px;
+            color: var(--login-text-dim);
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .verify-email {
+            font-weight: 600;
+            color: var(--login-text);
+        }
+        .otp-inputs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .otp-inputs input {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            border: 2px solid var(--login-border);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--login-text);
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: 'Inter', monospace;
+        }
+        .otp-inputs input:focus {
+            border-color: #1a73e8;
+        }
+        .verify-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--login-accent);
+            color: var(--login-bg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .verify-btn:hover { opacity: 0.85; }
+        .verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .verify-error {
+            background: rgba(234,67,53,0.1);
+            border: 1px solid rgba(234,67,53,0.3);
+            color: #ea4335;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .verify-success {
+            background: rgba(52,168,83,0.1);
+            border: 1px solid rgba(52,168,83,0.3);
+            color: #34a853;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .resend-link {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--login-text-dim);
+        }
+        .resend-link a {
+            color: #1a73e8;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .resend-link a:hover { text-decoration: underline; }
+        .back-link {
+            margin-top: 16px;
+            font-size: 13px;
+        }
+        .back-link a {
+            color: var(--login-text-dim);
+            text-decoration: none;
+        }
+        .back-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </div>
+        <div class="verify-title">Check your email</div>
+        <div class="verify-subtitle">
+            We sent a 6-digit verification code to<br>
+            <span class="verify-email">{{ email }}</span>
+        </div>
+
+        {% if error %}
+        <div class="verify-error">{{ error }}</div>
+        {% endif %}
+        <div id="successMsg" class="verify-success" style="display:none;"></div>
+
+        <form id="otpForm" method="POST" action="/verify-otp">
+            <div class="otp-inputs">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" data-idx="0">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="1">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="2">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="3">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="4">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" data-idx="5">
+            </div>
+            <input type="hidden" name="otp_code" id="otpCode">
+            <button type="submit" class="verify-btn" id="verifyBtn">Verify Email</button>
+        </form>
+
+        <div class="resend-link">
+            Didn't receive the code? <a id="resendBtn" onclick="resendCode()">Resend code</a>
+        </div>
+        <div class="back-link">
+            <a href="/signup">Back to sign up</a>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        var inputs = document.querySelectorAll(".otp-inputs input");
+        var form = document.getElementById("otpForm");
+        var codeField = document.getElementById("otpCode");
+
+        inputs.forEach(function(inp, i) {
+            inp.addEventListener("input", function(e) {
+                var val = e.target.value.replace(/[^0-9]/g, "");
+                e.target.value = val;
+                if (val && i < inputs.length - 1) {
+                    inputs[i + 1].focus();
+                }
+                updateCode();
+            });
+            inp.addEventListener("keydown", function(e) {
+                if (e.key === "Backspace" && !e.target.value && i > 0) {
+                    inputs[i - 1].focus();
+                    inputs[i - 1].value = "";
+                    updateCode();
+                }
+            });
+            inp.addEventListener("paste", function(e) {
+                e.preventDefault();
+                var paste = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "");
+                for (var j = 0; j < 6 && j < paste.length; j++) {
+                    inputs[j].value = paste[j];
+                }
+                if (paste.length > 0) {
+                    inputs[Math.min(paste.length, 5)].focus();
+                }
+                updateCode();
+            });
+        });
+
+        function updateCode() {
+            var code = "";
+            inputs.forEach(function(inp) { code += inp.value; });
+            codeField.value = code;
+        }
+
+        form.addEventListener("submit", function(e) {
+            updateCode();
+            if (codeField.value.length !== 6) {
+                e.preventDefault();
+                return;
+            }
+            document.getElementById("verifyBtn").disabled = true;
+            document.getElementById("verifyBtn").textContent = "Verifying...";
+        });
+
+        inputs[0].focus();
+    })();
+
+    function resendCode() {
+        var btn = document.getElementById("resendBtn");
+        btn.textContent = "Sending...";
+        btn.style.pointerEvents = "none";
+        fetch("/resend-otp", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            credentials: "include"
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            var msg = document.getElementById("successMsg");
+            if (data.success) {
+                msg.textContent = data.message || "Code resent!";
+                msg.style.display = "block";
+            } else {
+                msg.textContent = data.error || "Failed to resend";
+                msg.className = "verify-error";
+                msg.style.display = "block";
+            }
+            setTimeout(function() {
+                btn.textContent = "Resend code";
+                btn.style.pointerEvents = "auto";
+            }, 60000);
+        }).catch(function() {
+            btn.textContent = "Resend code";
+            btn.style.pointerEvents = "auto";
+        });
+    }
+    </script>
+</body>
+</html>

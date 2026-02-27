@@ -1,0 +1,27 @@
+"Please build out and populate the following sub-pages for Open Humana. Create high-quality, professional content for each route, ensuring the branding remains consistent with our 'Digital Employee Agency' theme. Use the company name 'Open Humana', email 'contact@openhumana.com', and address 'Clouds'.
+
+1. ABOUT US: Write a vision-focused page. Explain that Open Humana was founded to bridge the gap between human talent and AI efficiency. We provide 'Silicon-based teammates' who allow business owners to focus on strategy while our Digital Employees handle the grunt work.
+
+2. BLOG: Create a blog landing page with 3 placeholder 'Coming Soon' articles:
+
+'Why Your Next Sales Hire Should Be Digital'
+
+'The End of the 9-to-5: How Digital Employees Work 24/7'
+
+'Human-AI Collaboration: The Future of the Modern Workforce'
+
+3. HELP CENTER & FAQs: Create a searchable FAQ section covering:
+
+'What is a Digital Employee?' (Answer: A high-performance AI trained on your specific business data).
+
+'How much does it cost?' (Answer: A $99/mo salary per employee plus usage).
+
+'Can I fire a Digital Employee?' (Answer: Yes, instantly, with no HR paperwork).
+
+4. TCPA COMPLIANCE (CRITICAL): Draft a clear compliance page stating that Open Humana provides the technology, but the 'Employer' (the client) is responsible for ensuring their lead lists are scrubbed against 'Do Not Call' registries. Include a section on 'Prior Express Written Consent.'
+
+5. PRIVACY & TERMS: Generate standard legal templates for a B2B service. Emphasize data security and that we do not sell lead data to third parties.
+
+6. CONTACT SUPPORT: Create a clean contact form that points to 'contact@openhumana.com' and mentions that our 'Digital Support Team' will respond within 15 minutes.
+
+DESIGN INSTRUCTION: Ensure all these pages use the same header and footer as the main landing page. Use a clean, modern, 'Cloud' inspired aesthetic (whites, light blues, or deep dark mode) to match the address 'Clouds'. Link all these pages correctly to the existing footer links."

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Humana — Your Digital Employee Agency</title>
+  <meta name="description" content="10x your outbound connect rates with AI-powered dialing, personalized voicemail drops, and live transcription. The fastest way to reach more prospects.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/chat-widget.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-progress" id="navProgress"></div>
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:146px;width:auto;">
+      </a>
+      <div class="nav-links" id="navLinks">
+        <div class="nav-dropdown">
+          <a href="#features" class="nav-dropdown-trigger">Features <svg class="nav-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></a>
+          <div class="nav-mega">
+            <div class="mega-inner">
+              <div class="mega-item" data-target="features">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg></div>
+                <div><strong>Automated Campaign Dialer</strong><span>Launch campaigns that dial hundreds of numbers automatically</span></div>
+              </div>
+              <div class="mega-item" data-target="features">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+                <div><strong>AI Personalized Voicemails</strong><span>Custom voicemails with prospect name, company, and details</span></div>
+              </div>
+              <div class="mega-item" data-target="features">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                <div><strong>Live Call Transfer</strong><span>Instant transfer to your phone when a human picks up</span></div>
+              </div>
+              <div class="mega-item" data-target="features">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+                <div><strong>Real-Time Transcription</strong><span>Every call transcribed live for instant review</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-dropdown">
+          <a href="#how-it-works" class="nav-dropdown-trigger">How It Works <svg class="nav-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></a>
+          <div class="nav-mega">
+            <div class="mega-inner">
+              <div class="mega-item" data-target="how-it-works">
+                <div class="mega-icon mega-step">1</div>
+                <div><strong>Upload Your Contacts</strong><span>Drop a CSV and our smart parser finds all the details</span></div>
+              </div>
+              <div class="mega-item" data-target="how-it-works">
+                <div class="mega-icon mega-step">2</div>
+                <div><strong>Configure Your Campaign</strong><span>Pick dialing mode, voicemail, and transfer number</span></div>
+              </div>
+              <div class="mega-item" data-target="how-it-works">
+                <div class="mega-icon mega-step">3</div>
+                <div><strong>Launch & Watch Live</strong><span>Hit launch and see calls happen in real-time</span></div>
+              </div>
+              <div class="mega-item" data-target="how-it-works">
+                <div class="mega-icon mega-step">4</div>
+                <div><strong>Close More Deals</strong><span>Focus on selling while Alex handles the rest</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-dropdown">
+          <a href="#pricing" class="nav-dropdown-trigger">Pricing <svg class="nav-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></a>
+          <div class="nav-mega">
+            <div class="mega-inner">
+              <div class="mega-item" data-target="pricing">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                <div><strong>Hire One Employee &mdash; $99/mo</strong><span>1 Digital Employee, voicemail drop, live transfer</span></div>
+              </div>
+              <div class="mega-item" data-target="pricing">
+                <div class="mega-icon mega-popular"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                <div><strong>Hire a Team &mdash; $399/mo</strong><span>Up to 5 employees, 2,500+ daily dials, AI voicemails</span></div>
+              </div>
+              <div class="mega-item" data-target="pricing">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+                <div><strong>Hire an Agency &mdash; Custom</strong><span>Unlimited employees, dedicated manager, SLA</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-dropdown">
+          <a href="#blog" class="nav-dropdown-trigger">Resources <svg class="nav-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></a>
+          <div class="nav-mega">
+            <div class="mega-inner">
+              <div class="mega-item" onclick="window.location='/blog-page'">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+                <div><strong>Blog</strong><span>Insights on digital employment and sales strategy</span></div>
+              </div>
+              <div class="mega-item" onclick="window.location='/help'">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div><strong>Help Center</strong><span>FAQs, guides, and troubleshooting</span></div>
+              </div>
+              <div class="mega-item" onclick="window.location='/about'">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div><strong>About Us</strong><span>Our vision, mission, and the team behind Open Humana</span></div>
+              </div>
+              <div class="mega-item" onclick="window.location='/contact'">
+                <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+                <div><strong>Contact Support</strong><span>Get help from our team within 15 minutes</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <a href="/login" class="nav-login">Log in</a>
+        <a href="#" class="nav-cta" data-open-lead>Get Started</a>
+      </div>
+      <button class="nav-mobile" id="navMobile" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-mesh"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <canvas class="hero-canvas" id="heroCanvas"></canvas>
+    <div class="hero-grid-lines"></div>
+
+    <div class="hero-inner">
+      <div class="hero-badge anim-fade">
+        <span class="hero-badge-dot"></span>
+        <span class="hero-badge-text">Your Digital Employee Agency</span>
+        <span class="hero-badge-shimmer"></span>
+      </div>
+
+      <h1 class="hero-title anim-fade">
+        <span class="title-line title-line-1">
+          <span class="title-word" style="--i:0">Stop</span>
+          <span class="title-word" style="--i:1">Hiring</span>
+          <span class="title-word" style="--i:2">Staff.</span>
+        </span>
+        <span class="title-line title-line-2">
+          <span class="title-word" style="--i:3">Start</span>
+          <span class="title-word" style="--i:4">Scaling</span>
+          <span class="title-word" style="--i:5">with</span>
+        </span>
+        <span class="title-line title-line-3">
+          <span class="title-word" style="--i:6">Digital</span>
+          <span class="title-word title-word-accent" style="--i:7">Super-Employees.</span>
+        </span>
+      </h1>
+
+      <p class="hero-sub anim-fade">Hire 'Alex'—a high-performance Digital BDR that works around the clock so you don't have to. For a $99 monthly salary, get a teammate that never misses a beat.</p>
+
+      <div class="hero-actions anim-fade">
+        <a href="#" class="btn-primary btn-lg btn-glow" data-open-lead>
+          <span>Hire Your First Employee</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#comparison" class="btn-ghost btn-lg">Meet Alex</a>
+      </div>
+
+      <div class="hero-trust anim-fade">
+        <div class="trust-avatars">
+          <div class="trust-av" style="--c:#1a1a1a">S</div>
+          <div class="trust-av" style="--c:#333333">M</div>
+          <div class="trust-av" style="--c:#555555">R</div>
+          <div class="trust-av" style="--c:#222222">T</div>
+          <div class="trust-av" style="--c:#444444">J</div>
+        </div>
+        <span class="trust-text">Trusted by <strong>2,000+</strong> sales teams worldwide</span>
+      </div>
+    </div>
+
+    <div class="hero-mockup anim-fade">
+      <div class="mockup-float">
+        <div class="mockup-browser-bar">
+          <span class="browser-dot"></span><span class="browser-dot"></span><span class="browser-dot"></span>
+          <span class="browser-url">app.openhuman.ai/dashboard</span>
+        </div>
+        <img src="/static/images/dashboard-preview.png" alt="Open Humana dashboard preview" loading="eager">
+        <div class="mockup-glow"></div>
+        <div class="mockup-reflection"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="logo-strip">
+    <p class="logo-strip-label">Trusted by industry leaders</p>
+    <div class="logo-marquee">
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>TechVentures</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><span>Meridian Group</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><line x1="2" y1="12" x2="22" y2="12"/></svg><span>GlobalReach</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span>Apex Sales</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span>PulseMetrics</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg><span>CubeStack</span></div>
+      <div class="logo-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>OptiFlow</span></div>
+    </div>
+  </section>
+
+  <section class="value-pillars" id="comparison">
+    <div class="section-inner">
+      <p class="section-eyebrow anim-up">Economic Dominance</p>
+      <h2 class="section-title anim-up">Why Hire an Open Humana Digital Sales Force?</h2>
+      <p class="section-sub anim-up">Manual dialing is a 20th-century relic. Our Digital Employees do the <strong>'dirty work'</strong> of prospecting so your human closers can stay in their flow state.</p>
+
+      <div class="pillars-grid">
+        <div class="pillar-card anim-up">
+          <div class="pillar-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3 class="pillar-title">30:1 Force Multiplication</h3>
+          <p class="pillar-desc">One Digital Employee can dial up to <strong>50 lines simultaneously</strong>, filtering out busy signals and voicemails in milliseconds. It provides the output of an entire <strong>30-person call center</strong> for the cost of a daily coffee.</p>
+        </div>
+
+        <div class="pillar-card anim-up">
+          <div class="pillar-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          </div>
+          <h3 class="pillar-title">The 'Live Human' Bridge</h3>
+          <p class="pillar-desc">Your phone only rings when a <strong>live prospect is on the line</strong>. No more 'hellos' to dead air or machines. Every call you take is a <strong>hot inbound opportunity</strong> bridged directly from Alex.</p>
+        </div>
+
+        <div class="pillar-card anim-up">
+          <div class="pillar-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3 class="pillar-title">100% Hyper-Personalized Follow-up</h3>
+          <p class="pillar-desc">When a lead doesn't answer, Alex doesn't just hang up. He leaves a voicemail mentioning the lead's <strong>Name and Property Address</strong> with perfect human tonality.</p>
+        </div>
+
+        <div class="pillar-card anim-up">
+          <div class="pillar-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3 class="pillar-title">Elimination of 'Sales Burnout'</h3>
+          <p class="pillar-desc">Manual dialing is soul-crushing. By removing the <strong>95% of calls</strong> that result in rejection or silence, your human team stays high-energy and motivated.</p>
+        </div>
+      </div>
+
+      <div class="unfair-advantage anim-up">
+        <div class="unfair-badge">The Math of Success</div>
+        <p class="unfair-text"><strong>3,000 Dials per day vs. 100.</strong> Even with the same conversion rate, Open Humana users out-produce their competition by <strong>30x</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider">
+    <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z" fill="#f8f9fa"/></svg>
+  </div>
+
+  <section class="services" id="features">
+    <div class="section-inner">
+      <p class="section-eyebrow anim-up">What Alex Does</p>
+      <h2 class="section-title anim-up">Transforming Outbound Sales</h2>
+
+      <div class="bento-grid">
+        <div class="bento-card bento-large anim-up">
+          <div class="bento-text">
+            <h3>Automated Campaign Dialer</h3>
+            <p>Upload your list, set your preferences, and launch. Alex dials through hundreds of numbers automatically — sequential or simultaneous — while you focus on closing.</p>
+          </div>
+          <div class="bento-img">
+            <img src="/static/images/feature-dialer.png" alt="Campaign dialer" loading="lazy">
+          </div>
+        </div>
+
+        <div class="bento-card bento-medium anim-up">
+          <div class="bento-img bento-img-top">
+            <img src="/static/images/feature-ai-voicemail.png" alt="AI voicemail" loading="lazy">
+          </div>
+          <div class="bento-text">
+            <h3>AI Personalized Voicemails</h3>
+            <p>Every prospect hears their name, company, and details — generated by AI voice cloning that sounds exactly like you.</p>
+          </div>
+        </div>
+
+        <div class="bento-card bento-medium anim-up">
+          <div class="bento-text">
+            <h3>Live Call Transfer</h3>
+            <p>When a human picks up, get instantly notified and the call transfers to your team in real-time. Never miss a hot lead.</p>
+          </div>
+          <div class="bento-img bento-img-bottom">
+            <img src="/static/images/feature-hotlead.png" alt="Hot lead transfer" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="superpowers">
+    <div class="section-inner">
+      <p class="section-eyebrow anim-up">Superpowers</p>
+      <h2 class="section-title anim-up">What Makes Alex Superhuman</h2>
+
+      <div class="superpowers-grid">
+        <div class="superpower-card anim-up">
+          <div class="superpower-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3>Instant Speed-to-Lead</h3>
+          <p>Alex calls your leads within 5 seconds of receiving them. No delays, no coffee breaks, no excuses.</p>
+        </div>
+
+        <div class="superpower-card anim-up">
+          <div class="superpower-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h3>Infinite Memory</h3>
+          <p>Alex remembers every detail about every prospect forever. Names, preferences, past conversations.</p>
+        </div>
+
+        <div class="superpower-card anim-up">
+          <div class="superpower-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Zero Management Overhead</h3>
+          <p>No HR, no payroll taxes, no drama. Alex shows up every day and performs perfectly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="workflow" id="how-it-works">
+    <div class="section-inner">
+      <div class="workflow-header">
+        <div>
+          <p class="section-eyebrow anim-up">Workflow</p>
+          <h2 class="section-title section-title-left anim-up">A Smarter Way to Reach Your Prospects</h2>
+          <p class="section-sub-left anim-up">Take control of your outbound with a smarter approach. Upload, configure, launch, and close — all from one dashboard.</p>
+          <a href="#" class="btn-primary anim-up" style="margin-top:24px;" data-open-lead>Get Started Today</a>
+        </div>
+      </div>
+
+      <div class="workflow-steps">
+        <div class="wf-step anim-up">
+          <div class="wf-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <h4>Upload</h4>
+          <p>Drop a CSV with your contacts. Smart parser finds numbers and pulls names.</p>
+        </div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82"/></svg></div>
+          <h4>Configure</h4>
+          <p>Pick your dialing mode and set your transfer number.</p>
+        </div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <h4>Launch</h4>
+          <p>Hit launch and watch calls happen live.</p>
+        </div>
+        <div class="wf-step anim-up">
+          <div class="wf-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/></svg></div>
+          <h4>Close</h4>
+          <p>Focus on selling. Review transcripts and get instant alerts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="testimonials" id="testimonials">
+    <div class="section-inner">
+      <p class="section-eyebrow anim-up">What Employers Are Saying</p>
+      <h2 class="section-title anim-up">r/OpenHumana</h2>
+      <div class="reddit-feed" id="redditFeed">
+        <!-- Testimonials injected dynamically by landing.js -->
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-final">
+    <div class="section-inner">
+      <div class="cta-card">
+        <h2>Ready to scale your sales team?</h2>
+        <p>Hire your first digital employee in less than 5 minutes.</p>
+        <a href="#" class="btn-primary btn-lg btn-glow" data-open-lead>Get Started Now</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-glow"></div>
+    <div class="footer-main">
+      <div class="footer-inner">
+
+        <!-- Brand Column -->
+        <div class="footer-brand">
+          <a href="/" class="footer-logo-link">
+            <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
+          </a>
+          <p class="footer-tagline">Your Digital Employee Agency. Hire AI sales reps that work 24/7 so your team can focus on closing.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="Twitter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+            <a href="#" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
+            <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          </div>
+        </div>
+
+        <!-- Product Links -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Product</h4>
+          <ul class="footer-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#how-it-works">Workflow</a></li>
+            <li><a href="#comparison">Why Alex</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources Links -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Resources</h4>
+          <ul class="footer-links">
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/help">Help Center</a></li>
+            <li><a href="/about">About Us</a></li>
+            <li><a href="/contact">Support</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal Links -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Legal</h4>
+          <ul class="footer-links">
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/compliance">Compliance</a></li>
+          </ul>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="footer-col footer-newsletter">
+          <h4 class="footer-heading">Stay in the Loop</h4>
+          <p class="footer-newsletter-desc">Get weekly tips on scaling outbound with AI. No spam, ever.</p>
+          <form class="footer-newsletter-form" onsubmit="event.preventDefault();this.querySelector('button').textContent='Subscribed!';this.querySelector('input').value='';">
+            <input type="email" placeholder="you@company.com" required class="footer-newsletter-input">
+            <button type="submit" class="footer-newsletter-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p class="footer-copy">&copy; 2026 Open Humana. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="/privacy">Privacy</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/terms">Terms</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/compliance">Compliance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/landing.js"></script>
+</body>
+</html>

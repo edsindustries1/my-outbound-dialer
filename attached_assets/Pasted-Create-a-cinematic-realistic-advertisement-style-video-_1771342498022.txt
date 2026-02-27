@@ -1,0 +1,41 @@
+Create a cinematic, realistic, advertisement-style video (15–30 seconds, seamlessly loopable) designed to play as a full-screen background on the Voice Blast web application. The video should feel like a premium Apple or Samsung commercial — ultra high definition, shot on a professional cinema camera, color graded for a luxury dark aesthetic.
+
+Scene Breakdown:
+Shot 1 – 0:00 to 0:04
+Close-up shot of a man's hand reaching into the right pocket of dark slim-fit trousers. Slow motion. The fabric slightly stretches as his fingers wrap around an iPhone (latest model, black or titanium finish). Camera is low angle, almost floor level, bokeh background of a modern glass office building or urban street. Shallow depth of field. The phone slides out smoothly. Cinematic.
+Shot 2 – 0:04 to 0:08
+Cut to a young professional woman sitting at a minimalist café table. Her iPhone is face-down on the marble table. It vibrates and lights up. She turns it over with one hand — smooth, natural motion. The screen lights up showing an incoming call from "Voice Blast" with a clean caller ID display. Her expression is calm, slightly intrigued. Shot from slightly above and to the side. Shallow depth of field, warm bokeh lights in background.
+Shot 3 – 0:08 to 0:12
+A businessman walking through a modern airport terminal, glass walls, natural light pouring in. He reaches into his inside suit jacket pocket, pulls out an iPhone. As he raises it, the screen shows an incoming call notification — "Voice Blast" — with a soft purple glow on the screen. He slows his walk, glances at the phone. Camera follows from the front, slowly pulling backward as he walks forward. Cinematic tracking shot.
+Shot 4 – 0:12 to 0:16
+Extreme close-up of an iPhone screen — fingers hovering over it. The incoming call screen clearly shows the caller name "Voice Blast" in clean white text on a dark background. The phone is vibrating slightly — subtle motion blur on the edges. The purple call button glows softly. Shot is tight, almost macro. Background completely blurred.
+Shot 5 – 0:16 to 0:20
+A woman standing near a floor-to-ceiling window at night, city lights behind her out of focus. She reaches into her coat pocket, pulls out her iPhone. The screen illuminates her face softly — the caller ID reads "Voice Blast". She looks down at the phone thoughtfully. Camera slowly rotates around her from right to left — a smooth arc move. Cinematic color grade, cool blue and purple tones from the city lights.
+Shot 6 – 0:20 to 0:26
+Quick-cut montage — 3 fast cuts, each 1–2 seconds:
+
+A hand pulling a phone from a gym bag, screen showing Voice Blast calling
+A teenager in a hoodie pulling their iPhone from a hoodie pocket, reacting to the call
+A hand resting on a wooden desk, iPhone lighting up face-up with the Voice Blast incoming call screen
+
+Each cut is sharp and punchy with a subtle motion blur transition between them. Fast but not chaotic — like an iPhone ad.
+Shot 7 – 0:26 to 0:30 (Loop End)
+Slow fade back to the first scene — a hand reaching into a pocket again — so the video loops invisibly and seamlessly. The loop point should be a dark, motion-blurred frame that connects naturally back to Shot 1.
+
+Visual Style & Technical Specs:
+
+Aspect Ratio: 16:9 widescreen, optimized for full-screen desktop background
+Resolution: 4K (3840x2160) or minimum 1080p
+Frame Rate: 24fps for cinematic feel, slow-motion shots at 120fps slowed to 24fps
+Color Grade: Dark luxury tone — deep blacks, slightly cool-toned highlights, subtle purple/violet tint on light sources and screen glows to match Voice Blast brand colors (#7C3AED violet)
+Lighting: Natural + practical lights (café lights, city lights, office windows) — no harsh studio lighting. Everything should feel real and human
+Camera Style: Handheld with very subtle stabilized movement — never fully locked off, always slightly alive. Mix of tracking shots, slow push-ins, and arc moves
+Depth of Field: Shallow throughout — backgrounds always beautifully blurred
+No text overlays. No logos. No graphics. Pure cinematic footage only
+No music needed — this is a silent background video
+People: Diverse cast — different ages, genders, ethnicities. All well-dressed, modern, real-looking. Not stock-photo stiff. Natural expressions and movements
+iPhones: All phones should be latest model iPhones — black, white, or titanium finish. Screens clearly showing an incoming call from "Voice Blast"
+
+
+Mood & Feel:
+Think Apple iPhone commercial meets a luxury fintech brand film. Every frame should look like it could be a standalone print ad. The feeling is: "Important people are getting called. Something big is happening. Voice Blast is reaching everyone."

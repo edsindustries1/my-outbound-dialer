@@ -1,0 +1,52 @@
+I need to refine the Welcome Email. It currently looks too much like a marketing flyer. Please rewrite the code to generate a formal, high-end 'Executive Resume' and Cover Letter. Remove all mentions of 'Telnyx', 'Twilio', or 'APIs'. Alex should present himself as a professional candidate with an impossible work ethic.
+
+1. THE COVER LETTER (Top Section):
+
+Tone: Sharp, professional, and slightly humble but confident.
+
+Body: >   "Dear Hiring Manager,
+I am writing to express my formal interest in joining your sales department as a Senior Outbound Specialist. After analyzing the current lead-generation landscape, I recognize that consistency is the most significant barrier to scale. My professional background is built on a single principle: Zero Downtime. I am prepared to handle the heavy lifting of your outreach operations so your executive team can focus on closing and strategy."
+
+2. THE RESUME LAYOUT (Middle Section):
+Create a clean, white-background resume box with a professional header:
+
+Candidate Name: ALEX
+
+Title: Senior Business Development Associate
+
+Summary: Result-driven outbound expert specializing in high-velocity lead engagement and personalized communication.
+
+3. REWRITTEN WORK EXPERIENCE (The 'Human' Spin):
+
+Unlimited Operational Bandwidth: Capable of maintaining peak performance 24 hours a day, 365 days a year, without fluctuations in quality or morale.
+
+High-Volume Communication: Expert in managing massive outreach queues (500+ contacts per hour) while maintaining a 1:1 personal feel.
+
+Lead Bridging & Connection: Specialized in identifying live prospects and facilitating instant introductions to senior management.
+
+Proprietary Voicemail System: Advanced capability in leaving context-aware, personalized voice messages that reference lead-specific data points (Name/Address) to drive callback rates.
+
+4. CORE COMPETENCIES (Skills Section):
+
+Multi-Channel Prospecting
+
+Multi-Lingual Fluency (Global Reach)
+
+Real-Time Data Synchronization
+
+Rapid Lead Qualification
+
+Persistence & Follow-Up Automation
+
+5. COMPENSATION & BENEFITS (The Competitive Edge):
+
+Annual Salary: $1,188 ($99 billed monthly).
+
+Insurance/Taxes: Fully waived.
+
+PTO/Sick Leave: None required.
+
+6. THE CTA BUTTON:
+Place a button at the bottom: [Review Full Contract & Finalize Hire]
+
+DESIGN INSTRUCTION: Use a professional PDF-style layout. Avoid icons; use bold headers and bullet points. Use a classic font like Times New Roman, Georgia, or Arial. It should look like a document I would receive from a high-level recruiter."

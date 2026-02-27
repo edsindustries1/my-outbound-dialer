@@ -1,0 +1,124 @@
+Here's your copy-paste prompt for Replit:
+
+Voice Blast – Complete UI/UX Redesign (Luxury Minimal)
+
+Do not change any functionality, backend logic, API connections, or existing features. Only redesign the visual layer — HTML, CSS, and any frontend animations. Everything must still work exactly as before.
+
+Design Direction: Luxury Minimal SaaS
+
+Think: Linear.app meets Vercel meets a high-end fintech product. The goal is to look like a Silicon Valley startup that raised $10M and hired a world-class design team. Every pixel should feel intentional.
+
+1. Color Theme
+
+Use this exact palette:
+
+Background (primary): 
+#0A0A0F — near-black, slightly cool-toned
+Background (surface/cards): 
+#111118 — slightly lighter than base
+Border color: 
+#1E1E2E — subtle dark border
+Accent (primary): 
+#7C3AED — deep electric violet
+Accent (glow): 
+#A855F7 — lighter purple for glows and highlights
+Text (primary): 
+#F1F0FF — soft off-white, easy on the eyes
+Text (secondary): 
+#6B7280 — muted gray for labels and descriptions
+Success: 
+#10B981
+Warning: 
+#F59E0B
+Error/Danger: 
+#EF4444
+No pure white. No pure black. No flat blue bootstrap colors. Ditch anything that looks generic.
+
+2. Typography
+
+Use Inter (Google Font) as the primary font — import it if not already present
+Headlines: font-weight: 700, slightly wide letter-spacing
+Labels and UI text: font-weight: 400–500, font-size: 13–14px
+Make sure font sizes, weights, and line heights feel balanced and refined — not too big, not too cramped
+3. Layout & Spacing
+
+Add generous padding inside all cards and panels (at least 24px)
+Use consistent 8px base spacing grid throughout
+All cards should have: border-radius: 16px, subtle border: 1px solid #1E1E2E, and a very faint inner glow or box shadow: box-shadow: 0 0 0 1px #1E1E2E, 0 8px 32px rgba(0,0,0,0.4)
+Sidebar (if present) should feel sleek and minimal — icon + label, with a soft purple highlight on the active tab
+Everything should be vertically and horizontally balanced
+4. Buttons
+
+Primary button: deep violet background 
+#7C3AED, white text, border-radius: 10px, subtle glow on hover: box-shadow: 0 0 16px rgba(124, 58, 237, 0.5)
+Secondary button: transparent background, border: 1px solid #2D2D40, light text, darkens on hover
+All buttons should have a press-down micro-animation: transform: scale(0.97) on click, smooth transition: all 0.15s ease
+No rounded-pill buttons unless it's a tag or badge
+5. Input Fields
+
+Background: 
+#0D0D14
+Border: 1px solid #2A2A3D
+On focus: border changes to 
+#7C3AED with a faint glow: box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2)
+Text color: 
+#F1F0FF
+Placeholder color: 
+#3D3D55
+border-radius: 10px, padding: 10px 14px
+Font size: 14px
+6. Navigation / Tabs
+
+Tabs should look clean and modern — not like default browser tabs
+Active tab: soft violet underline or a filled pill highlight with background: rgba(124, 58, 237, 0.15) and left border accent 3px solid #7C3AED
+Inactive tabs: muted gray text, no background, subtle hover state
+Smooth transition between tab states: transition: all 0.2s ease
+7. Animations & Interactions
+
+Page load: Fade in with staggered slide-up for each section — opacity: 0 → 1, translateY(20px) → 0, staggered by 100ms per element
+Hover on cards: subtle lift — transform: translateY(-2px), box-shadow slightly deeper
+Click/tap anywhere: ripple effect that matches the violet accent color
+Sidebar or tab switches: smooth crossfade or slide transition, not instant jumps
+All transitions: ease or cubic-bezier(0.4, 0, 0.2, 1) — never linear, never jarring
+8. Cards & Panels
+
+Every section should be wrapped in a card with the surface color 
+#111118
+Add a very subtle top-border gradient on important cards: border-top: 1px solid rgba(124, 58, 237, 0.4)
+Stats or metrics should have a clean number display — large bold number, small muted label underneath
+Avoid flat sections with no visual separation — use border, shadow, or spacing to create depth
+9. Call Logs Table
+
+Dark table with alternating row backgrounds: 
+#0A0A0F and 
+#0E0E16
+Row hover: soft highlight background: rgba(124, 58, 237, 0.06)
+Column headers: uppercase, font-size: 11px, letter-spacing: 0.08em, muted color 
+#6B7280
+Status badges (ringing, answered, dropped, voicemail): colored pill badges — green, blue, red, gray respectively
+Clean divider lines: border-bottom: 1px solid #1A1A28
+10. Logo & Header
+
+The Voice Blast logo should sit in the top-left — icon + wordmark
+Logo icon: a stylized sound wave or signal burst in violet/purple gradient
+Wordmark: "Voice Blast" in Inter bold, white text, clean and modern
+Header bar: background: rgba(10, 10, 15, 0.85), with a backdrop-filter: blur(12px), feels like frosted glass
+Subtle bottom border on header: border-bottom: 1px solid #1E1E2E
+11. Scrollbars
+
+Style the custom scrollbars to match the theme:
+
+css
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0A0A0F; }
+::-webkit-scrollbar-thumb { background: #2A2A3D; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
+Final Note
+
+Every single element — buttons, inputs, tabs, cards, tables, text, spacing — must feel like it was designed by a human who has studied great SaaS products and cares about every detail. It should feel expensive, modern, and intentional. Remove any default browser styling, bootstrap defaults, or anything that looks auto-generated. This is a premium product. Make it look like one.
+
+
+
+
+
+

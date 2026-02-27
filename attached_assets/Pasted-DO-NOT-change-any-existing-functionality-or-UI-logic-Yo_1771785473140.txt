@@ -1,0 +1,267 @@
+DO NOT change any existing functionality or UI logic.
+
+You need to ADD a complete production-ready authentication and user management system around my existing app.
+
+🎯 GOAL
+
+Implement a secure login + signup system with:
+
+Google OAuth login
+
+Email + password signup/login
+
+Auto welcome email after signup
+
+Unique user profile creation
+
+Profile name selection
+
+Profile picture (DP) upload
+
+Separate data storage per user
+
+Persistent database (do NOT auto delete data)
+
+Each user gets their own isolated copy of the app data
+
+Do not break existing app functionality
+
+🏗 TECH STACK REQUIREMENTS
+
+Use:
+
+Node.js + Express (if backend exists, extend it)
+
+PostgreSQL (Replit DB or Neon)
+
+Prisma ORM (recommended)
+
+Passport.js or NextAuth (if Next.js)
+
+Google OAuth 2.0
+
+JWT session authentication
+
+Bcrypt password hashing
+
+Nodemailer for email
+
+Multer or Cloudinary for profile image upload
+
+If project uses different stack, adapt but keep architecture secure and scalable.
+
+🔐 AUTHENTICATION FEATURES
+1️⃣ Signup Options
+
+Allow users to:
+
+Sign up with Google
+
+Sign up with email + password
+
+For email signup:
+
+Hash password using bcrypt
+
+Store securely in database
+
+For Google:
+
+Store Google ID
+
+If user exists → login
+
+If not → create new user record
+
+📦 DATABASE STRUCTURE
+
+Create these tables:
+
+Users Table
+
+Fields:
+
+id (UUID primary key)
+
+email (unique)
+
+password (nullable if Google login)
+
+googleId (nullable)
+
+profileName
+
+profileImageUrl
+
+createdAt
+
+updatedAt
+
+UserAppData Table
+
+This table stores each user's isolated app data.
+
+Fields:
+
+id (UUID primary key)
+
+userId (foreign key reference to Users.id)
+
+appData (JSONB column)
+
+createdAt
+
+updatedAt
+
+Important:
+
+Each user must ONLY access their own app data.
+
+NEVER mix user data.
+
+NEVER auto delete data.
+
+Use proper foreign key constraints.
+
+🧠 APP INSTANCE LOGIC
+
+When a new user signs up:
+
+Create new user record
+
+Create default appData entry (copy of base app structure)
+
+Store that in UserAppData table
+
+When user logs in:
+
+Load only their appData
+
+Inject into existing app
+
+Keep functionality unchanged
+
+The app should behave exactly the same — but scoped per user.
+
+📧 AUTO WELCOME EMAIL
+
+After successful signup:
+
+Send automatic email:
+
+Subject:
+Welcome to [App Name] 🚀
+
+Body:
+
+Thank user
+
+Confirm account created
+
+Brief intro
+
+Support contact
+
+Use Nodemailer with:
+
+SMTP (Gmail or SendGrid)
+
+Environment variables for credentials
+
+Make email HTML formatted and professional.
+
+🖼 PROFILE SETTINGS
+
+After signup:
+
+User should be redirected to Profile Setup page where they can:
+
+Choose profile name
+
+Upload profile picture
+
+Save changes
+
+Profile image:
+
+Store in cloud storage or /uploads folder
+
+Save URL in database
+
+🛡 SECURITY REQUIREMENTS
+
+Hash passwords (bcrypt salt rounds 10+)
+
+Use JWT stored in HTTP-only cookies
+
+Protect all app routes with middleware
+
+Validate input using express-validator or Zod
+
+Prevent duplicate email signup
+
+Implement proper error handling
+
+Use environment variables for:
+
+JWT_SECRET
+
+GOOGLE_CLIENT_ID
+
+GOOGLE_CLIENT_SECRET
+
+EMAIL_USER
+
+EMAIL_PASS
+
+DATABASE_URL
+
+🔒 ACCESS CONTROL
+
+If not logged in → redirect to login page
+
+If logged in → access app
+
+User can only access their own appData
+
+No cross-user data exposure
+
+📁 FILE STRUCTURE
+
+Create clean modular structure:
+
+/auth
+/routes
+/controllers
+/middleware
+/models
+/uploads
+/config
+
+Do not mix everything in one file.
+
+🚫 DO NOT
+
+Do NOT change core business logic
+
+Do NOT remove existing functionality
+
+Do NOT reset database on restart
+
+Do NOT use in-memory storage
+
+Do NOT store passwords in plain text
+
+🎯 FINAL RESULT SHOULD
+
+Be production-ready
+
+Be scalable
+
+Follow best practices
+
+Be secure
+
+Be clean structured code
+
+Work immediately in Replit environment
