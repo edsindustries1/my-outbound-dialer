@@ -42,6 +42,9 @@ externalPort = 80
 SUPABASE_URL = "https://dzcqljtikqgebtmmagsj.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_FLLXqJ93AYCkYdRlN2H_EQ_THAsxVJq"
 GMAIL_ADDRESS = "openhumana@gmail.com"
+PAYPAL_MODE = "live"
+PAYPAL_CLIENT_ID = "ATAgVyxvNmu0H_4h5eU_w4US00eIYsWq5noNuQA2Mgff-YbcazUughA5AcP5rLNdF8AOAEtaNqvRucIS"
+PAYPAL_CLIENT_SECRET = "EC7aJePLaAamJkCwoa2ebI2Uub0Sq3JsP5NIm-FzCrGxVrK9O08gslnKYLWQ9JcQOi3nEH05e6mJin2G"
 
 [userenv.production]
 PUBLIC_BASE_URL = "https://voice-blast.replit.app"
