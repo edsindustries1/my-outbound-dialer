@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["python311", "gcc"]
+nixPkgs = ["python311Full", "gcc"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["python3 -m pip install -r requirements.txt"]
 
 [start]
-cmd = "gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 2 main:app"
+cmd = "python3 -m gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 2 main:app"
