@@ -1337,7 +1337,7 @@ def test_call():
     if not transfer_num:
         return jsonify({"error": "Transfer number is required for test calls"}), 400
     audio = camp.get("audio_url") or vm_url
-    set_campaign(audio, transfer_num, [number], dial_mode="sequential", batch_size=1, user_id=current_user.id)
+    set_campaign(audio, transfer_num, [number], dial_mode="sequential", batch_size=1, user_id=current_user.id, is_test=True)
 
     from_number = request.form.get("from_number", "").strip() or None
     logger.info(f"Placing test call to {number}" + (f" from {from_number}" if from_number else ""))
@@ -1371,11 +1371,14 @@ def stop():
 def status():
     """Return current call statuses and campaign info for the dashboard."""
     camp = get_campaign(user_id=current_user.id)
+    is_test = camp.get("is_test", False)
+    campaign_active = camp["active"] and not is_test
     return jsonify({
-        "active": camp["active"],
+        "active": campaign_active,
+        "is_test": is_test,
         "stop_requested": camp["stop_requested"],
-        "total": len(camp["numbers"]),
-        "dialed_count": camp["dialed_count"],
+        "total": len(camp["numbers"]) if not is_test else 0,
+        "dialed_count": camp["dialed_count"] if not is_test else 0,
         "transfer_paused": is_transfer_paused(user_id=current_user.id),
         "calls": get_all_statuses(user_id=current_user.id),
     })

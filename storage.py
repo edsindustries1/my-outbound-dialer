@@ -42,6 +42,7 @@ def get_user_for_call(call_control_id):
 def _default_campaign():
     return {
         "active": False,
+        "is_test": False,
         "audio_url": None,
         "transfer_number": None,
         "numbers": [],
@@ -235,11 +236,12 @@ def reset_campaign(user_id=None):
                 _cid_to_user.pop(cid, None)
 
 
-def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None):
+def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None, is_test=False):
     key = _campaign_key(user_id)
     with lock:
         camp = _default_campaign()
         camp["active"] = True
+        camp["is_test"] = is_test
         camp["audio_url"] = audio_url
         camp["transfer_number"] = transfer_number
         camp["numbers"] = list(numbers)
