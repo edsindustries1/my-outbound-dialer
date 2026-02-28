@@ -131,13 +131,16 @@ logger = logging.getLogger("voicemail_app")
 # ---- Flask App ----
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET")
+from datetime import timedelta as _td
+app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
+app.config["SESSION_PERMANENT"] = True
 
 # ---- Database & Auth Setup ----
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 
-from models import db, User, UserInstance, ProvisionedNumber, UserAppData, ensure_user_instance, init_db
+from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, ensure_user_instance, init_db
 import base64
 import requests
 init_db(app)
@@ -148,7 +151,10 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    user = User.query.get(int(user_id))
+    if user and not getattr(user, 'is_active_account', True):
+        return None
+    return user
 
 from google_auth import google_oauth, google_oauth_available
 app.register_blueprint(google_oauth)
@@ -810,35 +816,10 @@ ACTION: Reach out within 5 minutes for highest conversion.
             except Exception as e:
                 logger.exception(f"Background admin email send failed for {email}: {e}")
 
-        def _send_user_resume_email():
-            try:
-                first_name = (name_raw.split()[0] if name_raw else "there")
-                user_subject = "Alex's Resume - OpenHumana"
-                user_text = (
-                    f"Hi {first_name},\n\n"
-                    "Thanks for your interest in Alex and OpenHumana.\n"
-                    "Below is Alex's full resume and introduction.\n\n"
-                    "Best,\n"
-                    "Alex & The OpenHumana Team\n"
-                )
-                from welcome_email import _build_welcome_html
-                user_html = _build_welcome_html(user_name=name_raw, user_email=email_raw)
-
-                result = send_email(
-                    to_email=email_raw,
-                    subject=user_subject,
-                    html_body=user_html,
-                    text_body=user_text,
-                )
-                if result:
-                    logger.info(f"Resume email sent to lead: {email_raw}")
-                else:
-                    logger.error(f"Lead captured but resume email failed: {email_raw}")
-            except Exception as e:
-                logger.exception(f"Background resume email send failed for {email_raw}: {e}")
-
         threading.Thread(target=_send_admin_lead_email, daemon=True).start()
-        threading.Thread(target=_send_user_resume_email, daemon=True).start()
+
+        from invite_email import send_lead_confirmation_async
+        send_lead_confirmation_async(email_raw, name_raw)
 
         # Always return success to the client quickly; email sends happen in background
         return jsonify({"success": True})
@@ -871,6 +852,7 @@ def login():
                         db.session.commit()
                         logger.info("Admin account auto-created via APP_PASSWORD login")
                     login_user(admin, remember=True)
+                    session.permanent = True
                     logger.info("Admin successfully authenticated")
                     if is_ajax:
                         return jsonify({"success": True, "redirect": url_for("dashboard")})
@@ -888,25 +870,31 @@ def login():
                     if result:
                         user = User.query.filter_by(email=email).first()
                         if not user:
-                            user = User(email=email, supabase_id=result["user_id"])
-                            db.session.add(user)
-                            db.session.commit()
-                        elif not user.supabase_id:
-                            user.supabase_id = result["user_id"]
-                            db.session.commit()
-                        login_user(user)
-                        if is_ajax:
-                            return jsonify({"success": True, "redirect": url_for("dashboard")})
-                        return redirect(url_for("dashboard"))
+                            error = "No account found. Access is by invitation only."
+                        elif not getattr(user, 'is_active_account', True):
+                            error = "Your account has been deactivated. Please contact the administrator."
+                        else:
+                            if not user.supabase_id:
+                                user.supabase_id = result["user_id"]
+                                db.session.commit()
+                            login_user(user)
+                            session.permanent = True
+                            if is_ajax:
+                                return jsonify({"success": True, "redirect": url_for("dashboard")})
+                            return redirect(url_for("dashboard"))
                     else:
                         error = err or "Invalid email or password"
                 else:
                     user = User.query.filter_by(email=email).first()
                     if user and user.check_password(password):
-                        login_user(user)
-                        if is_ajax:
-                            return jsonify({"success": True, "redirect": url_for("dashboard")})
-                        return redirect(url_for("dashboard"))
+                        if not getattr(user, 'is_active_account', True):
+                            error = "Your account has been deactivated. Please contact the administrator."
+                        else:
+                            login_user(user)
+                            session.permanent = True
+                            if is_ajax:
+                                return jsonify({"success": True, "redirect": url_for("dashboard")})
+                            return redirect(url_for("dashboard"))
                     else:
                         error = "Invalid email or password"
             if is_ajax and error:
@@ -919,48 +907,10 @@ def login():
     return render_template("login.html", error=error, google_oauth=google_oauth_available, app_password_set=bool(APP_PASSWORD))
 
 
-@app.route("/signup", methods=["GET", "POST"])
+@app.route("/signup")
+@app.route("/register")
 def signup():
-    _detect_and_set_base_url()
-    if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
-    error = None
-    info_message = None
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        confirm = request.form.get("confirm_password", "")
-        name = request.form.get("name", "").strip()
-        if not email or not password:
-            error = "Email and password are required"
-        elif len(password) < 8:
-            error = "Password must be at least 8 characters"
-        elif password != confirm:
-            error = "Passwords do not match"
-        elif supabase_available:
-            otp_sent, otp_err = supabase_send_otp(email)
-            if otp_sent:
-                session["pending_verify_email"] = email
-                session["pending_verify_name"] = name or ""
-                session["pending_verify_password"] = password
-                return redirect(url_for("verify_otp_page"))
-            else:
-                error = otp_err or "Failed to send verification code"
-        else:
-            if User.query.filter_by(email=email).first():
-                error = "An account with this email already exists"
-            else:
-                user = User(email=email, profile_name=name or None, credit_balance=Decimal("5.00"))
-                user.set_password(password)
-                db.session.add(user)
-                db.session.commit()
-                login_user(user)
-                ensure_user_instance(user.id)
-                logger.info(f"New user signup: {email}")
-                from welcome_email import send_welcome_email_async
-                send_welcome_email_async(email, name)
-                return redirect(url_for("profile_setup"))
-    return render_template("login.html", signup=True, error=error, info_message=info_message, google_oauth=google_oauth_available)
+    return redirect(url_for("login"))
 
 
 def verify_otp_page():
@@ -2866,10 +2816,186 @@ def admin_required(f):
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated:
             return redirect(url_for("login"))
-        if current_user.email.lower() != ADMIN_EMAIL.lower() or not ADMIN_EMAIL:
+        is_admin = False
+        if ADMIN_EMAIL and current_user.email.lower() == ADMIN_EMAIL.lower():
+            is_admin = True
+        if getattr(current_user, 'role', 'user') == 'admin':
+            is_admin = True
+        if not is_admin:
             return "Not Found", 404
         return f(*args, **kwargs)
     return decorated
+
+
+@app.route("/admin")
+@admin_required
+def admin_panel():
+    success_msg = request.args.get("success")
+    error_msg = request.args.get("error")
+    users = User.query.order_by(User.created_at.desc()).all()
+    user_data = []
+    for u in users:
+        user_data.append({
+            "id": u.id,
+            "email": u.email,
+            "name": u.profile_name or u.email.split("@")[0],
+            "role": u.role or "user",
+            "active": getattr(u, 'is_active_account', True),
+            "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "N/A",
+        })
+    pending_invites = Invitation.query.filter_by(used=False).order_by(Invitation.created_at.desc()).all()
+    return render_template("admin.html", users=user_data, pending_invites=pending_invites,
+                           success_msg=success_msg, error_msg=error_msg)
+
+
+@app.route("/admin/invite", methods=["POST"])
+@admin_required
+def admin_invite():
+    email = request.form.get("email", "").strip().lower()
+    grant_free = request.form.get("grant_free_access") == "1"
+    if not email:
+        return redirect(url_for("admin_panel", error="Email is required"))
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return redirect(url_for("admin_panel", error=f"User {email} already has an account"))
+    existing_invite = Invitation.query.filter_by(email=email, used=False).first()
+    if existing_invite:
+        return redirect(url_for("admin_panel", error=f"An invite is already pending for {email}"))
+    invitation = Invitation(
+        email=email,
+        invited_by=current_user.id,
+        grant_free_access=grant_free,
+    )
+    db.session.add(invitation)
+    db.session.commit()
+    from invite_email import send_invite_email_async
+    send_invite_email_async(email, invitation.token, grant_free)
+    logger.info(f"Admin invited {email} (free_access={grant_free})")
+    return redirect(url_for("admin_panel", success=f"Invite sent to {email}"))
+
+
+@app.route("/admin/revoke", methods=["POST"])
+@admin_required
+def admin_revoke():
+    user_id = request.form.get("user_id", type=int)
+    target = User.query.get(user_id)
+    if not target:
+        return redirect(url_for("admin_panel", error="User not found"))
+    if target.role == "admin":
+        return redirect(url_for("admin_panel", error="Cannot revoke admin access"))
+    target.is_active_account = False
+    db.session.commit()
+    logger.info(f"Admin revoked access for {target.email}")
+    return redirect(url_for("admin_panel", success=f"Access revoked for {target.email}"))
+
+
+@app.route("/admin/restore", methods=["POST"])
+@admin_required
+def admin_restore():
+    user_id = request.form.get("user_id", type=int)
+    target = User.query.get(user_id)
+    if not target:
+        return redirect(url_for("admin_panel", error="User not found"))
+    target.is_active_account = True
+    db.session.commit()
+    logger.info(f"Admin restored access for {target.email}")
+    return redirect(url_for("admin_panel", success=f"Access restored for {target.email}"))
+
+
+@app.route("/setup-account", methods=["GET", "POST"])
+def setup_account():
+    token = request.args.get("token") or request.form.get("token", "")
+    if not token:
+        return redirect(url_for("login"))
+    invitation = Invitation.query.filter_by(token=token, used=False).first()
+    if not invitation:
+        return render_template("setup_account.html", token=token, email="",
+                               error="This invitation link is invalid or has already been used.",
+                               grant_free_access=False)
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+        if not username or not password:
+            error = "Username and password are required"
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters"
+        elif password != confirm:
+            error = "Passwords do not match"
+        else:
+            existing = User.query.filter_by(email=invitation.email).first()
+            if existing:
+                error = "An account with this email already exists. Please log in instead."
+            else:
+                user = User(
+                    email=invitation.email,
+                    profile_name=username,
+                    role='user',
+                    credit_balance=Decimal("5.00"),
+                )
+                user.set_password(password)
+                db.session.add(user)
+                invitation.used = True
+                invitation.used_at = datetime.utcnow()
+                db.session.commit()
+                ensure_user_instance(user.id)
+                login_user(user)
+                session.permanent = True
+                logger.info(f"New user created via invite: {invitation.email}")
+                return redirect(url_for("profile_setup"))
+    return render_template("setup_account.html", token=token, email=invitation.email,
+                           error=error, grant_free_access=invitation.grant_free_access)
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    error = None
+    success = None
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        if not email:
+            error = "Please enter your email address"
+        else:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                import uuid
+                token = str(uuid.uuid4())
+                user.reset_token = token
+                user.reset_token_expires = datetime.utcnow() + _td(hours=1)
+                db.session.commit()
+                from invite_email import send_password_reset_async
+                send_password_reset_async(email, token)
+                logger.info(f"Password reset requested for {email}")
+            success = "If an account exists with that email, we've sent a reset link."
+    return render_template("forgot_password.html", error=error, success=success)
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    token = request.args.get("token") or request.form.get("token", "")
+    if not token:
+        return redirect(url_for("forgot_password"))
+    user = User.query.filter_by(reset_token=token).first()
+    if not user or not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
+        return render_template("reset_password.html", token=token,
+                               error="This reset link is invalid or has expired. Please request a new one.")
+    error = None
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+        if not password or len(password) < 8:
+            error = "Password must be at least 8 characters"
+        elif password != confirm:
+            error = "Passwords do not match"
+        else:
+            user.set_password(password)
+            user.reset_token = None
+            user.reset_token_expires = None
+            db.session.commit()
+            logger.info(f"Password reset completed for {user.email}")
+            return redirect(url_for("login"))
+    return render_template("reset_password.html", token=token, error=error)
 
 
 @app.route("/super-admin")
