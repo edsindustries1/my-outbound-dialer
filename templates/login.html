@@ -144,8 +144,14 @@
             display: flex; align-items: center; justify-content: center;
             animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
         }
-        .login-logo-icon img { width: 100%; height: 100%; object-fit: contain; transition: filter 0.3s; }
-        [data-theme="dark"] .login-logo-icon img { filter: invert(1) brightness(2); }
+        .login-logo-icon img {
+            width: 100%; height: 100%; object-fit: contain;
+            transition: filter 0.3s ease;
+        }
+        [data-theme="dark"] .login-logo-icon img,
+        html[data-theme="dark"] .login-logo-icon img {
+            filter: invert(1) brightness(1.5) !important;
+        }
 
         .login-text-logo {
             font-size: 28px;
