@@ -424,7 +424,7 @@
     <div class="login-wrap">
         <div class="login-card">
             <div class="login-logo-icon">
-                <img src="/static/images/logo.png" alt="Open Humana" style="width:100%;height:100%;object-fit:contain;">
+                <img id="loginLogo" src="/static/images/logo.png" alt="Open Humana" style="width:100%;height:100%;object-fit:contain;">
             </div>
             <div class="login-subtitle">
                 Sign in to your account
@@ -539,11 +539,23 @@
     </script>
 
     <script>
+        function applyLogoTheme(theme) {
+            var logo = document.getElementById("loginLogo");
+            if (logo) {
+                if (theme === "dark") {
+                    logo.style.filter = "invert(1) brightness(1.5)";
+                } else {
+                    logo.style.filter = "none";
+                }
+            }
+        }
+        applyLogoTheme(document.documentElement.getAttribute("data-theme") || "light");
         document.getElementById("themeToggle").addEventListener("click", function() {
             var current = document.documentElement.getAttribute("data-theme") || "dark";
             var next = current === "dark" ? "light" : "dark";
             document.documentElement.setAttribute("data-theme", next);
             localStorage.setItem("vb_theme", next);
+            applyLogoTheme(next);
         });
         function toggleAdminLogin(e) {
             e.preventDefault();
