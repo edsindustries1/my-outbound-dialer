@@ -177,7 +177,7 @@ ALLOWED_CSV = {"csv", "txt"}
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
 PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
 PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox").lower()
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'live')
 PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
