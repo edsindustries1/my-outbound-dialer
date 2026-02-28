@@ -1,0 +1,86 @@
+I need you to make the following changes to my project. Read all existing code first before making any changes.
+
+## 1. TWO SEPARATE EXPERIENCES:
+
+**Public Website (openhumana.com)**
+- This is the marketing/landing page only
+- No dashboard access here
+- Login button should redirect to: app.openhumana.com/dashboard
+- Sign Up button should open the "Hire Your First Employee" lead capture form (the one already on the site)
+
+**Dashboard App (app.openhumana.com/dashboard)**
+- This is completely separate from the public website
+- Only accessible by authenticated users
+- Has its own login page at app.openhumana.com/login
+
+---
+
+## 2. ADMIN ACCESS SYSTEM:
+
+- I am the only Admin
+- Admin panel at: app.openhumana.com/admin
+- Admin can invite users by entering their email address
+- System sends an invitation email to that user
+- Invited user clicks the link in the email and is taken to a page to create their own username and password
+- Once they set their password they land directly on their dashboard
+- Admin can revoke access at any time
+
+---
+
+## 3. USER AUTHENTICATION FLOW:
+
+- User receives invite email from admin
+- User clicks invite link → taken to: app.openhumana.com/setup-account
+- User creates their own username and password
+- User logs in at: app.openhumana.com/login
+- After login → redirect to: app.openhumana.com/dashboard
+- Add "Forgot Password" option on login page
+- Sessions should stay logged in for 7 days
+
+---
+
+## 4. SIGN UP FORM ON PUBLIC WEBSITE:
+
+- When anyone clicks "Sign Up" on openhumana.com → open the "Hire Your First Employee" form/modal
+- After form is submitted:
+  1. Show a thank you message to the user
+  2. Automatically send a confirmation email to the person who filled the form
+  3. Send a notification email to admin (my email) with all the lead details: Name, Phone, Email, Company
+
+---
+
+## 5. EMAIL TEMPLATES NEEDED:
+
+**Invite Email (to new user):**
+Subject: You've been given access to OpenHumana
+Body: "You have been invited to access your OpenHumana dashboard. Click below to set up your account."
+[Setup Account Button]
+
+**Lead Confirmation Email (to person who filled signup form):**
+Subject: Welcome to OpenHumana - We'll be in touch shortly!
+Body: "Thank you for your interest in OpenHumana. Our team will reach out to you within 24 hours."
+
+**Admin Notification Email:**
+Subject: 🔥 New Lead Received - OpenHumana
+Body: All lead details (Name, Phone, Email, Company)
+
+---
+
+## 6. SECURITY REQUIREMENTS:
+
+- Dashboard and admin panel must be completely protected — no access without login
+- If a non-logged-in user tries to access /dashboard or /admin redirect them to /login
+- Admin route must only be accessible by admin email
+- Use secure password hashing
+- Use JWT or session-based authentication
+
+---
+
+## TECH NOTES:
+- Keep all existing design and branding exactly as is
+- Do not change anything on the public website except the Login and Sign Up button behavior
+- Use the existing database if one is already set up, otherwise set up a simple users table with: id, email, username, password, role (admin/user), invite_token, created_at
+- For emails use Resend or Nodemailer — whichever is simpler to set up
+- Make sure all changes work on both desktop and mobile
+
+Please start by reading all existing files, then tell me your plan before making any changes.
