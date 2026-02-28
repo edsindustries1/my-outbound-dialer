@@ -1581,12 +1581,13 @@
                 var toast = document.createElement("div");
                 toast.className = "toast toast-" + type;
                 var icons = {success: "&#10003;", error: "&#10007;", info: "&#9432;", warning: "&#9888;"};
-                toast.innerHTML = '<span style="font-size:16px;">' + (icons[type] || icons.info) + '</span><span>' + message + '</span>';
+                toast.innerHTML = '<span style="font-size:16px;">' + (icons[type] || icons.info) + '</span><span>' + message + '</span><button class="toast-close" onclick="this.parentElement.classList.add(\'toast-exit\');setTimeout(function(){this.parentElement.remove()}.bind(this),300)">&times;</button>';
                 container.appendChild(toast);
-                setTimeout(function(){
+                var autoTimer = setTimeout(function(){
                     toast.classList.add("toast-exit");
                     setTimeout(function(){ toast.remove(); }, 300);
-                }, 3500);
+                }, 5000);
+                toast._autoTimer = autoTimer;
                 if (typeof addNotification === 'function') {
                     var notifType = type === 'info' ? 'info' : type;
                     addNotification(notifType, message, toastId);
@@ -2568,7 +2569,13 @@
                                 html += "<td>" + formatRing(c.ring_duration) + "</td>";
                                 html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
                                 html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
-                                html += "<td>" + (c.voicemail_dropped ? "Yes" : "-") + "</td>";
+                                if (c.voicemail_dropped) {
+                                    var vmLabel = "Yes";
+                                    if (c.vm_duration) vmLabel = "Yes — " + c.vm_duration + "s";
+                                    html += '<td><span style="color:var(--gads-success);">' + vmLabel + '</span></td>';
+                                } else {
+                                    html += "<td>-</td>";
+                                }
 
                                 if (c.recording_url) {
                                     html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';

@@ -2397,9 +2397,18 @@ def _handle_webhook():
     elif event_type == "call.playback.ended":
         state = get_call_state(call_control_id)
         if state and state.get("voicemail_dropped"):
+            vm_duration = None
+            vm_start = state.get("vm_playback_start")
+            if vm_start:
+                from datetime import datetime as dt
+                vm_duration = round(dt.utcnow().timestamp() - vm_start)
+            desc = "Voicemail dropped successfully"
+            if vm_duration is not None:
+                desc = f"Voicemail dropped successfully — {vm_duration}s"
             update_call_state(call_control_id, status="voicemail_complete",
-                              status_description="Voicemail dropped successfully", status_color="green")
-            logger.info(f"Voicemail playback complete on {call_control_id}, hanging up")
+                              status_description=desc, status_color="green",
+                              vm_duration=vm_duration)
+            logger.info(f"Voicemail playback complete on {call_control_id} ({vm_duration}s), hanging up")
             hangup_call(call_control_id)
 
     # ---- call.transcription ----

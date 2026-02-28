@@ -172,6 +172,7 @@ def persist_call_log(call_control_id):
             "hangup_cause": state.get("hangup_cause"),
             "transcript": state.get("transcript", []),
             "recording_url": state.get("recording_url"),
+            "vm_duration": state.get("vm_duration"),
         }
     cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
@@ -374,6 +375,7 @@ def mark_voicemail_dropped(call_control_id):
             state["voicemail_dropped"] = True
             state["playback_started"] = True
             state["status"] = "voicemail_playing"
+            state["vm_playback_start"] = datetime.utcnow().timestamp()
             return True
         return False
 
@@ -485,6 +487,7 @@ def get_all_statuses(user_id=None):
                 "hangup_cause": state.get("hangup_cause"),
                 "transcript": state.get("transcript", []),
                 "recording_url": state.get("recording_url"),
+                "vm_duration": state.get("vm_duration"),
             })
             live_cids.add(cid)
 
@@ -512,6 +515,7 @@ def get_all_statuses(user_id=None):
             "hangup_cause": entry.get("hangup_cause"),
             "transcript": entry.get("transcript", []),
             "recording_url": entry.get("recording_url"),
+            "vm_duration": entry.get("vm_duration"),
         })
 
     combined = live_results + history_results
