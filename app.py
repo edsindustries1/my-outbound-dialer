@@ -1,3 +1,4 @@
+# Deploy ID: 2026-02-27T16:44:49-08:00
 """
 app.py - Main Flask application for the Voicemail Drop System.
 Handles web dashboard, file uploads, webhook processing, and campaign control.
@@ -130,13 +131,13 @@ logger = logging.getLogger("voicemail_app")
 
 # ---- Flask App ----
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+app.secret_key = os.getenv("SESSION_SECRET")
 from datetime import timedelta as _td
 app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
 app.config["SESSION_PERMANENT"] = True
 
 # ---- Database & Auth Setup ----
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///app.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 
@@ -173,11 +174,11 @@ UPLOAD_FOLDER = "uploads"
 ALLOWED_AUDIO = {"mp3", "wav"}
 ALLOWED_CSV = {"csv", "txt"}
 
-APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
-PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_MODE = os.environ.get("PAYPAL_MODE", "sandbox").lower()
-PAYPAL_WEBHOOK_ID = os.environ.get("WEBHOOK_ID", "")
+APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
+PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
+PAYPAL_MODE = os.getenv("PAYPAL_MODE", "sandbox").lower()
+PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
@@ -804,7 +805,7 @@ ACTION: Reach out within 5 minutes for highest conversion.
         def _send_admin_lead_email():
             try:
                 result = send_email(
-                    to_email=os.environ.get("ADMIN_EMAIL", "openhumana@gmail.com"),
+                    to_email=os.getenv("ADMIN_EMAIL", "openhumana@gmail.com"),
                     subject=f"NEW LEAD: {name_raw or 'Unknown'}",
                     html_body=html_body,
                     text_body=text_body,
@@ -933,7 +934,7 @@ def verify_otp_page():
                 if password and result.get("access_token"):
                     try:
                         from supabase import create_client
-                        temp_client = create_client(os.environ.get("SUPABASE_URL", ""), os.environ.get("SUPABASE_ANON_KEY", ""))
+                        temp_client = create_client(os.getenv("SUPABASE_URL", ""), os.getenv("SUPABASE_ANON_KEY", ""))
                         temp_client.auth._headers = {
                             **temp_client.auth._headers,
                             "Authorization": f"Bearer {result['access_token']}"
@@ -1032,12 +1033,12 @@ def _detect_and_set_base_url():
             return
     except Exception:
         pass
-    env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    env_url = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
     if env_url:
         _detected_base_url = env_url
         set_webhook_base_url(env_url)
         return
-    domains = os.environ.get("REPLIT_DOMAINS", "")
+    domains = os.getenv("REPLIT_DOMAINS", "")
     if domains:
         domain = domains.split(",")[0].strip()
         if domain:
@@ -1052,7 +1053,7 @@ def _detect_and_set_base_url():
 def dashboard():
     """Serve the main dashboard page (requires authentication)."""
     _detect_and_set_base_url()
-    secure_from = os.environ.get("TELNYX_FROM_NUMBER", "Not set")
+    secure_from = os.getenv("TELNYX_FROM_NUMBER", "Not set")
     user_data = current_user.to_dict() if current_user.is_authenticated else {}
     return render_template("index.html", secure_from=secure_from, user=user_data)
 
@@ -1200,7 +1201,7 @@ def start():
     # ---- Handle audio ----
     audio_url = None
     audio_file = request.files.get("audio_file")
-    public_base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    public_base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
     if audio_file and audio_file.filename:
         filename = secure_filename(audio_file.filename)
@@ -1276,7 +1277,7 @@ def start():
         pvm_humanize = request.form.get("pvm_humanize", "true") == "true"
 
         _detect_and_set_base_url()
-        base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+        base_url = _detected_base_url or os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
         contacts = []
         if csv_content_for_pvm:
@@ -2052,7 +2053,7 @@ def pvm_preview_audio_endpoint():
         return jsonify({"error": "No voice selected"}), 400
 
     _detect_and_set_base_url()
-    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    base_url = _detected_base_url or os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 
     voice_settings = data.get("voice_settings", None)
     humanize = data.get("humanize", True)
@@ -2084,7 +2085,7 @@ def pvm_generate():
         return jsonify({"error": "No voice selected"}), 400
 
     _detect_and_set_base_url()
-    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    base_url = _detected_base_url or os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
     if not base_url:
         return jsonify({"error": "Could not determine public URL for audio serving"}), 400
 
@@ -2630,8 +2631,8 @@ def api_request_additional_line():
 
     # Send Telegram notification to admin
     import requests as req_lib
-    bot_token = os.environ.get("BOT_TOKEN", "").strip()
-    admin_chat_id = os.environ.get("ADMIN_CHAT_ID", "").strip()
+    bot_token = os.getenv("BOT_TOKEN", "").strip()
+    admin_chat_id = os.getenv("ADMIN_CHAT_ID", "").strip()
     if bot_token and admin_chat_id:
         try:
             msg = (
@@ -2717,7 +2718,7 @@ def _get_current_webhook_url():
     global _detected_base_url
     if _detected_base_url:
         return _detected_base_url.rstrip("/") + "/webhook"
-    base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
     if base:
         return base + "/webhook"
     return "https://example.com/webhook"
@@ -2808,7 +2809,7 @@ def api_provision_status():
 
 
 # ---- Super Admin Portal ----
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
 
 
 def admin_required(f):
