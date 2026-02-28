@@ -173,11 +173,12 @@ UPLOAD_FOLDER = "uploads"
 ALLOWED_AUDIO = {"mp3", "wav"}
 ALLOWED_CSV = {"csv", "txt"}
 
-APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
-PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_MODE = os.environ.get("PAYPAL_MODE", "sandbox").lower()
-PAYPAL_WEBHOOK_ID = os.environ.get("WEBHOOK_ID", "")
+# Use 'live' as a default so the build daemon doesn't crash
+APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
+PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'live')
+PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
