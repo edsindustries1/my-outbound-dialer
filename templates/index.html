@@ -1352,7 +1352,8 @@
         /* ===== NOTIFICATIONS ===== */
         var _notifications = [];
         var _unreadCount = 0;
-        var _notifDedup = {};
+        var _notifShownIds = {};
+        var _notifCounter = 0;
 
         function toggleNotifications() {
             var panel = document.getElementById('notifPanel');
@@ -1367,21 +1368,22 @@
             if (avatarMenu) avatarMenu.classList.remove('open');
         }
 
-        function addNotification(type, message) {
-            var dedupKey = type + ':' + message;
-            var now = Date.now();
-            if (_notifDedup[dedupKey] && (now - _notifDedup[dedupKey]) < 10000) {
+        function addNotification(type, message, notifId) {
+            if (!notifId) {
+                notifId = type + ':' + message + ':' + (++_notifCounter);
+            }
+            if (_notifShownIds[notifId]) {
                 return;
             }
-            _notifDedup[dedupKey] = now;
-            var keys = Object.keys(_notifDedup);
-            if (keys.length > 50) {
-                keys.sort(function(a,b){ return _notifDedup[a] - _notifDedup[b]; });
-                for (var i = 0; i < keys.length - 30; i++) delete _notifDedup[keys[i]];
+            _notifShownIds[notifId] = true;
+            var keys = Object.keys(_notifShownIds);
+            if (keys.length > 200) {
+                var toRemove = keys.slice(0, keys.length - 100);
+                toRemove.forEach(function(k) { delete _notifShownIds[k]; });
             }
             var timeObj = new Date();
             var timeStr = timeObj.getHours().toString().padStart(2,'0') + ':' + timeObj.getMinutes().toString().padStart(2,'0');
-            _notifications.unshift({ type: type, message: message, time: timeStr });
+            _notifications.unshift({ id: notifId, type: type, message: message, time: timeStr });
             if (_notifications.length > 30) _notifications.pop();
             _unreadCount++;
             renderNotifications();
@@ -1428,7 +1430,6 @@
         function clearNotifications() {
             _notifications = [];
             _unreadCount = 0;
-            _notifDedup = {};
             renderNotifications();
             var bell = document.getElementById('notificationBell');
             if (bell) bell.classList.remove('has-unread');
@@ -1569,8 +1570,13 @@
             }
 
             // ---- Toast Notifications ----
-            function showToast(message, type) {
+            var _toastShownIds = {};
+            function showToast(message, type, toastId) {
                 type = type || "info";
+                if (toastId) {
+                    if (_toastShownIds[toastId]) return;
+                    _toastShownIds[toastId] = true;
+                }
                 var container = document.getElementById("toastContainer");
                 var toast = document.createElement("div");
                 toast.className = "toast toast-" + type;
@@ -1583,7 +1589,7 @@
                 }, 3500);
                 if (typeof addNotification === 'function') {
                     var notifType = type === 'info' ? 'info' : type;
-                    addNotification(notifType, message);
+                    addNotification(notifType, message, toastId);
                 }
             }
 
@@ -2370,9 +2376,10 @@
             var pollTimer = null;
             var isActive = false;
             var prevActiveState = false;
-            var prevVmCount = 0;
-            var prevHotLeadCount = 0;
+            var prevVmCount = -1;
+            var prevHotLeadCount = -1;
             var initialPollDone = false;
+            var baselineSet = false;
             var expandedTranscripts = {};
             var prevCallDataHash = "";
 
@@ -2456,23 +2463,28 @@
                         animateCounter(document.getElementById("dashConnected"), connected);
 
                         var newVmCount = voicemails;
-                        if (initialPollDone && newVmCount > prevVmCount && prevVmCount >= 0) {
-                            showToast("Voicemail dropped", "success");
-                        }
-                        prevVmCount = newVmCount;
-
-                        if (initialPollDone && hotLeads > prevHotLeadCount && prevHotLeadCount >= 0) {
-                            var newHotCalls = calls.filter(function(c){ return c.transferred; });
-                            if (newHotCalls.length > 0) {
-                                sendHotLeadNotification(newHotCalls[0].number);
+                        if (!baselineSet) {
+                            prevVmCount = newVmCount;
+                            prevHotLeadCount = hotLeads;
+                            prevActiveState = data.active;
+                            baselineSet = true;
+                        } else {
+                            if (newVmCount > prevVmCount) {
+                                showToast("Voicemail dropped", "success", 'vm_drop_' + newVmCount);
+                            }
+                            if (hotLeads > prevHotLeadCount) {
+                                var newHotCalls = calls.filter(function(c){ return c.transferred; });
+                                if (newHotCalls.length > 0) {
+                                    sendHotLeadNotification(newHotCalls[0].number, 'hot_lead_' + hotLeads);
+                                }
+                            }
+                            if (prevActiveState && !data.active && !data.stop_requested) {
+                                showToast("Campaign complete!", "success", 'campaign_complete_' + data.dialed_count);
+                                document.getElementById("wizCampaignComplete").style.display = "";
                             }
                         }
+                        prevVmCount = newVmCount;
                         prevHotLeadCount = hotLeads;
-
-                        if (prevActiveState && !data.active && !data.stop_requested) {
-                            showToast("Campaign complete!", "success");
-                            document.getElementById("wizCampaignComplete").style.display = "";
-                        }
                         prevActiveState = data.active;
 
                         var filterVal = statusFilter.value;
@@ -3184,7 +3196,9 @@
             }
             requestNotifPermission();
 
-            function sendHotLeadNotification(number) {
+            function sendHotLeadNotification(number, toastId) {
+                var nId = toastId || ('hot_lead_' + number + '_' + Date.now());
+                showToast("Hot Lead: " + (number || "Unknown"), "success", nId);
                 if (!("Notification" in window) || Notification.permission !== "granted") return;
                 try {
                     var n = new Notification("Hot Lead Detected!", {
