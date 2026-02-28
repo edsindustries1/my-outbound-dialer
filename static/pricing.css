@@ -24,7 +24,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 
 .pricing-nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .pricing-nav-inner{max-width:1200px;margin:0 auto;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
-.pricing-nav-brand{display:flex;align-items:center}
+.pricing-nav-brand{display:flex;align-items:center;height:36px;overflow:visible}
 .pricing-nav-links{display:flex;gap:4px;align-items:center}
 .pricing-nav-links a{font-size:.88rem;color:var(--text-secondary);font-weight:500;padding:8px 14px;border-radius:8px;text-decoration:none;transition:color .2s,background .2s}
 .pricing-nav-links a:hover,.pricing-nav-links a.active{color:var(--accent);background:var(--accent-light)}
