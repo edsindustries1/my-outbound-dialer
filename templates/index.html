@@ -2382,6 +2382,7 @@
             var baselineSet = false;
             var expandedTranscripts = {};
             var prevCallDataHash = "";
+            var prevTranscriptHash = "";
 
             function pollStatus() {
                 apiFetch("/status")
@@ -2490,26 +2491,35 @@
                         var filterVal = statusFilter.value;
 
                         var callStructureHash = filterVal + "||";
+                        var transcriptHash = "";
                         if (data.calls) {
                             callStructureHash += data.calls.map(function(c) {
                                 return (c.call_id||c.number) + ":" + c.status + ":" + c.status_color + ":" + (c.machine_detected === null ? "n" : c.machine_detected ? "m" : "h") + ":" + (c.transferred?"t":"") + ":" + (c.voicemail_dropped?"v":"");
                             }).join("|");
+                            transcriptHash = data.calls.map(function(c) {
+                                return (c.call_id||c.number) + ":" + (c.transcript ? c.transcript.length : 0);
+                            }).join("|");
                         }
                         var structureChanged = callStructureHash !== prevCallDataHash;
+                        var transcriptChanged = transcriptHash !== (prevTranscriptHash || "");
+                        prevTranscriptHash = transcriptHash;
 
-                        if (!structureChanged && data.calls && data.calls.length > 0) {
+                        if (!structureChanged && transcriptChanged && data.calls && data.calls.length > 0) {
                             data.calls.forEach(function(c) {
-                                if (!c.transcript || c.transcript.length === 0) return;
                                 var trKey = c.call_id || c.number;
                                 var boxes = callBody.querySelectorAll('.transcript-row[data-trkey="' + trKey + '"] .transcript-lines');
                                 boxes.forEach(function(box) {
                                     var linesHtml = "";
-                                    c.transcript.forEach(function(t) {
-                                        var speaker = t.track === "outbound" ? "Agent" : "Caller";
-                                        var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
-                                        var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                                        linesHtml += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
-                                    });
+                                    if (c.transcript && c.transcript.length > 0) {
+                                        c.transcript.forEach(function(t) {
+                                            var speaker = t.track === "outbound" ? "Agent" : "Caller";
+                                            var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                                            var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                                            linesHtml += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                                        });
+                                    } else {
+                                        linesHtml = '<div class="transcript-empty">Transcript will appear once call connects</div>';
+                                    }
                                     box.innerHTML = linesHtml;
                                     box.scrollTop = box.scrollHeight;
                                 });
@@ -2575,7 +2585,7 @@
                                     if (hasTranscript) {
                                         html += '<td><span class="transcript-live-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> LIVE</span></td>';
                                     } else {
-                                        html += '<td><span class="transcript-waiting"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Listening...</span></td>';
+                                        html += '<td><span class="transcript-waiting"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Waiting...</span></td>';
                                     }
                                 } else if (hasTranscript) {
                                     html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\',\'' + trKey + '\')">';
@@ -2599,7 +2609,7 @@
                                             html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
                                         });
                                     } else {
-                                        html += '<div class="transcript-empty">Waiting for speech...</div>';
+                                        html += '<div class="transcript-empty">Transcript will appear once call connects</div>';
                                     }
                                     html += '</div></div></td></tr>';
                                 } else if (hasTranscript) {
