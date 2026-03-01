@@ -93,7 +93,7 @@ def build_lead_confirmation_html(name):
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#ffffff;border:1px solid #d8d8de;border-radius:14px;overflow:hidden;">
 
 <tr><td style="padding:40px 52px 32px;text-align:center;background:#ffffff;">
-  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:100px;width:auto;" />
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:150px;width:auto;" />
   <p style="margin:12px 0 0;font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Your Digital Employee Agency</p>
 </td></tr>
 
@@ -449,7 +449,7 @@ def build_lead_confirmation_html(name):
 
 <tr><td style="padding:32px 52px;text-align:center;background:#ffffff;">
   <hr style="border:none;border-top:1px solid #e8e8ed;margin:0 0 24px;">
-  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:60px;width:auto;margin-bottom:12px;" />
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:90px;width:auto;margin-bottom:12px;" />
   <p style="margin:0 0 4px;font-size:11px;color:#aaa;letter-spacing:0.4px;">This candidate is represented by <strong style="color:#888;">Open Humana</strong></p>
   <p style="margin:0;font-size:11px;color:#bbb;">&copy; 2026 Open Humana &mdash; The Future of the Digital Workforce</p>
 </td></tr>
