@@ -126,7 +126,7 @@ def make_call(number, from_number_override=None):
         "connection_id": connection_id,
         "to": number,
         "from": from_number,
-        "answering_machine_detection": "premium",
+        "answering_machine_detection": "detect_beep",
         "answering_machine_detection_config": {
             "after_greeting_silence_millis": 1000,
             "between_words_silence_millis": 75,
