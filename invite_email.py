@@ -104,7 +104,8 @@ def build_lead_confirmation_html(name):
 <tr><td style="padding:32px 52px 0;background:#ffffff;">
   <p style="margin:0 0 20px;font-size:15px;color:#222;line-height:1.85;">Dear {first_name},</p>
   <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">Thank you for your interest in hiring through <strong style="color:#111;">Open Humana</strong>. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration. Enclosed below is my complete professional resume.</p>
-  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">While I operate on a digital framework, my commitment to delivering measurable results for your business is absolute. I do not take sick days. I do not require training. I am ready to begin my first shift within the hour of your approval.</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">A traditional hire takes 2&ndash;4 weeks of interviews, onboarding, and training before they make a single productive call. I require none of that. I am fully deployed and making calls for your business in under 60 seconds. No ramp-up period. No learning curve. No supervision required.</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">While I operate on a digital framework, my commitment to delivering measurable results for your business is absolute. I do not take sick days. I do not require training. I am ready to begin my first shift the moment you say go.</p>
 </td></tr>
 
 <tr><td style="padding:8px 52px 24px;background:#ffffff;">
@@ -329,6 +330,60 @@ def build_lead_confirmation_html(name):
     </table>
   </td></tr>
 
+  <tr><td style="padding:32px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Traditional Hire vs. Alex</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.4);font-weight:600;" width="200"></td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.4);font-weight:700;text-align:center;" width="160">Human BDR</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Alex</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Time to First Call</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">2&ndash;4 weeks</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Under 60 seconds</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Training Required</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">2&ndash;6 weeks</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">None</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Dials Per Day</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">40&ndash;80</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">500+</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Annual Cost</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">$45,000&ndash;$75,000</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">$1,188/yr</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Sick Days</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">8&ndash;15 per year</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Zero. Ever.</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Turnover Risk</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">High (avg 18 months)</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Zero</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Availability</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">8 hrs/day, 5 days/wk</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">24/7/365</td>
+      </tr>
+    </table>
+  </td></tr>
+
   <tr><td style="padding:32px 48px;">
     <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Compensation &amp; Employment Terms</p>
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
@@ -465,7 +520,7 @@ def send_lead_confirmation_async(to_email, name):
         try:
             first_name = name.split()[0] if name else "Hiring Manager"
             html = build_lead_confirmation_html(name)
-            send_email(to_email, "Alex's Resume — Application for Your Outbound Sales Team (via Open Humana)", html,
+            send_email(to_email, f"Hi {first_name} — Alex's resume, as requested", html,
                        f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops\n- 12+ touchpoints per lead\n\nMonthly Salary: $99/mo. No benefits required. No PTO. No training period.\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
         except Exception as e:
             logger.exception(f"Failed to send lead confirmation to {to_email}: {e}")
