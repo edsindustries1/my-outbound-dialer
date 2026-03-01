@@ -2377,14 +2377,14 @@ def _handle_webhook():
                               vm_pending_customer_number=customer_number,
                               vm_pending_user_id=webhook_user_id)
 
-            def _beep_hard_timeout(ccid, aud_url, is_pvm, cust_num, uid):
+            def _greeting_delay_drop(ccid, aud_url, is_pvm, cust_num, uid):
                 st = get_call_state(ccid)
                 if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
-                    logger.warning(f"No beep after 30s on {ccid}, dropping voicemail now (fallback)")
+                    logger.info(f"Greeting delay elapsed on {ccid}, dropping voicemail now")
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
-                t = threading.Timer(30, _beep_hard_timeout, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t = threading.Timer(5, _greeting_delay_drop, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
                 t.daemon = True
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
@@ -2411,14 +2411,14 @@ def _handle_webhook():
                               vm_pending_customer_number=customer_number,
                               vm_pending_user_id=webhook_user_id)
 
-            def _beep_hard_timeout_unsure(ccid, aud_url, is_pvm, cust_num, uid):
+            def _greeting_delay_drop_unsure(ccid, aud_url, is_pvm, cust_num, uid):
                 st = get_call_state(ccid)
                 if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
-                    logger.warning(f"No beep after 30s on {ccid} (not_sure), dropping voicemail now (fallback)")
+                    logger.info(f"Greeting delay elapsed on {ccid} (not_sure), dropping voicemail now")
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
-                t = threading.Timer(30, _beep_hard_timeout_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t = threading.Timer(5, _greeting_delay_drop_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
                 t.daemon = True
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
@@ -2493,6 +2493,23 @@ def _handle_webhook():
         if transcript_text:
             append_transcript(call_control_id, transcript_text, track, is_final=is_final)
             logger.info(f"Transcript stored [{track}] for {call_control_id}: {transcript_text[:100]}")
+
+            state = get_call_state(call_control_id)
+            if state and state.get("machine_detected") and not state.get("voicemail_dropped") and state.get("vm_pending_audio_url"):
+                vm_keywords = ["leave your message", "leave a message", "after the tone", "after the beep",
+                               "at the tone", "press pound", "unavailable", "voicemail", "not available",
+                               "can't come to the phone", "record your message"]
+                text_lower = transcript_text.lower()
+                if any(kw in text_lower for kw in vm_keywords):
+                    logger.info(f"Voicemail keywords detected in transcription for {call_control_id}, dropping voicemail NOW")
+                    beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
+                    if beep_timer:
+                        beep_timer.cancel()
+                    audio_url = state.get("vm_pending_audio_url")
+                    is_pvm = state.get("vm_pending_personalized", False)
+                    cust_num = state.get("vm_pending_customer_number", "")
+                    uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
+                    _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
 
     # ---- call.recording.saved ----
     elif event_type == "call.recording.saved":
