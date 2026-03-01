@@ -1031,6 +1031,7 @@
                             </select>
                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadTestFromNumbers()" style="font-size:11px;">Refresh</button>
                             <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="testCallBtn">Start Test Call</button>
+                            <button type="button" class="gads-btn gads-btn-sm" id="endTestCallBtn" style="display:none;background:#ef4444;color:#fff;border:none;">End Call</button>
                         </div>
                         <div class="test-results-box" id="testResultsBox" style="display:none;margin-top:12px;">
                             <div class="test-results-title" style="font-weight:600;font-size:13px;margin-bottom:4px;">Test Results</div>
@@ -1863,6 +1864,7 @@
             statusFilter.addEventListener("change", function() { pollStatus(); });
             var campaignStatus = document.getElementById("campaignStatus");
             var testCallBtn = document.getElementById("testCallBtn");
+            var endTestCallBtn = document.getElementById("endTestCallBtn");
             var testNumber = document.getElementById("testNumber");
             var testResult = document.getElementById("testResult");
             var testResultsBox = document.getElementById("testResultsBox");
@@ -2230,6 +2232,7 @@
                             _testCallActive = false;
                             testCallBtn.disabled = false;
                             testCallBtn.textContent = "Start Test Call";
+                            endTestCallBtn.style.display = "none";
                             if (found.voicemail_dropped) {
                                 updateTestStatus("Voicemail dropped! Check your phone to hear the message.", "var(--gads-success)");
                             } else if (found.transferred) {
@@ -2251,6 +2254,7 @@
                 if (!transferNum) { alert("Enter a transfer number for human-answered calls"); return; }
                 testCallBtn.disabled = true;
                 testCallBtn.textContent = "Calling...";
+                endTestCallBtn.style.display = "inline-block";
                 testResultsBox.style.display = "";
                 updateTestStatus("Dialing...", "var(--gads-primary)");
                 _testCallNumber = number;
@@ -2268,6 +2272,7 @@
                             _testCallActive = false;
                             testCallBtn.disabled = false;
                             testCallBtn.textContent = "Start Test Call";
+                            endTestCallBtn.style.display = "none";
                             updateTestStatus(data.error, "var(--gads-error)");
                         } else {
                             _testCallId = data.call_control_id || null;
@@ -2281,8 +2286,40 @@
                         _testCallActive = false;
                         testCallBtn.disabled = false;
                         testCallBtn.textContent = "Start Test Call";
+                        endTestCallBtn.style.display = "none";
                         updateTestStatus("Request failed", "var(--gads-error)");
                     });
+            });
+
+            endTestCallBtn.addEventListener("click", function() {
+                endTestCallBtn.disabled = true;
+                endTestCallBtn.textContent = "Ending...";
+                var payload = {};
+                if (_testCallId) payload.call_control_id = _testCallId;
+                apiFetch("/api/hangup_call", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    endTestCallBtn.disabled = false;
+                    endTestCallBtn.textContent = "End Call";
+                    if (data.error) {
+                        updateTestStatus("End call failed: " + data.error, "var(--gads-error)");
+                    } else {
+                        _testCallActive = false;
+                        testCallBtn.disabled = false;
+                        testCallBtn.textContent = "Start Test Call";
+                        endTestCallBtn.style.display = "none";
+                        updateTestStatus("Call ended by you", "#F59E0B");
+                    }
+                })
+                .catch(function(e) {
+                    if (e.message === "auth") return;
+                    endTestCallBtn.disabled = false;
+                    endTestCallBtn.textContent = "End Call";
+                });
             });
 
             // ---- Start Campaign ----

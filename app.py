@@ -1355,6 +1355,32 @@ def test_call():
         return jsonify({"error": f"Failed to place call: {call_error}"}), 500
 
 
+@app.route("/api/hangup_call", methods=["POST"])
+@login_required
+def api_hangup_call():
+    data = request.get_json() or {}
+    ccid = data.get("call_control_id", "").strip()
+    if not ccid:
+        snapshot = call_states_snapshot()
+        for cid, st in snapshot.items():
+            if str(st.get("user_id")) == str(current_user.id) and st.get("status") not in ("hangup", "voicemail_complete", "completed"):
+                ccid = cid
+                break
+    if not ccid:
+        return jsonify({"error": "No active call found"}), 404
+    state = get_call_state(ccid)
+    if not state or str(state.get("user_id")) != str(current_user.id):
+        return jsonify({"error": "Call not found or not yours"}), 404
+    try:
+        hangup_call(ccid)
+        update_call_state(ccid, status="hangup", status_description="Ended by user", status_color="yellow")
+        logger.info(f"Call {ccid} ended manually by user {current_user.id}")
+        return jsonify({"message": "Call ended"})
+    except Exception as e:
+        logger.error(f"Failed to hangup call {ccid}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # ---- Stop Campaign ----
 @app.route("/stop", methods=["POST"])
 @login_required
