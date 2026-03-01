@@ -2309,7 +2309,7 @@ def _handle_webhook():
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
-        timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
+        timer = threading.Timer(12.0, _amd_fallback, args=[call_control_id])
         timer.daemon = True
         _amd_timers[call_control_id] = timer
         timer.start()
@@ -2322,7 +2322,8 @@ def _handle_webhook():
             return "", 200
 
         result = payload.get("result", "unknown")
-        logger.info(f"AMD result: {result} for {call_control_id}")
+        amd_type = payload.get("type", "unknown")
+        logger.info(f"AMD result: {result} (type={amd_type}) for {call_control_id} | payload keys: {list(payload.keys())}")
 
         timer = _amd_timers.pop(call_control_id, None)
         if timer:
@@ -2384,16 +2385,13 @@ def _handle_webhook():
                               vm_pending_user_id=webhook_user_id)
 
             def _beep_hard_timeout(ccid, aud_url, is_pvm, cust_num, uid):
-                """If no beep after 30s, play voicemail anyway."""
-                import time
-                time.sleep(30)
                 st = get_call_state(ccid)
                 if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
                     logger.warning(f"No beep after 30s on {ccid}, dropping voicemail now (fallback)")
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
-                t = threading.Timer(0, _beep_hard_timeout, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t = threading.Timer(30, _beep_hard_timeout, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
                 t.daemon = True
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
@@ -2403,27 +2401,37 @@ def _handle_webhook():
                 hangup_call(call_control_id)
 
         elif result == "not_sure":
-            update_call_state(call_control_id, machine_detected=False, status="human_detected",
-                              amd_result="not_sure", status_description="Detection unclear - treating as human", status_color="yellow")
+            update_call_state(call_control_id, machine_detected=True, status="machine_detected",
+                              amd_result="not_sure", status_description="Detection unclear - treating as machine (safe mode)", status_color="yellow")
+            logger.info(f"AMD not_sure on {call_control_id}, treating as MACHINE (safe) - will drop voicemail")
+
             camp = get_campaign(user_id=webhook_user_id)
-            transfer_num = camp.get("transfer_number") or ""
-            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
-            if transfer_num and mark_transferred(call_control_id):
-                logger.info(f"AMD not_sure on {call_control_id}, treating as HUMAN - transferring to {transfer_num} (caller ID: {customer_num})")
-                success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
-                if success:
-                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
-                    logger.info(f"Campaign paused for transfer on {call_control_id}")
-                    update_call_state(call_control_id, status="transferred",
-                                      status_description="Answered by human - transferred (campaign paused)", status_color="green")
-                else:
-                    logger.error(f"Transfer failed for {call_control_id} (not_sure), hanging up")
-                    update_call_state(call_control_id, status="transfer_failed",
-                                      status_description="Transfer failed", status_color="red")
-                    hangup_call(call_control_id)
+            state = get_call_state(call_control_id)
+            customer_number = (state or {}).get("number", "")
+            personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
+            audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
+            is_personalized = bool(personalized_url)
+
+            update_call_state(call_control_id,
+                              vm_pending_audio_url=audio_url,
+                              vm_pending_personalized=is_personalized,
+                              vm_pending_customer_number=customer_number,
+                              vm_pending_user_id=webhook_user_id)
+
+            def _beep_hard_timeout_unsure(ccid, aud_url, is_pvm, cust_num, uid):
+                st = get_call_state(ccid)
+                if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
+                    logger.warning(f"No beep after 30s on {ccid} (not_sure), dropping voicemail now (fallback)")
+                    _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
+
+            if audio_url:
+                t = threading.Timer(30, _beep_hard_timeout_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t.daemon = True
+                t.start()
+                _amd_timers[f"beep_{call_control_id}"] = t
             else:
-                logger.warning(f"AMD not_sure on {call_control_id}, no transfer number, hanging up")
-                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
+                logger.error(f"No audio URL for voicemail on {call_control_id} (not_sure)")
+                update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
                 hangup_call(call_control_id)
 
         else:
