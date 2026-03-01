@@ -309,7 +309,7 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .footer{position:relative;background:#0a0a1a;overflow:hidden;margin-top:auto}
 .footer-glow{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#333,#6366f1,#333,transparent);background-size:200% 100%;animation:footerGlow 4s ease infinite}
 @keyframes footerGlow{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.footer-main{position:relative;border-top:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.footer-main{position:relative;border-top:1px solid rgba(255,255,255,0.06);background:rgba(10,10,26,0.98)}
 .footer-inner{max-width:1240px;margin:0 auto;padding:64px 32px 48px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 1.4fr;gap:40px}
 .footer-brand{display:flex;flex-direction:column;gap:16px}
 .footer-logo-link{display:flex;align-items:center;height:50px;overflow:visible}

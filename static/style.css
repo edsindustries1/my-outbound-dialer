@@ -116,7 +116,6 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .bg-glow {
     position: fixed;
     border-radius: 50%;
-    filter: blur(120px);
     opacity: 0.06;
     pointer-events: none;
     z-index: 0;
@@ -139,12 +138,13 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     display: flex;
     flex-direction: column;
     z-index: 100;
-    transition: width 0.3s var(--gads-transition);
-    box-shadow: 2px 0 12px rgba(0,0,0,0.03);
+    transition: width 0.2s var(--gads-transition);
+    will-change: width;
+    contain: layout style;
 }
 [data-theme="dark"] .gads-sidebar {
     background: var(--gads-surface);
-    box-shadow: 2px 0 20px rgba(0,0,0,0.2);
+    border-right-color: rgba(255,255,255,0.08);
 }
 .gads-sidebar-collapsed { width: 56px; }
 .gads-sidebar-collapsed .gads-logo-text,
@@ -268,9 +268,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     position: sticky;
     top: 0;
     height: var(--gads-topbar-height);
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    background: rgba(255,255,255,0.97);
     border-bottom: 1px solid rgba(229,231,235,0.6);
     display: flex;
     align-items: center;
@@ -280,7 +278,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     z-index: 90;
 }
 [data-theme="dark"] .gads-topbar {
-    background: rgba(31,31,31,0.88);
+    background: rgba(31,31,31,0.97);
     border-bottom-color: rgba(255,255,255,0.08);
 }
 
@@ -1347,18 +1345,16 @@ label {
 .gads-wizard-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0,0,0,0.55);
     z-index: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: overlayFadeIn 0.3s ease;
+    animation: overlayFadeIn 0.25s ease;
 }
 @keyframes overlayFadeIn {
-    from { opacity: 0; backdrop-filter: blur(0); }
-    to { opacity: 1; backdrop-filter: blur(8px); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 .gads-wizard-panel {
     background: var(--gads-surface);
@@ -3373,9 +3369,7 @@ label {
     font-weight: 500;
     pointer-events: auto;
     animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04);
     max-width: 400px;
 }
 .toast-success {
@@ -3608,17 +3602,13 @@ label {
     transition: all 0.3s;
 }
 
-/* Card glassmorphism effect for dark theme */
+/* Card dark theme */
 [data-theme="dark"] .gads-card {
-    background: rgba(22,32,50,0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(22,32,50,0.95);
     border-color: rgba(37,48,71,0.6);
 }
 [data-theme="dark"] .gads-kpi-card {
-    background: rgba(22,32,50,0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(22,32,50,0.95);
     border-color: rgba(37,48,71,0.6);
 }
 
@@ -3658,11 +3648,9 @@ label {
     50% { background-position: 100% 0; }
 }
 
-/* Wizard panel glassmorphism */
+/* Wizard panel dark */
 [data-theme="dark"] .gads-wizard-panel {
-    background: rgba(22,32,50,0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(22,32,50,0.98);
 }
 
 /* Enhanced wizard stepper */

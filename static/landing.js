@@ -11,14 +11,20 @@
   var nav = document.querySelector('.nav');
   var navProgress = document.getElementById('navProgress');
 
+  var scrollTicking = false;
   function onScroll() {
-    var scrollY = window.scrollY;
-    if (nav) nav.classList.toggle('scrolled', scrollY > 60);
-    if (navProgress) {
-      var docH = document.documentElement.scrollHeight - window.innerHeight;
-      var progress = docH > 0 ? Math.min(scrollY / docH, 1) : 0;
-      navProgress.style.transform = 'scaleX(' + progress + ')';
-    }
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(function () {
+      var scrollY = window.scrollY;
+      if (nav) nav.classList.toggle('scrolled', scrollY > 60);
+      if (navProgress) {
+        var docH = document.documentElement.scrollHeight - window.innerHeight;
+        var progress = docH > 0 ? Math.min(scrollY / docH, 1) : 0;
+        navProgress.style.transform = 'scaleX(' + progress + ')';
+      }
+      scrollTicking = false;
+    });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
@@ -108,14 +114,21 @@
   if (canvas) {
     var ctx = canvas.getContext('2d');
     var particles = [];
-    var particleCount = 50;
+    var particleCount = 35;
+    var heroCanvasPaused = false;
+    var heroCanvasId = null;
+    var heroFrame = 0;
 
     function resizeCanvas() {
       canvas.width = canvas.parentElement.offsetWidth;
       canvas.height = canvas.parentElement.offsetHeight;
     }
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeCanvas, 150);
+    });
 
     for (var i = 0; i < particleCount; i++) {
       particles.push({
@@ -128,7 +141,11 @@
       });
     }
 
+    var connDistSq = 120 * 120;
     function drawParticles() {
+      if (heroCanvasPaused) { heroCanvasId = null; return; }
+      heroFrame++;
+      if (heroFrame % 2 !== 0) { heroCanvasId = requestAnimationFrame(drawParticles); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (var j = 0; j < particles.length; j++) {
         var p = particles[j];
@@ -142,23 +159,36 @@
         ctx.fillStyle = 'rgba(255,255,255,' + p.a + ')';
         ctx.fill();
       }
+      ctx.lineWidth = 0.5;
       for (var a = 0; a < particles.length; a++) {
         for (var b = a + 1; b < particles.length; b++) {
           var dx = particles[a].x - particles[b].x;
           var dy = particles[a].y - particles[b].y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
+          var dSq = dx * dx + dy * dy;
+          if (dSq < connDistSq) {
+            var alpha = 0.06 * (1 - Math.sqrt(dSq) / 120);
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);
             ctx.lineTo(particles[b].x, particles[b].y);
-            ctx.strokeStyle = 'rgba(255,255,255,' + (0.06 * (1 - dist / 120)) + ')';
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
             ctx.stroke();
           }
         }
       }
-      requestAnimationFrame(drawParticles);
+      heroCanvasId = requestAnimationFrame(drawParticles);
     }
+
+    if ('IntersectionObserver' in window) {
+      var heroCanvasObs = new IntersectionObserver(function (entries) {
+        heroCanvasPaused = !entries[0].isIntersecting;
+        if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+      }, { threshold: 0 });
+      heroCanvasObs.observe(canvas.parentElement);
+    }
+    document.addEventListener('visibilitychange', function () {
+      heroCanvasPaused = document.hidden;
+      if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+    });
     drawParticles();
   }
 
@@ -526,11 +556,33 @@
     }, 400);
   }
 
+  var testimonialTimer = null;
+  var testimonialVisible = false;
+  function startTestimonialTimer() {
+    if (testimonialTimer) return;
+    testimonialTimer = setInterval(showTestimonials, 5000);
+  }
+  function stopTestimonialTimer() {
+    if (testimonialTimer) { clearInterval(testimonialTimer); testimonialTimer = null; }
+  }
   if (redditFeed) {
     redditFeed.style.transition = 'opacity .4s ease';
     shuffleArray(testimonials);
     showTestimonials();
-    setInterval(showTestimonials, 5000);
+    if ('IntersectionObserver' in window) {
+      var feedObs = new IntersectionObserver(function (entries) {
+        testimonialVisible = entries[0].isIntersecting;
+        if (testimonialVisible) startTestimonialTimer();
+        else stopTestimonialTimer();
+      }, { threshold: 0 });
+      feedObs.observe(redditFeed);
+    } else {
+      startTestimonialTimer();
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopTestimonialTimer();
+      else if (testimonialVisible) startTestimonialTimer();
+    });
   }
 
   /* ========== REDDIT VOTE BUTTONS ========== */
