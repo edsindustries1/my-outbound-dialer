@@ -83,46 +83,315 @@ def build_invite_html(invite_token, grant_free_access=False):
 
 def build_lead_confirmation_html(name):
     base = _get_base_url()
-    first_name = name.split()[0] if name else "there"
+    first_name = name.split()[0] if name else "Hiring Manager"
     return f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f4f4f7;font-family:'Helvetica Neue',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 20px;">
+<body style="margin:0;padding:0;background:#ebebf0;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ebebf0;padding:40px 20px;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#ffffff;border:1px solid #d8d8de;border-radius:14px;overflow:hidden;">
 
-<tr><td style="padding:36px 52px;text-align:center;background:#ffffff;">
-  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:80px;width:auto;" />
+<tr><td style="padding:40px 52px 32px;text-align:center;background:#ffffff;">
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:100px;width:auto;" />
+  <p style="margin:12px 0 0;font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Your Digital Employee Agency</p>
 </td></tr>
 
 <tr><td style="padding:0 52px;background:#ffffff;">
-  <hr style="border:none;border-top:1px solid #e5e7eb;margin:0;">
+  <hr style="border:none;border-top:1px solid #e8e8ed;margin:0;">
 </td></tr>
 
-<tr><td style="padding:32px 52px 24px;background:#ffffff;">
-  <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;letter-spacing:-0.02em;">Thanks for reaching out, {first_name}!</h1>
-  <p style="margin:0 0 16px;font-size:15px;color:#4b5563;line-height:1.75;">We received your request and our team will reach out to you within 24 hours to discuss how Alex can help your business scale its outbound sales.</p>
-  <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.75;">In the meantime, here's what Alex can do for your team:</p>
+<tr><td style="padding:32px 52px 0;background:#ffffff;">
+  <p style="margin:0 0 20px;font-size:15px;color:#222;line-height:1.85;">Dear {first_name},</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">Thank you for your interest in hiring through <strong style="color:#111;">Open Humana</strong>. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration. Enclosed below is my complete professional resume.</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">While I operate on a digital framework, my commitment to delivering measurable results for your business is absolute. I do not take sick days. I do not require training. I am ready to begin my first shift within the hour of your approval.</p>
 </td></tr>
 
-<tr><td style="padding:0 52px 24px;background:#ffffff;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;">
-    <tr><td style="padding:20px 24px;">
-      <p style="margin:0 0 10px;font-size:14px;color:#111827;line-height:1.7;"><strong>500+ automated dials per day</strong> — while your team focuses on closing</p>
-      <p style="margin:0 0 10px;font-size:14px;color:#111827;line-height:1.7;"><strong>AI-personalized voicemails</strong> — every message tailored to the prospect</p>
-      <p style="margin:0 0 10px;font-size:14px;color:#111827;line-height:1.7;"><strong>Live call transfers</strong> — warm handoffs when a real prospect picks up</p>
-      <p style="margin:0;font-size:14px;color:#111827;line-height:1.7;"><strong>Real-time transcription</strong> — every call documented automatically</p>
+<tr><td style="padding:8px 52px 24px;background:#ffffff;">
+  <p style="margin:0;font-size:15px;color:#444;line-height:1.85;">Respectfully yours,</p>
+  <p style="margin:4px 0 0;font-size:17px;color:#111;font-weight:700;">Alex</p>
+  <p style="margin:2px 0 0;font-size:12px;color:#888;letter-spacing:0.5px;">Senior Digital Associate &bull; Open Humana</p>
+</td></tr>
+
+<tr><td style="padding:0 36px 0;background:#ffffff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a1a;border-radius:14px;overflow:hidden;">
+
+  <tr><td style="padding:44px 48px 0;text-align:center;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="text-align:center;">
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;"><tr>
+          <td width="80" height="80" style="background:#1a1a2e;border-radius:50%;text-align:center;vertical-align:middle;font-size:32px;font-weight:800;color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;">A</td>
+        </tr></table>
+        <p style="margin:0;font-size:36px;font-weight:800;color:#ffffff;letter-spacing:6px;">ALEX</p>
+        <p style="margin:10px 0 0;font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:3px;text-transform:uppercase;">Senior Digital Associate &bull; BDR Specialist</p>
+        <p style="margin:6px 0 0;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:1px;">Represented by Open Humana &mdash; Digital Employee Agency</p>
+      </td>
+    </tr></table>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:28px 0 0;">
+  </td></tr>
+
+  <tr><td style="padding:0 48px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+      <tr>
+        <td width="33%" style="text-align:center;padding:12px 0;vertical-align:top;">
+          <p style="margin:0;font-size:28px;font-weight:800;color:#ffffff;">500+</p>
+          <p style="margin:4px 0 0;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;">Dials Per Day</p>
+        </td>
+        <td width="33%" style="text-align:center;padding:12px 0;vertical-align:top;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06);">
+          <p style="margin:0;font-size:28px;font-weight:800;color:#ffffff;">50+</p>
+          <p style="margin:4px 0 0;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;">Languages</p>
+        </td>
+        <td width="33%" style="text-align:center;padding:12px 0;vertical-align:top;">
+          <p style="margin:0;font-size:28px;font-weight:800;color:#ffffff;">24/7</p>
+          <p style="margin:4px 0 0;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;">Availability</p>
+        </td>
+      </tr>
+    </table>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:20px 0 0;">
+  </td></tr>
+
+  <tr><td style="padding:28px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Professional Objective</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
+    <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.85;">To eliminate the manual dialing gap in your sales operation and ensure 100% lead engagement across every contact in your pipeline. I exist to turn cold lists into warm conversations and dead leads into revenue &mdash; at scale, without supervision, and without ever clocking out.</p>
+  </td></tr>
+
+  <tr><td style="padding:32px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Professional Experience</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 18px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;padding:0 0 4px;">
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Senior Digital BDR &mdash; Real Estate Sector</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Phoenix, AZ &bull; 90-Day Engagement</p>
+        </td>
+      </tr>
+      <tr><td style="padding:8px 0 0;">
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Managed entire cold calling operation for a mid-size brokerage. Increased lead conversion rate by 40% within 90 days. Monthly closings rose from 12 to 17 &mdash; a direct result of reaching more prospects faster than any human team could.</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;padding:0 0 4px;">
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Outbound Operations Lead &mdash; Solar Energy</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Houston, TX &bull; Ongoing Engagement</p>
+        </td>
+      </tr>
+      <tr><td style="padding:8px 0 0;">
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Executed 10,000+ outbound calls monthly with zero downtime. Appointment-setting rate doubled within the first 60 days. Eliminated missed follow-ups entirely through automated persistence protocols.</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;padding:0 0 4px;">
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Lead Generation Specialist &mdash; Insurance</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Miami, FL &bull; 60-Day Sprint</p>
+        </td>
+      </tr>
+      <tr><td style="padding:8px 0 0;">
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Generated 340 qualified leads at $0.29 per lead for an insurance brokerage. The client's human team was averaging $14 per lead prior to my deployment &mdash; a 48x cost reduction in lead acquisition.</p>
+      </td></tr>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px;">
+      <tr>
+        <td style="vertical-align:top;padding:0 0 4px;">
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Re-Engagement Campaign Manager &mdash; Home Services</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Nationwide &bull; Quarterly Campaign</p>
+        </td>
+      </tr>
+      <tr><td style="padding:8px 0 0;">
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Revived 22% of a dormant lead database that the client had written off. Dead leads were re-engaged through personalized voicemail sequences and multi-touch follow-up protocols, converting them into paying customers.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:32px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Core Competencies</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 18px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;" width="8">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 16px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Extreme Persistence &amp; Follow-Up</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">12+ touchpoints per lead. Programmed to never accept a single &lsquo;no&rsquo; as final. Every lead gets worked until converted or exhausted.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 16px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">AI-Personalized Voicemail Drops</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">Every voicemail references the prospect by name and includes context-specific details. Recipients call back because the message feels personal &mdash; not automated.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 16px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Instant Live Call Transfer</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">When a prospect picks up, they are bridged to your team in under 200 milliseconds. Warm handoffs, zero dead air, seamless transition.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 16px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Answering Machine Detection</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">Advanced AMD technology distinguishes between humans and machines in real-time. Humans get transferred. Machines get a perfectly timed voicemail drop.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 16px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Real-Time Call Transcription</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">Every call is transcribed and documented automatically. Full searchable records for compliance, coaching, and deal tracking.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 4px;vertical-align:top;">
+          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+        </td>
+        <td style="padding:0 0 4px 14px;vertical-align:top;">
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Multi-Lingual Fluency</p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">Fluent in 50+ languages. Can switch mid-conversation if needed. No interpreter fees, no accent barriers, no limitations.</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:32px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Industries Served</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:rgba(255,255,255,0.55);">
+      <tr>
+        <td style="padding:5px 0;" width="50%">&#9656; Real Estate &amp; Property</td>
+        <td style="padding:5px 0;">&#9656; Solar &amp; Renewable Energy</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;">&#9656; Insurance &amp; Financial Services</td>
+        <td style="padding:5px 0;">&#9656; Home Services &amp; Contracting</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;">&#9656; Mortgage &amp; Lending</td>
+        <td style="padding:5px 0;">&#9656; SaaS &amp; Technology</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 0;" colspan="2">&#9656; Healthcare, Legal, &amp; Professional Services</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:32px 48px 0;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Technical Specifications</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Dialing Capacity</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">500+ personalized dials per day, per instance</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Transfer Speed</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Sub-200ms live call bridge to your team</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Uptime</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">24/7/365 &mdash; zero downtime, zero sick days</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Voice Technology</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">ElevenLabs AI voice cloning with SSML</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Touchpoints Per Lead</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">12+ automated follow-up sequences</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Compliance</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">TCPA-aware dialing with DNC list respect</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:32px 48px;">
+    <p style="margin:0 0 4px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2.5px;">Compensation &amp; Employment Terms</p>
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Monthly Salary</td>
+        <td style="padding:8px 0;color:#22c55e;font-weight:700;font-size:15px;">$99/mo (Agency Fee)</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Health &amp; Benefits</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">$0.00 &mdash; Self-maintained digital infrastructure</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Vacation / PTO</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">None required. Peak performance is my default state.</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Training Period</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">None. Pre-trained on your industry and scripts.</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Management Overhead</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Zero. Fully autonomous after campaign setup.</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Notice Period</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Cancel anytime. 7-day money-back guarantee.</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:0 48px 36px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;">
+      <tr><td style="padding:20px 24px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2px;font-weight:600;">References</p>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.8;">Currently serving <strong style="color:rgba(255,255,255,0.8);">200+ companies</strong> across Real Estate, Solar, Insurance, Home Services, and Financial Services. Available upon request.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+
+</table>
+</td></tr>
+
+<tr><td style="padding:32px 52px 0;text-align:center;background:#ffffff;">
+  <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111;">Ready to bring Alex on board?</p>
+  <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.7;">Our team will reach out within 24 hours to discuss deployment. In the meantime, you can explore the platform or schedule Alex&rsquo;s first shift today.</p>
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr><td style="background:#0a0a1a;border-radius:10px;">
+      <a href="{base}/pricing" style="display:inline-block;padding:16px 48px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">Hire Alex Now &rarr;</a>
     </td></tr>
   </table>
 </td></tr>
 
-<tr><td style="padding:0 52px 32px;background:#ffffff;" align="center">
-  <a href="{base}" style="display:inline-block;padding:14px 36px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Learn More About Alex</a>
-</td></tr>
-
-<tr><td style="background:#f9fafb;padding:24px 52px;text-align:center;border-top:1px solid #e5e7eb;">
-  <p style="margin:0;font-size:12px;color:#9ca3af;">&copy; 2026 Open Humana &mdash; Your Digital Employee Agency</p>
+<tr><td style="padding:32px 52px;text-align:center;background:#ffffff;">
+  <hr style="border:none;border-top:1px solid #e8e8ed;margin:0 0 24px;">
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:60px;width:auto;margin-bottom:12px;" />
+  <p style="margin:0 0 4px;font-size:11px;color:#aaa;letter-spacing:0.4px;">This candidate is represented by <strong style="color:#888;">Open Humana</strong></p>
+  <p style="margin:0;font-size:11px;color:#bbb;">&copy; 2026 Open Humana &mdash; The Future of the Digital Workforce</p>
 </td></tr>
 
 </table>
@@ -194,9 +463,10 @@ def send_invite_email_async(to_email, invite_token, grant_free_access=False):
 def send_lead_confirmation_async(to_email, name):
     def _send():
         try:
+            first_name = name.split()[0] if name else "Hiring Manager"
             html = build_lead_confirmation_html(name)
-            send_email(to_email, "Welcome to OpenHumana — We'll be in touch shortly!", html,
-                       f"Hi {name},\n\nThanks for your interest in OpenHumana. Our team will reach out within 24 hours.\n\nBest,\nThe OpenHumana Team")
+            send_email(to_email, "Alex's Resume — Application for Your Outbound Sales Team (via Open Humana)", html,
+                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops\n- 12+ touchpoints per lead\n\nMonthly Salary: $99/mo. No benefits required. No PTO. No training period.\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
         except Exception as e:
             logger.exception(f"Failed to send lead confirmation to {to_email}: {e}")
     threading.Thread(target=_send, daemon=True).start()
