@@ -2128,6 +2128,34 @@ def pvm_clear_all():
     return jsonify({"message": "Personalized audio cleared"})
 
 
+def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_number, user_id):
+    """Play voicemail audio and append transcript. Called after beep or timeout."""
+    if not mark_voicemail_dropped(call_control_id):
+        return
+    from datetime import datetime as dt
+    update_call_state(call_control_id,
+                      status_description="Dropping voicemail..." if not is_personalized else "Dropping personalized voicemail...",
+                      status_color="blue",
+                      vm_pending_audio_url=None,
+                      vm_playback_start=dt.utcnow().timestamp())
+    if is_personalized:
+        logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
+    logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
+    play_audio(call_control_id, audio_url)
+    vm_script_text = None
+    if is_personalized and customer_number:
+        audio_map = pvm_get_audio_map()
+        digits = re.sub(r'[^\d+]', '', customer_number)
+        for key, val in audio_map.items():
+            if key.lstrip("+") == digits.lstrip("+"):
+                vm_script_text = val.get("script", "")
+                break
+    if not vm_script_text:
+        vm_script_text = get_voicemail_script(user_id=user_id)
+    if vm_script_text:
+        append_transcript(call_control_id, vm_script_text, track="outbound", is_final=True)
+
+
 # ---- Telnyx Webhook Handler ----
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -2313,38 +2341,40 @@ def _handle_webhook():
 
         elif result == "machine":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
-                              amd_result="machine", status_description="Machine detected - dropping voicemail", status_color="blue")
-            logger.info(f"MACHINE detected on {call_control_id}, playing voicemail immediately")
+                              amd_result="machine", status_description="Machine detected - waiting for beep", status_color="blue")
+            logger.info(f"MACHINE detected on {call_control_id}, waiting for greeting to end before playing voicemail")
 
-            if mark_voicemail_dropped(call_control_id):
-                update_call_state(call_control_id, status_description="Dropping voicemail...", status_color="blue")
-                camp = get_campaign(user_id=webhook_user_id)
-                state = get_call_state(call_control_id)
-                customer_number = (state or {}).get("number", "")
-                personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
-                audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
-                if personalized_url:
-                    logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
-                    update_call_state(call_control_id, status_description="Dropping personalized voicemail...", status_color="blue")
-                if audio_url:
-                    logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
-                    play_audio(call_control_id, audio_url)
-                    vm_script_text = None
-                    if personalized_url and customer_number:
-                        audio_map = pvm_get_audio_map()
-                        digits = re.sub(r'[^\d+]', '', customer_number)
-                        for key, val in audio_map.items():
-                            if key.lstrip("+") == digits.lstrip("+"):
-                                vm_script_text = val.get("script", "")
-                                break
-                    if not vm_script_text:
-                        vm_script_text = get_voicemail_script(user_id=webhook_user_id)
-                    if vm_script_text:
-                        append_transcript(call_control_id, vm_script_text, track="outbound", is_final=True)
-                else:
-                    logger.error(f"No audio URL configured for voicemail on {call_control_id}")
-                    update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
-                    hangup_call(call_control_id)
+            camp = get_campaign(user_id=webhook_user_id)
+            state = get_call_state(call_control_id)
+            customer_number = (state or {}).get("number", "")
+            personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
+            audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
+            is_personalized = bool(personalized_url)
+
+            update_call_state(call_control_id,
+                              vm_pending_audio_url=audio_url,
+                              vm_pending_personalized=is_personalized,
+                              vm_pending_customer_number=customer_number,
+                              vm_pending_user_id=webhook_user_id)
+
+            def _beep_hard_timeout(ccid, aud_url, is_pvm, cust_num, uid):
+                """If no beep after 30s, play voicemail anyway."""
+                import time
+                time.sleep(30)
+                st = get_call_state(ccid)
+                if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
+                    logger.warning(f"No beep after 30s on {ccid}, dropping voicemail now (fallback)")
+                    _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
+
+            if audio_url:
+                t = threading.Timer(0, _beep_hard_timeout, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t.daemon = True
+                t.start()
+                _amd_timers[f"beep_{call_control_id}"] = t
+            else:
+                logger.error(f"No audio URL configured for voicemail on {call_control_id}")
+                update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
+                hangup_call(call_control_id)
 
         elif result == "not_sure":
             update_call_state(call_control_id, machine_detected=False, status="human_detected",
@@ -2385,41 +2415,37 @@ def _handle_webhook():
         beep_result = payload.get("result", "unknown")
         logger.info(f"Voicemail greeting ended on {call_control_id}, result: {beep_result}")
 
-        if state.get("voicemail_dropped"):
-            camp = get_campaign(user_id=get_user_for_call(call_control_id))
-            customer_number = state.get("number", "")
-            personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
-            audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=get_user_for_call(call_control_id))
-            if audio_url and beep_result == "beep_detected":
-                logger.info(f"Beep detected! Restarting voicemail from beginning on {call_control_id}")
-                update_call_state(call_control_id, vm_beep_replay=True)
-                from datetime import datetime as dt
-                update_call_state(call_control_id, vm_playback_start=dt.utcnow().timestamp())
-                play_audio(call_control_id, audio_url)
-            else:
-                logger.info(f"Greeting ended on {call_control_id}, audio already playing")
+        beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
+        if beep_timer:
+            beep_timer.cancel()
+
+        if not state.get("voicemail_dropped") and state.get("vm_pending_audio_url"):
+            audio_url = state.get("vm_pending_audio_url")
+            is_pvm = state.get("vm_pending_personalized", False)
+            cust_num = state.get("vm_pending_customer_number", "")
+            uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
+            logger.info(f"Greeting ended ({beep_result}) on {call_control_id} — dropping voicemail now (after beep)")
+            _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
+        elif state.get("voicemail_dropped"):
+            logger.info(f"Greeting ended on {call_control_id}, voicemail already playing")
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
         state = get_call_state(call_control_id)
         if state and state.get("voicemail_dropped"):
-            if state.get("vm_beep_replay"):
-                update_call_state(call_control_id, vm_beep_replay=False)
-                logger.info(f"Playback ended on {call_control_id} but beep replay is active — waiting for post-beep playback to finish")
-            else:
-                vm_duration = None
-                vm_start = state.get("vm_playback_start")
-                if vm_start:
-                    from datetime import datetime as dt
-                    vm_duration = round(dt.utcnow().timestamp() - vm_start)
-                desc = "Voicemail dropped successfully"
-                if vm_duration is not None:
-                    desc = f"Voicemail dropped successfully — {vm_duration}s"
-                update_call_state(call_control_id, status="voicemail_complete",
-                                  status_description=desc, status_color="green",
-                                  vm_duration=vm_duration)
-                logger.info(f"Voicemail playback complete on {call_control_id} ({vm_duration}s), hanging up")
-                hangup_call(call_control_id)
+            vm_duration = None
+            vm_start = state.get("vm_playback_start")
+            if vm_start:
+                from datetime import datetime as dt
+                vm_duration = round(dt.utcnow().timestamp() - vm_start)
+            desc = "Voicemail dropped successfully"
+            if vm_duration is not None:
+                desc = f"Voicemail dropped successfully — {vm_duration}s"
+            update_call_state(call_control_id, status="voicemail_complete",
+                              status_description=desc, status_color="green",
+                              vm_duration=vm_duration)
+            logger.info(f"Voicemail playback complete on {call_control_id} ({vm_duration}s), hanging up")
+            hangup_call(call_control_id)
 
     # ---- call.transcription ----
     elif event_type == "call.transcription":

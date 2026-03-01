@@ -389,7 +389,6 @@ def mark_voicemail_dropped(call_control_id):
             state["voicemail_dropped"] = True
             state["playback_started"] = True
             state["status"] = "voicemail_playing"
-            state["vm_playback_start"] = datetime.utcnow().timestamp()
             return True
         return False
 
