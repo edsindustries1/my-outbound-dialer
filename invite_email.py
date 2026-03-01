@@ -217,7 +217,7 @@ def build_lead_confirmation_html(name):
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;" width="8">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Extreme Persistence &amp; Follow-Up</p>
@@ -226,7 +226,7 @@ def build_lead_confirmation_html(name):
       </tr>
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">AI-Personalized Voicemail Drops</p>
@@ -235,7 +235,7 @@ def build_lead_confirmation_html(name):
       </tr>
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Instant Live Call Transfer</p>
@@ -244,7 +244,7 @@ def build_lead_confirmation_html(name):
       </tr>
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Answering Machine Detection</p>
@@ -253,7 +253,7 @@ def build_lead_confirmation_html(name):
       </tr>
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Real-Time Call Transcription</p>
@@ -262,7 +262,7 @@ def build_lead_confirmation_html(name):
       </tr>
       <tr>
         <td style="padding:0 0 4px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#22c55e;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 4px 14px;vertical-align:top;">
           <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Multi-Lingual Fluency</p>
@@ -337,49 +337,49 @@ def build_lead_confirmation_html(name):
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.4);font-weight:600;" width="200"></td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.4);font-weight:700;text-align:center;" width="160">Human BDR</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Alex</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">Alex</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Time to First Call</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">2&ndash;4 weeks</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Under 60 seconds</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">Under 60 seconds</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Training Required</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">2&ndash;6 weeks</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">None</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">None</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Dials Per Day</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">40&ndash;80</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">500+</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">500+</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Annual Cost</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">$45,000&ndash;$75,000</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">$1,188/yr</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">From $99/mo + usage</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Sick Days</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">8&ndash;15 per year</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Zero. Ever.</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">Zero. Ever.</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Turnover Risk</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">High (avg 18 months)</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">Zero</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">Zero</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Availability</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">8 hrs/day, 5 days/wk</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;text-align:center;">24/7/365</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">24/7/365</td>
       </tr>
     </table>
   </td></tr>
@@ -389,8 +389,13 @@ def build_lead_confirmation_html(name):
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
       <tr>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Monthly Salary</td>
-        <td style="padding:8px 0;color:#22c55e;font-weight:700;font-size:15px;">$99/mo (Agency Fee)</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Monthly Retainer</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">$99/mo &mdash; covers platform access, all features, and unlimited campaigns</td>
+      </tr>
+      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
+      <tr>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Usage</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Billed per successful call only. You are never charged for unanswered dials or failed attempts.</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -415,7 +420,7 @@ def build_lead_confirmation_html(name):
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Notice Period</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Cancel anytime. 7-day money-back guarantee.</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Cancel anytime. No contracts, no commitments.</td>
       </tr>
     </table>
   </td></tr>
