@@ -677,6 +677,9 @@
                             <audio id="vmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:8px;"></audio>
                             <div class="vm-duration" id="vmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
                         </div>
+                        <label style="margin-top:14px;display:block;">Voicemail Script (word-for-word transcript)</label>
+                        <p style="font-size:12px;color:var(--gads-text-secondary);margin:2px 0 6px 0;">Paste the exact words spoken in the voicemail audio above. This text appears in call transcripts so you can see the full conversation.</p>
+                        <textarea id="vmScriptInput" class="gads-input" rows="4" placeholder="Hi there, this is Mike calling from OpenHumana. I'm reaching out because..." style="resize:vertical;font-size:13px;line-height:1.5;"></textarea>
                         <div id="vmSaveResult" style="margin-top:8px;font-size:13px;"></div>
                     </div>
 
@@ -1870,6 +1873,7 @@
 
             // ---- Voicemail Settings ----
             var vmUrlInput = document.getElementById("vmUrlInput");
+            var vmScriptInput = document.getElementById("vmScriptInput");
             var saveVmBtn = document.getElementById("saveVmBtn");
             var vmPreview = document.getElementById("vmPreview");
             var vmAudioPlayer = document.getElementById("vmAudioPlayer");
@@ -1883,6 +1887,9 @@
                         if (data.voicemail_url) {
                             vmUrlInput.value = data.voicemail_url;
                             showVmPreview(data.voicemail_url);
+                        }
+                        if (data.voicemail_script) {
+                            vmScriptInput.value = data.voicemail_script;
                         }
                     })
                     .catch(function() {});
@@ -1904,12 +1911,13 @@
             saveVmBtn.addEventListener("click", function() {
                 var url = vmUrlInput.value.trim();
                 if (!url) { alert("Enter a voicemail URL"); return; }
+                var script = vmScriptInput.value.trim();
                 saveVmBtn.disabled = true;
                 saveVmBtn.textContent = "Saving...";
                 apiFetch("/api/voicemail_settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ voicemail_url: url })
+                    body: JSON.stringify({ voicemail_url: url, voicemail_script: script })
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {

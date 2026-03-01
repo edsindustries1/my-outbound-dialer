@@ -72,7 +72,19 @@ def get_voicemail_url(user_id=None):
     return DEFAULT_VOICEMAIL_URL
 
 
-def save_voicemail_url(url, user_id=None):
+def get_voicemail_script(user_id=None):
+    settings_file = _user_file(user_id, "app_settings.json")
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+                return settings.get("voicemail_script", "")
+    except Exception:
+        pass
+    return ""
+
+
+def save_voicemail_url(url, user_id=None, script=None):
     d = _user_logs_dir(user_id)
     os.makedirs(d, exist_ok=True)
     settings_file = _user_file(user_id, "app_settings.json")
@@ -84,6 +96,8 @@ def save_voicemail_url(url, user_id=None):
     except Exception:
         pass
     settings["voicemail_url"] = url
+    if script is not None:
+        settings["voicemail_script"] = script
     settings["updated_at"] = datetime.utcnow().isoformat()
     with open(settings_file, "w") as f:
         json.dump(settings, f, indent=2)

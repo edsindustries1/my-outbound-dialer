@@ -38,6 +38,7 @@ from storage import (
     get_call_history,
     clear_call_history,
     get_voicemail_url,
+    get_voicemail_script,
     save_voicemail_url,
     get_voice_preset,
     save_voice_preset,
@@ -1389,7 +1390,8 @@ def status():
 @login_required
 def get_vm_settings():
     url = get_voicemail_url(user_id=current_user.id)
-    return jsonify({"voicemail_url": url})
+    script = get_voicemail_script(user_id=current_user.id)
+    return jsonify({"voicemail_url": url, "voicemail_script": script})
 
 
 @app.route("/api/voicemail_settings", methods=["POST"])
@@ -1397,13 +1399,14 @@ def get_vm_settings():
 def save_vm_settings():
     data = request.get_json() or {}
     url = data.get("voicemail_url", "").strip()
+    script = data.get("voicemail_script", "").strip()
     if not url:
         return jsonify({"error": "Voicemail URL is required"}), 400
     if not url.startswith(("http://", "https://")):
         return jsonify({"error": "URL must start with http:// or https://"}), 400
-    save_voicemail_url(url, user_id=current_user.id)
-    logger.info(f"Voicemail URL updated: {url}")
-    return jsonify({"message": "Voicemail URL saved", "voicemail_url": url})
+    save_voicemail_url(url, user_id=current_user.id, script=script)
+    logger.info(f"Voicemail URL updated: {url}, script: {script[:50] if script else '(none)'}...")
+    return jsonify({"message": "Voicemail URL saved", "voicemail_url": url, "voicemail_script": script})
 
 
 @app.route("/api/voice-preset", methods=["GET"])
@@ -2326,18 +2329,18 @@ def _handle_webhook():
                 if audio_url:
                     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
                     play_audio(call_control_id, audio_url)
-                    pvm_script_text = None
+                    vm_script_text = None
                     if personalized_url and customer_number:
                         audio_map = pvm_get_audio_map()
                         digits = re.sub(r'[^\d+]', '', customer_number)
                         for key, val in audio_map.items():
                             if key.lstrip("+") == digits.lstrip("+"):
-                                pvm_script_text = val.get("script", "")
+                                vm_script_text = val.get("script", "")
                                 break
-                    if pvm_script_text:
-                        append_transcript(call_control_id, pvm_script_text, track="outbound", is_final=True)
-                    else:
-                        append_transcript(call_control_id, "[Voicemail audio playing]", track="outbound", is_final=True)
+                    if not vm_script_text:
+                        vm_script_text = get_voicemail_script(user_id=webhook_user_id)
+                    if vm_script_text:
+                        append_transcript(call_control_id, vm_script_text, track="outbound", is_final=True)
                 else:
                     logger.error(f"No audio URL configured for voicemail on {call_control_id}")
                     update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
