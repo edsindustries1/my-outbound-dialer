@@ -92,9 +92,9 @@ def build_lead_confirmation_html(name):
 <tr><td align="center">
 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#ffffff;border:1px solid #d8d8de;border-radius:14px;overflow:hidden;">
 
-<tr><td style="padding:40px 52px 32px;text-align:center;background:#ffffff;">
-  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:150px;width:auto;" />
-  <p style="margin:12px 0 0;font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Your Digital Employee Agency</p>
+<tr><td style="padding:16px 52px 20px;text-align:center;background:#ffffff;">
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:195px;width:auto;" />
+  <p style="margin:8px 0 0;font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Your Digital Employee Agency</p>
 </td></tr>
 
 <tr><td style="padding:0 52px;background:#ffffff;">
