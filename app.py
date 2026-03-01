@@ -2280,36 +2280,29 @@ def _handle_webhook():
             logger.error(f"Failed to start recording: {e}")
 
         def _amd_fallback(ccid):
-            """If AMD event never arrives, treat as human and transfer."""
+            """If AMD event never arrives, treat as machine and drop voicemail (safe mode)."""
             state = get_call_state(ccid)
             if state and not state.get("amd_received") and state.get("status") == "answered":
-                logger.warning(f"AMD timeout on {ccid}, treating as HUMAN and transferring")
-                update_call_state(ccid, machine_detected=False, status="human_detected", amd_received=True,
-                                  amd_result="timeout", status_description="AMD detection timeout", status_color="yellow")
-                camp = get_campaign(user_id=get_user_for_call(ccid))
-                transfer_num = camp.get("transfer_number") or ""
+                logger.warning(f"AMD timeout on {ccid}, treating as MACHINE (safe mode) - will drop voicemail")
+                update_call_state(ccid, machine_detected=True, status="machine_detected", amd_received=True,
+                                  amd_result="timeout", status_description="AMD timeout - dropping voicemail (safe mode)", status_color="yellow")
+                uid = get_user_for_call(ccid)
+                camp = get_campaign(user_id=uid)
                 customer_num = state.get("number", "")
-                if transfer_num and mark_transferred(ccid):
-                    logger.info(f"Fallback transfer {ccid} to {transfer_num} (caller ID: {customer_num})")
-                    success = transfer_call(ccid, transfer_num, customer_number=customer_num)
-                    if success:
-                        pause_for_transfer(ccid, user_id=get_user_for_call(ccid))
-                        logger.info(f"Campaign paused for transfer on {ccid}")
-                        update_call_state(ccid, status="transferred",
-                                          status_description="Answered by human - transferred (campaign paused)", status_color="green")
-                    else:
-                        logger.error(f"Fallback transfer failed for {ccid}, hanging up")
-                        update_call_state(ccid, status="transfer_failed",
-                                          status_description="Transfer failed", status_color="red")
-                        hangup_call(ccid)
+                personalized_url = get_personalized_audio_url(customer_num) if customer_num else None
+                audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=uid)
+                is_personalized = bool(personalized_url)
+
+                if audio_url:
+                    logger.info(f"AMD timeout fallback: dropping voicemail immediately on {ccid}")
+                    _drop_voicemail_now(ccid, audio_url, is_personalized, customer_num, uid)
                 else:
-                    logger.warning(f"AMD timeout on {ccid}, no transfer number configured, hanging up")
-                    update_call_state(ccid, status="human_no_transfer",
-                                      status_description="Human answered - no transfer number", status_color="yellow")
+                    logger.error(f"AMD timeout on {ccid}, no audio URL, hanging up")
+                    update_call_state(ccid, status_description="Voicemail failed - no audio", status_color="red")
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
-        timer = threading.Timer(12.0, _amd_fallback, args=[call_control_id])
+        timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
         timer.daemon = True
         _amd_timers[call_control_id] = timer
         timer.start()
