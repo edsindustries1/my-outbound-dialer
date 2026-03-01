@@ -458,14 +458,8 @@ def _get_or_create_user_by_email(email):
         return None
     user = User.query.filter_by(email=email).first()
     if not user:
-        import secrets
-        user = User(email=email, profile_name=email.split("@")[0])
-        temp_password = secrets.token_urlsafe(16)
-        user.set_password(temp_password)
-        db.session.add(user)
-        db.session.commit()
-        ensure_user_instance(user.id)
-        logger.info(f"Created guest user {user.id} for email {email}")
+        logger.warning(f"PayPal payment from unknown email {email} — no account created (invite-only)")
+        return None
     return user
 
 
