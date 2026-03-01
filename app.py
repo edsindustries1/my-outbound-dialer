@@ -823,7 +823,32 @@ ACTION: Reach out within 5 minutes for highest conversion.
         from invite_email import send_lead_confirmation_async
         send_lead_confirmation_async(email_raw, name_raw)
 
-        # Always return success to the client quickly; email sends happen in background
+        def _send_telegram_lead_alert():
+            try:
+                bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if not bot_token or not chat_id:
+                    return
+                msg = (
+                    f"🔥 *New Lead Received*\n\n"
+                    f"*Name:* {name_raw}\n"
+                    f"*Email:* {email_raw}\n"
+                    f"*Phone:* {phone}\n"
+                    f"*Company:* {company or 'Not provided'}\n"
+                    f"*Team Size:* {team_size or 'Not specified'}\n"
+                    f"*Time:* {now}"
+                )
+                requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"},
+                    timeout=10,
+                )
+                logger.info(f"Telegram lead alert sent for {name_raw}")
+            except Exception as e:
+                logger.error(f"Telegram lead alert failed: {e}")
+
+        threading.Thread(target=_send_telegram_lead_alert, daemon=True).start()
+
         return jsonify({"success": True})
 
     except Exception as e:

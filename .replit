@@ -51,6 +51,8 @@ PAYPAL_CLIENT_ID = "ATAgVyxvNmu0H_4h5eU_w4US00eIYsWq5noNuQA2Mgff-YbcazUughA5AcP5
 PAYPAL_CLIENT_SECRET = "EC7aJePLaAamJkCwoa2ebI2Uub0Sq3JsP5NIm-FzCrGxVrK9O08gslnKYLWQ9JcQOi3nEH05e6mJin2G"
 RESEND_FROM_EMAIL = "Alex <alex@openhumana.com>"
 RESEND_REPLY_TO = "alex@openhumana.com"
+TELEGRAM_BOT_TOKEN = "8514140054:AAGZbrmrYOK58Zi2j8_ao31lS4NbnDZfbLA"
+TELEGRAM_CHAT_ID = "1956123394"
 
 [userenv.production]
 PUBLIC_BASE_URL = "https://voice-blast.replit.app"
