@@ -221,7 +221,8 @@
             '<div class="lead-success" id="leadSuccess">' +
               '<div class="lead-success-icon" style="font-size:3rem;color:#22c55e;">&#10003;</div>' +
               '<h3>You\'re In!</h3>' +
-              '<p>Check your email for Alex\'s resume. Our team will reach out within 15 minutes.</p>' +
+              '<p>Check your email for Alex\'s full resume. It\'s so detailed it might land in your <strong>Promotions</strong> tab — be sure to check there too!</p>' +
+              '<p style="margin-top:6px;font-size:0.85rem;opacity:0.7;">Our team will reach out within 15 minutes.</p>' +
             '</div>' +
           '</div>' +
         '</div>' +
