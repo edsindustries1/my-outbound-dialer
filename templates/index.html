@@ -253,10 +253,10 @@
                     </div>
                     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                         <div id="creditChip" class="credit-chip">Credits: <span id="creditValue" data-initial="{{ '%.2f' % (user.credit_balance or 0) }}">${{ '%.2f' % (user.credit_balance or 0) }}</span></div>
-                        <a class="gads-btn gads-btn-primary" id="refillBtn" href="{{ url_for('pricing') }}">
+                        <button class="gads-btn gads-btn-primary" id="refillBtn" onclick="openAddCreditsModal()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Upgrade / Pricing
-                        </a>
+                            Add Credits
+                        </button>
                     </div>
                 </div>
                         <div id="provisionContent" style="padding:16px 20px;">
@@ -3954,6 +3954,170 @@
             checkProvisionStatus();
 
     </script>
+
+<div id="addCreditsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;max-width:440px;width:90%;box-shadow:0 25px 60px rgba(0,0,0,0.25);overflow:hidden;">
+        <div style="padding:28px 32px 0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <img src="/static/images/logo.png" alt="Open Humana" style="height:32px;">
+                    <span style="font-size:18px;font-weight:700;color:#111827;">Add Credits</span>
+                </div>
+                <button onclick="closeAddCreditsModal()" style="background:none;border:none;cursor:pointer;padding:4px;color:#9ca3af;font-size:20px;">&times;</button>
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Amount (USD)</label>
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                    <button onclick="setCreditAmount(10, this)" class="credit-preset-btn" style="padding:8px 16px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s;">$10</button>
+                    <button onclick="setCreditAmount(25, this)" class="credit-preset-btn" style="padding:8px 16px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s;">$25</button>
+                    <button onclick="setCreditAmount(50, this)" class="credit-preset-btn" style="padding:8px 16px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s;">$50</button>
+                    <button onclick="setCreditAmount(100, this)" class="credit-preset-btn" style="padding:8px 16px;border-radius:8px;border:1px solid #d1d5db;background:#fff;font-size:14px;font-weight:600;color:#374151;cursor:pointer;transition:all .15s;">$100</button>
+                </div>
+                <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;font-weight:600;color:#6b7280;">$</span>
+                    <input type="number" id="creditAmountInput" min="10" step="1" value="25" style="width:100%;padding:10px 12px 10px 28px;border:1px solid #d1d5db;border-radius:8px;font-size:16px;font-family:inherit;color:#111827;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s;" onfocus="this.style.borderColor='#111827';this.style.boxShadow='0 0 0 1px #111827'" onblur="this.style.borderColor='#d1d5db';this.style.boxShadow='none'">
+                </div>
+                <p style="font-size:12px;color:#9ca3af;margin-top:6px;">Minimum $10.00</p>
+            </div>
+            <div id="creditPayError" style="display:none;color:#dc2626;font-size:13px;background:#fef2f2;padding:10px 14px;border-radius:8px;border:1px solid #fecaca;margin-bottom:12px;"></div>
+        </div>
+        <div style="padding:0 32px 28px;">
+            <div id="creditPaypalButtons" style="min-height:48px;"></div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;font-size:12px;color:#9ca3af;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Secured with 256-bit SSL encryption
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="creditSuccessOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;padding:48px 40px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.15);">
+        <div style="width:64px;height:64px;background:#f0fdf4;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
+            <svg width="28" height="28" fill="none" stroke="#22c55e" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h2 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px;">Credits Added</h2>
+        <p id="creditSuccessMsg" style="font-size:14px;color:#6b7280;line-height:1.6;margin:0 0 20px;">Your credits have been added to your account.</p>
+        <button onclick="closeCreditSuccess()" style="display:inline-block;padding:12px 28px;background:#111827;color:#fff;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:background .15s;">Continue</button>
+    </div>
+</div>
+
+{% if processor_id %}
+<script src="https://www.paypal.com/sdk/js?client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&disable-funding=paylater,credit"></script>
+<script>
+(function() {
+    var overlay = document.getElementById('addCreditsOverlay');
+    var amountInput = document.getElementById('creditAmountInput');
+    var errorEl = document.getElementById('creditPayError');
+    var buttonsRendered = false;
+
+    window.openAddCreditsModal = function() {
+        overlay.style.display = 'flex';
+        if (!buttonsRendered) {
+            renderCreditPaypalButtons();
+            buttonsRendered = true;
+        }
+    };
+
+    window.closeAddCreditsModal = function() {
+        overlay.style.display = 'none';
+        errorEl.style.display = 'none';
+    };
+
+    window.closeCreditSuccess = function() {
+        document.getElementById('creditSuccessOverlay').style.display = 'none';
+    };
+
+    window.setCreditAmount = function(val, el) {
+        amountInput.value = val;
+        document.querySelectorAll('.credit-preset-btn').forEach(function(btn) {
+            btn.style.background = '#fff';
+            btn.style.borderColor = '#d1d5db';
+            btn.style.color = '#374151';
+        });
+        if (el) {
+            el.style.background = '#111827';
+            el.style.color = '#fff';
+            el.style.borderColor = '#111827';
+        }
+    };
+
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closeAddCreditsModal();
+    });
+
+    function showCreditError(msg) {
+        errorEl.style.display = 'block';
+        errorEl.textContent = msg;
+    }
+
+    function getCreditAmount() {
+        var val = parseFloat(amountInput.value);
+        if (isNaN(val) || val < 10) return null;
+        return Math.round(val * 100) / 100;
+    }
+
+    function renderCreditPaypalButtons() {
+        paypal.Buttons({
+            style: { layout: 'vertical', color: 'black', shape: 'rect', label: 'pay', height: 50, tagline: false },
+            createOrder: function(data, actions) {
+                errorEl.style.display = 'none';
+                var amount = getCreditAmount();
+                if (!amount) {
+                    showCreditError('Please enter a valid amount ($10 minimum).');
+                    return actions.reject();
+                }
+                return fetch('/api/paypal/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: amount, plan: 'refill' })
+                }).then(function(r) { return r.json(); }).then(function(json) {
+                    if (json.error) { showCreditError(json.error); return actions.reject(); }
+                    var oid = json.id || (json.result && json.result.id);
+                    if (!oid) { showCreditError('Could not create order'); return actions.reject(); }
+                    return oid;
+                }).catch(function() {
+                    showCreditError('Network error. Please try again.');
+                    return actions.reject();
+                });
+            },
+            onApprove: function(data, actions) {
+                errorEl.style.display = 'none';
+                return fetch('/api/paypal/capture-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: data.orderID, plan: 'refill' })
+                }).then(function(r) { return r.json(); }).then(function(json) {
+                    if (json.status === 'COMPLETED') {
+                        closeAddCreditsModal();
+                        var credited = json.credited || 0;
+                        var creditValEl = document.getElementById('creditValue');
+                        var creditBarText = document.getElementById('creditBarText');
+                        if (creditValEl) {
+                            var current = parseFloat(creditValEl.getAttribute('data-initial') || creditValEl.textContent.replace('$','')) || 0;
+                            var newBal = current + credited;
+                            creditValEl.textContent = '$' + newBal.toFixed(2);
+                            creditValEl.setAttribute('data-initial', newBal.toFixed(2));
+                        }
+                        if (creditBarText) {
+                            creditBarText.textContent = '$' + (parseFloat(creditBarText.textContent.replace('$','')) + credited).toFixed(2);
+                        }
+                        document.getElementById('creditSuccessMsg').textContent = '$' + credited.toFixed(2) + ' has been added to your account.';
+                        document.getElementById('creditSuccessOverlay').style.display = 'flex';
+                    } else {
+                        showCreditError(json.error || 'Payment was not completed. Please try again.');
+                    }
+                }).catch(function() {
+                    showCreditError('Could not verify payment. Please contact support.');
+                });
+            },
+            onCancel: function() { errorEl.style.display = 'none'; },
+            onError: function(err) { console.error('PayPal error:', err); }
+        }).render('#creditPaypalButtons');
+    }
+})();
+</script>
+{% endif %}
 
 </body>
 </html>

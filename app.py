@@ -1056,7 +1056,7 @@ def dashboard():
     _detect_and_set_base_url()
     secure_from = os.environ.get("TELNYX_FROM_NUMBER", "Not set")
     user_data = current_user.to_dict() if current_user.is_authenticated else {}
-    return render_template("index.html", secure_from=secure_from, user=user_data)
+    return render_template("index.html", secure_from=secure_from, user=user_data, processor_id=PAYPAL_CLIENT_ID)
 
 
 # ---- Audio File Serving ----
