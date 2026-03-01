@@ -3125,7 +3125,7 @@ label {
     transition: none;
 }
 .iphone-fab.visible { display: flex; }
-.iphone-fab.floating { transition: none !important; }
+.iphone-fab.floating { transition: none !important; will-change: transform; contain: layout style; }
 
 .notepad-fab {
     position: fixed;
@@ -3147,7 +3147,7 @@ label {
 }
 .notepad-fab:hover { box-shadow: 0 6px 16px rgba(26,26,26,0.5); }
 .notepad-fab.hidden { display: none; }
-.notepad-fab.floating { transition: none !important; }
+.notepad-fab.floating { transition: none !important; will-change: transform; contain: layout style; }
 
 /* ============================================================
    NOTEPAD WINDOW
