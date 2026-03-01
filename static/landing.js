@@ -334,6 +334,7 @@
   var messagesEl = document.getElementById('alexMessages');
   var inputEl = document.getElementById('alexInput');
   var sendBtn = document.getElementById('alexSend');
+  var chatHistory = [];
 
   function toggleChat() {
     chatWindow.classList.toggle('open');
@@ -373,11 +374,48 @@
       var resp = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, history: chatHistory })
       });
-      var data = await resp.json();
+
+      if (!resp.ok) {
+        typingEl.remove();
+        addMessage('Sorry, something went wrong. Please try again.', 'bot');
+        sendBtn.disabled = false;
+        inputEl.focus();
+        return;
+      }
+
       typingEl.remove();
-      addMessage(data.reply || data.error || 'Sorry, something went wrong.', 'bot');
+      var botMsg = addMessage('', 'bot');
+      var fullText = '';
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder();
+
+      while (true) {
+        var result = await reader.read();
+        if (result.done) break;
+        var chunk = decoder.decode(result.value, { stream: true });
+        var lines = chunk.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (!line.startsWith('data: ')) continue;
+          var dataStr = line.substring(6);
+          if (dataStr === '[DONE]') continue;
+          try {
+            var parsed = JSON.parse(dataStr);
+            if (parsed.text) {
+              fullText += parsed.text;
+              botMsg.textContent = fullText;
+              messagesEl.scrollTop = messagesEl.scrollHeight;
+            }
+          } catch (e) {}
+        }
+      }
+
+      if (!fullText) botMsg.textContent = 'Sorry, I didn\'t catch that. Could you try again?';
+      chatHistory.push({ role: 'user', text: text });
+      chatHistory.push({ role: 'model', text: fullText });
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
     } catch (err) {
       typingEl.remove();
       addMessage('Connection error. Please try again.', 'bot');
