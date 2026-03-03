@@ -596,6 +596,7 @@ def api_health():
 
 
 
+
 @app.route("/api/chat", methods=["POST"])
 @app.route("/api/chat-alex", methods=["POST"])
 def api_chat():
