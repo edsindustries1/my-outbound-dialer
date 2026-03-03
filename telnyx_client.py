@@ -130,7 +130,7 @@ def make_call(number, from_number_override=None):
         "answering_machine_detection_config": {
             "after_greeting_silence_millis": 1500,
             "between_words_silence_millis": 50,
-            "greeting_duration_millis": 30000,
+            "greeting_duration_millis": 10000,
             "greeting_silence_duration_millis": 2000,
             "greeting_total_analysis_time_millis": 50000,
             "initial_silence_millis": 3500,
