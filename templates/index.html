@@ -2458,8 +2458,95 @@
             var initialPollDone = false;
             var baselineSet = false;
             var expandedTranscripts = {};
-            var prevCallDataHash = "";
-            var prevTranscriptHash = "";
+            var _prevRK = [];
+            var _prevCH = {};
+            var _prevTH = {};
+            var _prevDashHash = "";
+
+            function _buildCallRowHtml(c, idx, rk, isLive) {
+                var tsDisplay = "-";
+                if (c.timestamp) {
+                    try {
+                        var d = new Date(c.timestamp);
+                        if (!isNaN(d.getTime())) {
+                            tsDisplay = d.toLocaleDateString(undefined, {month:"short", day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"});
+                        }
+                    } catch(e) {}
+                }
+                var descText = c.status_description || formatStatus(c.status);
+                var colorCls = "status-" + (c.status_color || "blue");
+                var trKey = c.call_id || c.number || ("idx_" + idx);
+                var trId = "tr_" + (c.call_id || c.number || idx);
+                var hasTranscript = c.transcript && c.transcript.length > 0;
+                var rowCls = isLive ? "call-row-live" : "";
+                var rkSafe = rk.replace(/"/g, '&quot;');
+                var html = '<tr class="' + rowCls + '" data-rk="' + rkSafe + '">';
+                html += '<td class="td-ts">' + tsDisplay + "</td>";
+                html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
+                html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
+                html += '<td><span class="status-desc-badge ' + colorCls + '">' + descText;
+                if (isLive) html += ' <span class="live-pulse"></span>';
+                html += "</span></td>";
+                html += "<td>" + formatRing(c.ring_duration) + "</td>";
+                html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
+                html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
+                if (c.voicemail_dropped) {
+                    var vmLabel = "Yes";
+                    if (c.vm_duration) vmLabel = "Yes \u2014 " + c.vm_duration + "s";
+                    html += '<td><span style="color:var(--gads-success);">' + vmLabel + '</span></td>';
+                } else {
+                    html += "<td>-</td>";
+                }
+                if (c.recording_url) {
+                    html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';
+                } else if (isLive) {
+                    html += '<td><span style="font-size:11px;color:var(--gads-text-secondary);">Recording...</span></td>';
+                } else {
+                    html += "<td>-</td>";
+                }
+                if (isLive) {
+                    if (hasTranscript) {
+                        html += '<td><span class="transcript-live-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> LIVE</span></td>';
+                    } else {
+                        html += '<td><span class="transcript-waiting"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Waiting...</span></td>';
+                    }
+                } else if (hasTranscript) {
+                    html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\',\'' + trKey + '\')">';
+                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+                    html += ' View</button></td>';
+                } else {
+                    html += "<td>-</td>";
+                }
+                html += '</tr>';
+                if (isLive) {
+                    expandedTranscripts[trKey] = true;
+                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" data-trkey="' + trKey + '" data-rk-tr="' + rkSafe + '" style="display:table-row;"><td colspan="10"><div class="transcript-box transcript-box-live">';
+                    html += '<div class="transcript-header-live"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Live Transcription <span class="live-dot"></span></div>';
+                    html += '<div class="transcript-lines">';
+                    if (hasTranscript) {
+                        c.transcript.forEach(function(t) {
+                            var speaker = t.track === "outbound" ? "Agent" : "Caller";
+                            var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                            var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                            html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                        });
+                    } else {
+                        html += '<div class="transcript-empty">Transcript will appear once call connects</div>';
+                    }
+                    html += '</div></div></td></tr>';
+                } else if (hasTranscript) {
+                    var wasOpen = expandedTranscripts[trKey] === true;
+                    html += '<tr class="transcript-row" id="' + trId + '" data-trkey="' + trKey + '" data-rk-tr="' + rkSafe + '" style="display:' + (wasOpen ? "table-row" : "none") + ';"><td colspan="10"><div class="transcript-box"><div class="transcript-lines">';
+                    c.transcript.forEach(function(t) {
+                        var speaker = t.track === "outbound" ? "Agent" : "Caller";
+                        var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                        var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                        html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                    });
+                    html += '</div></div></td></tr>';
+                }
+                return html;
+            }
 
             function pollStatus() {
                 apiFetch("/status")
@@ -2592,164 +2679,149 @@
 
                         var filterVal = statusFilter.value;
 
-                        var callStructureHash = filterVal + "||";
-                        var transcriptHash = "";
-                        if (data.calls) {
-                            callStructureHash += data.calls.map(function(c) {
-                                return (c.call_id||c.number) + ":" + c.status + ":" + c.status_color + ":" + (c.machine_detected === null ? "n" : c.machine_detected ? "m" : "h") + ":" + (c.transferred?"t":"") + ":" + (c.voicemail_dropped?"v":"");
-                            }).join("|");
-                            transcriptHash = data.calls.map(function(c) {
-                                return (c.call_id||c.number) + ":" + (c.transcript ? c.transcript.length : 0);
-                            }).join("|");
-                        }
-                        var structureChanged = callStructureHash !== prevCallDataHash;
-                        var transcriptChanged = transcriptHash !== (prevTranscriptHash || "");
-                        prevTranscriptHash = transcriptHash;
+                        var allFiltered = (data.calls || []).filter(function(c) {
+                            if (filterVal === "all") return true;
+                            var col = c.status_color || "";
+                            if (filterVal === "success") return col === "green";
+                            if (filterVal === "failed") return col === "red";
+                            if (filterVal === "issues") return col === "yellow";
+                            if (filterVal === "progress") return col === "blue";
+                            return true;
+                        });
+                        var _MR = 100;
+                        var _trunc = allFiltered.length > _MR;
+                        var filtered = _trunc ? allFiltered.slice(0, _MR) : allFiltered;
+                        var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing","transferred","connected"];
 
-                        if (!structureChanged && transcriptChanged && data.calls && data.calls.length > 0) {
-                            data.calls.forEach(function(c) {
+                        var _nk = [], _nc = {}, _nt = {}, _rm = {};
+                        filtered.forEach(function(c, idx) {
+                            var rk = (c.call_id || 'h') + '|' + (c.number || '') + '|' + (c.timestamp || idx);
+                            var isLive = liveStatuses.indexOf(c.status) !== -1;
+                            if (isLive) hasLiveCalls = true;
+                            _nk.push(rk);
+                            _nc[rk] = c.status + ':' + (c.status_color||'') + ':' +
+                                (c.machine_detected===null?'n':c.machine_detected?'m':'h') + ':' +
+                                (c.transferred?'t':'') + ':' + (c.voicemail_dropped?'v':'') + ':' +
+                                (c.recording_url?'r':'') + ':' + (c.ring_duration||'');
+                            _nt[rk] = c.transcript ? String(c.transcript.length) : '0';
+                            _rm[rk] = {c:c, idx:idx, isLive:isLive, rk:rk};
+                        });
+
+                        var _km = _nk.length === _prevRK.length;
+                        if (_km) { for (var _ki=0; _ki<_nk.length; _ki++) { if (_nk[_ki]!==_prevRK[_ki]) { _km=false; break; } } }
+
+                        var _cr = {}, _ac = false, _at = false;
+                        _nk.forEach(function(rk) {
+                            if (_prevCH[rk] !== _nc[rk]) { _cr[rk] = true; _ac = true; }
+                            if (_prevTH[rk] !== _nt[rk]) _at = true;
+                        });
+
+                        if (_km && !_ac && _at && filtered.length > 0) {
+                            filtered.forEach(function(c) {
                                 var trKey = c.call_id || c.number;
                                 var boxes = callBody.querySelectorAll('.transcript-row[data-trkey="' + trKey + '"] .transcript-lines');
                                 boxes.forEach(function(box) {
-                                    var linesHtml = "";
+                                    var lh = "";
                                     if (c.transcript && c.transcript.length > 0) {
                                         c.transcript.forEach(function(t) {
-                                            var speaker = t.track === "outbound" ? "Agent" : "Caller";
-                                            var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
-                                            var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                                            linesHtml += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
+                                            var sp = t.track === "outbound" ? "Agent" : "Caller";
+                                            var cl = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                                            var st = (t.text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                                            lh += '<div class="transcript-line ' + cl + '"><strong>' + sp + ':</strong> ' + st + '</div>';
                                         });
                                     } else {
-                                        linesHtml = '<div class="transcript-empty">Transcript will appear once call connects</div>';
+                                        lh = '<div class="transcript-empty">Transcript will appear once call connects</div>';
                                     }
-                                    box.innerHTML = linesHtml;
+                                    box.innerHTML = lh;
                                     box.scrollTop = box.scrollHeight;
                                 });
                             });
-                        }
-
-                        prevCallDataHash = callStructureHash;
-
-                        if (structureChanged && data.calls && data.calls.length > 0) {
-                            var filtered = data.calls.filter(function(c) {
-                                if (filterVal === "all") return true;
-                                var col = c.status_color || "";
-                                if (filterVal === "success") return col === "green";
-                                if (filterVal === "failed") return col === "red";
-                                if (filterVal === "issues") return col === "yellow";
-                                if (filterVal === "progress") return col === "blue";
-                                return true;
-                            });
-
-                            var liveStatuses = ["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing","transferred","connected"];
-
-                            var html = "";
-                            filtered.forEach(function(c, idx) {
-                                var isLive = liveStatuses.indexOf(c.status) !== -1;
-                                if (isLive) hasLiveCalls = true;
-                                var tsDisplay = "-";
-                                if (c.timestamp) {
-                                    try {
-                                        var d = new Date(c.timestamp);
-                                        if (!isNaN(d.getTime())) {
-                                            tsDisplay = d.toLocaleDateString(undefined, {month:"short", day:"numeric"}) + " " + d.toLocaleTimeString(undefined, {hour:"2-digit", minute:"2-digit"});
-                                        }
-                                    } catch(e) {}
-                                }
-                                var descText = c.status_description || formatStatus(c.status);
-                                var colorCls = "status-" + (c.status_color || "blue");
-
-                                var rowCls = isLive ? "call-row-live" : "";
-                                html += '<tr class="' + rowCls + '">';
-                                html += '<td class="td-ts">' + tsDisplay + "</td>";
-                                html += '<td class="td-mono">' + maskNumber(c.number) + "</td>";
-                                html += '<td class="td-mono">' + maskNumber(c.from_number) + "</td>";
-                                html += '<td><span class="status-desc-badge ' + colorCls + '">' + descText;
-                                if (isLive) html += ' <span class="live-pulse"></span>';
-                                html += "</span></td>";
-                                html += "<td>" + formatRing(c.ring_duration) + "</td>";
-                                html += "<td>" + (c.machine_detected === null ? "-" : (c.machine_detected ? "Yes" : "No")) + "</td>";
-                                html += "<td>" + (c.transferred ? "Yes" : "-") + "</td>";
-                                if (c.voicemail_dropped) {
-                                    var vmLabel = "Yes";
-                                    if (c.vm_duration) vmLabel = "Yes — " + c.vm_duration + "s";
-                                    html += '<td><span style="color:var(--gads-success);">' + vmLabel + '</span></td>';
-                                } else {
-                                    html += "<td>-</td>";
-                                }
-
-                                if (c.recording_url) {
-                                    html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';
-                                } else if (isLive) {
-                                    html += '<td><span style="font-size:11px;color:var(--gads-text-secondary);">Recording...</span></td>';
-                                } else {
-                                    html += "<td>-</td>";
-                                }
-
-                                var hasTranscript = c.transcript && c.transcript.length > 0;
-                                var trId = "tr_" + (c.call_id || c.number || idx);
-                                var trKey = c.call_id || c.number || ("idx_" + idx);
-                                if (isLive) {
-                                    if (hasTranscript) {
-                                        html += '<td><span class="transcript-live-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> LIVE</span></td>';
-                                    } else {
-                                        html += '<td><span class="transcript-waiting"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Waiting...</span></td>';
-                                    }
-                                } else if (hasTranscript) {
-                                    html += '<td><button type="button" class="btn-transcript" onclick="toggleTranscript(\'' + trId + '\',\'' + trKey + '\')">';
-                                    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
-                                    html += ' View</button></td>';
-                                } else {
-                                    html += "<td>-</td>";
-                                }
-                                html += '</tr>';
-
-                                if (isLive) {
-                                    expandedTranscripts[trKey] = true;
-                                    html += '<tr class="transcript-row transcript-row-live" id="' + trId + '" data-trkey="' + trKey + '" style="display:table-row;"><td colspan="10"><div class="transcript-box transcript-box-live">';
-                                    html += '<div class="transcript-header-live"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Live Transcription <span class="live-dot"></span></div>';
-                                    html += '<div class="transcript-lines">';
-                                    if (hasTranscript) {
-                                        c.transcript.forEach(function(t) {
-                                            var speaker = t.track === "outbound" ? "Agent" : "Caller";
-                                            var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
-                                            var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                                            html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
-                                        });
-                                    } else {
-                                        html += '<div class="transcript-empty">Transcript will appear once call connects</div>';
-                                    }
-                                    html += '</div></div></td></tr>';
-                                } else if (hasTranscript) {
-                                    var wasOpen = expandedTranscripts[trKey] === true;
-                                    html += '<tr class="transcript-row" id="' + trId + '" data-trkey="' + trKey + '" style="display:' + (wasOpen ? "table-row" : "none") + ';"><td colspan="10"><div class="transcript-box"><div class="transcript-lines">';
-                                    c.transcript.forEach(function(t) {
-                                        var speaker = t.track === "outbound" ? "Agent" : "Caller";
-                                        var cls = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
-                                        var safeText = (t.text || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-                                        html += '<div class="transcript-line ' + cls + '"><strong>' + speaker + ':</strong> ' + safeText + '</div>';
-                                    });
-                                    html += '</div></div></td></tr>';
-                                }
-                            });
+                        } else if (!_km || _ac) {
                             if (filtered.length > 0) {
-                                callBody.innerHTML = html;
+                                if (!_km) {
+                                    var html = "";
+                                    filtered.forEach(function(c, idx) {
+                                        var rk = _nk[idx];
+                                        html += _buildCallRowHtml(c, idx, rk, _rm[rk].isLive);
+                                    });
+                                    if (_trunc) html += '<tr><td colspan="10" style="text-align:center;padding:12px;color:var(--gads-text-secondary);font-size:12px;">Showing ' + _MR + ' of ' + allFiltered.length + ' calls</td></tr>';
+                                    callBody.innerHTML = html;
+                                } else {
+                                    var _chgCount = Object.keys(_cr).length;
+                                    if (_chgCount > 5) {
+                                        var html = "";
+                                        filtered.forEach(function(c, idx) {
+                                            var rk = _nk[idx];
+                                            html += _buildCallRowHtml(c, idx, rk, _rm[rk].isLive);
+                                        });
+                                        if (_trunc) html += '<tr><td colspan="10" style="text-align:center;padding:12px;color:var(--gads-text-secondary);font-size:12px;">Showing ' + _MR + ' of ' + allFiltered.length + ' calls</td></tr>';
+                                        callBody.innerHTML = html;
+                                    } else {
+                                    _nk.forEach(function(rk) {
+                                        if (!_cr[rk]) return;
+                                        var rd = _rm[rk];
+                                        if (!rd) return;
+                                        var rkAttr = rk.replace(/"/g, '&quot;');
+                                        var oldMain = callBody.querySelector('tr[data-rk="' + rkAttr + '"]');
+                                        if (!oldMain) return;
+                                        var newHtml = _buildCallRowHtml(rd.c, rd.idx, rk, rd.isLive);
+                                        var temp = document.createElement('tbody');
+                                        temp.innerHTML = newHtml;
+                                        var oldTr = callBody.querySelector('tr[data-rk-tr="' + rkAttr + '"]');
+                                        var ref = oldTr ? oldTr.nextElementSibling : oldMain.nextElementSibling;
+                                        while (temp.firstChild) {
+                                            callBody.insertBefore(temp.firstChild, ref);
+                                        }
+                                        if (oldTr) oldTr.remove();
+                                        oldMain.remove();
+                                    });
+                                    if (_at) {
+                                        filtered.forEach(function(c, idx) {
+                                            var rk = _nk[idx];
+                                            if (_cr[rk]) return;
+                                            if (_prevTH[rk] === _nt[rk]) return;
+                                            var trKey = c.call_id || c.number;
+                                            var boxes = callBody.querySelectorAll('.transcript-row[data-trkey="' + trKey + '"] .transcript-lines');
+                                            boxes.forEach(function(box) {
+                                                var lh = "";
+                                                if (c.transcript && c.transcript.length > 0) {
+                                                    c.transcript.forEach(function(t) {
+                                                        var sp = t.track === "outbound" ? "Agent" : "Caller";
+                                                        var cl = t.track === "outbound" ? "transcript-outbound" : "transcript-inbound";
+                                                        var st = (t.text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                                                        lh += '<div class="transcript-line ' + cl + '"><strong>' + sp + ':</strong> ' + st + '</div>';
+                                                    });
+                                                } else {
+                                                    lh = '<div class="transcript-empty">Transcript will appear once call connects</div>';
+                                                }
+                                                box.innerHTML = lh;
+                                                box.scrollTop = box.scrollHeight;
+                                            });
+                                        });
+                                    }
+                                    }
+                                }
                                 var liveBoxes = callBody.querySelectorAll('.transcript-box-live .transcript-lines');
-                                liveBoxes.forEach(function(box) {
-                                    box.scrollTop = box.scrollHeight;
-                                });
+                                liveBoxes.forEach(function(box) { box.scrollTop = box.scrollHeight; });
+                            } else if (count === 0) {
+                                callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No calls yet</td></tr>';
                             } else {
                                 callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No matching calls</td></tr>';
                             }
-                        } else if (structureChanged && count === 0) {
-                            callBody.innerHTML = '<tr><td colspan="10" class="gads-empty">No calls yet</td></tr>';
                         }
+
+                        _prevRK = _nk;
+                        _prevCH = _nc;
+                        _prevTH = _nt;
 
                         // Update dashboard recent activity (mirror last 20 rows)
                         var dashRecent = document.getElementById("dashRecentBody");
                         if (dashRecent && data.calls && data.calls.length > 0) {
-                            var recentHtml = "";
                             var recentCalls = data.calls.slice(0, 20);
+                            var _dh = recentCalls.map(function(c) { return (c.call_id||'') + ':' + c.status + ':' + (c.status_color||''); }).join('|');
+                            if (_dh !== _prevDashHash) {
+                            _prevDashHash = _dh;
+                            var recentHtml = "";
                             recentCalls.forEach(function(c) {
                                 var tsDisplay = "-";
                                 if (c.timestamp) {
@@ -2774,6 +2846,7 @@
                                 recentHtml += '</tr>';
                             });
                             dashRecent.innerHTML = recentHtml;
+                            }
                         }
 
                         if (typeof iphoneUpdateDialer === "function") {
@@ -3127,6 +3200,7 @@
         }
 
         document.addEventListener("visibilitychange",function(){if(!document.hidden&&(isFloating||iFabActive)&&!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}});
+        window.addEventListener("resize",function(){var w=window.innerWidth,h=window.innerHeight;if(isFloating&&!fab.classList.contains("hidden")){fabX=Math.max(0,Math.min(fabX,w-fabSize));fabY=Math.max(0,Math.min(fabY,h-fabSize));applyFabPos();}if(iFabActive){iFabX=Math.max(0,Math.min(iFabX,w-iFabSize));iFabY=Math.max(0,Math.min(iFabY,h-iFabSize));applyIFabPos();}if(win.classList.contains("open")){var r=win.getBoundingClientRect();if(r.left>w-60){win.style.left=(w-200)+"px";win.style.right="auto";}if(r.top>h-60){win.style.top=(h-200)+"px";win.style.bottom="auto";}}});
 
         function startFloat(){isFloating=true;fab.classList.add("floating");floatToggle.classList.add("active");floatToggle.textContent="Float";localStorage.setItem(floatKey,"true");initFabPos();fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);lastPhysicsTime=0;physicsIdleFrames=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);}
         function stopFloat(){isFloating=false;fab.classList.remove("floating");floatToggle.classList.remove("active");floatToggle.textContent="Stick";localStorage.setItem(floatKey,"false");if(fabAnim){cancelAnimationFrame(fabAnim);fabAnim=null;}lastPhysicsTime=0;fab.style.transform="";fab.style.left="";fab.style.top="";fab.style.bottom=defaultBottom+"px";fab.style.right=defaultRight+"px";if(iFabActive&&!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}}
@@ -3163,7 +3237,7 @@
         updateCharCount();
         function saveContent(){localStorage.setItem(storageKey,editor.innerHTML);updateCharCount();}
         editor.addEventListener("input",saveContent);
-        fab.addEventListener("click",function(e){if(isFloating&&!fabClicked)return;fab.classList.add("hidden");win.classList.add("open");var pos=localStorage.getItem(posKey);if(pos){try{var p=JSON.parse(pos);win.style.bottom="auto";win.style.right="auto";win.style.left=p.left+"px";win.style.top=p.top+"px";}catch(e2){}}editor.focus();});
+        fab.addEventListener("click",function(e){if(isFloating&&!fabClicked)return;fab.classList.add("hidden");win.classList.add("open");var pos=localStorage.getItem(posKey);if(pos){try{var p=JSON.parse(pos);var vw=window.innerWidth,vh=window.innerHeight;if(p.left<0)p.left=0;if(p.top<0)p.top=0;if(p.left>vw-120)p.left=Math.max(0,vw-400);if(p.top>vh-80)p.top=Math.max(0,vh-460);win.style.bottom="auto";win.style.right="auto";win.style.left=p.left+"px";win.style.top=p.top+"px";}catch(e2){}}editor.focus();});
         function closeNotepad(){win.classList.remove("open");fab.classList.remove("hidden");win.style.bottom=defaultBottom+"px";win.style.right=defaultRight+"px";win.style.left="";win.style.top="";if(isFloating){initFabFloat();}}
         minBtn.addEventListener("click",closeNotepad);
         clearBtn.addEventListener("click",function(){if(confirm("Clear all notes?")){editor.innerHTML="";saveContent();}});
@@ -3453,16 +3527,33 @@
                 if (_recordingModal) { _recordingModal.remove(); }
                 var modal = document.createElement("div");
                 modal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;";
+                var safeUrl = url.replace(/"/g, '&quot;');
                 modal.innerHTML = '<div style="background:var(--gads-card-bg,#fff);border-radius:12px;padding:24px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">' +
                     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
                     '<h3 style="margin:0;font-size:16px;">Call Recording</h3>' +
                     '<button onclick="closeRecordingModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--gads-text-secondary);">&times;</button></div>' +
-                    '<audio controls autoplay style="width:100%;border-radius:8px;" src="' + url.replace(/"/g, '&quot;') + '"></audio>' +
-                    '<div style="margin-top:12px;text-align:right;"><a href="' + url.replace(/"/g, '&quot;') + '" download style="font-size:12px;color:var(--gads-primary);text-decoration:none;">Download Recording</a></div></div>';
+                    '<audio id="recAudioEl" controls autoplay style="width:100%;border-radius:8px;" src="' + safeUrl + '"></audio>' +
+                    '<div id="recErrorBox" class="rec-error-box" style="display:none;">Recording not available yet. It may still be processing.<br><button onclick="retryRecording()">Retry</button></div>' +
+                    '<div style="margin-top:12px;text-align:right;"><a href="' + safeUrl + '" download style="font-size:12px;color:var(--gads-primary);text-decoration:none;">Download Recording</a></div></div>';
                 modal.onclick = function(e) { if (e.target === modal) closeRecordingModal(); };
                 document.body.appendChild(modal);
                 _recordingModal = modal;
+                _lastRecUrl = url;
+                var audio = modal.querySelector('#recAudioEl');
+                var errBox = modal.querySelector('#recErrorBox');
+                if (audio) {
+                    audio.addEventListener('error', function() {
+                        audio.style.display = 'none';
+                        errBox.style.display = 'block';
+                    });
+                }
             }
+            var _lastRecUrl = "";
+            window.retryRecording = function() {
+                var u = _lastRecUrl;
+                closeRecordingModal();
+                if (u) setTimeout(function() { playRecording(u); }, 500);
+            };
             function closeRecordingModal() {
                 if (_recordingModal) { _recordingModal.remove(); _recordingModal = null; }
             }

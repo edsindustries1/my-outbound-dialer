@@ -1667,6 +1667,31 @@ label {
 .call-row-live td {
     transition: background 0.3s ease;
 }
+#callBody {
+    contain: layout style;
+}
+#callBody tr {
+    transition: opacity 0.15s ease;
+}
+.rec-error-box {
+    padding: 16px;
+    text-align: center;
+    color: var(--gads-text-secondary);
+    font-size: 13px;
+}
+.rec-error-box button {
+    margin-top: 8px;
+    padding: 6px 16px;
+    background: var(--gads-primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.rec-error-box button:hover {
+    background: var(--gads-primary-hover);
+}
 
 .btn-transcript {
     display: inline-flex;
