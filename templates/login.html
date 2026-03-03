@@ -32,19 +32,19 @@
         }
         .login-orb-1 {
             width: 600px; height: 600px;
-            background: #1a1a1a;
+            background: #2563EB;
             top: -200px; left: -100px;
             animation-delay: 0s;
         }
         .login-orb-2 {
             width: 500px; height: 500px;
-            background: #333333;
+            background: #60A5FA;
             bottom: -150px; right: -100px;
             animation-delay: -7s;
         }
         .login-orb-3 {
             width: 300px; height: 300px;
-            background: #555555;
+            background: #93C5FD;
             top: 50%; left: 60%;
             animation-delay: -14s;
             opacity: 0.08;
@@ -143,7 +143,7 @@
             transition: stroke 0.2s;
         }
         .login-input-wrap input:focus ~ svg {
-            stroke: #1a1a1a;
+            stroke: #2563EB;
         }
         .login-card input[type="text"],
         .login-card input[type="email"],
@@ -160,9 +160,9 @@
             outline: none;
         }
         .login-card input:focus {
-            border-color: #1a1a1a;
-            box-shadow: 0 0 0 3px rgba(26,26,26,0.12);
-            background: rgba(0,0,0,0.02);
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+            background: rgba(37,99,235,0.02);
         }
         .login-card input::placeholder {
             color: #666666;
@@ -172,7 +172,7 @@
         .login-btn {
             width: 100%;
             padding: 14px 24px;
-            background: #1a1a1a;
+            background: #2563EB;
             color: #fff;
             border: none;
             border-radius: 14px;
@@ -183,17 +183,17 @@
             position: relative;
             overflow: hidden;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 16px -2px rgba(26,26,26,0.4);
+            box-shadow: 0 4px 16px -2px rgba(37,99,235,0.35);
             margin-top: 8px;
         }
         .login-btn:hover {
-            background: #333333;
-            box-shadow: 0 8px 30px -4px rgba(26,26,26,0.5);
+            background: #1D4ED8;
+            box-shadow: 0 8px 30px -4px rgba(37,99,235,0.45);
             transform: translateY(-2px);
         }
         .login-btn:active {
             transform: translateY(0) scale(0.98);
-            box-shadow: 0 2px 8px rgba(26,26,26,0.3);
+            box-shadow: 0 2px 8px rgba(37,99,235,0.25);
         }
         .login-btn::after {
             content: '';
@@ -237,7 +237,7 @@
             font-weight: 600;
             cursor: pointer;
             font-family: inherit;
-            color: #1a1a1a;
+            color: #111827;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -245,10 +245,10 @@
             transition: all 0.2s;
         }
         .google-btn:hover {
-            background: rgba(26,26,26,0.04);
-            border-color: #1a1a1a;
+            background: rgba(37,99,235,0.04);
+            border-color: #2563EB;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.08);
         }
         .google-btn svg {
             width: 20px; height: 20px;
@@ -278,7 +278,7 @@
             animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s backwards;
         }
         .login-toggle a {
-            color: #1a1a1a;
+            color: #2563EB;
             text-decoration: none;
             font-weight: 600;
         }
@@ -376,7 +376,7 @@
         </div>
     </div>
 
-    <div id="splashOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:#000;">
+    <div id="splashOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000;background:#fff;">
         <video id="splashVideo" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;">
             <source src="/static/videos/login-splash.mp4" type="video/mp4">
         </video>
