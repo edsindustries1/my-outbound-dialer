@@ -595,6 +595,7 @@ def api_health():
     return jsonify({"status": "ok", "service": "Open Humana"}), 200
 
 
+
 @app.route("/api/chat", methods=["POST"])
 @app.route("/api/chat-alex", methods=["POST"])
 def api_chat():
