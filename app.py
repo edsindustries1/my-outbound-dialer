@@ -25,6 +25,9 @@ import html as html_module
 from storage import (
     set_campaign,
     stop_campaign,
+    pause_campaign,
+    resume_campaign,
+    is_campaign_paused,
     get_all_statuses,
     get_campaign,
     get_call_state,
@@ -1413,6 +1416,26 @@ def stop():
     return jsonify({"message": "Campaign stopped"})
 
 
+# ---- Pause Campaign ----
+@app.route("/pause", methods=["POST"])
+@login_required
+def pause():
+    """Pause the current campaign. No new calls will be placed until resumed."""
+    pause_campaign(user_id=current_user.id)
+    logger.info("Campaign paused by user")
+    return jsonify({"message": "Campaign paused"})
+
+
+# ---- Resume Campaign ----
+@app.route("/resume", methods=["POST"])
+@login_required
+def resume():
+    """Resume a paused campaign."""
+    resume_campaign(user_id=current_user.id)
+    logger.info("Campaign resumed by user")
+    return jsonify({"message": "Campaign resumed"})
+
+
 # ---- Status Endpoint (polled by frontend) ----
 @app.route("/status")
 @login_required
@@ -1425,6 +1448,7 @@ def status():
         "active": campaign_active,
         "is_test": is_test,
         "stop_requested": camp["stop_requested"],
+        "paused": camp.get("paused", False),
         "total": len(camp["numbers"]) if not is_test else 0,
         "dialed_count": camp["dialed_count"] if not is_test else 0,
         "transfer_paused": is_transfer_paused(user_id=current_user.id),

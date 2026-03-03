@@ -48,6 +48,7 @@ def _default_campaign():
         "numbers": [],
         "dialed_count": 0,
         "stop_requested": False,
+        "paused": False,
         "dial_mode": "sequential",
         "batch_size": 5,
     }
@@ -253,6 +254,7 @@ def reset_campaign(user_id=None):
 
 def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None, is_test=False):
     key = _campaign_key(user_id)
+    _get_pause_event(user_id).set()
     with lock:
         camp = _default_campaign()
         camp["active"] = True
@@ -262,6 +264,7 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
         camp["numbers"] = list(numbers)
         camp["dialed_count"] = 0
         camp["stop_requested"] = False
+        camp["paused"] = False
         camp["dial_mode"] = dial_mode
         camp["batch_size"] = max(1, min(int(batch_size), 50))
         camp["dial_delay"] = max(1, min(10, int(dial_delay)))
@@ -284,6 +287,50 @@ def stop_campaign(user_id=None):
         if camp:
             camp["stop_requested"] = True
             camp["active"] = False
+            camp["paused"] = False
+    _get_pause_event(user_id).set()
+
+
+def pause_campaign(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp and camp["active"] and not camp["stop_requested"]:
+            camp["paused"] = True
+    _get_pause_event(user_id).clear()
+
+
+def resume_campaign(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp and camp["active"]:
+            camp["paused"] = False
+    _get_pause_event(user_id).set()
+
+
+def is_campaign_paused(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp:
+            return camp.get("paused", False)
+        return False
+
+
+_pause_events = {}
+
+def _get_pause_event(user_id=None):
+    key = _campaign_key(user_id)
+    if key not in _pause_events:
+        evt = threading.Event()
+        evt.set()
+        _pause_events[key] = evt
+    return _pause_events[key]
+
+
+def wait_if_campaign_paused(user_id=None):
+    _get_pause_event(user_id).wait()
 
 
 def mark_campaign_complete(user_id=None):

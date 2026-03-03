@@ -16,6 +16,8 @@ from storage import (
     register_call_complete_event,
     is_transfer_paused,
     wait_if_transfer_paused,
+    is_campaign_paused,
+    wait_if_campaign_paused,
     is_dnc,
     is_valid_phone_number,
     log_invalid_number,
@@ -85,6 +87,14 @@ def _dial_sequential(numbers, dial_delay=2, from_number=None, user_id=None):
                 logger.info("Campaign stopped during transfer pause, exiting")
                 break
 
+        if is_campaign_paused(user_id=user_id):
+            logger.info("Campaign paused by user, waiting for resume...")
+            wait_if_campaign_paused(user_id=user_id)
+            logger.info("Campaign resumed by user")
+            if not is_campaign_active(user_id=user_id):
+                logger.info("Campaign stopped while paused, exiting")
+                break
+
         number = number.strip()
         if not number:
             continue
@@ -138,6 +148,14 @@ def _dial_simultaneous(numbers, batch_size, from_number=None, user_id=None):
             logger.info("Transfer completed, campaign resuming")
             if not is_campaign_active(user_id=user_id):
                 logger.info("Campaign stopped during transfer pause, exiting")
+                break
+
+        if is_campaign_paused(user_id=user_id):
+            logger.info("Campaign paused by user, waiting for resume...")
+            wait_if_campaign_paused(user_id=user_id)
+            logger.info("Campaign resumed by user")
+            if not is_campaign_active(user_id=user_id):
+                logger.info("Campaign stopped while paused, exiting")
                 break
 
         batch_end = min(i + batch_size, total)
