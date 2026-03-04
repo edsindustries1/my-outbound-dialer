@@ -100,7 +100,6 @@ from telnyx_client import (
     list_call_control_apps, get_number_order_status,
     lookup_number, lookup_numbers_batch,
     auto_configure_outbound,
-    caller_health_check, caller_health_check_batch,
 )
 from call_manager import start_dialer
 from personalized_vm import (
@@ -1812,28 +1811,6 @@ def api_lookup_numbers_batch():
     return jsonify(results)
 
 
-@app.route("/api/caller-health", methods=["POST"])
-@login_required
-def api_caller_health():
-    data = request.get_json() or {}
-    number = data.get("number", "").strip()
-    if not number:
-        return jsonify({"error": "No number provided"}), 400
-    result = caller_health_check(number)
-    return jsonify(result)
-
-
-@app.route("/api/caller-health-batch", methods=["POST"])
-@login_required
-def api_caller_health_batch():
-    data = request.get_json() or {}
-    numbers = data.get("numbers", [])
-    if not numbers:
-        return jsonify({"error": "No numbers provided"}), 400
-    if len(numbers) > 20:
-        return jsonify({"error": "Maximum 20 numbers per batch health check"}), 400
-    results = caller_health_check_batch(numbers, max_concurrent=3)
-    return jsonify({"results": results})
 
 
 # ---- Contact Management API ----

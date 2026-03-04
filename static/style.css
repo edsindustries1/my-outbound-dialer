@@ -1139,22 +1139,6 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .gads-badge-warning { background: var(--gads-warning-light); color: var(--gads-warning); border-color: rgba(245,158,11,0.3); }
 .gads-badge-error { background: var(--gads-error-light); color: var(--gads-error); border-color: rgba(239,68,68,0.3); }
 
-.health-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: default;
-    white-space: nowrap;
-}
-.health-badge svg { flex-shrink: 0; }
-.health-good { background: var(--gads-success-light); color: var(--gads-success); border: 1px solid rgba(16,185,129,0.3); }
-.health-warning { background: var(--gads-warning-light); color: var(--gads-warning); border: 1px solid rgba(245,158,11,0.3); }
-.health-danger { background: var(--gads-error-light); color: var(--gads-error); border: 1px solid rgba(239,68,68,0.3); }
-.health-pending { background: var(--gads-surface-hover); color: var(--gads-text-muted); border: 1px solid var(--gads-border); }
 
 @keyframes spin {
     from { transform: rotate(0deg); }
