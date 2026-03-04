@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>!function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);}();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Humana</title>
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=5">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1833,8 +1834,10 @@
             }
             themeToggle.addEventListener("click", function() {
                 var next = getCurrentTheme() === "dark" ? "light" : "dark";
+                document.documentElement.classList.add("theme-transition");
                 document.documentElement.setAttribute("data-theme", next);
                 localStorage.setItem("vb_theme", next);
+                setTimeout(function(){ document.documentElement.classList.remove("theme-transition"); }, 350);
             });
 
             // ---- Fullscreen Toggle ----
@@ -3303,12 +3306,14 @@
             for (var i = 0; i < particles.length; i++) {
                 var a = particles[i];
                 ctx.beginPath(); ctx.arc(a.x, a.y, a.baseSize, 0, 6.2832);
-                ctx.fillStyle = "rgba(26,115,232," + a.alpha + ")"; ctx.fill();
+                var _pd = document.documentElement.getAttribute("data-theme") === "dark";
+                var _pc = _pd ? "180,180,210" : "26,26,46";
+                ctx.fillStyle = "rgba(" + _pc + "," + a.alpha * 0.7 + ")"; ctx.fill();
                 for (var j = i + 1; j < particles.length; j++) {
                     var b = particles[j]; var dx = a.x - b.x, dy = a.y - b.y; var dSq = dx * dx + dy * dy;
                     if (dSq < CONNECTION_DIST_SQ) {
                         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                        ctx.strokeStyle = "rgba(26,115,232," + ((1 - Math.sqrt(dSq) / 120) * 0.1) + ")"; ctx.stroke();
+                        ctx.strokeStyle = "rgba(" + _pc + "," + ((1 - Math.sqrt(dSq) / 120) * 0.1) + ")"; ctx.stroke();
                     }
                 }
             }
