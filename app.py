@@ -90,6 +90,7 @@ from storage import (
     clear_contacts,
     store_recording_url,
     get_user_for_call,
+    claim_call_action,
 )
 from telnyx_client import (
     transfer_call, play_audio, hangup_call, make_call, validate_connection_id,
@@ -2502,28 +2503,87 @@ def _handle_webhook():
             logger.info(f"[AMD UNKNOWN] {call_control_id} | result='{result}', hanging up")
             hangup_call(call_control_id)
 
-    # ---- call.machine.greeting.ended (beep detected) ----
+    # ---- call.machine.greeting.ended (beep/no-beep) ----
     elif event_type in ("call.machine.greeting.ended", "call.machine.premium.greeting.ended"):
         state = get_call_state(call_control_id)
         if not state:
             return "", 200
 
         beep_result = payload.get("result", "unknown")
-        logger.info(f"Voicemail greeting ended on {call_control_id}, result: {beep_result}")
+        logger.info(f"[GREETING ENDED] {call_control_id} | result: {beep_result}")
 
         beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
         if beep_timer:
             beep_timer.cancel()
 
-        if not state.get("voicemail_dropped") and state.get("vm_pending_audio_url"):
+        if state.get("voicemail_dropped"):
+            logger.info(f"[GREETING ENDED] {call_control_id} | voicemail already playing, ignoring")
+        elif state.get("transferred"):
+            logger.info(f"[GREETING ENDED] {call_control_id} | already transferred, ignoring")
+        elif state.get("vm_pending_audio_url"):
             audio_url = state.get("vm_pending_audio_url")
             is_pvm = state.get("vm_pending_personalized", False)
             cust_num = state.get("vm_pending_customer_number", "")
             uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
-            logger.info(f"Greeting ended ({beep_result}) on {call_control_id} — dropping voicemail now (after beep)")
-            _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
-        elif state.get("voicemail_dropped"):
-            logger.info(f"Greeting ended on {call_control_id}, voicemail already playing")
+
+            if beep_result == "beep_detected":
+                logger.info(f"[BEEP DETECTED] {call_control_id} | Confirmed voicemail, dropping immediately")
+                update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
+                _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
+            else:
+                logger.info(f"[NO BEEP] {call_control_id} | No beep detected, waiting 4s for transcription to classify (gatekeeper vs voicemail)")
+                update_call_state(call_control_id, beep_detected=False,
+                                  status_description="No beep - analyzing transcription...", status_color="blue")
+
+                def _no_beep_fallback(ccid, aud_url, is_pvm_flag, cn, u):
+                    st = get_call_state(ccid)
+                    if not st or st.get("voicemail_dropped") or st.get("transferred") or st.get("gatekeeper_handled"):
+                        _amd_timers.pop(f"nobeep_{ccid}", None)
+                        return
+                    transcripts = st.get("transcript", [])
+                    full_text = " ".join(t.get("text", "") for t in transcripts).lower()
+                    gatekeeper_kw = ["reason for calling", "who is calling", "what is this regarding",
+                                     "i'll see if", "let me check", "please stay on the line",
+                                     "hold on", "one moment", "transferring you", "how can i help",
+                                     "how may i direct", "who are you trying to reach",
+                                     "what company are you with", "is this person expecting your call",
+                                     "may i ask who", "state your name", "who shall i say"]
+                    if any(kw in full_text for kw in gatekeeper_kw):
+                        logger.info(f"[GATEKEEPER DETECTED] {ccid} | Transcription confirms AI gatekeeper (no-beep fallback), transferring")
+                        update_call_state(ccid, ai_gatekeeper=True, gatekeeper_handled=True,
+                                          vm_pending_audio_url=None,
+                                          status_description="AI gatekeeper detected - transferring", status_color="blue")
+                        u_id = u or get_user_for_call(ccid)
+                        camp = get_campaign(user_id=u_id)
+                        t_num = camp.get("transfer_number") or ""
+                        if t_num and mark_transferred(ccid):
+                            logger.info(f"[TRANSFER] {ccid} | Gatekeeper -> transferring to {t_num}")
+                            try:
+                                success = transfer_call(ccid, t_num, customer_number=cn)
+                            except Exception as e:
+                                logger.error(f"[TRANSFER ERROR] {ccid} | {e}")
+                                success = False
+                            if success:
+                                pause_for_transfer(ccid, user_id=u_id)
+                                update_call_state(ccid, status="transferred",
+                                                  status_description="AI gatekeeper - transferred to human", status_color="green")
+                            else:
+                                update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                                hangup_call(ccid)
+                        elif not t_num:
+                            logger.warning(f"[GATEKEEPER] {ccid} | No transfer number configured, hanging up")
+                            update_call_state(ccid, status_description="Gatekeeper detected - no transfer number", status_color="yellow")
+                            hangup_call(ccid)
+                    else:
+                        logger.info(f"[NO BEEP FALLBACK] {ccid} | No gatekeeper keywords found after 4s, dropping voicemail")
+                        update_call_state(ccid, voicemail_confirmed=True)
+                        _drop_voicemail_now(ccid, aud_url, is_pvm_flag, cn, u)
+                    _amd_timers.pop(f"nobeep_{ccid}", None)
+
+                t = threading.Timer(4, _no_beep_fallback, args=[call_control_id, audio_url, is_pvm, cust_num, uid])
+                t.daemon = True
+                t.start()
+                _amd_timers[f"nobeep_{call_control_id}"] = t
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
@@ -2564,29 +2624,72 @@ def _handle_webhook():
             logger.info(f"Transcript stored [{track}] for {call_control_id}: {transcript_text[:100]}")
 
             state = get_call_state(call_control_id)
-            if state and state.get("machine_detected") and not state.get("voicemail_dropped") and state.get("vm_pending_audio_url"):
-                vm_keywords = ["leave your message", "leave a message", "after the tone", "after the beep",
-                               "at the tone", "record your message", "record a message",
-                               "press pound", "can't come to the phone", "cannot take your call"]
+            if state and state.get("machine_detected") and not state.get("voicemail_dropped") and not state.get("transferred") and not state.get("gatekeeper_handled"):
                 text_lower = transcript_text.lower()
-                if any(kw in text_lower for kw in vm_keywords):
-                    logger.info(f"Voicemail keywords detected in transcription for {call_control_id}, scheduling drop in 5s (after beep window)")
-                    beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
-                    if beep_timer:
-                        beep_timer.cancel()
-                    audio_url = state.get("vm_pending_audio_url")
-                    is_pvm = state.get("vm_pending_personalized", False)
-                    cust_num = state.get("vm_pending_customer_number", "")
+
+                gatekeeper_keywords = ["reason for calling", "who is calling", "what is this regarding",
+                                       "i'll see if", "let me check", "please stay on the line",
+                                       "hold on", "one moment", "transferring you", "how can i help",
+                                       "how may i direct", "who are you trying to reach",
+                                       "what company are you with", "is this person expecting your call",
+                                       "may i ask who", "state your name", "who shall i say"]
+
+                if any(kw in text_lower for kw in gatekeeper_keywords):
+                    logger.info(f"[GATEKEEPER DETECTED] {call_control_id} | Keywords in transcription: '{transcript_text[:100]}'")
+                    for timer_key in [f"beep_{call_control_id}", f"nobeep_{call_control_id}"]:
+                        t = _amd_timers.pop(timer_key, None)
+                        if t:
+                            t.cancel()
+                    update_call_state(call_control_id, ai_gatekeeper=True, gatekeeper_handled=True,
+                                      vm_pending_audio_url=None,
+                                      status_description="AI gatekeeper detected - transferring", status_color="blue")
                     uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
-                    def _keyword_delay_drop(ccid, aud, pvm, cn, u):
-                        st = get_call_state(ccid)
-                        if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
-                            logger.info(f"Keyword delay elapsed on {ccid}, dropping voicemail now")
-                            _drop_voicemail_now(ccid, aud, pvm, cn, u)
-                    t = threading.Timer(5, _keyword_delay_drop, args=[call_control_id, audio_url, is_pvm, cust_num, uid])
-                    t.daemon = True
-                    t.start()
-                    _amd_timers[f"beep_{call_control_id}"] = t
+                    camp = get_campaign(user_id=uid)
+                    t_num = camp.get("transfer_number") or ""
+                    customer_num = state.get("number", "")
+                    if t_num and mark_transferred(call_control_id):
+                        logger.info(f"[TRANSFER] {call_control_id} | Gatekeeper detected via transcription, transferring to {t_num}")
+                        try:
+                            success = transfer_call(call_control_id, t_num, customer_number=customer_num)
+                        except Exception as e:
+                            logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
+                            success = False
+                        if success:
+                            pause_for_transfer(call_control_id, user_id=uid)
+                            update_call_state(call_control_id, status="transferred",
+                                              status_description="AI gatekeeper - transferred to human", status_color="green")
+                        else:
+                            update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
+                            hangup_call(call_control_id)
+                    elif not t_num:
+                        logger.warning(f"[GATEKEEPER] {call_control_id} | No transfer number, hanging up")
+                        update_call_state(call_control_id, status_description="Gatekeeper detected - no transfer number", status_color="yellow")
+                        hangup_call(call_control_id)
+
+                elif state.get("vm_pending_audio_url"):
+                    vm_keywords = ["leave your message", "leave a message", "after the tone", "after the beep",
+                                   "at the tone", "record your message", "record a message",
+                                   "press pound", "can't come to the phone", "cannot take your call"]
+                    if any(kw in text_lower for kw in vm_keywords):
+                        logger.info(f"[VM KEYWORDS] {call_control_id} | Voicemail keywords detected: '{transcript_text[:100]}', scheduling drop in 5s")
+                        for timer_key in [f"beep_{call_control_id}", f"nobeep_{call_control_id}"]:
+                            t = _amd_timers.pop(timer_key, None)
+                            if t:
+                                t.cancel()
+                        update_call_state(call_control_id, voicemail_confirmed=True)
+                        audio_url = state.get("vm_pending_audio_url")
+                        is_pvm = state.get("vm_pending_personalized", False)
+                        cust_num = state.get("vm_pending_customer_number", "")
+                        uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
+                        def _keyword_delay_drop(ccid, aud, pvm, cn, u):
+                            st = get_call_state(ccid)
+                            if st and not st.get("voicemail_dropped") and not st.get("transferred") and st.get("vm_pending_audio_url"):
+                                logger.info(f"[VM DROP] {ccid} | Keyword delay elapsed, dropping voicemail now")
+                                _drop_voicemail_now(ccid, aud, pvm, cn, u)
+                        t = threading.Timer(5, _keyword_delay_drop, args=[call_control_id, audio_url, is_pvm, cust_num, uid])
+                        t.daemon = True
+                        t.start()
+                        _amd_timers[f"beep_{call_control_id}"] = t
 
     # ---- call.recording.saved ----
     elif event_type == "call.recording.saved":
@@ -2603,12 +2706,10 @@ def _handle_webhook():
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":
-        timer = _amd_timers.pop(call_control_id, None)
-        if timer:
-            timer.cancel()
-        beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
-        if beep_timer:
-            beep_timer.cancel()
+        for prefix in ["", "beep_", "nobeep_", "safety_"]:
+            t = _amd_timers.pop(f"{prefix}{call_control_id}", None)
+            if t:
+                t.cancel()
 
         hangup_cause = payload.get("hangup_cause", "unknown")
         hangup_source = payload.get("hangup_source", "unknown")

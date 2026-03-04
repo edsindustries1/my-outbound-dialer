@@ -436,12 +436,26 @@ def append_transcript(call_control_id, text, track="inbound", is_final=True):
 def mark_voicemail_dropped(call_control_id):
     with lock:
         state = call_states.get(call_control_id)
-        if state and not state["voicemail_dropped"]:
+        if state and not state["voicemail_dropped"] and not state.get("transferred") and not state.get("gatekeeper_handled"):
             state["voicemail_dropped"] = True
             state["playback_started"] = True
             state["status"] = "voicemail_playing"
             return True
         return False
+
+
+def claim_call_action(call_control_id, action):
+    """Atomically claim an action on a call. Returns True only if no conflicting action has been taken.
+    Actions: 'voicemail', 'transfer', 'gatekeeper_transfer', 'hangup'"""
+    with lock:
+        state = call_states.get(call_control_id)
+        if not state:
+            return False
+        if state.get("voicemail_dropped") or state.get("transferred") or state.get("gatekeeper_handled"):
+            return False
+        if action in ("transfer", "gatekeeper_transfer"):
+            state["gatekeeper_handled"] = True
+        return True
 
 
 def call_states_snapshot():
