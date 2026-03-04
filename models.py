@@ -75,8 +75,15 @@ class Invitation(db.Model):
     used = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     used_at = db.Column(db.DateTime, nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
 
     inviter = db.relationship('User', foreign_keys=[invited_by])
+
+    @property
+    def is_expired(self):
+        if not self.expires_at:
+            return False
+        return datetime.utcnow() > self.expires_at
 
 
 class UserAppData(db.Model):
@@ -178,6 +185,12 @@ def _ensure_schema():
             db.session.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)"))
             db.session.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires TIMESTAMP"))
             db.session.commit()
+
+        if "invitations" in inspector.get_table_names():
+            inv_cols = {col["name"] for col in inspector.get_columns("invitations")}
+            if "expires_at" not in inv_cols:
+                db.session.execute(text("ALTER TABLE invitations ADD COLUMN expires_at TIMESTAMP"))
+                db.session.commit()
 
         admin_email = __import__('os').environ.get("ADMIN_EMAIL", "")
         if admin_email:

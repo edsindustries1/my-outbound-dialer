@@ -872,11 +872,14 @@ def login():
                 if app_password == APP_PASSWORD:
                     admin = User.query.filter_by(email="admin@openhuman.local").first()
                     if not admin:
-                        admin = User(email="admin@openhuman.local", profile_name="Admin")
+                        admin = User(email="admin@openhuman.local", profile_name="Admin", role='admin')
                         admin.set_password(APP_PASSWORD)
                         db.session.add(admin)
                         db.session.commit()
                         logger.info("Admin account auto-created via APP_PASSWORD login")
+                    elif admin.role != 'admin':
+                        admin.role = 'admin'
+                        db.session.commit()
                     login_user(admin, remember=True)
                     session.permanent = True
                     logger.info("Admin successfully authenticated")
@@ -2406,8 +2409,8 @@ def _handle_webhook():
 
         elif result == "machine":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
-                              amd_result="machine", status_description="Machine detected - waiting for beep (up to 60s)", status_color="blue")
-            logger.info(f"MACHINE detected on {call_control_id}, waiting for beep/greeting end before playing voicemail (60s patience)")
+                              amd_result="machine", status_description="Machine detected - waiting for beep", status_color="blue")
+            logger.info(f"MACHINE detected on {call_control_id}, waiting for beep/greeting end before playing voicemail (30s fallback)")
 
             camp = get_campaign(user_id=webhook_user_id)
             state = get_call_state(call_control_id)
@@ -2429,7 +2432,7 @@ def _handle_webhook():
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
-                t = threading.Timer(60, _greeting_delay_drop, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t = threading.Timer(30, _greeting_delay_drop, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
                 t.daemon = True
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
@@ -2463,7 +2466,7 @@ def _handle_webhook():
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
-                t = threading.Timer(60, _greeting_delay_drop_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
+                t = threading.Timer(30, _greeting_delay_drop_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
                 t.daemon = True
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
@@ -2542,10 +2545,27 @@ def _handle_webhook():
             state = get_call_state(call_control_id)
             if state and state.get("machine_detected") and not state.get("voicemail_dropped") and state.get("vm_pending_audio_url"):
                 vm_keywords = ["leave your message", "leave a message", "after the tone", "after the beep",
-                               "at the tone", "record your message"]
+                               "at the tone", "record your message", "record a message",
+                               "press pound", "can't come to the phone", "cannot take your call"]
                 text_lower = transcript_text.lower()
                 if any(kw in text_lower for kw in vm_keywords):
-                    logger.info(f"Voicemail keywords detected in transcription for {call_control_id} — noted but waiting for beep signal (not dropping early)")
+                    logger.info(f"Voicemail keywords detected in transcription for {call_control_id}, scheduling drop in 5s (after beep window)")
+                    beep_timer = _amd_timers.pop(f"beep_{call_control_id}", None)
+                    if beep_timer:
+                        beep_timer.cancel()
+                    audio_url = state.get("vm_pending_audio_url")
+                    is_pvm = state.get("vm_pending_personalized", False)
+                    cust_num = state.get("vm_pending_customer_number", "")
+                    uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
+                    def _keyword_delay_drop(ccid, aud, pvm, cn, u):
+                        st = get_call_state(ccid)
+                        if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
+                            logger.info(f"Keyword delay elapsed on {ccid}, dropping voicemail now")
+                            _drop_voicemail_now(ccid, aud, pvm, cn, u)
+                    t = threading.Timer(5, _keyword_delay_drop, args=[call_control_id, audio_url, is_pvm, cust_num, uid])
+                    t.daemon = True
+                    t.start()
+                    _amd_timers[f"beep_{call_control_id}"] = t
 
     # ---- call.recording.saved ----
     elif event_type == "call.recording.saved":
@@ -2994,6 +3014,7 @@ def admin_invite():
         email=email,
         invited_by=current_user.id,
         grant_free_access=grant_free,
+        expires_at=datetime.utcnow() + _td(days=7),
     )
     db.session.add(invitation)
     db.session.commit()
@@ -3040,6 +3061,10 @@ def setup_account():
     if not invitation:
         return render_template("setup_account.html", token=token, email="",
                                error="This invitation link is invalid or has already been used.",
+                               grant_free_access=False)
+    if invitation.is_expired:
+        return render_template("setup_account.html", token=token, email="",
+                               error="This invitation link has expired. Please contact the administrator for a new invite.",
                                grant_free_access=False)
     error = None
     if request.method == "POST":
