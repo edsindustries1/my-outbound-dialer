@@ -38,7 +38,7 @@
         <!-- ===== SIDEBAR ===== -->
         <div class="gads-sidebar" id="gadsSidebar">
             <div class="gads-sidebar-logo" onclick="navigateTo('dashboard')" style="cursor:pointer;">
-                <img src="/static/images/logo.png" alt="Open Humana" style="height:130px;width:auto;">
+                <img src="/static/images/logo.png" alt="Open Humana" style="height:156px;width:auto;">
             </div>
             <nav class="gads-sidebar-nav">
                 <a class="gads-nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
@@ -1249,6 +1249,19 @@
             sidebar.classList.toggle('gads-sidebar-collapsed');
             main.classList.toggle('gads-main-expanded');
         }
+
+        (function(){
+            var navItems = document.querySelectorAll('.gads-nav-item');
+            navItems.forEach(function(item){
+                item.addEventListener('mousemove', function(e){
+                    var rect = item.getBoundingClientRect();
+                    var x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+                    var y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+                    item.style.setProperty('--ripple-x', x + '%');
+                    item.style.setProperty('--ripple-y', y + '%');
+                });
+            });
+        })();
 
         window.addEventListener('hashchange', function() {
             var hash = window.location.hash.replace('#', '');
