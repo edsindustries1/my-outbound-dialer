@@ -3086,7 +3086,6 @@
         var fabDragOffX = 0, fabDragOffY = 0;
         var fabTrailX = [], fabTrailY = [], fabTrailT = [];
         var fabAnim = null;
-        var fabOriginX, fabOriginY;
         var GRAV = 980;
         var AIR_DRAG = 0.998;
         var GROUND_FRIC = 0.92;
@@ -3095,6 +3094,7 @@
         var REST_VEL = 0.4;
         var REST_FRAMES_MAX = 90;
         var IDLE_NUDGE_VEL = 60;
+        var FLOOR_PAD = 56;
         var iFab = document.getElementById("iphoneFab");
         var iFabSize = 56;
         var iFabX = 0, iFabY = 0, iFabVX = 0, iFabVY = 0;
@@ -3102,14 +3102,13 @@
         var iFabDragOffX = 0, iFabDragOffY = 0;
         var iFabTrailX = [], iFabTrailY = [], iFabTrailT = [];
         var iFabActive = false;
-        var iFabOriginX, iFabOriginY;
         var lastPhysicsTime = 0;
         var physicsIdleFrames = 0;
 
-        function initFabPos(){var rect=fab.getBoundingClientRect();fabX=rect.left;fabY=rect.top;fabOriginX=rect.left;fabOriginY=rect.top;}
-        function applyFabPos(){fab.style.transform="translate3d("+(fabX-fabOriginX)+"px,"+(fabY-fabOriginY)+"px,0)";}
-        function initIFabPos(){var rect=iFab.getBoundingClientRect();iFabX=rect.left;iFabY=rect.top;iFabOriginX=rect.left;iFabOriginY=rect.top;}
-        function applyIFabPos(){iFab.style.transform="translate3d("+(iFabX-iFabOriginX)+"px,"+(iFabY-iFabOriginY)+"px,0)";}
+        function initFabPos(){var rect=fab.getBoundingClientRect();fabX=rect.left;fabY=rect.top;fab.style.left=fabX+"px";fab.style.top=fabY+"px";fab.style.bottom="auto";fab.style.right="auto";fab.style.transform="";}
+        function applyFabPos(){fab.style.left=fabX+"px";fab.style.top=fabY+"px";}
+        function initIFabPos(){var rect=iFab.getBoundingClientRect();iFabX=rect.left;iFabY=rect.top;iFab.style.left=iFabX+"px";iFab.style.top=iFabY+"px";iFab.style.bottom="auto";iFab.style.right="auto";iFab.style.transform="";}
+        function applyIFabPos(){iFab.style.left=iFabX+"px";iFab.style.top=iFabY+"px";}
 
         function stepBall(x,y,vx,vy,sz,dt,onGround){
             vx*=Math.pow(AIR_DRAG,dt*60);
@@ -3118,7 +3117,7 @@
             x+=vx*dt;
             y+=vy*dt;
             var maxX=window.innerWidth-sz;
-            var maxY=window.innerHeight-sz;
+            var maxY=window.innerHeight-sz-FLOOR_PAD;
             if(y>=maxY){y=maxY;vy=-Math.abs(vy)*BOUNCE;if(Math.abs(vy)<30)vy=0;vx*=GROUND_FRIC;}
             if(y<=0){y=0;vy=Math.abs(vy)*BOUNCE;}
             if(x<=0){x=0;vx=Math.abs(vx)*WALL_BOUNCE;}
@@ -3200,13 +3199,16 @@
         }
 
         document.addEventListener("visibilitychange",function(){if(!document.hidden&&(isFloating||iFabActive)&&!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}});
-        window.addEventListener("resize",function(){var w=window.innerWidth,h=window.innerHeight;if(isFloating&&!fab.classList.contains("hidden")){fabX=Math.max(0,Math.min(fabX,w-fabSize));fabY=Math.max(0,Math.min(fabY,h-fabSize));applyFabPos();}if(iFabActive){iFabX=Math.max(0,Math.min(iFabX,w-iFabSize));iFabY=Math.max(0,Math.min(iFabY,h-iFabSize));applyIFabPos();}if(win.classList.contains("open")){var r=win.getBoundingClientRect();if(r.left>w-60){win.style.left=(w-200)+"px";win.style.right="auto";}if(r.top>h-60){win.style.top=(h-200)+"px";win.style.bottom="auto";}}});
+        function _clampWidgets(){var w=window.innerWidth,h=window.innerHeight;var floorY=h-FLOOR_PAD;if(isFloating&&!fab.classList.contains("hidden")){fabX=Math.max(0,Math.min(fabX,w-fabSize));fabY=Math.max(0,Math.min(fabY,floorY-fabSize));applyFabPos();fabVX=0;fabVY=0;}if(iFabActive){iFabX=Math.max(0,Math.min(iFabX,w-iFabSize));iFabY=Math.max(0,Math.min(iFabY,floorY-iFabSize));applyIFabPos();iFabVX=0;iFabVY=0;}if(win.classList.contains("open")){var r=win.getBoundingClientRect();if(r.left<0||r.left>w-60){win.style.left=Math.max(0,Math.min(r.left,w-200))+"px";win.style.right="auto";}if(r.top<0||r.top>h-60){win.style.top=Math.max(0,Math.min(r.top,h-200))+"px";win.style.bottom="auto";}}physicsIdleFrames=0;lastPhysicsTime=0;if((isFloating||iFabActive)&&!fabAnim){fabAnim=requestAnimationFrame(physicsTick);}}
+        window.addEventListener("resize",_clampWidgets);
+        document.addEventListener("fullscreenchange",function(){setTimeout(_clampWidgets,100);});
+        if(window.screen&&window.screen.orientation){window.screen.orientation.addEventListener("change",function(){setTimeout(_clampWidgets,200);});}
 
         function startFloat(){isFloating=true;fab.classList.add("floating");floatToggle.classList.add("active");floatToggle.textContent="Float";localStorage.setItem(floatKey,"true");initFabPos();fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);lastPhysicsTime=0;physicsIdleFrames=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);}
-        function stopFloat(){isFloating=false;fab.classList.remove("floating");floatToggle.classList.remove("active");floatToggle.textContent="Stick";localStorage.setItem(floatKey,"false");if(fabAnim){cancelAnimationFrame(fabAnim);fabAnim=null;}lastPhysicsTime=0;fab.style.transform="";fab.style.left="";fab.style.top="";fab.style.bottom=defaultBottom+"px";fab.style.right=defaultRight+"px";if(iFabActive&&!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}}
+        function stopFloat(){isFloating=false;fab.classList.remove("floating");floatToggle.classList.remove("active");floatToggle.textContent="Stick";localStorage.setItem(floatKey,"false");if(fabAnim){cancelAnimationFrame(fabAnim);fabAnim=null;}lastPhysicsTime=0;fab.style.transform="";fab.style.left="";fab.style.top="";fab.style.bottom=defaultBottom+"px";fab.style.right=defaultRight+"px";fabVX=0;fabVY=0;if(iFabActive&&!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}}
 
         function fabStartDrag(cx,cy){if(!isFloating)return;fabDragging=true;fabClicked=true;fabDragOffX=cx-fabX;fabDragOffY=cy-fabY;fabVX=0;fabVY=0;fabTrailX=[cx];fabTrailY=[cy];fabTrailT=[performance.now()];fab.style.cursor="grabbing";physicsIdleFrames=0;if(!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}}
-        function fabMoveDrag(cx,cy){if(!fabDragging)return;fabClicked=false;fabX=cx-fabDragOffX;fabY=cy-fabDragOffY;fabX=Math.max(0,Math.min(fabX,window.innerWidth-fabSize));fabY=Math.max(0,Math.min(fabY,window.innerHeight-fabSize));applyFabPos();var now=performance.now();fabTrailX.push(cx);fabTrailY.push(cy);fabTrailT.push(now);if(fabTrailX.length>8){fabTrailX.shift();fabTrailY.shift();fabTrailT.shift();}}
+        function fabMoveDrag(cx,cy){if(!fabDragging)return;fabClicked=false;fabX=cx-fabDragOffX;fabY=cy-fabDragOffY;fabX=Math.max(0,Math.min(fabX,window.innerWidth-fabSize));fabY=Math.max(0,Math.min(fabY,window.innerHeight-fabSize-FLOOR_PAD));applyFabPos();var now=performance.now();fabTrailX.push(cx);fabTrailY.push(cy);fabTrailT.push(now);if(fabTrailX.length>8){fabTrailX.shift();fabTrailY.shift();fabTrailT.shift();}}
         function fabEndDrag(){if(!fabDragging)return;fabDragging=false;fab.style.cursor="";var now=performance.now();var tvx=0,tvy=0;if(fabTrailX.length>=2){var idx=0;for(var k=fabTrailT.length-1;k>=0;k--){if(now-fabTrailT[k]>100)break;idx=k;}var dt=(now-fabTrailT[idx])||1;tvx=(fabTrailX[fabTrailX.length-1]-fabTrailX[idx])/dt*1000;tvy=(fabTrailY[fabTrailY.length-1]-fabTrailY[idx])/dt*1000;}var maxT=2000;fabVX=Math.max(-maxT,Math.min(maxT,tvx));fabVY=Math.max(-maxT,Math.min(maxT,tvy));physicsIdleFrames=0;lastPhysicsTime=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);}
 
         fab.addEventListener("mousedown",function(e){if(!isFloating)return;e.preventDefault();fabStartDrag(e.clientX,e.clientY);});
@@ -3217,7 +3219,7 @@
         document.addEventListener("touchend",function(){if(fabDragging)fabEndDrag();});
 
         function iFabStartDrag(cx,cy){iFabDragging=true;iFabClicked=true;iFabDragOffX=cx-iFabX;iFabDragOffY=cy-iFabY;iFabVX=0;iFabVY=0;iFabTrailX=[cx];iFabTrailY=[cy];iFabTrailT=[performance.now()];iFab.style.cursor="grabbing";physicsIdleFrames=0;if(!fabAnim){lastPhysicsTime=0;fabAnim=requestAnimationFrame(physicsTick);}}
-        function iFabMoveDrag(cx,cy){if(!iFabDragging)return;iFabClicked=false;iFabX=cx-iFabDragOffX;iFabY=cy-iFabDragOffY;iFabX=Math.max(0,Math.min(iFabX,window.innerWidth-iFabSize));iFabY=Math.max(0,Math.min(iFabY,window.innerHeight-iFabSize));applyIFabPos();var now=performance.now();iFabTrailX.push(cx);iFabTrailY.push(cy);iFabTrailT.push(now);if(iFabTrailX.length>8){iFabTrailX.shift();iFabTrailY.shift();iFabTrailT.shift();}}
+        function iFabMoveDrag(cx,cy){if(!iFabDragging)return;iFabClicked=false;iFabX=cx-iFabDragOffX;iFabY=cy-iFabDragOffY;iFabX=Math.max(0,Math.min(iFabX,window.innerWidth-iFabSize));iFabY=Math.max(0,Math.min(iFabY,window.innerHeight-iFabSize-FLOOR_PAD));applyIFabPos();var now=performance.now();iFabTrailX.push(cx);iFabTrailY.push(cy);iFabTrailT.push(now);if(iFabTrailX.length>8){iFabTrailX.shift();iFabTrailY.shift();iFabTrailT.shift();}}
         function iFabEndDrag(){if(!iFabDragging)return;iFabDragging=false;iFab.style.cursor="";var now=performance.now();var tvx=0,tvy=0;if(iFabTrailX.length>=2){var idx=0;for(var k=iFabTrailT.length-1;k>=0;k--){if(now-iFabTrailT[k]>100)break;idx=k;}var dt=(now-iFabTrailT[idx])||1;tvx=(iFabTrailX[iFabTrailX.length-1]-iFabTrailX[idx])/dt*1000;tvy=(iFabTrailY[iFabTrailY.length-1]-iFabTrailY[idx])/dt*1000;}var mx=2000;iFabVX=Math.max(-mx,Math.min(mx,tvx));iFabVY=Math.max(-mx,Math.min(mx,tvy));physicsIdleFrames=0;lastPhysicsTime=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);}
 
         iFab.addEventListener("mousedown",function(e){if(!iFabActive)return;e.preventDefault();iFabStartDrag(e.clientX,e.clientY);});
@@ -3227,10 +3229,10 @@
         document.addEventListener("touchmove",function(e){if(iFabDragging){var t=e.touches[0];iFabMoveDrag(t.clientX,t.clientY);}},{passive:true});
         document.addEventListener("touchend",function(){if(iFabDragging)iFabEndDrag();});
         iFab.addEventListener("click",function(e){if(!iFabActive)return;if(!iFabClicked)return;e.stopPropagation();if(typeof iphoneToggleMinimize==="function"){iphoneToggleMinimize();}});
-        window.ballsStartIphone=function(){iFabActive=true;iFab.classList.add("floating");setTimeout(function(){initIFabPos();iFabVX=(Math.random()-0.5)*200;iFabVY=-(200+Math.random()*300);lastPhysicsTime=0;physicsIdleFrames=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);},50);};
-        window.ballsStopIphone=function(){iFabActive=false;iFabVX=0;iFabVY=0;iFab.style.transform="";iFab.style.left="";iFab.style.top="";iFab.style.bottom="";iFab.style.right="";};
-        function initFabFloat(){initFabPos();fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);}
-        if(isFloating){fab.classList.add("floating");setTimeout(function(){initFabPos();fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);lastPhysicsTime=0;physicsIdleFrames=0;fabAnim=requestAnimationFrame(physicsTick);},600);}else{floatToggle.classList.remove("active");floatToggle.textContent="Stick";}
+        window.ballsStartIphone=function(){iFabActive=true;iFab.classList.add("floating");setTimeout(function(){var rect=iFab.getBoundingClientRect();iFabX=rect.left;iFabY=rect.top;iFab.style.left=iFabX+"px";iFab.style.top=iFabY+"px";iFab.style.bottom="auto";iFab.style.right="auto";iFab.style.transform="";iFabVX=(Math.random()-0.5)*200;iFabVY=-(200+Math.random()*300);lastPhysicsTime=0;physicsIdleFrames=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);},50);};
+        window.ballsStopIphone=function(){iFabActive=false;iFabVX=0;iFabVY=0;iFab.style.transform="";iFab.style.left="";iFab.style.top="";iFab.style.bottom="";iFab.style.right="";iFab.classList.remove("floating");};
+        function initFabFloat(){var rect=fab.getBoundingClientRect();fabX=rect.left;fabY=rect.top;fab.style.left=fabX+"px";fab.style.top=fabY+"px";fab.style.bottom="auto";fab.style.right="auto";fab.style.transform="";fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);}
+        if(isFloating){fab.classList.add("floating");setTimeout(function(){var rect=fab.getBoundingClientRect();fabX=rect.left;fabY=rect.top;fab.style.left=fabX+"px";fab.style.top=fabY+"px";fab.style.bottom="auto";fab.style.right="auto";fab.style.transform="";fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);lastPhysicsTime=0;physicsIdleFrames=0;fabAnim=requestAnimationFrame(physicsTick);},600);}else{floatToggle.classList.remove("active");floatToggle.textContent="Stick";}
         floatToggle.addEventListener("click",function(e){e.preventDefault();if(isFloating){stopFloat();}else{startFloat();}});
         var saved=localStorage.getItem(storageKey);if(saved)editor.innerHTML=saved;
         function updateCharCount(){var t=editor.innerText||"";var len=t.replace(/\n$/,"").length;charCount.textContent=len+" character"+(len!==1?"s":"");}
@@ -3238,7 +3240,7 @@
         function saveContent(){localStorage.setItem(storageKey,editor.innerHTML);updateCharCount();}
         editor.addEventListener("input",saveContent);
         fab.addEventListener("click",function(e){if(isFloating&&!fabClicked)return;fab.classList.add("hidden");win.classList.add("open");var pos=localStorage.getItem(posKey);if(pos){try{var p=JSON.parse(pos);var vw=window.innerWidth,vh=window.innerHeight;if(p.left<0)p.left=0;if(p.top<0)p.top=0;if(p.left>vw-120)p.left=Math.max(0,vw-400);if(p.top>vh-80)p.top=Math.max(0,vh-460);win.style.bottom="auto";win.style.right="auto";win.style.left=p.left+"px";win.style.top=p.top+"px";}catch(e2){}}editor.focus();});
-        function closeNotepad(){win.classList.remove("open");fab.classList.remove("hidden");win.style.bottom=defaultBottom+"px";win.style.right=defaultRight+"px";win.style.left="";win.style.top="";if(isFloating){initFabFloat();}}
+        function closeNotepad(){win.classList.remove("open");fab.classList.remove("hidden");win.style.bottom=defaultBottom+"px";win.style.right=defaultRight+"px";win.style.left="";win.style.top="";if(isFloating){var rect=fab.getBoundingClientRect();fabX=rect.left;fabY=rect.top;fab.style.left=fabX+"px";fab.style.top=fabY+"px";fab.style.bottom="auto";fab.style.right="auto";fabVX=(Math.random()-0.5)*120;fabVY=-(150+Math.random()*200);lastPhysicsTime=0;physicsIdleFrames=0;if(!fabAnim)fabAnim=requestAnimationFrame(physicsTick);}}
         minBtn.addEventListener("click",closeNotepad);
         clearBtn.addEventListener("click",function(){if(confirm("Clear all notes?")){editor.innerHTML="";saveContent();}});
         header.addEventListener("mousedown",function(e){if(e.target.tagName==="BUTTON")return;isDragging=true;var rect=win.getBoundingClientRect();dragX=e.clientX-rect.left;dragY=e.clientY-rect.top;e.preventDefault();});
