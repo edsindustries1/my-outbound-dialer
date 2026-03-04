@@ -129,10 +129,10 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 16px 12px;
+    padding: 0 12px;
     border-bottom: 1px solid var(--gads-border);
-    min-height: 72px;
-    overflow: visible;
+    height: 56px;
+    overflow: hidden;
     font-weight: 700;
     font-size: 16px;
     color: var(--gads-text-primary);
