@@ -138,6 +138,13 @@ app.secret_key = os.environ.get("SESSION_SECRET")
 from datetime import timedelta as _td
 app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
 app.config["SESSION_PERMANENT"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") != "development"
+app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+app.config["REMEMBER_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") != "development"
+app.config["REMEMBER_COOKIE_DURATION"] = _td(days=7)
 
 # ---- Database & Auth Setup ----
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
@@ -1027,6 +1034,7 @@ def profile_setup():
 @app.route("/logout")
 def logout():
     logout_user()
+    session.clear()
     return redirect(url_for("landing"))
 
 
@@ -2315,7 +2323,7 @@ def _handle_webhook():
         from datetime import datetime as dt
         update_call_state(call_control_id, status="answered", amd_received=False, ring_end=dt.utcnow().timestamp(),
                           status_description="Answered - detecting...", status_color="blue")
-        logger.info(f"Call answered: {call_control_id}, waiting for AMD result...")
+        logger.info(f"[CALL ANSWERED] {call_control_id} | to: {to_number} | from: {from_number}")
 
         try:
             start_transcription(call_control_id)
@@ -2328,25 +2336,29 @@ def _handle_webhook():
             logger.error(f"Failed to start recording: {e}")
 
         def _amd_fallback(ccid):
-            """If AMD event never arrives, treat as machine and drop voicemail (safe mode)."""
+            """If AMD event never arrives within 8s, default to transfer (treat as human)."""
             state = get_call_state(ccid)
             if state and not state.get("amd_received") and state.get("status") == "answered":
-                logger.warning(f"AMD timeout on {ccid}, treating as MACHINE (safe mode) - will drop voicemail")
-                update_call_state(ccid, machine_detected=True, status="machine_detected", amd_received=True,
-                                  amd_result="timeout", status_description="AMD timeout - dropping voicemail (safe mode)", status_color="yellow")
+                logger.warning(f"[AMD TIMEOUT] {ccid} | No AMD result in 8s, defaulting to HUMAN (transfer)")
+                update_call_state(ccid, amd_received=True, amd_result="timeout",
+                                  status_description="AMD timeout - treating as human", status_color="blue")
                 uid = get_user_for_call(ccid)
                 camp = get_campaign(user_id=uid)
+                t_num = camp.get("transfer_number") or ""
                 customer_num = state.get("number", "")
-                personalized_url = get_personalized_audio_url(customer_num) if customer_num else None
-                audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=uid)
-                is_personalized = bool(personalized_url)
-
-                if audio_url:
-                    logger.info(f"AMD timeout fallback: dropping voicemail immediately on {ccid}")
-                    _drop_voicemail_now(ccid, audio_url, is_personalized, customer_num, uid)
-                else:
-                    logger.error(f"AMD timeout on {ccid}, no audio URL, hanging up")
-                    update_call_state(ccid, status_description="Voicemail failed - no audio", status_color="red")
+                if t_num and mark_transferred(ccid):
+                    logger.info(f"[TRANSFER] {ccid} | AMD timeout fallback transfer to {t_num}")
+                    success = transfer_call(ccid, t_num, customer_number=customer_num)
+                    if success:
+                        pause_for_transfer(ccid, user_id=uid)
+                        update_call_state(ccid, status="transferred",
+                                          status_description="AMD timeout - transferred to human", status_color="green")
+                    else:
+                        update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                        hangup_call(ccid)
+                elif not t_num:
+                    logger.warning(f"[AMD TIMEOUT] {ccid} | No transfer number, hanging up")
+                    update_call_state(ccid, status_description="No transfer number configured", status_color="yellow")
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
@@ -2355,8 +2367,22 @@ def _handle_webhook():
         _amd_timers[call_control_id] = timer
         timer.start()
 
-    # ---- call.machine.detection.ended ----
-    elif event_type == "call.machine.detection.ended":
+        def _safety_timeout(ccid):
+            """Rule 4: If call lasts 60s with no action, hang up gracefully."""
+            st = get_call_state(ccid)
+            if st and not st.get("transferred") and not st.get("voicemail_dropped") and st.get("status") not in ("hangup", "voicemail_complete", "transferred"):
+                logger.warning(f"[SAFETY TIMEOUT] {ccid} | 60s with no action taken, hanging up")
+                update_call_state(ccid, status_description="Safety timeout - no action taken in 60s", status_color="yellow")
+                hangup_call(ccid)
+            _amd_timers.pop(f"safety_{ccid}", None)
+
+        safety_timer = threading.Timer(60.0, _safety_timeout, args=[call_control_id])
+        safety_timer.daemon = True
+        _amd_timers[f"safety_{call_control_id}"] = safety_timer
+        safety_timer.start()
+
+    # ---- AMD Detection (standard + premium) ----
+    elif event_type in ("call.machine.detection.ended", "call.machine.premium.detection.ended"):
         state = get_call_state(call_control_id)
         if state and state.get("transferred"):
             logger.info(f"Ignoring AMD event for already-transferred call {call_control_id}")
@@ -2364,7 +2390,7 @@ def _handle_webhook():
 
         result = payload.get("result", "unknown")
         amd_type = payload.get("type", "unknown")
-        logger.info(f"AMD result: {result} (type={amd_type}) for {call_control_id} | payload keys: {list(payload.keys())}")
+        logger.info(f"[AMD RESULT] {call_control_id} | result: {result} | type: {amd_type} | event: {event_type}")
 
         timer = _amd_timers.pop(call_control_id, None)
         if timer:
@@ -2382,21 +2408,24 @@ def _handle_webhook():
             camp = get_campaign(user_id=webhook_user_id)
             transfer_num = camp.get("transfer_number") or ""
             customer_num = (get_call_state(call_control_id) or {}).get("number", "")
-            if transfer_num and mark_transferred(call_control_id):
-                logger.info(f"HUMAN detected - transferring {call_control_id} to {transfer_num} (caller ID: {customer_num})")
-                success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
+            if transfer_num and not state.get("transferred") and mark_transferred(call_control_id):
+                logger.info(f"[TRANSFER] {call_control_id} | HUMAN detected, transferring to {transfer_num} (caller ID: {customer_num})")
+                try:
+                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
+                except Exception as e:
+                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
+                    success = False
                 if success:
                     pause_for_transfer(call_control_id, user_id=webhook_user_id)
-                    logger.info(f"Campaign paused for transfer on {call_control_id}")
                     update_call_state(call_control_id, status="transferred",
                                       status_description="Answered by human - transferred (campaign paused)", status_color="green")
                 else:
-                    logger.error(f"Transfer failed for {call_control_id}, hanging up")
+                    logger.error(f"[TRANSFER FAILED] {call_control_id} | hanging up")
                     update_call_state(call_control_id, status="transfer_failed",
                                       status_description="Transfer failed", status_color="red")
                     hangup_call(call_control_id)
             elif not transfer_num:
-                logger.warning(f"HUMAN detected on {call_control_id} but no transfer number configured")
+                logger.warning(f"[NO TRANSFER] {call_control_id} | HUMAN detected but no transfer number configured")
                 update_call_state(call_control_id, status="human_no_transfer",
                                   status_description="Human answered - no transfer number", status_color="yellow")
                 hangup_call(call_control_id)
@@ -2404,13 +2433,13 @@ def _handle_webhook():
         elif result == "fax":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
                               amd_result="fax", status_description="Fax machine detected", status_color="red")
-            logger.info(f"FAX detected on {call_control_id}, hanging up")
+            logger.info(f"[FAX] {call_control_id} | Fax detected, hanging up")
             hangup_call(call_control_id)
 
         elif result == "machine":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
                               amd_result="machine", status_description="Machine detected - waiting for beep", status_color="blue")
-            logger.info(f"MACHINE detected on {call_control_id}, waiting for beep/greeting end before playing voicemail (30s fallback)")
+            logger.info(f"[AMD RESULT] {call_control_id} | MACHINE detected, waiting for beep (30s fallback)")
 
             camp = get_campaign(user_id=webhook_user_id)
             state = get_call_state(call_control_id)
@@ -2427,8 +2456,8 @@ def _handle_webhook():
 
             def _greeting_delay_drop(ccid, aud_url, is_pvm, cust_num, uid):
                 st = get_call_state(ccid)
-                if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
-                    logger.info(f"Greeting delay elapsed on {ccid}, dropping voicemail now")
+                if st and not st.get("voicemail_dropped") and not st.get("transferred") and st.get("vm_pending_audio_url"):
+                    logger.info(f"[BEEP TIMEOUT] {ccid} | 30s elapsed, dropping voicemail now (fallback)")
                     _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
 
             if audio_url:
@@ -2437,48 +2466,40 @@ def _handle_webhook():
                 t.start()
                 _amd_timers[f"beep_{call_control_id}"] = t
             else:
-                logger.error(f"No audio URL configured for voicemail on {call_control_id}")
+                logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
                 hangup_call(call_control_id)
 
         elif result == "not_sure":
-            update_call_state(call_control_id, machine_detected=True, status="machine_detected",
-                              amd_result="not_sure", status_description="Detection unclear - treating as machine (safe mode)", status_color="yellow")
-            logger.info(f"AMD not_sure on {call_control_id}, treating as MACHINE (safe) - will drop voicemail")
-
             camp = get_campaign(user_id=webhook_user_id)
-            state = get_call_state(call_control_id)
-            customer_number = (state or {}).get("number", "")
-            personalized_url = get_personalized_audio_url(customer_number) if customer_number else None
-            audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
-            is_personalized = bool(personalized_url)
-
-            update_call_state(call_control_id,
-                              vm_pending_audio_url=audio_url,
-                              vm_pending_personalized=is_personalized,
-                              vm_pending_customer_number=customer_number,
-                              vm_pending_user_id=webhook_user_id)
-
-            def _greeting_delay_drop_unsure(ccid, aud_url, is_pvm, cust_num, uid):
-                st = get_call_state(ccid)
-                if st and not st.get("voicemail_dropped") and st.get("vm_pending_audio_url"):
-                    logger.info(f"Greeting delay elapsed on {ccid} (not_sure), dropping voicemail now")
-                    _drop_voicemail_now(ccid, aud_url, is_pvm, cust_num, uid)
-
-            if audio_url:
-                t = threading.Timer(30, _greeting_delay_drop_unsure, args=[call_control_id, audio_url, is_personalized, customer_number, webhook_user_id])
-                t.daemon = True
-                t.start()
-                _amd_timers[f"beep_{call_control_id}"] = t
-            else:
-                logger.error(f"No audio URL for voicemail on {call_control_id} (not_sure)")
-                update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
+            transfer_num = camp.get("transfer_number") or ""
+            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
+            logger.info(f"[AMD RESULT] {call_control_id} | NOT_SURE, treating as human (transferring)")
+            update_call_state(call_control_id, amd_result="not_sure",
+                              status_description="Detection unclear - treating as human", status_color="blue")
+            if transfer_num and not state.get("transferred") and mark_transferred(call_control_id):
+                logger.info(f"[TRANSFER] {call_control_id} | not_sure -> transferring to {transfer_num}")
+                try:
+                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
+                except Exception as e:
+                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
+                    success = False
+                if success:
+                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
+                    update_call_state(call_control_id, status="transferred",
+                                      status_description="Detection unclear - transferred to human", status_color="green")
+                else:
+                    update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
+                    hangup_call(call_control_id)
+            elif not transfer_num:
+                logger.warning(f"[NO TRANSFER] {call_control_id} | not_sure, no transfer number, hanging up")
+                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
                 hangup_call(call_control_id)
 
         else:
             update_call_state(call_control_id, status="no_answer",
                               amd_result=result, status_description=f"Unknown AMD result: {result}", status_color="yellow")
-            logger.info(f"AMD unknown result '{result}' on {call_control_id}, hanging up")
+            logger.info(f"[AMD UNKNOWN] {call_control_id} | result='{result}', hanging up")
             hangup_call(call_control_id)
 
     # ---- call.machine.greeting.ended (beep detected) ----

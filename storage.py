@@ -387,6 +387,10 @@ def create_call_state(call_control_id, number, user_id=None):
             "hangup_cause": None,
             "transcript": [],
             "user_id": user_id,
+            "ai_gatekeeper": False,
+            "gatekeeper_handled": False,
+            "voicemail_confirmed": False,
+            "beep_detected": False,
         }
         if user_id is not None:
             _cid_to_user[call_control_id] = user_id
