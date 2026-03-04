@@ -873,7 +873,7 @@ def login():
     if request.method == "POST":
         try:
             login_mode = request.form.get("login_mode", "user")
-            if login_mode == "admin" and APP_PASSWORD:
+            if login_mode in ("admin", "super_admin") and APP_PASSWORD:
                 app_password = request.form.get("app_password", "").strip()
                 logger.info(f"Admin login attempt (password length: {len(app_password)}, expected length: {len(APP_PASSWORD)})")
                 if app_password == APP_PASSWORD:
@@ -889,10 +889,11 @@ def login():
                         db.session.commit()
                     login_user(admin, remember=True)
                     session.permanent = True
-                    logger.info("Admin successfully authenticated")
+                    redirect_target = url_for("super_admin") if login_mode == "super_admin" else url_for("dashboard")
+                    logger.info(f"Admin successfully authenticated, redirecting to {redirect_target}")
                     if is_ajax:
-                        return jsonify({"success": True, "redirect": url_for("dashboard")})
-                    return redirect(url_for("dashboard"))
+                        return jsonify({"success": True, "redirect": redirect_target})
+                    return redirect(redirect_target)
                 else:
                     logger.warning(f"Admin login failed - password mismatch")
                     error = "Invalid admin password"

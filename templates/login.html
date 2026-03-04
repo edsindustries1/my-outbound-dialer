@@ -370,6 +370,9 @@
             <div class="login-toggle" style="margin-top:4px;">
                 <a href="#" id="adminToggle" onclick="toggleAdminLogin(event)">Login as Admin</a>
             </div>
+            <div class="login-toggle" style="margin-top:4px;">
+                <a href="#" id="superAdminToggle" onclick="toggleSuperAdminLogin(event)">Login as Super Admin</a>
+            </div>
             {% endif %}
 
             <div class="login-footer">Intelligent Communication at Scale</div>
@@ -411,7 +414,8 @@
                     }, 8000);
                 } else {
                     btn.disabled = false;
-                    btn.textContent = loginForm.querySelector("#loginMode").value === "admin" ? "Login as Admin" : "Sign In";
+                    var mode = loginForm.querySelector("#loginMode").value;
+                    btn.textContent = mode === "super_admin" ? "Login as Super Admin" : mode === "admin" ? "Login as Admin" : "Sign In";
                     var errDiv = document.querySelector(".login-error");
                     if (!errDiv) {
                         errDiv = document.createElement("div");
@@ -429,6 +433,30 @@
     </script>
 
     <script>
+        function toggleSuperAdminLogin(e) {
+            e.preventDefault();
+            var userFields = document.getElementById("userLoginFields");
+            var adminFields = document.getElementById("adminLoginFields");
+            var modeInput = document.getElementById("loginMode");
+            var btn = document.getElementById("loginSubmitBtn");
+            var toggle = document.getElementById("superAdminToggle");
+            var adminToggle = document.getElementById("adminToggle");
+            if (modeInput.value !== "super_admin") {
+                modeInput.value = "super_admin";
+                userFields.style.display = "none";
+                adminFields.style.display = "block";
+                btn.textContent = "Login as Super Admin";
+                toggle.textContent = "Login with Email";
+                adminToggle.textContent = "Login as Admin";
+            } else {
+                modeInput.value = "user";
+                userFields.style.display = "block";
+                adminFields.style.display = "none";
+                btn.textContent = "Sign In";
+                toggle.textContent = "Login as Super Admin";
+            }
+        }
+
         function toggleAdminLogin(e) {
             e.preventDefault();
             var userFields = document.getElementById("userLoginFields");
@@ -436,12 +464,14 @@
             var modeInput = document.getElementById("loginMode");
             var btn = document.getElementById("loginSubmitBtn");
             var toggle = document.getElementById("adminToggle");
-            if (modeInput.value === "user") {
+            var superToggle = document.getElementById("superAdminToggle");
+            if (modeInput.value !== "admin") {
                 modeInput.value = "admin";
                 userFields.style.display = "none";
                 adminFields.style.display = "block";
                 btn.textContent = "Login as Admin";
                 toggle.textContent = "Login with Email";
+                if (superToggle) superToggle.textContent = "Login as Super Admin";
             } else {
                 modeInput.value = "user";
                 userFields.style.display = "block";
