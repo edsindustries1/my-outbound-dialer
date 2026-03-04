@@ -1059,6 +1059,14 @@ def _detect_and_set_base_url():
     global _detected_base_url
     if _detected_base_url:
         return
+    domains = os.environ.get("REPLIT_DOMAINS", "")
+    if domains:
+        domain = domains.split(",")[0].strip()
+        if domain:
+            _detected_base_url = f"https://{domain}"
+            set_webhook_base_url(_detected_base_url)
+            logger.info(f"Using REPLIT_DOMAINS for base URL: {_detected_base_url}")
+            return
     try:
         host = request.headers.get("X-Forwarded-Host") or request.headers.get("Host") or request.host
         proto = request.headers.get("X-Forwarded-Proto", "https")
@@ -1075,13 +1083,6 @@ def _detect_and_set_base_url():
         _detected_base_url = env_url
         set_webhook_base_url(env_url)
         return
-    domains = os.environ.get("REPLIT_DOMAINS", "")
-    if domains:
-        domain = domains.split(",")[0].strip()
-        if domain:
-            _detected_base_url = f"https://{domain}"
-            set_webhook_base_url(_detected_base_url)
-            logger.info(f"Using REPLIT_DOMAINS for base URL: {_detected_base_url}")
 
 
 # ---- Dashboard Route ----
