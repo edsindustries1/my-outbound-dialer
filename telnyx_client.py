@@ -129,9 +129,9 @@ def make_call(number, from_number_override=None):
         "answering_machine_detection": "premium",
         "answering_machine_detection_config": {
             "total_analysis_time_millis": 50000,
-            "after_greeting_silence_millis": 10000,
+            "after_greeting_silence_millis": 5000,
             "between_words_silence_millis": 2000,
-            "silence_threshold": 3000,
+            "silence_threshold": 1000,
             "maximum_number_of_words": 10,
         },
         "timeout_secs": 60,
