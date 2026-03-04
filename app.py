@@ -2455,7 +2455,13 @@ def _handle_webhook():
                               vm_pending_customer_number=customer_number,
                               vm_pending_user_id=webhook_user_id)
 
-            if not audio_url:
+            if audio_url:
+                try:
+                    start_gather(call_control_id, timeout_millis=60000)
+                    logger.info(f"[GATHER] {call_control_id} | Started gather immediately to keep RTP alive while waiting for beep")
+                except Exception as e:
+                    logger.error(f"[GATHER ERROR] {call_control_id} | {e}")
+            else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
                 hangup_call(call_control_id)
@@ -2512,13 +2518,9 @@ def _handle_webhook():
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
         else:
-            logger.info(f"[NO BEEP] {call_control_id} | No beep — starting gather to keep line alive, waiting for beep or human (60s timeout)")
+            logger.info(f"[NO BEEP] {call_control_id} | No beep — listening silently for beep or human (60s timeout)")
             update_call_state(call_control_id, beep_detected=False,
                               status_description="No beep — listening silently for beep or human", status_color="blue")
-            try:
-                start_gather(call_control_id, timeout_millis=60000)
-            except Exception as e:
-                logger.error(f"[GATHER ERROR] {call_control_id} | Failed to start gather: {e}")
 
     # ---- call.gather.ended (from keep-alive gather after no-beep) ----
     elif event_type == "call.gather.ended":
