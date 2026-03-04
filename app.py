@@ -2347,7 +2347,7 @@ def _handle_webhook():
                 camp = get_campaign(user_id=uid)
                 t_num = camp.get("transfer_number") or ""
                 customer_num = state.get("number", "")
-                if t_num and mark_transferred(ccid):
+                if t_num and not state.get("voicemail_dropped") and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
                     logger.info(f"[TRANSFER] {ccid} | AMD timeout fallback transfer to {t_num}")
                     success = transfer_call(ccid, t_num, customer_number=customer_num)
                     if success:
@@ -2409,7 +2409,7 @@ def _handle_webhook():
             camp = get_campaign(user_id=webhook_user_id)
             transfer_num = camp.get("transfer_number") or ""
             customer_num = (get_call_state(call_control_id) or {}).get("number", "")
-            if transfer_num and not state.get("transferred") and mark_transferred(call_control_id):
+            if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | HUMAN detected, transferring to {transfer_num} (caller ID: {customer_num})")
                 try:
                     success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
@@ -2467,7 +2467,7 @@ def _handle_webhook():
             logger.info(f"[AMD RESULT] {call_control_id} | NOT_SURE, treating as human (transferring)")
             update_call_state(call_control_id, amd_result="not_sure",
                               status_description="Detection unclear - treating as human", status_color="blue")
-            if transfer_num and not state.get("transferred") and mark_transferred(call_control_id):
+            if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | not_sure -> transferring to {transfer_num}")
                 try:
                     success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
@@ -2512,7 +2512,9 @@ def _handle_webhook():
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
         else:
-            logger.info(f"[NO BEEP] {call_control_id} | No beep — remaining silent, waiting for human or 60s timeout")
+            logger.info(f"[NO BEEP] {call_control_id} | No beep — remaining silent, waiting for beep or human (60s timeout)")
+            update_call_state(call_control_id, beep_detected=False,
+                              status_description="No beep — listening silently for beep or human", status_color="blue")
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
