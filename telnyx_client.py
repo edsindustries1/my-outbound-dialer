@@ -258,9 +258,12 @@ def transfer_call(call_control_id, to_number, customer_number=None):
         return False
 
 
-def play_audio(call_control_id, audio_url):
+def play_audio(call_control_id, audio_url, client_state=None):
     """Play an audio file on an active call."""
     payload = {"audio_url": audio_url}
+    if client_state:
+        import base64
+        payload["client_state"] = base64.b64encode(client_state.encode()).decode()
     try:
         resp = requests.post(
             f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/playback_start",
@@ -273,6 +276,23 @@ def play_audio(call_control_id, audio_url):
         return True
     except Exception as e:
         logger.error(f"Failed to play audio on call {call_control_id}: {e}")
+        return False
+
+
+def stop_playback(call_control_id):
+    """Stop any currently playing audio on the call."""
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/playback_stop",
+            json={},
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Playback stopped on call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to stop playback on call {call_control_id}: {e}")
         return False
 
 

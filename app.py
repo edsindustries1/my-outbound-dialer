@@ -93,7 +93,7 @@ from storage import (
     claim_call_action,
 )
 from telnyx_client import (
-    transfer_call, play_audio, hangup_call, make_call, validate_connection_id,
+    transfer_call, play_audio, stop_playback, hangup_call, make_call, validate_connection_id,
     set_webhook_base_url, start_transcription, start_recording, start_gather,
     search_available_numbers, purchase_number, create_call_control_app,
     assign_number_to_app, list_owned_numbers, release_number,
@@ -2215,6 +2215,16 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
     """Play voicemail audio and append transcript. Called after beep or timeout."""
     if not mark_voicemail_dropped(call_control_id):
         return
+    state = get_call_state(call_control_id)
+    if state and state.get("silence_playing"):
+        try:
+            stop_playback(call_control_id)
+            logger.info(f"[SILENCE STOP] {call_control_id} | Stopped silence keepalive before dropping voicemail")
+            update_call_state(call_control_id, silence_playing=False)
+            import time
+            time.sleep(0.3)
+        except Exception as e:
+            logger.error(f"[SILENCE STOP ERROR] {call_control_id} | {e}")
     from datetime import datetime as dt
     update_call_state(call_control_id,
                       status_description="Dropping voicemail..." if not is_personalized else "Dropping personalized voicemail...",
@@ -2456,11 +2466,13 @@ def _handle_webhook():
                               vm_pending_user_id=webhook_user_id)
 
             if audio_url:
+                silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
                 try:
-                    start_gather(call_control_id, timeout_millis=60000)
-                    logger.info(f"[GATHER] {call_control_id} | Started gather immediately to keep RTP alive while waiting for beep")
+                    play_audio(call_control_id, silence_url, client_state="silence_keepalive")
+                    update_call_state(call_control_id, silence_playing=True)
+                    logger.info(f"[SILENCE PLAY] {call_control_id} | Playing 60s silence to keep RTP alive while waiting for beep")
                 except Exception as e:
-                    logger.error(f"[GATHER ERROR] {call_control_id} | {e}")
+                    logger.error(f"[SILENCE PLAY ERROR] {call_control_id} | {e}")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -2534,8 +2546,26 @@ def _handle_webhook():
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
+        import base64 as b64module
+        raw_cs = payload.get("client_state", "") or ""
+        try:
+            client_state_str = b64module.b64decode(raw_cs).decode() if raw_cs else ""
+        except Exception:
+            client_state_str = ""
+
         state = get_call_state(call_control_id)
-        if state and state.get("voicemail_dropped"):
+
+        if client_state_str == "silence_keepalive":
+            update_call_state(call_control_id, silence_playing=False)
+            if state and not state.get("voicemail_dropped") and not state.get("transferred"):
+                logger.info(f"[SILENCE END] {call_control_id} | 60s silence finished, no beep detected — hanging up")
+                update_call_state(call_control_id, status="no_voicemail",
+                                  status_description="60s wait — no beep detected, hanging up", status_color="yellow")
+                hangup_call(call_control_id)
+            else:
+                logger.info(f"[SILENCE END] {call_control_id} | Silence playback ended (already handled: vm={state.get('voicemail_dropped')}, xfer={state.get('transferred')})")
+
+        elif state and state.get("voicemail_dropped"):
             vm_duration = None
             vm_start = state.get("vm_playback_start")
             if vm_start:
