@@ -3193,23 +3193,98 @@ def reset_password():
 @app.route("/super-admin")
 @admin_required
 def super_admin():
+    from storage import _load_call_history, get_contacts
+    from decimal import Decimal
+
     users = User.query.order_by(User.created_at.desc()).all()
     user_data = []
+    all_calls = []
+    total_credit_balance = Decimal("0.00")
+    active_users_count = 0
+    revoked_users_count = 0
+
+    now = datetime.utcnow()
+    today_str = now.strftime("%Y-%m-%d")
+    week_ago = (now - _td(days=7)).strftime("%Y-%m-%dT")
+
     for u in users:
-        from storage import _load_call_history, get_contacts
+        calls = _load_call_history(user_id=u.id)
         leads_count = len(get_contacts(user_id=u.id))
-        call_count = len(_load_call_history(user_id=u.id))
         active_number = ProvisionedNumber.query.filter_by(user_id=u.id, status='active').first()
+        bal = Decimal(str(u.credit_balance or 0))
+        total_credit_balance += bal
+
+        if getattr(u, 'is_active_account', True):
+            active_users_count += 1
+        else:
+            revoked_users_count += 1
+
+        user_calls_today = 0
+        user_vm_count = 0
+        user_transfer_count = 0
+        user_calls_week = 0
+        last_call_time = None
+
+        for c in calls:
+            ts = c.get("timestamp", "")
+            if ts.startswith(today_str):
+                user_calls_today += 1
+            if ts >= week_ago:
+                user_calls_week += 1
+            if c.get("voicemail_dropped"):
+                user_vm_count += 1
+            if c.get("transferred"):
+                user_transfer_count += 1
+            if ts and (last_call_time is None or ts > last_call_time):
+                last_call_time = ts
+
+        all_calls.extend(calls)
+
         user_data.append({
             "id": u.id,
             "email": u.email,
             "name": u.profile_name or u.email.split("@")[0],
             "leads": leads_count,
-            "calls": call_count,
+            "calls": len(calls),
+            "calls_today": user_calls_today,
+            "calls_week": user_calls_week,
+            "voicemails": user_vm_count,
+            "transfers": user_transfer_count,
             "active_number": active_number.phone_number if active_number else "None",
+            "credit_balance": float(bal),
+            "role": u.role or "user",
+            "active": getattr(u, 'is_active_account', True),
             "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "N/A",
+            "last_activity": last_call_time[:16].replace("T", " ") if last_call_time else "Never",
         })
-    return render_template("super_admin.html", users=user_data)
+
+    platform_calls_today = sum(1 for c in all_calls if c.get("timestamp", "").startswith(today_str))
+    platform_calls_week = sum(1 for c in all_calls if c.get("timestamp", "") >= week_ago)
+    platform_vm_total = sum(1 for c in all_calls if c.get("voicemail_dropped"))
+    platform_transfers_total = sum(1 for c in all_calls if c.get("transferred"))
+    platform_vm_rate = round((platform_vm_total / len(all_calls) * 100), 1) if all_calls else 0
+    platform_transfer_rate = round((platform_transfers_total / len(all_calls) * 100), 1) if all_calls else 0
+
+    total_numbers = ProvisionedNumber.query.filter_by(status='active').count()
+    pending_invites = Invitation.query.filter_by(used=False).count()
+
+    stats = {
+        "total_users": len(users),
+        "active_users": active_users_count,
+        "revoked_users": revoked_users_count,
+        "total_credit_balance": float(total_credit_balance),
+        "total_calls": len(all_calls),
+        "calls_today": platform_calls_today,
+        "calls_week": platform_calls_week,
+        "voicemails_total": platform_vm_total,
+        "transfers_total": platform_transfers_total,
+        "vm_rate": platform_vm_rate,
+        "transfer_rate": platform_transfer_rate,
+        "active_lines": total_numbers,
+        "pending_invites": pending_invites,
+    }
+
+    return render_template("super_admin.html", users=user_data, stats=stats)
 
 
 @app.route("/api/admin/user-activity/<int:uid>")
@@ -3219,15 +3294,55 @@ def api_admin_user_activity(uid):
     if not target_user:
         return jsonify({"error": "User not found"}), 404
     from storage import _load_call_history, get_contacts
+    from decimal import Decimal
     calls = _load_call_history(user_id=uid)
     contacts = get_contacts(user_id=uid)
     numbers = ProvisionedNumber.query.filter_by(user_id=uid).all()
+
+    vm_count = sum(1 for c in calls if c.get("voicemail_dropped"))
+    transfer_count = sum(1 for c in calls if c.get("transferred"))
+    failed_count = len(calls) - vm_count - transfer_count
+    vm_rate = round((vm_count / len(calls) * 100), 1) if calls else 0
+    transfer_rate = round((transfer_count / len(calls) * 100), 1) if calls else 0
+
+    now = datetime.utcnow()
+    today_str = now.strftime("%Y-%m-%d")
+    week_ago = (now - _td(days=7)).strftime("%Y-%m-%dT")
+    calls_today = sum(1 for c in calls if c.get("timestamp", "").startswith(today_str))
+    calls_week = sum(1 for c in calls if c.get("timestamp", "") >= week_ago)
+
+    recent = []
+    for c in (calls[-30:] if calls else []):
+        recent.append({
+            "number": c.get("number", "Unknown"),
+            "status": c.get("status", "unknown"),
+            "transferred": c.get("transferred", False),
+            "voicemail_dropped": c.get("voicemail_dropped", False),
+            "timestamp": c.get("timestamp", ""),
+            "amd_result": c.get("amd_result", ""),
+        })
+
     return jsonify({
-        "user": {"id": uid, "email": target_user.email, "name": target_user.profile_name or ""},
+        "user": {
+            "id": uid,
+            "email": target_user.email,
+            "name": target_user.profile_name or "",
+            "role": target_user.role or "user",
+            "active": getattr(target_user, 'is_active_account', True),
+            "credit_balance": float(Decimal(str(target_user.credit_balance or 0))),
+            "joined": target_user.created_at.strftime("%b %d, %Y") if target_user.created_at else "N/A",
+        },
         "total_calls": len(calls),
         "total_leads": len(contacts),
+        "calls_today": calls_today,
+        "calls_week": calls_week,
+        "voicemails": vm_count,
+        "transfers": transfer_count,
+        "failed": failed_count,
+        "vm_rate": vm_rate,
+        "transfer_rate": transfer_rate,
         "numbers": [{"phone": n.phone_number, "status": n.status} for n in numbers],
-        "recent_calls": calls[-20:] if calls else [],
+        "recent_calls": recent,
     })
 
 
