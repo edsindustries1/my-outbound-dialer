@@ -128,11 +128,11 @@ def make_call(number, from_number_override=None):
         "from": from_number,
         "answering_machine_detection": "premium",
         "answering_machine_detection_config": {
-            "total_analysis_time_millis": 5000,
-            "silence_threshold": 300,
-            "maximum_number_of_words": 5,
-            "after_greeting_silence_millis": 800,
-            "between_words_silence_millis": 50,
+            "total_analysis_time_millis": 50000,
+            "after_greeting_silence_millis": 10000,
+            "between_words_silence_millis": 2000,
+            "silence_threshold": 3000,
+            "maximum_number_of_words": 10,
         },
         "timeout_secs": 60,
         "time_limit_secs": 180,
@@ -273,6 +273,31 @@ def play_audio(call_control_id, audio_url):
         return True
     except Exception as e:
         logger.error(f"Failed to play audio on call {call_control_id}: {e}")
+        return False
+
+
+def start_gather(call_control_id, timeout_millis=60000):
+    """Start a gather to keep the RTP audio path alive after AMD no-beep detection.
+    This prevents the far end from thinking the caller disconnected."""
+    payload = {
+        "minimum_digits": 1,
+        "maximum_digits": 1,
+        "timeout_millis": timeout_millis,
+        "inter_digit_timeout_millis": timeout_millis,
+        "valid_digits": "0123456789*#",
+    }
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/gather",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Gather started on call {call_control_id} (keeping line alive for {timeout_millis}ms)")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to start gather on call {call_control_id}: {e}")
         return False
 
 

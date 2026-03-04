@@ -94,7 +94,7 @@ from storage import (
 )
 from telnyx_client import (
     transfer_call, play_audio, hangup_call, make_call, validate_connection_id,
-    set_webhook_base_url, start_transcription, start_recording,
+    set_webhook_base_url, start_transcription, start_recording, start_gather,
     search_available_numbers, purchase_number, create_call_control_app,
     assign_number_to_app, list_owned_numbers, release_number,
     list_call_control_apps, get_number_order_status,
@@ -2512,9 +2512,23 @@ def _handle_webhook():
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
         else:
-            logger.info(f"[NO BEEP] {call_control_id} | No beep — remaining silent, waiting for beep or human (60s timeout)")
+            logger.info(f"[NO BEEP] {call_control_id} | No beep — starting gather to keep line alive, waiting for beep or human (60s timeout)")
             update_call_state(call_control_id, beep_detected=False,
                               status_description="No beep — listening silently for beep or human", status_color="blue")
+            try:
+                start_gather(call_control_id, timeout_millis=60000)
+            except Exception as e:
+                logger.error(f"[GATHER ERROR] {call_control_id} | Failed to start gather: {e}")
+
+    # ---- call.gather.ended (from keep-alive gather after no-beep) ----
+    elif event_type == "call.gather.ended":
+        state = get_call_state(call_control_id)
+        if state:
+            digits = payload.get("digits", "")
+            status = payload.get("status", "")
+            logger.info(f"[GATHER ENDED] {call_control_id} | status={status}, digits={digits}")
+            if not state.get("voicemail_dropped") and not state.get("transferred") and state.get("machine_detected"):
+                logger.info(f"[GATHER TIMEOUT] {call_control_id} | Gather ended with no action taken, safety timeout will handle hangup")
 
     # ---- call.playback.ended ----
     elif event_type == "call.playback.ended":
