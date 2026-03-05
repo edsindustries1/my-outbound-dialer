@@ -2515,7 +2515,8 @@ def _handle_webhook():
                 silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
                 try:
                     play_audio(call_control_id, silence_url, client_state="silence_keepalive")
-                    update_call_state(call_control_id, silence_playing=True)
+                    import time as _time_mod
+                    update_call_state(call_control_id, silence_playing=True, silence_start_time=_time_mod.time())
                     logger.info(f"[SILENCE PLAY] {call_control_id} | Playing 60s silence to keep RTP alive while waiting for beep")
                 except Exception as e:
                     logger.error(f"[SILENCE PLAY ERROR] {call_control_id} | {e}")
@@ -2602,13 +2603,25 @@ def _handle_webhook():
         state = get_call_state(call_control_id)
 
         if client_state_str == "silence_keepalive":
-            update_call_state(call_control_id, silence_playing=False)
             if state and not state.get("voicemail_dropped") and not state.get("transferred"):
-                logger.info(f"[SILENCE END] {call_control_id} | 60s silence finished, no beep detected — hanging up")
-                update_call_state(call_control_id, status="no_voicemail",
-                                  status_description="60s wait — no beep detected, hanging up", status_color="yellow")
-                hangup_call(call_control_id)
+                import time as _time_mod2
+                silence_start = state.get("silence_start_time", 0)
+                elapsed = _time_mod2.time() - silence_start if silence_start else 0
+                if elapsed < 50:
+                    logger.info(f"[SILENCE REPLAY] {call_control_id} | Silence ended early ({elapsed:.1f}s), replaying to keep line alive while waiting for beep")
+                    silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+                    try:
+                        play_audio(call_control_id, silence_url, client_state="silence_keepalive")
+                        update_call_state(call_control_id, silence_start_time=_time_mod2.time())
+                    except Exception as e:
+                        logger.error(f"[SILENCE REPLAY ERROR] {call_control_id} | {e}")
+                else:
+                    logger.info(f"[SILENCE END] {call_control_id} | Full silence wait completed ({elapsed:.1f}s), no beep detected — hanging up")
+                    update_call_state(call_control_id, silence_playing=False, status="no_voicemail",
+                                      status_description="60s wait — no beep detected, hanging up", status_color="yellow")
+                    hangup_call(call_control_id)
             else:
+                update_call_state(call_control_id, silence_playing=False)
                 logger.info(f"[SILENCE END] {call_control_id} | Silence playback ended (already handled: vm={state.get('voicemail_dropped')}, xfer={state.get('transferred')})")
 
         elif state and state.get("voicemail_dropped"):
