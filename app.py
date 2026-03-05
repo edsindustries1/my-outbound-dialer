@@ -1094,7 +1094,14 @@ def _detect_and_set_base_url():
 def dashboard():
     """Serve the main dashboard page (requires authentication)."""
     _detect_and_set_base_url()
-    secure_from = os.environ.get("TELNYX_FROM_NUMBER", "Not set")
+    user_default_number = None
+    try:
+        user_pn = ProvisionedNumber.query.filter_by(user_id=current_user.id, status="active").first()
+        if user_pn:
+            user_default_number = user_pn.phone_number
+    except Exception:
+        pass
+    secure_from = user_default_number or os.environ.get("TELNYX_FROM_NUMBER", "Not set")
     user_data = current_user.to_dict() if current_user.is_authenticated else {}
     is_admin = getattr(current_user, 'role', 'user') == 'admin'
     return render_template("index.html", secure_from=secure_from, user=user_data, processor_id=PAYPAL_CLIENT_ID, is_admin=is_admin)
@@ -1281,6 +1288,14 @@ def start():
 
     voicemail_type = request.form.get("voicemail_type", "standard").strip()
     campaign_from_number = request.form.get("from_number", "").strip() or None
+
+    if not campaign_from_number:
+        try:
+            user_pn = ProvisionedNumber.query.filter_by(user_id=current_user.id, status="active").first()
+            if user_pn:
+                campaign_from_number = user_pn.phone_number
+        except Exception:
+            pass
 
     # ---- Start the campaign ----
     logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}")

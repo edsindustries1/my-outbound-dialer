@@ -50,22 +50,32 @@ def _dial_worker(user_id=None):
     Sequential: one call at a time with configurable delay (1-10 minutes).
     Simultaneous: fires batch_size calls at once, waits, then next batch.
     """
-    campaign = get_campaign(user_id=user_id)
-    numbers = campaign.get("numbers", [])
-    dial_mode = campaign.get("dial_mode", "sequential")
-    batch_size = campaign.get("batch_size", 5)
-    dial_delay = campaign.get("dial_delay", 2)
-    from_number = campaign.get("from_number")
+    try:
+        campaign = get_campaign(user_id=user_id)
+        numbers = campaign.get("numbers", [])
+        dial_mode = campaign.get("dial_mode", "sequential")
+        batch_size = campaign.get("batch_size", 5)
+        dial_delay = campaign.get("dial_delay", 2)
+        from_number = campaign.get("from_number")
 
-    logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}, delay={dial_delay}min, from={from_number or 'default'}")
+        logger.info(f"Dialer starting with {len(numbers)} numbers, mode={dial_mode}, batch_size={batch_size}, delay={dial_delay}min, from={from_number or 'default'}")
 
-    if dial_mode == "simultaneous":
-        _dial_simultaneous(numbers, batch_size, from_number, user_id=user_id)
-    else:
-        _dial_sequential(numbers, dial_delay, from_number, user_id=user_id)
+        if not numbers:
+            logger.warning("No numbers to dial, campaign will complete")
+            return
 
-    mark_campaign_complete(user_id=user_id)
-    logger.info("Dialer finished processing all numbers")
+        if dial_mode == "simultaneous":
+            _dial_simultaneous(numbers, batch_size, from_number, user_id=user_id)
+        else:
+            _dial_sequential(numbers, dial_delay, from_number, user_id=user_id)
+    except Exception as e:
+        logger.exception(f"Dialer worker crashed: {e}")
+    finally:
+        mark_campaign_complete(user_id=user_id)
+        with _worker_threads_lock:
+            key = user_id or "global"
+            _worker_threads.pop(key, None)
+        logger.info("Dialer finished processing all numbers")
 
 
 def _dial_sequential(numbers, dial_delay=2, from_number=None, user_id=None):
@@ -112,16 +122,21 @@ def _dial_sequential(numbers, dial_delay=2, from_number=None, user_id=None):
             continue
 
         logger.info(f"Dialing [{i+1}/{len(numbers)}]: {number}")
-        call_control_id, call_error = make_call(number, from_number_override=from_number)
+        try:
+            call_control_id, call_error = make_call(number, from_number_override=from_number)
 
-        if call_control_id:
-            complete_event = register_call_complete_event(call_control_id)
-            create_call_state(call_control_id, number, user_id=user_id)
-            logger.info(f"Call state created for {number}, waiting for call to complete...")
-            complete_event.wait(timeout=120)
-            logger.info(f"Call to {number} completed, moving to next")
-        else:
-            logger.error(f"Could not dial {number}: {call_error}")
+            if call_control_id:
+                complete_event = register_call_complete_event(call_control_id)
+                create_call_state(call_control_id, number, user_id=user_id)
+                logger.info(f"Call state created for {number}, waiting for call to complete...")
+                complete_event.wait(timeout=120)
+                logger.info(f"Call to {number} completed, moving to next")
+            else:
+                logger.error(f"Could not dial {number}: {call_error}")
+                time.sleep(2)
+        except Exception as e:
+            logger.exception(f"Exception dialing {number}: {e}")
+            time.sleep(2)
 
         increment_dialed(user_id=user_id)
         if i < len(numbers) - 1:
@@ -187,17 +202,20 @@ def _dial_simultaneous(numbers, batch_size, from_number=None, user_id=None):
 
 def _place_single_call(number, from_number=None, user_id=None):
     """Place a single call and create its state entry."""
-    if is_dnc(number, user_id=user_id):
-        logger.info(f"Skipping DNC number: {number}")
-        return
-    is_valid, reason = is_valid_phone_number(number)
-    if not is_valid:
-        logger.info(f"Skipping invalid number: {number} ({reason})")
-        log_invalid_number(number, reason, user_id=user_id)
-        return
-    call_control_id, call_error = make_call(number, from_number_override=from_number)
-    if call_control_id:
-        create_call_state(call_control_id, number, user_id=user_id)
-        logger.info(f"Call state created for {number}")
-    else:
-        logger.error(f"Could not dial {number}: {call_error}")
+    try:
+        if is_dnc(number, user_id=user_id):
+            logger.info(f"Skipping DNC number: {number}")
+            return
+        is_valid, reason = is_valid_phone_number(number)
+        if not is_valid:
+            logger.info(f"Skipping invalid number: {number} ({reason})")
+            log_invalid_number(number, reason, user_id=user_id)
+            return
+        call_control_id, call_error = make_call(number, from_number_override=from_number)
+        if call_control_id:
+            create_call_state(call_control_id, number, user_id=user_id)
+            logger.info(f"Call state created for {number}")
+        else:
+            logger.error(f"Could not dial {number}: {call_error}")
+    except Exception as e:
+        logger.exception(f"Exception in single call to {number}: {e}")

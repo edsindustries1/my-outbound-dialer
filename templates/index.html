@@ -335,7 +335,7 @@
                             </div>
                         </div>
                         <div class="gads-campaign-actions" style="display:flex;gap:8px;">
-                            <button type="button" class="gads-btn gads-btn-outline" id="monitorPauseBtn" onclick="doPauseCampaign()" disabled style="display:none;">
+                            <button type="button" class="gads-btn gads-btn-outline" id="monitorPauseBtn" onclick="doPauseCampaign()">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                 Pause
                             </button>
@@ -343,7 +343,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Resume
                             </button>
-                            <button type="button" class="gads-btn gads-btn-danger" id="monitorStopBtn" onclick="document.getElementById('stopBtn').click()" disabled>Stop Campaign</button>
+                            <button type="button" class="gads-btn gads-btn-danger" id="monitorStopBtn" onclick="doStopCampaign()">Stop Campaign</button>
                         </div>
                     </div>
 
@@ -2624,39 +2624,56 @@
             }
 
             // ---- Stop Campaign ----
-            stopBtn.addEventListener("click", function() {
+            window.doStopCampaign = function() {
+                var monStop = document.getElementById("monitorStopBtn");
+                monStop.disabled = true;
+                monStop.textContent = "Stopping...";
                 apiFetch("/stop", { method: "POST" })
                     .then(function(r) { return r.json(); })
                     .then(function() {
                         stopBtn.disabled = true;
-                        document.getElementById("monitorStopBtn").disabled = true;
                         document.getElementById("monitorPauseBtn").style.display = "none";
                         document.getElementById("monitorResumeBtn").style.display = "none";
                         startBtn.disabled = false;
                         startBtn.textContent = "Launch Campaign";
                         showToast("Campaign stopped", "info");
+                        monStop.textContent = "Stop Campaign";
+                    })
+                    .catch(function() {
+                        monStop.disabled = false;
+                        monStop.textContent = "Stop Campaign";
                     });
-            });
+            };
+
+            stopBtn.addEventListener("click", function() { doStopCampaign(); });
 
             // ---- Pause / Resume Campaign ----
             window.doPauseCampaign = function() {
+                var pauseBtn = document.getElementById("monitorPauseBtn");
+                pauseBtn.disabled = true;
                 apiFetch("/pause", { method: "POST" })
                     .then(function(r) { return r.json(); })
                     .then(function() {
-                        document.getElementById("monitorPauseBtn").style.display = "none";
+                        pauseBtn.style.display = "none";
+                        pauseBtn.disabled = false;
                         document.getElementById("monitorResumeBtn").style.display = "";
                         showToast("Campaign paused", "info");
-                    });
+                    })
+                    .catch(function() { pauseBtn.disabled = false; });
             };
             window.doResumeCampaign = function() {
+                var resumeBtn = document.getElementById("monitorResumeBtn");
+                resumeBtn.disabled = true;
                 apiFetch("/resume", { method: "POST" })
                     .then(function(r) { return r.json(); })
                     .then(function() {
-                        document.getElementById("monitorResumeBtn").style.display = "none";
+                        resumeBtn.style.display = "none";
+                        resumeBtn.disabled = false;
                         document.getElementById("monitorPauseBtn").style.display = "";
                         document.getElementById("monitorPauseBtn").disabled = false;
                         showToast("Campaign resumed", "success");
-                    });
+                    })
+                    .catch(function() { resumeBtn.disabled = false; });
             };
 
             // ---- Status Helpers ----
@@ -2815,39 +2832,51 @@
 
                         var pauseBtn = document.getElementById("monitorPauseBtn");
                         var resumeBtn = document.getElementById("monitorResumeBtn");
+                        var monStop = document.getElementById("monitorStopBtn");
 
                         if (data.active && data.transfer_paused) {
                             bar.className = "status-bar stagger-1 active";
                             bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign paused &mdash; live transfer in progress';
                             pauseBtn.style.display = "none";
                             resumeBtn.style.display = "none";
+                            monStop.disabled = false;
+                            monStop.textContent = "Stop Campaign";
+                            stopBtn.disabled = false;
                         } else if (data.active && data.paused) {
                             bar.className = "status-bar stagger-1 active";
                             bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign paused &mdash; ' + data.dialed_count + ' / ' + data.total + ' dialed';
                             pauseBtn.style.display = "none";
                             resumeBtn.style.display = "";
+                            resumeBtn.disabled = false;
+                            monStop.disabled = false;
+                            monStop.textContent = "Stop Campaign";
+                            stopBtn.disabled = false;
                         } else if (data.active) {
                             bar.className = "status-bar stagger-1 active";
-                            bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.total + ' numbers';
+                            bar.innerHTML = '<span class="dot dot-active"></span> Campaign active &mdash; ' + data.dialed_count + ' / ' + data.total + ' dialed';
                             pauseBtn.style.display = "";
                             pauseBtn.disabled = false;
                             resumeBtn.style.display = "none";
+                            monStop.disabled = false;
+                            monStop.textContent = "Stop Campaign";
+                            stopBtn.disabled = false;
                         } else if (data.stop_requested) {
                             bar.className = "status-bar stagger-1";
                             bar.innerHTML = '<span class="dot dot-stopping"></span> Campaign stopping...';
                             pauseBtn.style.display = "none";
                             resumeBtn.style.display = "none";
+                            monStop.disabled = true;
+                            monStop.textContent = "Stopping...";
                         } else {
                             bar.className = "status-bar stagger-1";
                             bar.innerHTML = '<span class="dot dot-inactive"></span> No active campaign';
                             pauseBtn.style.display = "none";
                             resumeBtn.style.display = "none";
-                            if (data.calls && data.calls.length > 0) {
-                                startBtn.disabled = false;
-                                startBtn.textContent = "Launch Campaign";
-                                stopBtn.disabled = true;
-                                document.getElementById("monitorStopBtn").disabled = true;
-                            }
+                            monStop.disabled = true;
+                            monStop.textContent = "Stop Campaign";
+                            startBtn.disabled = false;
+                            startBtn.textContent = "Launch Campaign";
+                            stopBtn.disabled = true;
                         }
 
                         // Update dashboard campaign status
@@ -4149,13 +4178,17 @@
                 var sel = document.getElementById(selId);
                 var current = sel.value;
                 var nums = (data.numbers || []).filter(function(n){ return n.status === "active"; });
-                sel.innerHTML = '<option value="">Default ({{ secure_from }})</option>';
-                nums.forEach(function(n) {
-                    var opt = document.createElement("option");
-                    opt.value = n.phone_number;
-                    opt.textContent = n.phone_number;
-                    sel.appendChild(opt);
-                });
+                if (nums.length > 0) {
+                    sel.innerHTML = '';
+                    nums.forEach(function(n) {
+                        var opt = document.createElement("option");
+                        opt.value = n.phone_number;
+                        opt.textContent = n.phone_number + (nums.length === 1 ? " (Your Line)" : "");
+                        sel.appendChild(opt);
+                    });
+                } else {
+                    sel.innerHTML = '<option value="">Default ({{ secure_from }})</option>';
+                }
                 if (current) sel.value = current;
             }
 

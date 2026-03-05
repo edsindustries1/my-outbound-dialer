@@ -318,6 +318,7 @@ def stop_campaign(user_id=None):
             camp["active"] = False
             camp["paused"] = False
     _get_pause_event(user_id).set()
+    _get_transfer_event(user_id).set()
 
 
 def pause_campaign(user_id=None):
