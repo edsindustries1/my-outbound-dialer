@@ -904,38 +904,31 @@ def login():
                 password = request.form.get("password", "")
                 if not email or not password:
                     error = "Please enter email and password"
-                elif supabase_available:
-                    result, err = supabase_sign_in(email, password)
-                    if result:
-                        user = User.query.filter_by(email=email).first()
-                        if not user:
-                            error = "No account found. Access is by invitation only."
-                        elif not getattr(user, 'is_active_account', True):
-                            error = "Your account has been deactivated. Please contact the administrator."
-                        else:
-                            if not user.supabase_id:
-                                user.supabase_id = result["user_id"]
-                                db.session.commit()
-                            login_user(user)
-                            session.permanent = True
-                            if is_ajax:
-                                return jsonify({"success": True, "redirect": url_for("dashboard")})
-                            return redirect(url_for("dashboard"))
-                    else:
-                        error = err or "Invalid email or password"
                 else:
+                    authenticated = False
                     user = User.query.filter_by(email=email).first()
-                    if user and user.check_password(password):
-                        if not getattr(user, 'is_active_account', True):
-                            error = "Your account has been deactivated. Please contact the administrator."
-                        else:
+                    if not user:
+                        error = "No account found. Access is by invitation only."
+                    elif not getattr(user, 'is_active_account', True):
+                        error = "Your account has been deactivated. Please contact the administrator."
+                    else:
+                        if supabase_available:
+                            result, err = supabase_sign_in(email, password)
+                            if result:
+                                if not user.supabase_id:
+                                    user.supabase_id = result["user_id"]
+                                    db.session.commit()
+                                authenticated = True
+                        if not authenticated and user.check_password(password):
+                            authenticated = True
+                        if authenticated:
                             login_user(user)
                             session.permanent = True
                             if is_ajax:
                                 return jsonify({"success": True, "redirect": url_for("dashboard")})
                             return redirect(url_for("dashboard"))
-                    else:
-                        error = "Invalid email or password"
+                        else:
+                            error = "Invalid email or password"
             if is_ajax and error:
                 return jsonify({"success": False, "error": error}), 401
         except Exception as e:
@@ -3236,6 +3229,7 @@ def reset_password():
             user.reset_token_expires = None
             db.session.commit()
             logger.info(f"Password reset completed for {user.email}")
+            flash("Your password has been reset successfully. Please log in.", "success")
             return redirect(url_for("login"))
     return render_template("reset_password.html", token=token, error=error)
 

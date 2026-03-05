@@ -326,6 +326,13 @@
             {% if info_message %}
             <div class="login-error" style="background:rgba(52,168,83,0.15);border-color:#34a853;color:#34a853;">{{ info_message }}</div>
             {% endif %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="login-error" style="{% if category == 'success' %}background:rgba(52,168,83,0.15);border-color:#34a853;color:#34a853;{% endif %}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
             {% if google_oauth %}
             <a href="/google_login" class="google-btn">
