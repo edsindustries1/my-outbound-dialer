@@ -418,11 +418,19 @@ def search_available_numbers(country_code="US", area_code=None, state=None, city
                 "number_type": n.get("phone_number_type", "local"),
                 "features": n.get("features", []),
             })
+        if not results:
+            return {"success": False, "error": "No phone numbers available for this area code. Please try a different area code."}
         logger.info(f"Found {len(results)} available numbers")
         return {"success": True, "numbers": results}
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Number search HTTP error: {e}")
+        return {"success": False, "error": "No phone numbers available for this area code. Please try a different area code."}
+    except requests.exceptions.Timeout:
+        logger.error("Number search timed out")
+        return {"success": False, "error": "Search timed out. Please try again."}
     except Exception as e:
         logger.error(f"Number search failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to search for phone numbers right now. Please try again later."}
 
 
 def purchase_number(phone_number, connection_id=None):
@@ -449,16 +457,11 @@ def purchase_number(phone_number, connection_id=None):
             "phone_numbers": [pn.get("phone_number", "") for pn in order.get("phone_numbers", [])],
         }
     except requests.exceptions.HTTPError as e:
-        error_body = ""
-        try:
-            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
-        except Exception:
-            error_body = str(e)
-        logger.error(f"Number purchase failed: {error_body}")
-        return {"success": False, "error": error_body}
+        logger.error(f"Number purchase failed: {e}")
+        return {"success": False, "error": "Unable to purchase this phone number. It may no longer be available. Please try a different number."}
     except Exception as e:
         logger.error(f"Number purchase failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to purchase this phone number. Please try again later."}
 
 
 def create_call_control_app(app_name, webhook_url):
@@ -501,17 +504,9 @@ def create_call_control_app(app_name, webhook_url):
             "app_id": app_data.get("id"),
             "app_name": app_data.get("application_name"),
         }
-    except requests.exceptions.HTTPError as e:
-        error_body = ""
-        try:
-            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
-        except Exception:
-            error_body = str(e)
-        logger.error(f"App creation failed: {error_body}")
-        return {"success": False, "error": error_body}
     except Exception as e:
         logger.error(f"App creation failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to set up your phone line. Please try again later."}
 
 
 def assign_number_to_app(phone_number_id, connection_id):
@@ -529,7 +524,7 @@ def assign_number_to_app(phone_number_id, connection_id):
         return {"success": True, "phone_number": data.get("phone_number"), "connection_id": data.get("connection_id")}
     except Exception as e:
         logger.error(f"Failed to assign number: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to configure your phone number. Please try again later."}
 
 
 def list_owned_numbers():
@@ -567,7 +562,7 @@ def list_owned_numbers():
         return {"success": True, "numbers": all_numbers}
     except Exception as e:
         logger.error(f"Failed to list owned numbers: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve your phone numbers. Please try again later."}
 
 
 def release_number(phone_number_id):
@@ -582,7 +577,7 @@ def release_number(phone_number_id):
         return {"success": True}
     except Exception as e:
         logger.error(f"Failed to release number: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to release this phone number. Please try again later."}
 
 
 def list_call_control_apps():
@@ -606,7 +601,7 @@ def list_call_control_apps():
         return {"success": True, "apps": results}
     except Exception as e:
         logger.error(f"Failed to list apps: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve phone line configurations. Please try again later."}
 
 
 def lookup_number(phone_number):
@@ -751,7 +746,7 @@ def list_outbound_voice_profiles():
         return {"success": True, "profiles": results}
     except Exception as e:
         logger.error(f"Failed to list outbound voice profiles: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve voice profiles. Please try again later."}
 
 
 def create_outbound_voice_profile(name="Open Humana Outbound"):
@@ -774,7 +769,7 @@ def create_outbound_voice_profile(name="Open Humana Outbound"):
         return {"success": True, "profile_id": profile.get("id"), "name": profile.get("name")}
     except Exception as e:
         logger.error(f"Failed to create outbound voice profile: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to create voice profile. Please try again later."}
 
 
 def assign_outbound_profile_to_app(app_id, profile_id):
@@ -797,7 +792,7 @@ def assign_outbound_profile_to_app(app_id, profile_id):
         return {"success": True, "app_id": data.get("id")}
     except Exception as e:
         logger.error(f"Failed to assign outbound profile to app: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to configure voice profile. Please try again later."}
 
 
 def auto_configure_outbound():
@@ -1043,4 +1038,4 @@ def get_number_order_status(order_id):
         }
     except Exception as e:
         logger.error(f"Failed to check order status: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to check order status. Please try again later."}
