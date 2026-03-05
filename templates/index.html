@@ -871,7 +871,7 @@
                         </div>
                         <div class="gads-table-wrap" style="max-height:360px;overflow-y:auto;">
                             <table class="gads-table" id="ownedNumbersTable">
-                                <thead><tr><th>Phone Number</th><th>Status</th><th>Voice App</th><th>Type</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Phone Number</th><th>Status</th><th>Line Config</th><th>Type</th><th>Actions</th></tr></thead>
                                 <tbody id="ownedNumbersBody"><tr><td colspan="5" class="gads-empty">Loading...</td></tr></tbody>
                             </table>
                         </div>
@@ -880,12 +880,12 @@
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Voice Apps</h3>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Line Profiles</h3>
                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoiceApps()">Refresh</button>
                         </div>
                         <div id="voiceAppsList" style="font-size:13px;color:var(--gads-text-secondary);">Loading...</div>
                         <div style="margin-top:12px;">
-                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="createVoiceApp()">+ Create Voice App</button>
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="createVoiceApp()">+ Create Line Profile</button>
                         </div>
                     </div>
                 </div>
@@ -3996,7 +3996,7 @@
             }
 
             function buyNumber(phoneNumber) {
-                if (!confirm("Purchase " + phoneNumber + "?\n\nThis will:\n1. Provision the number via OpenHumana Infrastructure\n2. Auto-create/assign a Voice App\n3. Configure call routing\n\nStandard provisioning fees apply.")) return;
+                if (!confirm("Purchase " + phoneNumber + "?\n\nThis will:\n1. Provision the number on your account\n2. Configure call routing automatically\n\nStandard provisioning fees apply.")) return;
                 showToast("Purchasing " + phoneNumber + "...", "info");
                 apiFetch("/api/numbers/buy", {
                     method: "POST",
@@ -4055,7 +4055,7 @@
                         html += '<tr>';
                         html += '<td class="td-mono" style="font-weight:600;">' + n.phone_number + '</td>';
                         html += '<td><span class="gads-badge ' + statusClass + '">' + n.status + '</span></td>';
-                        html += '<td style="font-size:12px;">' + (n.connection_name || '<span style="color:var(--gads-text-muted);">Not assigned</span>') + '</td>';
+                        html += '<td style="font-size:12px;">' + (n.connection_name ? '<span class="gads-badge gads-badge-success">Connected</span>' : '<span style="color:var(--gads-text-muted);">Not configured</span>') + '</td>';
                         html += '<td><span class="gads-badge">' + (n.number_type || "-") + '</span></td>';
                         html += '<td>';
                         if (!n.connection_id) {
@@ -4086,7 +4086,7 @@
                 showToast("Setting up " + phoneNumber + "...", "info");
                 apiFetch("/api/numbers/apps").then(function(r){return r.json();}).then(function(data) {
                     if (!data.apps || data.apps.length === 0) {
-                        showToast("No voice apps found. Creating one...", "info");
+                        showToast("Setting up line profile...", "info");
                         return apiFetch("/api/numbers/create-app", {
                             method: "POST",
                             headers: {"Content-Type": "application/json"},
@@ -4117,15 +4117,14 @@
                     if (data.error) { container.textContent = "Failed to load: " + data.error; return; }
                     var apps = data.apps || [];
                     if (apps.length === 0) {
-                        container.innerHTML = '<span style="color:var(--gads-text-muted);">No voice apps yet. Create one or buy a number with auto-setup.</span>';
+                        container.innerHTML = '<span style="color:var(--gads-text-muted);">No line profiles yet. Buy a number to auto-create one.</span>';
                         return;
                     }
                     var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
                     apps.forEach(function(a) {
                         html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--gads-bg);border-radius:8px;border:1px solid var(--gads-border);">';
                         html += '<div style="flex:1;"><strong>' + a.name + '</strong>';
-                        html += '<div style="font-size:11px;color:var(--gads-text-muted);margin-top:2px;">ID: ' + a.id + '</div>';
-                        html += '<div style="font-size:11px;color:var(--gads-text-muted);">Webhook: ' + (a.webhook_url || "Not set") + '</div>';
+                        html += '<div style="font-size:11px;color:var(--gads-text-muted);margin-top:2px;">Status: Ready</div>';
                         html += '</div>';
                         html += '<span class="gads-badge gads-badge-success">Active</span>';
                         html += '</div>';
@@ -4143,7 +4142,7 @@
                 nums.forEach(function(n) {
                     var opt = document.createElement("option");
                     opt.value = n.phone_number;
-                    opt.textContent = n.phone_number + (n.connection_name ? " (" + n.connection_name + ")" : "");
+                    opt.textContent = n.phone_number;
                     sel.appendChild(opt);
                 });
                 if (current) sel.value = current;
@@ -4167,16 +4166,16 @@
 
 
             function createVoiceApp() {
-                var name = prompt("Enter a name for the new voice app:", "Open Humana Dialer");
+                var name = prompt("Enter a name for the new line profile:", "Open Humana Dialer");
                 if (!name) return;
-                showToast("Creating voice app...", "info");
+                showToast("Creating line profile...", "info");
                 apiFetch("/api/numbers/create-app", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({app_name: name})
                 }).then(function(r){return r.json();}).then(function(data) {
                     if (data.error) { showToast("Failed: " + data.error, "error"); return; }
-                    showToast("Voice app created!", "success");
+                    showToast("Line profile created!", "success");
                     loadVoiceApps();
                 }).catch(function(e){if(e.message==="auth")return;showToast("Failed to create app","error");});
             }
