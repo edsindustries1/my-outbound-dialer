@@ -45,6 +45,8 @@ from storage import (
     save_voicemail_url,
     get_voice_preset,
     save_voice_preset,
+    get_custom_variables,
+    save_custom_variables,
     pause_for_transfer,
     resume_after_transfer,
     is_transfer_paused,
@@ -1491,6 +1493,33 @@ def save_vm_settings():
     save_voicemail_url(url, user_id=current_user.id, script=script)
     logger.info(f"Voicemail URL updated: {url}, script: {script[:50] if script else '(none)'}...")
     return jsonify({"message": "Voicemail URL saved", "voicemail_url": url, "voicemail_script": script})
+
+
+@app.route("/api/custom-variables", methods=["GET"])
+@login_required
+def api_get_custom_variables():
+    variables = get_custom_variables(user_id=current_user.id)
+    return jsonify({"variables": variables})
+
+
+@app.route("/api/custom-variables", methods=["POST"])
+@login_required
+def api_save_custom_variables():
+    data = request.get_json() or {}
+    variables = data.get("variables", [])
+    import re
+    cleaned = []
+    seen = set()
+    for v in variables:
+        if not isinstance(v, str):
+            continue
+        v = v.strip().lower()
+        v = re.sub(r'[^a-z0-9_]', '', v.replace(' ', '_'))
+        if v and v not in seen and len(v) <= 50:
+            cleaned.append(v)
+            seen.add(v)
+    save_custom_variables(cleaned, user_id=current_user.id)
+    return jsonify({"variables": cleaned})
 
 
 @app.route("/api/voice-preset", methods=["GET"])

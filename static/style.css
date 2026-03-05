@@ -2383,6 +2383,23 @@ label {
     transition: background 0.15s;
 }
 .pvm-placeholder-tag:hover { background: rgba(26,26,26,0.2); }
+.pvm-custom-tag {
+    background: rgba(59,130,246,0.12);
+    color: #2563eb;
+    position: relative;
+}
+.pvm-custom-tag:hover { background: rgba(59,130,246,0.22); }
+.pvm-tag-remove {
+    display: inline-block;
+    margin-left: 3px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.5;
+    vertical-align: middle;
+}
+.pvm-tag-remove:hover { opacity: 1; color: #dc2626; }
 .pvm-script-meta {
     display: flex;
     justify-content: space-between;

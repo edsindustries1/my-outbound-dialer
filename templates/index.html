@@ -656,13 +656,18 @@
                                 <div class="vmt-form-group">
                                     <label>Voicemail Script</label>
                                     <p class="vmt-hint">Click tags to insert placeholders into your script.</p>
-                                    <div class="pvm-placeholders">
+                                    <div class="pvm-placeholders" id="vmtPlaceholderTags">
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('first_name')">{first_name}</span>
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('last_name')">{last_name}</span>
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('amount')">{amount}</span>
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('date')">{date}</span>
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('email')">{email}</span>
                                         <span class="pvm-placeholder-tag" onclick="vmtInsertTag('address')">{address}</span>
+                                    </div>
+                                    <div id="vmtCustomTags" class="pvm-placeholders" style="margin-top:4px;"></div>
+                                    <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
+                                        <input type="text" id="vmtNewVarInput" class="gads-input" placeholder="e.g. account_number" style="max-width:200px;font-size:12px;" maxlength="50">
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtAddCustomVar()" style="font-size:11px;white-space:nowrap;">+ Add Variable</button>
                                     </div>
                                     <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
                                 </div>
@@ -698,7 +703,7 @@
                             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Personalized Voicemail (AI)</h3>
                         </div>
                         <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Create script templates here with placeholders. When you start a campaign, select "Personalized (AI)" voicemail and the system will auto-generate unique voicemails for each contact using your CSV data.</p>
-                        <p class="pvm-hint" style="margin-bottom:8px;">Available placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{amount}</code> <code>{date}</code> <code>{email}</code> <code>{address}</code></p>
+                        <p class="pvm-hint" style="margin-bottom:8px;">Built-in placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{amount}</code> <code>{date}</code> <code>{email}</code> <code>{address}</code>. You can also create custom variables that match any column in your CSV.</p>
                         <p class="pvm-hint">Script templates are saved in the template library above. Use the "+ Create Template" button and select "Script Template" type.</p>
                     </div>
                 </div>
@@ -1221,6 +1226,7 @@
             if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
                 if (typeof vmtLoad === 'function') vmtLoad();
+                if (typeof vmtLoadCustomVars === 'function') vmtLoadCustomVars();
                 if (typeof pvmInit === 'function') pvmInit();
             }
             if (page === 'phonenumbers') {
@@ -2102,6 +2108,71 @@
                 ta.focus();
                 ta.selectionStart = ta.selectionEnd = start + insert.length;
             }
+
+            var _customVars = [];
+            var _builtinVars = ['first_name', 'last_name', 'amount', 'date', 'email', 'address'];
+
+            function vmtLoadCustomVars() {
+                apiFetch("/api/custom-variables")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        _customVars = data.variables || [];
+                        vmtRenderCustomTags();
+                    })
+                    .catch(function() {});
+            }
+
+            function vmtRenderCustomTags() {
+                var container = document.getElementById("vmtCustomTags");
+                if (!container) return;
+                container.innerHTML = "";
+                _customVars.forEach(function(v) {
+                    var safe = v.replace(/[^a-z0-9_]/g, '');
+                    if (!safe) return;
+                    var span = document.createElement("span");
+                    span.className = "pvm-placeholder-tag pvm-custom-tag";
+                    span.appendChild(document.createTextNode("{" + safe + "} "));
+                    var removeBtn = document.createElement("span");
+                    removeBtn.className = "pvm-tag-remove";
+                    removeBtn.title = "Remove";
+                    removeBtn.textContent = "\u00d7";
+                    removeBtn.addEventListener("click", function(e) { e.stopPropagation(); vmtRemoveCustomVar(safe); });
+                    span.appendChild(removeBtn);
+                    span.addEventListener("click", function() { vmtInsertTag(safe); });
+                    container.appendChild(span);
+                });
+            }
+
+            function vmtAddCustomVar() {
+                var input = document.getElementById("vmtNewVarInput");
+                var raw = input.value.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                if (!raw) { input.focus(); return; }
+                if (_builtinVars.indexOf(raw) !== -1) { alert("'" + raw + "' is already a built-in variable."); input.value = ""; return; }
+                if (_customVars.indexOf(raw) !== -1) { alert("'" + raw + "' already exists."); input.value = ""; return; }
+                _customVars.push(raw);
+                input.value = "";
+                vmtRenderCustomTags();
+                vmtSaveCustomVars();
+            }
+
+            function vmtRemoveCustomVar(name) {
+                _customVars = _customVars.filter(function(v) { return v !== name; });
+                vmtRenderCustomTags();
+                vmtSaveCustomVars();
+            }
+
+            function vmtSaveCustomVars() {
+                apiFetch("/api/custom-variables", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ variables: _customVars })
+                }).catch(function() {});
+            }
+
+            document.getElementById("vmtNewVarInput").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") { e.preventDefault(); vmtAddCustomVar(); }
+            });
+
             function vmtSave() {
                 var id = document.getElementById("vmtEditId").value;
                 var name = document.getElementById("vmtName").value.trim();

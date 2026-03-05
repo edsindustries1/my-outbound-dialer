@@ -134,6 +134,35 @@ def save_voice_preset(preset, user_id=None):
     return preset
 
 
+def get_custom_variables(user_id=None):
+    settings_file = _user_file(user_id, "app_settings.json")
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+                return settings.get("custom_variables", [])
+    except Exception:
+        pass
+    return []
+
+def save_custom_variables(variables, user_id=None):
+    d = _user_logs_dir(user_id)
+    os.makedirs(d, exist_ok=True)
+    settings_file = _user_file(user_id, "app_settings.json")
+    settings = {}
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+    except Exception:
+        pass
+    settings["custom_variables"] = variables
+    settings["updated_at"] = datetime.utcnow().isoformat()
+    with open(settings_file, "w") as f:
+        json.dump(settings, f, indent=2)
+    return variables
+
+
 def _load_call_history(user_id=None):
     call_log_file = _user_file(user_id, "call_history.json")
     try:
