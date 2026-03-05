@@ -357,8 +357,22 @@
                         <div class="gads-card-header"><h3>Campaign History</h3></div>
                         <div class="gads-table-wrap">
                             <table class="gads-table" id="historyTable">
-                                <thead><tr><th>Date</th><th>Total Calls</th><th>Hot Leads</th><th>Voicemails</th><th>Failed</th><th>Success Rate</th></tr></thead>
-                                <tbody id="historyBody"><tr><td colspan="6" class="gads-empty">Loading...</td></tr></tbody>
+                                <thead><tr><th>Date</th><th>Total Calls</th><th>Hot Leads</th><th>Voicemails</th><th>Failed</th><th>Success Rate</th><th></th></tr></thead>
+                                <tbody id="historyBody"><tr><td colspan="7" class="gads-empty">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="gads-card" id="campaignDetailCard" style="margin-top:20px;display:none;">
+                        <div class="gads-card-header">
+                            <h3 id="campaignDetailTitle">Campaign Details</h3>
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="closeCampaignDetail()">&times; Close</button>
+                        </div>
+                        <div class="campaign-detail-summary" id="campaignDetailSummary"></div>
+                        <div class="gads-table-wrap" style="margin-top:12px;">
+                            <table class="gads-table">
+                                <thead><tr><th>Time</th><th>Number</th><th>Caller ID</th><th>Status</th><th>AMD</th><th>Transferred</th><th>Voicemail</th><th>Ring</th><th>Recording</th><th>Transcript</th></tr></thead>
+                                <tbody id="campaignDetailBody"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1634,23 +1648,102 @@
                     .then(function(data){
                         var body = document.getElementById("historyBody");
                         if (!data || data.length === 0) {
-                            body.innerHTML = '<tr><td colspan="6" class="gads-empty">No campaign history yet</td></tr>';
+                            body.innerHTML = '<tr><td colspan="7" class="gads-empty">No campaign history yet</td></tr>';
                             return;
                         }
                         var html = "";
                         data.forEach(function(d){
                             var rateColor = d.success_rate >= 50 ? "green" : d.success_rate >= 25 ? "yellow" : "red";
-                            html += '<tr>';
+                            html += '<tr class="history-row-clickable" onclick="openCampaignDetail(\'' + d.date + '\')" title="Click to view details">';
                             html += '<td>' + d.date + '</td>';
                             html += '<td>' + d.total + '</td>';
                             html += '<td style="color:#1e8e3e">' + d.transferred + '</td>';
                             html += '<td style="color:#1a1a1a">' + d.voicemail + '</td>';
                             html += '<td style="color:#d93025">' + d.failed + '</td>';
                             html += '<td><span class="badge badge-' + rateColor + '">' + d.success_rate + '%</span></td>';
+                            html += '<td><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><polyline points="9 18 15 12 9 6"/></svg></td>';
                             html += '</tr>';
                         });
                         body.innerHTML = html;
                     });
+            }
+
+            function openCampaignDetail(date) {
+                var card = document.getElementById("campaignDetailCard");
+                var title = document.getElementById("campaignDetailTitle");
+                var summaryEl = document.getElementById("campaignDetailSummary");
+                var body = document.getElementById("campaignDetailBody");
+                title.textContent = "Campaign Details — " + date;
+                summaryEl.innerHTML = "";
+                body.innerHTML = '<tr><td colspan="10" class="gads-empty">Loading...</td></tr>';
+                card.style.display = "";
+                card.scrollIntoView({ behavior: "smooth", block: "start" });
+
+                apiFetch("/api/campaign_history/" + date)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.error) {
+                            body.innerHTML = '<tr><td colspan="10" class="gads-empty">' + data.error + '</td></tr>';
+                            return;
+                        }
+                        var s = data.summary;
+                        summaryEl.innerHTML =
+                            '<div class="cd-stat"><span class="cd-stat-val">' + s.total + '</span><span class="cd-stat-lbl">Total</span></div>' +
+                            '<div class="cd-stat cd-stat-success"><span class="cd-stat-val">' + s.transferred + '</span><span class="cd-stat-lbl">Hot Leads</span></div>' +
+                            '<div class="cd-stat cd-stat-vm"><span class="cd-stat-val">' + s.voicemail + '</span><span class="cd-stat-lbl">Voicemails</span></div>' +
+                            '<div class="cd-stat cd-stat-fail"><span class="cd-stat-val">' + s.failed + '</span><span class="cd-stat-lbl">Failed</span></div>';
+
+                        var calls = data.calls || [];
+                        if (calls.length === 0) {
+                            body.innerHTML = '<tr><td colspan="10" class="gads-empty">No calls found</td></tr>';
+                            return;
+                        }
+                        var html = "";
+                        calls.forEach(function(c) {
+                            var ts = c.timestamp || "";
+                            var time = ts.length > 10 ? ts.substring(11, 19) : ts;
+                            var statusClass = c.transferred ? "cd-status-transfer" : c.voicemail_dropped ? "cd-status-vm" : "cd-status-fail";
+                            var statusText = c.status_description || c.status || "unknown";
+                            var amd = c.amd_result || (c.machine_detected ? "Machine" : "Human");
+                            var ring = c.ring_duration !== null && c.ring_duration !== undefined ? c.ring_duration + "s" : "-";
+                            var rec = c.recording_url ? '<a href="' + c.recording_url + '" target="_blank" class="cd-link">Play</a>' : '-';
+                            var transcript = "";
+                            if (c.transcript && c.transcript.length > 0) {
+                                var lines = [];
+                                c.transcript.forEach(function(t) {
+                                    var role = t.role || "unknown";
+                                    lines.push(role + ": " + (t.content || t.text || ""));
+                                });
+                                var fullText = lines.join("\n");
+                                var preview = fullText.length > 60 ? fullText.substring(0, 60) + "..." : fullText;
+                                var safeTitle = fullText.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'&#10;');
+                                var safePreview = preview.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                                transcript = '<span class="cd-transcript-preview" title="' + safeTitle + '">' + safePreview + '</span>';
+                            } else {
+                                transcript = "-";
+                            }
+                            html += '<tr>';
+                            html += '<td style="white-space:nowrap">' + time + '</td>';
+                            html += '<td>' + (c.number || "") + '</td>';
+                            html += '<td style="font-size:11px">' + (c.from_number || "") + '</td>';
+                            html += '<td><span class="' + statusClass + '">' + statusText + '</span></td>';
+                            html += '<td>' + amd + '</td>';
+                            html += '<td>' + (c.transferred ? '<span style="color:#1e8e3e">Yes</span>' : '-') + '</td>';
+                            html += '<td>' + (c.voicemail_dropped ? '<span style="color:#6366f1">Yes</span>' : '-') + '</td>';
+                            html += '<td>' + ring + '</td>';
+                            html += '<td>' + rec + '</td>';
+                            html += '<td style="max-width:200px;font-size:11px">' + transcript + '</td>';
+                            html += '</tr>';
+                        });
+                        body.innerHTML = html;
+                    })
+                    .catch(function() {
+                        body.innerHTML = '<tr><td colspan="10" class="gads-empty">Failed to load details</td></tr>';
+                    });
+            }
+
+            function closeCampaignDetail() {
+                document.getElementById("campaignDetailCard").style.display = "none";
             }
 
             // ---- View Switching (redirects to new navigation) ----
@@ -1677,7 +1770,7 @@
             function showDashPanel(panelId) {
                 var panelPageMap = {
                     panelVmSettings: 'voicemails',
-                    panelTestDialer: 'settings',
+                    panelTestDialer: 'testdialer',
                     panelAnalytics: 'reports',
                     panelDNC: 'contacts',
                     panelSchedule: 'settings',

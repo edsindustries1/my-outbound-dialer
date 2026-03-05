@@ -2020,6 +2020,27 @@ def campaign_history():
     return jsonify(get_campaign_history_summary(user_id=current_user.id))
 
 
+@app.route("/api/campaign_history/<date>")
+@login_required
+def campaign_history_detail(date):
+    import re
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
+        return jsonify({"error": "Invalid date format"}), 400
+    start_date = date + "T00:00:00"
+    end_date = date + "T23:59:59"
+    calls = get_call_history(start_date=start_date, end_date=end_date, user_id=current_user.id)
+    calls.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    summary = {"total": len(calls), "transferred": 0, "voicemail": 0, "failed": 0}
+    for c in calls:
+        if c.get("transferred"):
+            summary["transferred"] += 1
+        elif c.get("voicemail_dropped"):
+            summary["voicemail"] += 1
+        else:
+            summary["failed"] += 1
+    return jsonify({"date": date, "summary": summary, "calls": calls})
+
+
 # ---- Background Scheduler Thread ----
 def _scheduler_worker():
     import time as _time

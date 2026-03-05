@@ -1116,6 +1116,47 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .badge-yellow { background: var(--gads-warning-light); color: var(--gads-warning); }
 .badge-red { background: var(--gads-error-light); color: var(--gads-error); }
 
+/* Campaign History Clickable Rows */
+.history-row-clickable { cursor: pointer; }
+.history-row-clickable:hover { background: var(--gads-primary-light) !important; }
+.history-row-clickable td:last-child { text-align: center; }
+
+/* Campaign Detail View */
+.campaign-detail-summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.cd-stat {
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--gads-bg);
+    border: 1px solid var(--gads-border);
+    text-align: center;
+}
+.cd-stat-val { display: block; font-size: 24px; font-weight: 700; color: var(--gads-text); }
+.cd-stat-lbl { display: block; font-size: 11px; color: var(--gads-text-secondary); margin-top: 2px; }
+.cd-stat-success .cd-stat-val { color: var(--gads-success); }
+.cd-stat-vm .cd-stat-val { color: #6366f1; }
+.cd-stat-fail .cd-stat-val { color: var(--gads-error); }
+.cd-status-transfer { color: #1e8e3e; font-weight: 500; }
+.cd-status-vm { color: #6366f1; font-weight: 500; }
+.cd-status-fail { color: var(--gads-error); font-weight: 500; }
+.cd-link { color: var(--gads-primary); text-decoration: none; font-size: 12px; }
+.cd-link:hover { text-decoration: underline; }
+.cd-transcript-preview {
+    cursor: help;
+    font-size: 11px;
+    color: var(--gads-text-secondary);
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Filter row */
 .gads-filter-row {
     display: flex;
