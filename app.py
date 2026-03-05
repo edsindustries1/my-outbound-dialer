@@ -1096,11 +1096,7 @@ def dashboard():
     _detect_and_set_base_url()
     secure_from = os.environ.get("TELNYX_FROM_NUMBER", "Not set")
     user_data = current_user.to_dict() if current_user.is_authenticated else {}
-    is_admin = False
-    if ADMIN_EMAIL and current_user.email.lower() == ADMIN_EMAIL.lower():
-        is_admin = True
-    if getattr(current_user, 'role', 'user') == 'admin':
-        is_admin = True
+    is_admin = getattr(current_user, 'role', 'user') == 'admin'
     return render_template("index.html", secure_from=secure_from, user=user_data, processor_id=PAYPAL_CLIENT_ID, is_admin=is_admin)
 
 
@@ -2917,12 +2913,8 @@ def api_numbers_release():
 def api_numbers_apps():
     result = list_call_control_apps()
     if result.get("success"):
-        is_admin = False
-        if ADMIN_EMAIL and current_user.email.lower() == ADMIN_EMAIL.lower():
-            is_admin = True
-        if getattr(current_user, 'role', 'user') == 'admin':
-            is_admin = True
-        if not is_admin:
+        is_role_admin = getattr(current_user, 'role', 'user') == 'admin'
+        if not is_role_admin:
             user_conn_ids = set()
             user_numbers = ProvisionedNumber.query.filter_by(user_id=current_user.id).all()
             for pn in user_numbers:
@@ -2954,12 +2946,7 @@ def api_numbers_assign():
 @app.route("/api/numbers/create-app", methods=["POST"])
 @login_required
 def api_numbers_create_app():
-    is_admin = False
-    if ADMIN_EMAIL and current_user.email.lower() == ADMIN_EMAIL.lower():
-        is_admin = True
-    if getattr(current_user, 'role', 'user') == 'admin':
-        is_admin = True
-    if not is_admin:
+    if getattr(current_user, 'role', 'user') != 'admin':
         return jsonify({"error": "Line profiles are configured automatically when you purchase a number."}), 403
     data = request.get_json() or {}
     app_name = data.get("app_name", "Open Human Dialer").strip()

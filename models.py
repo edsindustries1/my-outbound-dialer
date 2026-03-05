@@ -192,12 +192,7 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE invitations ADD COLUMN expires_at TIMESTAMP"))
                 db.session.commit()
 
-        admin_email = __import__('os').environ.get("ADMIN_EMAIL", "")
-        if admin_email:
-            admin_user = User.query.filter_by(email=admin_email.lower()).first()
-            if admin_user and admin_user.role != 'admin':
-                admin_user.role = 'admin'
-                db.session.commit()
+        pass
 
     except Exception as e:
         logger.exception(f"Schema ensure failed: {e}")
