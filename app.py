@@ -164,7 +164,7 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = User.query.get(int(user_id))
+    user = db.session.get(User, int(user_id))
     if user and not getattr(user, 'is_active_account', True):
         return None
     return user
@@ -697,7 +697,15 @@ def contact_page():
 def api_lead():
     """Receive lead form submission and email to owner."""
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
+        if not data:
+            data = {
+                "name": request.form.get("name", ""),
+                "email": request.form.get("email", ""),
+                "phone": request.form.get("phone", ""),
+                "company": request.form.get("company", ""),
+                "team_size": request.form.get("team_size", ""),
+            }
         name_raw = data.get("name", "").strip()
         email_raw = data.get("email", "").strip()
         phone = data.get("phone", "").strip()
@@ -3109,7 +3117,7 @@ def admin_invite():
 @admin_required
 def admin_revoke():
     user_id = request.form.get("user_id", type=int)
-    target = User.query.get(user_id)
+    target = db.session.get(User, user_id)
     if not target:
         return redirect(url_for("admin_panel", error="User not found"))
     if target.role == "admin":
@@ -3124,7 +3132,7 @@ def admin_revoke():
 @admin_required
 def admin_restore():
     user_id = request.form.get("user_id", type=int)
-    target = User.query.get(user_id)
+    target = db.session.get(User, user_id)
     if not target:
         return redirect(url_for("admin_panel", error="User not found"))
     target.is_active_account = True
@@ -3334,7 +3342,7 @@ def super_admin():
 @app.route("/api/admin/user-activity/<int:uid>")
 @admin_required
 def api_admin_user_activity(uid):
-    target_user = User.query.get(uid)
+    target_user = db.session.get(User, uid)
     if not target_user:
         return jsonify({"error": "User not found"}), 404
     from storage import _load_call_history, get_contacts
