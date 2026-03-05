@@ -393,6 +393,88 @@
     return msg;
   }
 
+  var _chatMsgCount = 0;
+
+  function _randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function _sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+  var _adjacentKeys = {
+    'a':'s','b':'v','c':'x','d':'s','e':'w','f':'g','g':'h','h':'j','i':'o','j':'k',
+    'k':'l','l':'k','m':'n','n':'b','o':'p','p':'o','q':'w','r':'t','s':'d','t':'r',
+    'u':'y','v':'c','w':'e','x':'z','y':'u','z':'x'
+  };
+
+  function _stripLeadTag(text) {
+    return text.replace(/\[LEAD_CAPTURED:.*?\]/g, '').trim();
+  }
+
+  async function _simulateTyping(botMsg, text) {
+    _chatMsgCount++;
+    var cleanText = _stripLeadTag(text);
+    if (!cleanText) return;
+
+    var thinkDelay;
+    if (cleanText.length < 60) thinkDelay = _randInt(800, 1200);
+    else if (cleanText.length <= 150) thinkDelay = _randInt(1400, 2200);
+    else thinkDelay = _randInt(2200, 3500);
+    await _sleep(thinkDelay);
+
+    var doTypo = (_chatMsgCount % 6 === 0);
+    var typoWordIdx = -1;
+    var typoCharPos = -1;
+    if (doTypo) {
+      var words = cleanText.split(' ');
+      var candidates = [];
+      for (var w = 1; w < words.length - 1; w++) {
+        if (words[w].length >= 5 && !/[@.\/\d]/.test(words[w])) candidates.push(w);
+      }
+      if (candidates.length > 0) {
+        typoWordIdx = candidates[_randInt(0, candidates.length - 1)];
+        var charStart = 0;
+        for (var wi = 0; wi < typoWordIdx; wi++) charStart += words[wi].length + 1;
+        typoCharPos = charStart + _randInt(2, 3);
+      } else {
+        doTypo = false;
+      }
+    }
+
+    var rendered = '';
+    var typoInserted = false;
+    var i = 0;
+    while (i < cleanText.length) {
+      var ch = cleanText[i];
+
+      if (doTypo && !typoInserted && i === typoCharPos) {
+        var wrongChar = _adjacentKeys[ch.toLowerCase()] || 'e';
+        rendered += wrongChar;
+        botMsg.textContent = rendered;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        await _sleep(_randInt(400, 700));
+        var removeCount = _randInt(1, 2);
+        for (var r = 0; r < removeCount && rendered.length > 0; r++) {
+          rendered = rendered.slice(0, -1);
+          botMsg.textContent = rendered;
+          await _sleep(60);
+        }
+        typoInserted = true;
+        i = i - removeCount + 1;
+        if (i < 0) i = 0;
+        continue;
+      }
+
+      rendered += ch;
+      botMsg.textContent = rendered;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      i++;
+
+      var delay = _randInt(35, 65);
+      if (ch === ' ') delay += 20;
+      else if (ch === ',') delay = _randInt(180, 280);
+      else if (ch === '.' || ch === '?' || ch === '!') delay = _randInt(350, 550);
+      await _sleep(delay);
+    }
+  }
+
   async function sendMessage() {
     var text = inputEl.value.trim();
     if (!text) return;
@@ -416,36 +498,47 @@
         return;
       }
 
-      typingEl.remove();
-      var botMsg = addMessage('', 'bot');
       var fullText = '';
       var reader = resp.body.getReader();
       var decoder = new TextDecoder();
+      var sseBuffer = '';
 
       while (true) {
         var result = await reader.read();
         if (result.done) break;
-        var chunk = decoder.decode(result.value, { stream: true });
-        var lines = chunk.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
+        sseBuffer += decoder.decode(result.value, { stream: true });
+        var eventLines = sseBuffer.split('\n');
+        sseBuffer = eventLines.pop();
+        for (var li = 0; li < eventLines.length; li++) {
+          var line = eventLines[li].trim();
           if (!line.startsWith('data: ')) continue;
           var dataStr = line.substring(6);
           if (dataStr === '[DONE]') continue;
           try {
             var parsed = JSON.parse(dataStr);
-            if (parsed.text) {
-              fullText += parsed.text;
-              botMsg.textContent = fullText;
-              messagesEl.scrollTop = messagesEl.scrollHeight;
-            }
+            if (parsed.text) fullText += parsed.text;
           } catch (e) {}
         }
       }
+      if (sseBuffer.trim().startsWith('data: ') && sseBuffer.trim().substring(6) !== '[DONE]') {
+        try {
+          var lastParsed = JSON.parse(sseBuffer.trim().substring(6));
+          if (lastParsed.text) fullText += lastParsed.text;
+        } catch (e) {}
+      }
 
-      if (!fullText) botMsg.textContent = 'Sorry, I didn\'t catch that. Could you try again?';
+      typingEl.remove();
+
+      if (!fullText) {
+        addMessage('Sorry, I didn\'t catch that. Could you try again?', 'bot');
+      } else {
+        var botMsg = addMessage('', 'bot');
+        await _simulateTyping(botMsg, fullText);
+      }
+
+      var cleanForHistory = _stripLeadTag(fullText);
       chatHistory.push({ role: 'user', text: text });
-      chatHistory.push({ role: 'model', text: fullText });
+      chatHistory.push({ role: 'model', text: cleanForHistory });
       if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
     } catch (err) {
       typingEl.remove();
