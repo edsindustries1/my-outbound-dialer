@@ -99,15 +99,6 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .hero-spline-col{flex:1;min-width:0;height:550px;position:relative}
 .hero-spline-glow{position:absolute;inset:-40px;background:radial-gradient(circle at center,rgba(100,130,255,.08) 0%,transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
 .hero-spline-col spline-viewer{position:relative;z-index:1}
-.hero-spline-card{position:absolute;z-index:2;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 18px;animation:splineCardFloat 3s ease-in-out infinite alternate}
-.hero-spline-card-top{top:32px;right:16px;animation-delay:0s}
-.hero-spline-card-bottom{bottom:48px;left:16px;animation-delay:1.5s}
-.spline-card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.spline-card-icon-green{background:rgba(34,197,94,.15);color:#22c55e}
-.spline-card-icon-blue{background:rgba(59,130,246,.15);color:#3b82f6}
-.spline-card-title{font-size:.88rem;font-weight:600;color:#fff;line-height:1.3}
-.spline-card-sub{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:2px}
-@keyframes splineCardFloat{0%{transform:translateY(0)}100%{transform:translateY(-8px)}}
 
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:50px;background:rgba(26,26,26,0.1);border:1px solid rgba(26,26,26,0.2);font-size:.78rem;font-weight:600;color:rgba(26,26,26,1);margin-bottom:20px;letter-spacing:.5px;position:relative;overflow:hidden}
 .hero-badge-dot{width:7px;height:7px;border-radius:50%;background:#1a1a1a;box-shadow:0 0 8px rgba(26,26,26,0.6)}
@@ -125,7 +116,8 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .hero-split .hero-actions{justify-content:flex-start}
 .hero-split .hero-sub{margin-left:0}
 .hero-split .hero-trust{justify-content:flex-start}
-spline-viewer{--logo-display:none}
+spline-viewer{--logo-display:none;--watermark-display:none}
+spline-viewer::part(logo),spline-viewer::part(watermark){display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 .hero-spline-fallback{display:none;position:absolute;inset:0;z-index:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,.3);font-size:.9rem;text-align:center;padding:40px}
 
 .btn-glow{position:relative;overflow:hidden}
@@ -687,12 +679,6 @@ spline-viewer{--logo-display:none}
   .hero-split .hero-sub{margin:0 auto 24px}
   .hero-split .hero-trust{justify-content:center}
   .hero-spline-col{height:400px}
-  .hero-spline-card-top{top:16px;right:8px}
-  .hero-spline-card-bottom{bottom:24px;left:8px}
-  .hero-spline-card{padding:10px 14px;gap:10px}
-  .spline-card-icon{width:32px;height:32px;border-radius:8px}
-  .spline-card-title{font-size:.78rem}
-  .spline-card-sub{font-size:.68rem}
   .hero-mockup{padding:0 16px;margin-top:40px}
   .bento-grid{grid-template-columns:1fr}
   .bento-features{grid-template-columns:1fr}
