@@ -23,6 +23,8 @@
         var progress = docH > 0 ? Math.min(scrollY / docH, 1) : 0;
         navProgress.style.transform = 'scaleX(' + progress + ')';
       }
+      var floatingCta = document.getElementById('floatingCta');
+      if (floatingCta) floatingCta.classList.toggle('visible', scrollY > 500);
       scrollTicking = false;
     });
   }
