@@ -66,6 +66,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                     <span>Live Calls</span>
                 </a>
+                <a class="gads-nav-item" data-page="testdialer" onclick="navigateTo('testdialer')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/><polyline points="16 2 22 2 22 8"/><line x1="22" y1="2" x2="16" y2="8"/></svg>
+                    <span>Test Dialer</span>
+                </a>
                 <a class="gads-nav-item" data-page="reports" onclick="navigateTo('reports')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                     <span>Reports</span>
@@ -277,7 +281,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             New Campaign
                         </button>
-                        <button class="gads-btn gads-btn-outline" onclick="navigateTo('settings')">
+                        <button class="gads-btn gads-btn-outline" onclick="navigateTo('testdialer')">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/></svg>
                             Test Call
                         </button>
@@ -990,13 +994,13 @@
                     </div>
                 </div>
 
-                <!-- ==================== PAGE: SETTINGS ==================== -->
-                <div class="gads-page" id="page-settings" style="display:none">
-                    <div class="gads-page-header"><h2>Settings</h2></div>
+                <!-- ==================== PAGE: TEST DIALER ==================== -->
+                <div class="gads-page" id="page-testdialer" style="display:none">
+                    <div class="gads-page-header"><h2>Test Dialer</h2></div>
 
                     <div class="gads-card">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/></svg> Test Dialer</h3>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/><polyline points="16 2 22 2 22 8"/><line x1="22" y1="2" x2="16" y2="8"/></svg> Make a Test Call</h3>
                         </div>
                         <label>Enter a phone number to test and a transfer number for human-answered calls.</label>
                         <div class="gads-input-row" style="margin-top:8px;">
@@ -1017,6 +1021,28 @@
                             <div id="testResult" class="test-result-status">Status: Idle</div>
                         </div>
                     </div>
+
+                    <div class="gads-card" style="margin-top:20px;">
+                        <div class="gads-card-header">
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Voicemail Audio URL</h3>
+                        </div>
+                        <label>Set the default voicemail audio that Alex drops when a call goes to voicemail.</label>
+                        <div class="gads-input-row" style="margin-top:8px;">
+                            <input type="text" id="testVmUrlInput" class="gads-input" placeholder="https://example.com/voicemail.mp3 or .wav">
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="testVmSaveBtn">Save</button>
+                        </div>
+                        <div class="vm-preview" id="testVmPreview" style="display:none;margin-top:8px;">
+                            <label>Audio Preview</label>
+                            <audio id="testVmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:8px;"></audio>
+                            <div id="testVmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
+                        </div>
+                        <div id="testVmSaveResult" style="margin-top:8px;font-size:13px;"></div>
+                    </div>
+                </div>
+
+                <!-- ==================== PAGE: SETTINGS ==================== -->
+                <div class="gads-page" id="page-settings" style="display:none">
+                    <div class="gads-page-header"><h2>Settings</h2></div>
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
@@ -1146,6 +1172,7 @@
             phonenumbers: 'Phone Numbers',
             livecalls: 'Live Calls',
             reports: 'Reports',
+            testdialer: 'Test Dialer',
             settings: 'Settings'
         };
 
@@ -1181,12 +1208,15 @@
                 if (typeof loadDNC === 'function') loadDNC();
                 if (typeof loadContacts === 'function') loadContacts();
             }
+            if (page === 'testdialer') {
+                if (typeof loadTestFromNumbers === 'function') loadTestFromNumbers();
+                if (typeof loadTestVmSettings === 'function') loadTestVmSettings();
+            }
             if (page === 'settings') {
                 if (typeof loadSchedules === 'function') loadSchedules();
                 if (typeof loadTemplates === 'function') loadTemplates();
                 if (typeof loadWebhookStatus === 'function') loadWebhookStatus();
                 if (typeof presetLoadVoices === 'function') presetLoadVoices();
-                if (typeof loadTestFromNumbers === 'function') loadTestFromNumbers();
             }
             if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
@@ -1282,11 +1312,12 @@
             { page: 'phonenumbers', label: 'Phone Numbers', sub: 'Search, buy & manage numbers', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>' },
             { page: 'livecalls', label: 'Live Calls', sub: 'Call logs & real-time status', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' },
             { page: 'reports', label: 'Reports', sub: 'Analytics & email reports', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
-            { page: 'settings', label: 'Settings', sub: 'Test dialer, webhooks, templates', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }
+            { page: 'testdialer', label: 'Test Dialer', sub: 'Make test calls & voicemail', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/><polyline points="16 2 22 2 22 8"/><line x1="22" y1="2" x2="16" y2="8"/></svg>' },
+            { page: 'settings', label: 'Settings', sub: 'Webhooks & templates', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }
         ];
         var _searchQuickActions = [
             { label: 'New Campaign', sub: 'Launch a new campaign', action: function(){ navigateTo('campaigns'); setTimeout(openWizard, 100); }, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' },
-            { label: 'Test Call', sub: 'Make a test call', action: function(){ navigateTo('settings'); }, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>' }
+            { label: 'Test Call', sub: 'Make a test call', action: function(){ navigateTo('testdialer'); }, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>' }
         ];
 
         (function() {
@@ -1932,6 +1963,70 @@
                     saveVmBtn.disabled = false;
                     saveVmBtn.textContent = "Save";
                     vmSaveResult.innerHTML = '<span style="color:var(--gads-error);">Failed to save</span>';
+                });
+            });
+
+            // ---- Test Dialer Voicemail URL ----
+            var testVmUrlInput = document.getElementById("testVmUrlInput");
+            var testVmSaveBtn = document.getElementById("testVmSaveBtn");
+            var testVmPreview = document.getElementById("testVmPreview");
+            var testVmAudioPlayer = document.getElementById("testVmAudioPlayer");
+            var testVmDuration = document.getElementById("testVmDuration");
+            var testVmSaveResult = document.getElementById("testVmSaveResult");
+
+            function loadTestVmSettings() {
+                apiFetch("/api/voicemail_settings")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.voicemail_url) {
+                            testVmUrlInput.value = data.voicemail_url;
+                            showTestVmPreview(data.voicemail_url);
+                        }
+                    })
+                    .catch(function() {});
+            }
+
+            function showTestVmPreview(url) {
+                if (!url) { testVmPreview.style.display = "none"; return; }
+                testVmAudioPlayer.src = url;
+                testVmPreview.style.display = "";
+                testVmAudioPlayer.addEventListener("loadedmetadata", function() {
+                    var dur = Math.round(testVmAudioPlayer.duration);
+                    testVmDuration.textContent = "Duration: " + dur + " seconds";
+                });
+                testVmAudioPlayer.addEventListener("error", function() {
+                    testVmDuration.textContent = "Could not load audio preview";
+                });
+            }
+
+            testVmSaveBtn.addEventListener("click", function() {
+                var url = testVmUrlInput.value.trim();
+                if (!url) { alert("Enter a voicemail URL"); return; }
+                testVmSaveBtn.disabled = true;
+                testVmSaveBtn.textContent = "Saving...";
+                apiFetch("/api/voicemail_settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ voicemail_url: url })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    testVmSaveBtn.disabled = false;
+                    testVmSaveBtn.textContent = "Save";
+                    if (data.error) {
+                        testVmSaveResult.innerHTML = '<span style="color:var(--gads-error);">' + data.error + '</span>';
+                    } else {
+                        testVmSaveResult.innerHTML = '<span style="color:var(--gads-success);">Voicemail URL saved</span>';
+                        showTestVmPreview(url);
+                        if (vmUrlInput) vmUrlInput.value = url;
+                        setTimeout(function() { testVmSaveResult.textContent = ""; }, 3000);
+                    }
+                })
+                .catch(function(e) {
+                    if (e.message === "auth") return;
+                    testVmSaveBtn.disabled = false;
+                    testVmSaveBtn.textContent = "Save";
+                    testVmSaveResult.innerHTML = '<span style="color:var(--gads-error);">Failed to save</span>';
                 });
             });
 
