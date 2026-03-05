@@ -713,4 +713,63 @@
     });
   }
 
+  /* ========== SPLINE LAZY LOAD + FALLBACK ========== */
+  var heroSpline = document.getElementById('heroSpline');
+  var splineFallback = document.getElementById('splineFallback');
+
+  if (heroSpline && splineFallback) {
+    var hasWebGL = false;
+    try {
+      var testCanvas = document.createElement('canvas');
+      hasWebGL = !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl'));
+    } catch (e) {}
+
+    if (!hasWebGL) {
+      splineFallback.style.display = 'flex';
+      heroSpline.style.display = 'none';
+    } else {
+      var splineLoaded = false;
+      var splineTimeout = setTimeout(function () {
+        if (!splineLoaded) {
+          splineFallback.style.display = 'flex';
+          heroSpline.style.display = 'none';
+        }
+      }, 12000);
+
+      var loadSplineScript = function () {
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = 'https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js';
+        s.onload = function () {
+          var checkReady = setInterval(function () {
+            if (customElements.get('spline-viewer')) {
+              splineLoaded = true;
+              clearTimeout(splineTimeout);
+              clearInterval(checkReady);
+            }
+          }, 200);
+          setTimeout(function () { clearInterval(checkReady); }, 10000);
+        };
+        s.onerror = function () {
+          clearTimeout(splineTimeout);
+          splineFallback.style.display = 'flex';
+          heroSpline.style.display = 'none';
+        };
+        document.head.appendChild(s);
+      };
+
+      if ('IntersectionObserver' in window) {
+        var splineObs = new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            loadSplineScript();
+            splineObs.disconnect();
+          }
+        }, { rootMargin: '200px' });
+        splineObs.observe(heroSpline.parentElement);
+      } else {
+        loadSplineScript();
+      }
+    }
+  }
+
 })();
