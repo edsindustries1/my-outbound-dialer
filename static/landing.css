@@ -116,7 +116,7 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .hero-split .hero-actions{justify-content:flex-start}
 .hero-split .hero-sub{margin-left:0}
 .hero-split .hero-trust{justify-content:flex-start}
-spline-viewer{--logo-display:none;--watermark-display:none}
+spline-viewer{--logo-display:none;--watermark-display:none;position:relative;overflow:hidden}
 spline-viewer::part(logo),spline-viewer::part(watermark){display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 .hero-spline-fallback{display:none;position:absolute;inset:0;z-index:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,.3);font-size:.9rem;text-align:center;padding:40px}
 

@@ -746,6 +746,17 @@
               splineLoaded = true;
               clearTimeout(splineTimeout);
               clearInterval(checkReady);
+              setTimeout(function () {
+                var sv = document.getElementById('heroSpline');
+                if (sv && sv.shadowRoot) {
+                  var logo = sv.shadowRoot.querySelector('#logo');
+                  if (logo) logo.style.display = 'none';
+                  sv.shadowRoot.querySelectorAll('a[href*="spline"]').forEach(function (a) { a.style.display = 'none'; });
+                  sv.shadowRoot.querySelectorAll('img').forEach(function (img) {
+                    if (img.alt && img.alt.toLowerCase().indexOf('spline') !== -1) img.style.display = 'none';
+                  });
+                }
+              }, 2000);
             }
           }, 200);
           setTimeout(function () { clearInterval(checkReady); }, 10000);
