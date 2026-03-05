@@ -35,8 +35,8 @@ The application is built on a Python Flask framework with PostgreSQL for data pe
 
 **Technical Implementations & Features:**
 - **Real-time Call Transcription**: Utilizes Telnyx STT for transcription, stored per call.
-- **Telnyx Number Management**: Users can search, buy, and manage Telnyx numbers directly from the dashboard, with auto-provisioning of Call Control Applications.
-- **Automated Line Provisioning**: Dashboard "Provision Line" button automates the entire flow: search local number -> purchase -> create per-user Call Control App -> assign. Shows friendly status: "Assigning Alex a local line..." -> "Alex is Ready." API endpoints: `/api/provision-line` (POST) and `/api/provision-status` (GET). Data stored in `provisioned_numbers` table.
+- **Telnyx Number Management**: Users can search, buy, and manage Telnyx numbers directly from the dashboard, with auto-provisioning of Call Control Applications. Line profiles (voice apps) are scoped per user — regular users only see their own line profile for their provisioned number, while admins see all profiles. Non-admin API responses strip sensitive fields (IDs, webhook URLs). The "Create Line Profile" button and manual "Setup" button on unassigned numbers are admin-only. The `/api/numbers/create-app` endpoint is restricted to admin users.
+- **Automated Line Provisioning**: Dashboard "Provision Line" button automates the entire flow: search local number -> purchase -> create per-user Call Control App -> assign -> store `telnyx_connection_id` on `ProvisionedNumber`. Shows friendly status: "Assigning Alex a local line..." -> "Alex is Ready." API endpoints: `/api/provision-line` (POST) and `/api/provision-status` (GET). Data stored in `provisioned_numbers` table. Line profiles auto-configure during provisioning — users never need to manually create or assign voice apps.
 - **Campaign Wizard**: A 5-step overlay for creating campaigns, including contact uploads and voicemail selection.
 - **Reporting**: Call analytics with Chart.js charts and daily email reports for hot leads and failed calls.
 - **Environment Management**: Auto-detection of webhook base URL for flexible deployment.

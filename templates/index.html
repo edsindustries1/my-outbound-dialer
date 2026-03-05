@@ -880,13 +880,15 @@
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Line Profiles</h3>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg> Line Profile</h3>
                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoiceApps()">Refresh</button>
                         </div>
                         <div id="voiceAppsList" style="font-size:13px;color:var(--gads-text-secondary);">Loading...</div>
+                        {% if is_admin %}
                         <div style="margin-top:12px;">
                             <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="createVoiceApp()">+ Create Line Profile</button>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -4058,9 +4060,11 @@
                         html += '<td style="font-size:12px;">' + (n.connection_name ? '<span class="gads-badge gads-badge-success">Connected</span>' : '<span style="color:var(--gads-text-muted);">Not configured</span>') + '</td>';
                         html += '<td><span class="gads-badge">' + (n.number_type || "-") + '</span></td>';
                         html += '<td>';
+                        {% if is_admin %}
                         if (!n.connection_id) {
                             html += '<button class="gads-btn gads-btn-outline gads-btn-sm" onclick="autoAssignNumber(\'' + n.phone_number + '\')">Setup</button> ';
                         }
+                        {% endif %}
                         html += '<button class="gads-btn gads-btn-sm" style="color:var(--gads-error);border:1px solid var(--gads-error);background:transparent;font-size:11px;" onclick="releaseNumber(\'' + n.id + '\',\'' + n.phone_number + '\')">Release</button>';
                         html += '</td>';
                         html += '</tr>';
@@ -4111,19 +4115,20 @@
                 }).catch(function(e){if(e.message==="auth")return;showToast("Setup failed: " + e.message, "error");});
             }
 
+            var _isAdmin = {{ 'true' if is_admin else 'false' }};
             function loadVoiceApps() {
                 apiFetch("/api/numbers/apps").then(function(r){return r.json();}).then(function(data) {
                     var container = document.getElementById("voiceAppsList");
                     if (data.error) { container.textContent = "Failed to load: " + data.error; return; }
                     var apps = data.apps || [];
                     if (apps.length === 0) {
-                        container.innerHTML = '<span style="color:var(--gads-text-muted);">No line profiles yet. Buy a number to auto-create one.</span>';
+                        container.innerHTML = '<span style="color:var(--gads-text-muted);">No line profile configured. Buy a number to auto-create one.</span>';
                         return;
                     }
                     var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
                     apps.forEach(function(a) {
                         html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--gads-bg);border-radius:8px;border:1px solid var(--gads-border);">';
-                        html += '<div style="flex:1;"><strong>' + a.name + '</strong>';
+                        html += '<div style="flex:1;"><strong>Your Line</strong>';
                         html += '<div style="font-size:11px;color:var(--gads-text-muted);margin-top:2px;">Status: Ready</div>';
                         html += '</div>';
                         html += '<span class="gads-badge gads-badge-success">Active</span>';
