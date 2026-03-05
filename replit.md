@@ -42,7 +42,8 @@ The application is built on a Python Flask framework with PostgreSQL for data pe
 - **Frontend Interaction**: Features like drag-and-drop file uploads, floating Notepad widget, and an iPhone-style live dialer widget enhance user interaction.
 - **Blog**: Full blog system at `/blog` with 6 articles on AI sales, compliance, and strategy. Features category filtering (server-side via query params), individual post pages at `/blog/<slug>` with Key Takeaways boxes, reading time estimates, structured H2/H3 content, and "More from the blog" related posts. Blog data in `blog_data.py`, templates in `templates/blog.html` and `templates/blog_post.html`, styles in `static/blog.css`. Uses white/light theme distinct from the dark subpage styling.
 - **Sub-Pages**: About Us, Help Center (searchable FAQ accordion), TCPA Compliance (legal disclaimer), Privacy Policy, Terms of Service, and Contact Support pages. All share the landing page header/footer and use `static/pages.css` for sub-page-specific styles.
-- **Alex AI Chatbot**: An interactive chat widget on the landing page powered by Pollinations AI (free, no API key required). Alex has a deep personality as a digital associate with a proven track record (real estate, solar, insurance case studies), emotional range, and lead conversion logic that provides direct links to pricing/registration. Features letter-by-letter text streaming, typing indicator, green online badge, 10-message conversation memory, and markdown link rendering. Backend in `alex_chat.py`, API at `/api/chat` and `/api/chat-alex`, widget CSS in `static/chat-widget.css`.
+- **Alex AI Chatbot (Website)**: Interactive chat widget on the landing page powered by Groq API (llama-3.3-70b-versatile) with Pollinations fallback. Alex is a sales agent persona — casual, 2-sentence max replies, lead capture with `[LEAD_CAPTURED]` tags stripped before display. Features realistic typing simulation (character-by-character with variable delays, punctuation pauses, occasional typo simulation), SSE streaming with line buffer for partial chunks, typing indicator, green online badge, 10-message conversation memory. Backend in `alex_chat.py`, API at `/api/chat` and `/api/chat-alex`, widget CSS in `static/chat-widget.css`.
+- **Alex Telegram Bot (Admin)**: Alex runs 24/7 on Telegram as a background polling thread inside the Flask app (`telegram_bot.py`). Only responds to the admin (`TELEGRAM_CHAT_ID`). Has full access to real-time platform stats — queries the database for user counts, credit balances, call volumes, voicemail/transfer rates, active lines, and per-user breakdowns. Uses Groq (llama-3.3-70b-versatile) with conversation history (20 messages). Admin can ask anything about the platform and get real data. Single-instance guard prevents duplicate pollers in multi-worker deployments.
 - **Welcome Email**: Styled as a formal job application/resume from Alex. Sent automatically when users request Alex's resume via the lead capture form. Template in `welcome_email.py`.
 - **Lead Confirmation Email**: Professional thank-you email sent to leads who submit the demo request form. Template in `invite_email.py`.
 - **Railway Deployment**: Configured via `railway.json` and `Procfile` for zero-touch GitHub-to-Railway deployment. Health check at `/api/health`. Global 500 error handler shows friendly "System Configuration in Progress" page.
@@ -56,13 +57,15 @@ The application is built on a Python Flask framework with PostgreSQL for data pe
 - **ElevenLabs TTS**: For generating personalized voicemail audio with advanced speech features.
 - **Chart.js**: For rendering interactive charts in the reports section.
 - **PayPal**: Payment processing for subscription plans. Configured via PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_MODE env vars.
-- **Pollinations AI**: Free AI API for the Alex chatbot on the landing page.
+- **Groq API**: Primary AI backend for both the website chat (llama-3.3-70b-versatile) and Telegram bot. Configured via GROQ_API_KEY env var.
+- **Pollinations AI**: Fallback AI API for the website chatbot if Groq is unavailable.
 
 ## Key Files
 - `app.py` — Main Flask application with all routes
 - `models.py` — SQLAlchemy models (User, Invitation, UserAppData, UserInstance, ProvisionedNumber) + schema migration
 - `gmail_client.py` — Resend API email sending
 - `invite_email.py` — Email templates for invites, lead confirmations, password resets
+- `telegram_bot.py` — Telegram bot polling thread (admin-only, real-time platform stats via Groq AI)
 - `welcome_email.py` — Alex resume/welcome email template
 - `blog_data.py` — Blog article data
 - `templates/admin.html` — Admin invite panel
