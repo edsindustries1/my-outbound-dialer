@@ -124,16 +124,11 @@
     </div>
   </nav>
 
-  <section class="hero">
-    <div class="hero-mesh"></div>
-    <div class="hero-orb hero-orb-1"></div>
-    <div class="hero-orb hero-orb-2"></div>
-    <div class="hero-orb hero-orb-3"></div>
-    <canvas class="hero-canvas" id="heroCanvas"></canvas>
-    <div class="hero-grid-lines"></div>
+  <section class="hero" id="heroSection">
+    <canvas class="hero-tubes-canvas" id="heroTubesCanvas" style="touch-action:none;"></canvas>
+    <div class="hero-tubes-overlay"></div>
 
-    <div class="hero-inner hero-split">
-      <div class="hero-text-col">
+    <div class="hero-inner">
         <div class="hero-badge anim-fade">
           <span class="hero-badge-dot"></span>
           <span class="hero-badge-text">Your Digital Employee Agency</span>
@@ -173,16 +168,6 @@
           </div>
           <span class="trust-text">Trusted by <strong>2,000+</strong> sales teams worldwide</span>
         </div>
-      </div>
-
-      <div class="hero-spline-col anim-fade">
-        <div class="hero-spline-glow"></div>
-        <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" loading-anim-type="spinner-big-dark" style="width:100%;height:100%;" id="heroSpline"></spline-viewer>
-        <div class="hero-spline-fallback" id="splineFallback">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 8v4l2 2"/></svg>
-          <span>Interactive 3D scene loads in your browser</span>
-        </div>
-      </div>
     </div>
 
     <div class="hero-mockup" style="opacity:1;transform:none">
@@ -779,5 +764,47 @@
   </a>
 
   <script src="/static/landing.js"></script>
+  <script type="module">
+    (function() {
+      var canvas = document.getElementById('heroTubesCanvas');
+      if (!canvas) return;
+
+      var tubesApp = null;
+      var loaded = false;
+
+      import('https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js')
+        .then(function(module) {
+          var TubesCursor = module.default;
+          tubesApp = TubesCursor(canvas, {
+            tubes: {
+              colors: ["#ffffff", "#aaaaaa", "#666666"],
+              lights: {
+                intensity: 150,
+                colors: ["#ffffff", "#cccccc", "#888888", "#aaaaaa"]
+              }
+            }
+          });
+          loaded = true;
+
+          canvas.addEventListener('click', function() {
+            if (!tubesApp) return;
+            var randomColors = function(n) {
+              var grays = [];
+              for (var i = 0; i < n; i++) {
+                var v = Math.floor(Math.random() * 180 + 60);
+                grays.push('#' + v.toString(16).padStart(2,'0') + v.toString(16).padStart(2,'0') + v.toString(16).padStart(2,'0'));
+              }
+              return grays;
+            };
+            tubesApp.tubes.setColors(randomColors(3));
+            tubesApp.tubes.setLightsColors(randomColors(4));
+          });
+        })
+        .catch(function(err) {
+          console.warn('Tubes 3D background unavailable:', err.message);
+          canvas.style.background = '#050510';
+        });
+    })();
+  </script>
 </body>
 </html>
