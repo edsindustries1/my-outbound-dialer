@@ -128,7 +128,7 @@ def make_call(number, from_number_override=None):
         "from": from_number,
         "answering_machine_detection": "premium",
         "answering_machine_detection_config": {
-            "total_analysis_time_millis": 120000,
+            "total_analysis_time_millis": 60000,
             "after_greeting_silence_millis": 3000,
             "between_words_silence_millis": 1000,
             "silence_threshold": 500,
