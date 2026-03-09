@@ -125,8 +125,8 @@
   </nav>
 
   <section class="hero" id="heroSection">
-    <canvas class="hero-tubes-canvas" id="heroTubesCanvas" style="touch-action:none;"></canvas>
-    <div class="hero-tubes-overlay"></div>
+    <canvas class="hero-spiral-canvas" id="heroSpiralCanvas"></canvas>
+    <div class="hero-spiral-overlay"></div>
 
     <div class="hero-inner">
         <div class="hero-badge anim-fade">
@@ -764,47 +764,7 @@
   </a>
 
   <script src="/static/landing.js"></script>
-  <script type="module">
-    (function() {
-      var canvas = document.getElementById('heroTubesCanvas');
-      if (!canvas) return;
-
-      var tubesApp = null;
-      var loaded = false;
-
-      import('https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js')
-        .then(function(module) {
-          var TubesCursor = module.default;
-          tubesApp = TubesCursor(canvas, {
-            tubes: {
-              colors: ["#ffffff", "#aaaaaa", "#666666"],
-              lights: {
-                intensity: 150,
-                colors: ["#ffffff", "#cccccc", "#888888", "#aaaaaa"]
-              }
-            }
-          });
-          loaded = true;
-
-          canvas.addEventListener('click', function() {
-            if (!tubesApp) return;
-            var randomColors = function(n) {
-              var grays = [];
-              for (var i = 0; i < n; i++) {
-                var v = Math.floor(Math.random() * 180 + 60);
-                grays.push('#' + v.toString(16).padStart(2,'0') + v.toString(16).padStart(2,'0') + v.toString(16).padStart(2,'0'));
-              }
-              return grays;
-            };
-            tubesApp.tubes.setColors(randomColors(3));
-            tubesApp.tubes.setLightsColors(randomColors(4));
-          });
-        })
-        .catch(function(err) {
-          console.warn('Tubes 3D background unavailable:', err.message);
-          canvas.style.background = '#050510';
-        });
-    })();
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="/static/spiral-bg.js"></script>
 </body>
 </html>
