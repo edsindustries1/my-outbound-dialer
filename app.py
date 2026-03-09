@@ -2425,15 +2425,15 @@ def _handle_webhook():
         timer.start()
 
         def _safety_timeout(ccid):
-            """Rule 4: If call lasts 60s with no action, hang up gracefully."""
+            """Rule 4: If call lasts 120s with no action, hang up gracefully."""
             st = get_call_state(ccid)
             if st and not st.get("transferred") and not st.get("voicemail_dropped") and st.get("status") not in ("hangup", "voicemail_complete", "transferred"):
-                logger.warning(f"[SAFETY TIMEOUT] {ccid} | 60s with no action taken, hanging up")
-                update_call_state(ccid, status_description="Safety timeout - no action taken in 60s", status_color="yellow")
+                logger.warning(f"[SAFETY TIMEOUT] {ccid} | 120s with no action taken, hanging up")
+                update_call_state(ccid, status_description="Safety timeout - no action taken in 120s", status_color="yellow")
                 hangup_call(ccid)
             _amd_timers.pop(f"safety_{ccid}", None)
 
-        safety_timer = threading.Timer(60.0, _safety_timeout, args=[call_control_id])
+        safety_timer = threading.Timer(120.0, _safety_timeout, args=[call_control_id])
         safety_timer.daemon = True
         _amd_timers[f"safety_{call_control_id}"] = safety_timer
         safety_timer.start()
@@ -2496,7 +2496,7 @@ def _handle_webhook():
         elif result == "machine":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
                               amd_result="machine", status_description="Machine detected - waiting for beep", status_color="blue")
-            logger.info(f"[AMD RESULT] {call_control_id} | MACHINE detected, waiting for beep only (60s timeout)")
+            logger.info(f"[AMD RESULT] {call_control_id} | MACHINE detected, waiting for beep only (120s timeout)")
 
             camp = get_campaign(user_id=webhook_user_id)
             state = get_call_state(call_control_id)
@@ -2577,7 +2577,7 @@ def _handle_webhook():
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
         else:
-            logger.info(f"[NO BEEP] {call_control_id} | No beep — listening silently for beep or human (60s timeout)")
+            logger.info(f"[NO BEEP] {call_control_id} | No beep — listening silently for beep or human (120s timeout)")
             update_call_state(call_control_id, beep_detected=False,
                               status_description="No beep — listening silently for beep or human", status_color="blue")
 
@@ -2607,18 +2607,17 @@ def _handle_webhook():
                 import time as _time_mod2
                 silence_start = state.get("silence_start_time", 0)
                 elapsed = _time_mod2.time() - silence_start if silence_start else 0
-                if elapsed < 50:
+                if elapsed < 110:
                     logger.info(f"[SILENCE REPLAY] {call_control_id} | Silence ended early ({elapsed:.1f}s), replaying to keep line alive while waiting for beep")
                     silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
                     try:
                         play_audio(call_control_id, silence_url, client_state="silence_keepalive")
-                        update_call_state(call_control_id, silence_start_time=_time_mod2.time())
                     except Exception as e:
                         logger.error(f"[SILENCE REPLAY ERROR] {call_control_id} | {e}")
                 else:
                     logger.info(f"[SILENCE END] {call_control_id} | Full silence wait completed ({elapsed:.1f}s), no beep detected — hanging up")
                     update_call_state(call_control_id, silence_playing=False, status="no_voicemail",
-                                      status_description="60s wait — no beep detected, hanging up", status_color="yellow")
+                                      status_description="120s wait — no beep detected, hanging up", status_color="yellow")
                     hangup_call(call_control_id)
             else:
                 update_call_state(call_control_id, silence_playing=False)
@@ -2667,25 +2666,9 @@ def _handle_webhook():
                                "at the tone", "record your message", "record a message",
                                "press pound", "can't come to the phone", "cannot take your call"]
                 if any(kw in text_lower for kw in vm_keywords) and state.get("vm_pending_audio_url"):
-                    logger.info(f"[VM KEYWORDS] {call_control_id} | Voicemail keywords detected: '{transcript_text[:100]}', scheduling drop in 5s")
+                    logger.info(f"[VM KEYWORDS] {call_control_id} | Voicemail keywords detected: '{transcript_text[:100]}' — continuing to wait for beep (will NOT drop without beep)")
                     update_call_state(call_control_id, voicemail_confirmed=True,
-                                      status_description="Voicemail keywords heard - dropping after beep window", status_color="blue")
-                    audio_url = state.get("vm_pending_audio_url")
-                    is_pvm = state.get("vm_pending_personalized", False)
-                    cust_num = state.get("vm_pending_customer_number", "")
-                    uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
-                    def _keyword_delay_drop(ccid, aud, pvm, cn, u):
-                        st = get_call_state(ccid)
-                        if st and not st.get("voicemail_dropped") and not st.get("transferred") and st.get("vm_pending_audio_url"):
-                            logger.info(f"[VM DROP] {ccid} | Keyword delay elapsed, dropping voicemail now")
-                            _drop_voicemail_now(ccid, aud, pvm, cn, u)
-                    beep_t = _amd_timers.pop(f"beep_{call_control_id}", None)
-                    if beep_t:
-                        beep_t.cancel()
-                    t = threading.Timer(5, _keyword_delay_drop, args=[call_control_id, audio_url, is_pvm, cust_num, uid])
-                    t.daemon = True
-                    t.start()
-                    _amd_timers[f"beep_{call_control_id}"] = t
+                                      status_description="Voicemail keywords heard - waiting for beep", status_color="blue")
 
     # ---- call.recording.saved ----
     elif event_type == "call.recording.saved":
