@@ -77,21 +77,41 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 
 /* ---- HERO ---- */
 .hero{position:relative;padding:140px 0 80px;text-align:center;overflow:hidden;background:#050510;display:flex;flex-direction:column;justify-content:flex-start;min-height:100vh}
-.hero-morph-container{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden}
-.hero-morph-overlay{position:absolute;inset:0;z-index:2;pointer-events:none;background:
-  radial-gradient(ellipse at center,rgba(5,5,16,0.1) 0%,rgba(5,5,16,0.4) 55%,rgba(5,5,16,0.8) 100%)}
-.morph-card{position:absolute;width:60px;height:85px;transform-style:preserve-3d;perspective:1000px;cursor:pointer;will-change:transform,opacity}
-.morph-card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.42,0,.58,1)}
-.morph-card:hover .morph-card-inner{transform:rotateY(180deg)}
-.morph-card-front,.morph-card-back{position:absolute;inset:0;width:100%;height:100%;border-radius:10px;backface-visibility:hidden;overflow:hidden}
-.morph-card-front{box-shadow:0 4px 16px rgba(0,0,0,0.3)}
-.morph-card-front img{width:100%;height:100%;object-fit:cover;display:block}
-.morph-card-front::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.1);transition:background .3s}
-.morph-card:hover .morph-card-front::after{background:transparent}
-.morph-card-back{box-shadow:0 4px 16px rgba(0,0,0,0.3);background:#1a1a2e;display:flex;align-items:center;justify-content:center;transform:rotateY(180deg);border:1px solid rgba(255,255,255,0.15)}
-.morph-card-back span{color:#fff;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.hero-mesh{position:absolute;inset:0;background:
+  radial-gradient(ellipse at 20% 50%,rgba(26,26,26,0.15) 0%,transparent 50%),
+  radial-gradient(ellipse at 80% 20%,rgba(51,51,51,0.1) 0%,transparent 40%),
+  radial-gradient(ellipse at 50% 80%,rgba(26,26,26,0.08) 0%,transparent 50%);
+  pointer-events:none}
+.hero-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
+.hero-grid-lines{position:absolute;inset:0;background-image:
+  linear-gradient(rgba(26,26,26,0.04) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(26,26,26,0.04) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%)}
+.hero-orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+.hero-orb-1{width:600px;height:600px;background:radial-gradient(circle,rgba(26,26,26,0.12) 0%,transparent 70%);top:-10%;left:-5%}
+.hero-orb-2{width:500px;height:500px;background:radial-gradient(circle,rgba(51,51,51,0.1) 0%,transparent 70%);bottom:10%;right:-5%}
+.hero-orb-3{width:400px;height:400px;background:radial-gradient(circle,rgba(26,26,26,0.08) 0%,transparent 70%);top:40%;left:50%;transform:translateX(-50%)}
 
 .hero-inner{max-width:880px;margin:0 auto;padding:0 32px;position:relative;z-index:3}
+.hero-split{max-width:1200px;display:flex;align-items:center;gap:40px;text-align:left}
+.hero-text-col{flex:1;min-width:0}
+.hero-spline-col{flex:1;min-width:0;height:550px;position:relative}
+.hero-spline-glow{position:absolute;inset:-40px;background:radial-gradient(circle at center,rgba(100,130,255,.08) 0%,transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
+.hero-spline-col spline-viewer{position:relative;z-index:1}
+.hero-spline-card{position:absolute;z-index:2;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.6);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 18px;animation:splineCardFloat 3s ease-in-out infinite alternate}
+.hero-spline-card-top{top:32px;right:16px;animation-delay:0s}
+.hero-spline-card-bottom{bottom:48px;left:16px;animation-delay:1.5s}
+.spline-card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.spline-card-icon-green{background:rgba(34,197,94,.15);color:#22c55e}
+.spline-card-icon-blue{background:rgba(59,130,246,.15);color:#3b82f6}
+.spline-card-title{font-size:.88rem;font-weight:600;color:#fff;line-height:1.3}
+.spline-card-sub{font-size:.75rem;color:rgba(255,255,255,.5);margin-top:2px}
+@keyframes splineCardFloat{0%{transform:translateY(0)}100%{transform:translateY(-8px)}}
+.hero-split .hero-actions{justify-content:flex-start}
+.hero-split .hero-sub{margin-left:0}
+.hero-split .hero-trust{justify-content:flex-start}
+spline-viewer{--logo-display:none}
+.hero-spline-fallback{display:none;position:absolute;inset:0;z-index:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,.3);font-size:.9rem;text-align:center;padding:40px}
 
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:50px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);font-size:.78rem;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:20px;letter-spacing:.5px;position:relative;overflow:hidden;backdrop-filter:blur(8px)}
 .hero-badge-dot{width:7px;height:7px;border-radius:50%;background:#53bc28;box-shadow:0 0 8px rgba(83,188,40,0.6);animation:badgePulse 2s ease-in-out infinite}
@@ -660,9 +680,19 @@ a{text-decoration:none;color:inherit;transition:color .2s}
   .nav-login,.nav-cta{display:none}
   .hero{padding:120px 0 30px;min-height:auto}
   .hero-inner{padding:0 20px}
+  .hero-split{flex-direction:column;text-align:center;gap:24px}
+  .hero-split .hero-actions{justify-content:center}
+  .hero-split .hero-sub{margin:0 auto 24px}
+  .hero-split .hero-trust{justify-content:center}
+  .hero-spline-col{height:400px}
+  .hero-spline-card-top{top:16px;right:8px}
+  .hero-spline-card-bottom{bottom:24px;left:8px}
+  .hero-spline-card{padding:10px 14px;gap:10px}
+  .spline-card-icon{width:32px;height:32px;border-radius:8px}
+  .spline-card-title{font-size:.78rem}
+  .spline-card-sub{font-size:.68rem}
   .bento-img-dashboard{padding:16px}
   .bento-img-dashboard .mock-dash{min-height:260px}
-  .morph-card{width:40px;height:57px}
   .bento-grid{grid-template-columns:1fr}
   .bento-features{grid-template-columns:1fr}
   .pricing-cards{grid-template-columns:1fr;max-width:400px;margin:0 auto;gap:16px}

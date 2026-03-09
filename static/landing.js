@@ -111,6 +111,88 @@
     if (heroSection) heroObserver.observe(heroSection);
   }
 
+  /* ========== HERO CANVAS (particle network) ========== */
+  var canvas = document.getElementById('heroCanvas');
+  if (canvas) {
+    var ctx = canvas.getContext('2d');
+    var particles = [];
+    var particleCount = 35;
+    var heroCanvasPaused = false;
+    var heroCanvasId = null;
+    var heroFrame = 0;
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.offsetWidth;
+      canvas.height = canvas.parentElement.offsetHeight;
+    }
+    resizeCanvas();
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeCanvas, 150);
+    });
+
+    for (var i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.5 + 0.5,
+        a: Math.random() * 0.3 + 0.05
+      });
+    }
+
+    var connDistSq = 120 * 120;
+    function drawParticles() {
+      if (heroCanvasPaused) { heroCanvasId = null; return; }
+      heroFrame++;
+      if (heroFrame % 2 !== 0) { heroCanvasId = requestAnimationFrame(drawParticles); return; }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var j = 0; j < particles.length; j++) {
+        var p = particles[j];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,' + p.a + ')';
+        ctx.fill();
+      }
+      ctx.lineWidth = 0.5;
+      for (var a = 0; a < particles.length; a++) {
+        for (var b = a + 1; b < particles.length; b++) {
+          var dx = particles[a].x - particles[b].x;
+          var dy = particles[a].y - particles[b].y;
+          var dSq = dx * dx + dy * dy;
+          if (dSq < connDistSq) {
+            var alpha = 0.06 * (1 - Math.sqrt(dSq) / 120);
+            ctx.beginPath();
+            ctx.moveTo(particles[a].x, particles[a].y);
+            ctx.lineTo(particles[b].x, particles[b].y);
+            ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
+            ctx.stroke();
+          }
+        }
+      }
+      heroCanvasId = requestAnimationFrame(drawParticles);
+    }
+
+    if ('IntersectionObserver' in window) {
+      var heroCanvasObs = new IntersectionObserver(function (entries) {
+        heroCanvasPaused = !entries[0].isIntersecting;
+        if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+      }, { threshold: 0 });
+      heroCanvasObs.observe(canvas.parentElement);
+    }
+    document.addEventListener('visibilitychange', function () {
+      heroCanvasPaused = document.hidden;
+      if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+    });
+    drawParticles();
+  }
 
   /* ========== SMOOTH SCROLL FOR ANCHOR LINKS ========== */
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
