@@ -109,18 +109,16 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .trust-text{font-size:.82rem;color:rgba(255,255,255,0.45)}
 .trust-text strong{color:rgba(255,255,255,0.7)}
 
-.hero-mockup{max-width:1000px;margin:40px auto 0;padding:0 32px;position:relative;z-index:3;perspective:1000px}
-.mockup-float{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06);transition:transform .6s cubic-bezier(.25,.46,.45,.94);transform:rotateX(2deg)}
-.mockup-float:hover{transform:rotateX(0) translateY(-8px)}
+.mockup-float-feat{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.12),0 0 0 1px rgba(0,0,0,0.06);transition:transform .5s}
+.bento-card:hover .mockup-float-feat{transform:translateY(-4px)}
 .mockup-browser-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(30,30,50,0.9);border-bottom:1px solid rgba(255,255,255,0.06)}
+.bento-img-dashboard{padding:24px;display:flex;align-items:center}
+.bento-img-dashboard .mock-dash{min-height:320px}
 .browser-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.12)}
 .browser-dot:nth-child(1){background:#ff5f57}
 .browser-dot:nth-child(2){background:#febc2e}
 .browser-dot:nth-child(3){background:#28c840}
 .browser-url{margin-left:12px;font-size:.72rem;color:rgba(255,255,255,0.3);font-family:var(--font);letter-spacing:.3px}
-.mockup-float img{width:100%;display:block}
-.mockup-glow{position:absolute;inset:-20px;border-radius:30px;background:radial-gradient(ellipse,rgba(255,255,255,0.04) 0%,transparent 70%);z-index:-1}
-.mockup-reflection{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(to top,rgba(10,10,26,0.5),transparent);pointer-events:none}
 
 .mock-dash{display:flex;background:#f5f6f8;min-height:380px;font-family:'Inter',sans-serif}
 .mock-sidebar{width:180px;background:#fff;border-right:1px solid #ecedf0;display:flex;flex-direction:column;flex-shrink:0}
@@ -652,7 +650,8 @@ a{text-decoration:none;color:inherit;transition:color .2s}
   .nav-login,.nav-cta{display:none}
   .hero{padding:120px 0 30px;min-height:auto}
   .hero-inner{padding:0 20px}
-  .hero-mockup{padding:0 16px;margin-top:40px}
+  .bento-img-dashboard{padding:16px}
+  .bento-img-dashboard .mock-dash{min-height:260px}
   .bento-grid{grid-template-columns:1fr}
   .bento-features{grid-template-columns:1fr}
   .pricing-cards{grid-template-columns:1fr;max-width:400px;margin:0 auto;gap:16px}
