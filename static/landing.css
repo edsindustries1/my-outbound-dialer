@@ -77,9 +77,19 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 
 /* ---- HERO ---- */
 .hero{position:relative;padding:140px 0 80px;text-align:center;overflow:hidden;background:#050510;display:flex;flex-direction:column;justify-content:flex-start;min-height:100vh}
-.hero-spiral-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1}
-.hero-spiral-overlay{position:absolute;inset:0;z-index:2;pointer-events:none;background:
-  radial-gradient(ellipse at center,rgba(5,5,16,0.05) 0%,rgba(5,5,16,0.35) 55%,rgba(5,5,16,0.75) 100%)}
+.hero-morph-container{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:hidden}
+.hero-morph-overlay{position:absolute;inset:0;z-index:2;pointer-events:none;background:
+  radial-gradient(ellipse at center,rgba(5,5,16,0.1) 0%,rgba(5,5,16,0.4) 55%,rgba(5,5,16,0.8) 100%)}
+.morph-card{position:absolute;width:60px;height:85px;transform-style:preserve-3d;perspective:1000px;cursor:pointer;will-change:transform,opacity}
+.morph-card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.42,0,.58,1)}
+.morph-card:hover .morph-card-inner{transform:rotateY(180deg)}
+.morph-card-front,.morph-card-back{position:absolute;inset:0;width:100%;height:100%;border-radius:10px;backface-visibility:hidden;overflow:hidden}
+.morph-card-front{box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.morph-card-front img{width:100%;height:100%;object-fit:cover;display:block}
+.morph-card-front::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,0.1);transition:background .3s}
+.morph-card:hover .morph-card-front::after{background:transparent}
+.morph-card-back{box-shadow:0 4px 16px rgba(0,0,0,0.3);background:#1a1a2e;display:flex;align-items:center;justify-content:center;transform:rotateY(180deg);border:1px solid rgba(255,255,255,0.15)}
+.morph-card-back span{color:#fff;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
 
 .hero-inner{max-width:880px;margin:0 auto;padding:0 32px;position:relative;z-index:3}
 
@@ -652,6 +662,7 @@ a{text-decoration:none;color:inherit;transition:color .2s}
   .hero-inner{padding:0 20px}
   .bento-img-dashboard{padding:16px}
   .bento-img-dashboard .mock-dash{min-height:260px}
+  .morph-card{width:40px;height:57px}
   .bento-grid{grid-template-columns:1fr}
   .bento-features{grid-template-columns:1fr}
   .pricing-cards{grid-template-columns:1fr;max-width:400px;margin:0 auto;gap:16px}
