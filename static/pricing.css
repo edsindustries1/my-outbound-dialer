@@ -135,6 +135,78 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .contact-success h3{font-size:1.1rem;font-weight:700;margin-top:16px;margin-bottom:8px}
 .contact-success p{font-size:.88rem;color:var(--text-secondary)}
 
+/* ══════════════ PRICING MODEL BANNER ══════════════ */
+.pricing-model-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 auto 52px;
+  padding: 12px 22px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  max-width: fit-content;
+}
+.pricing-header { margin-bottom: 28px; }
+.pmb-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.pmb-pill svg { flex-shrink: 0; color: var(--text-muted); }
+.pmb-plus, .pmb-eq {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.pmb-pill-accent {
+  color: var(--accent);
+}
+.pmb-pill-accent svg { color: var(--accent); }
+
+/* ── Per-card billing model row ── */
+.plan-billing-model {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: -20px;
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.plan-billing-model-light {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+}
+.pbm-fixed, .pbm-usage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.plan-billing-model-light .pbm-fixed,
+.plan-billing-model-light .pbm-usage { color: rgba(255,255,255,0.75); }
+.pbm-fixed svg, .pbm-usage svg { flex-shrink: 0; }
+.pbm-sep {
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+.plan-billing-model-light .pbm-sep { color: rgba(255,255,255,0.4); }
+
 /* ══════════════ PRICING CALCULATOR ══════════════ */
 .calc-section {
   max-width: 860px;
