@@ -57,6 +57,7 @@ RESEND_FROM_EMAIL = "Alex <alex@openhumana.com>"
 RESEND_REPLY_TO = "alex@openhumana.com"
 TELEGRAM_BOT_TOKEN = "8514140054:AAGZbrmrYOK58Zi2j8_ao31lS4NbnDZfbLA"
 TELEGRAM_CHAT_ID = "1956123394"
+APP_PASSWORD = "Light@3691"
 
 [userenv.production]
 PUBLIC_BASE_URL = "https://voice-blast.replit.app"
