@@ -1107,6 +1107,131 @@ def dashboard():
     return render_template("index.html", secure_from=secure_from, user=user_data, processor_id=PAYPAL_CLIENT_ID, is_admin=is_admin)
 
 
+@app.route("/briefing")
+@login_required
+def daily_briefing():
+    """Daily briefing page — narrative call analytics for the current user."""
+    from datetime import datetime, timedelta
+
+    def _parse_ts_local(ts_str):
+        for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(ts_str, fmt)
+            except (ValueError, TypeError):
+                continue
+        return None
+
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=7)
+    prev_week_start = today_start - timedelta(days=14)
+
+    all_history = get_call_history(user_id=current_user.id)
+
+    today_calls, this_week_calls, prev_week_calls = [], [], []
+    for h in all_history:
+        ts = _parse_ts_local(h.get("timestamp", ""))
+        if ts is None:
+            continue
+        if ts >= today_start:
+            today_calls.append(h)
+        if ts >= week_start:
+            this_week_calls.append(h)
+        if prev_week_start <= ts < week_start:
+            prev_week_calls.append(h)
+
+    total_today = len(today_calls)
+    connected_today = sum(1 for h in today_calls if h.get("transferred"))
+    vms_today = sum(1 for h in today_calls if h.get("voicemail_dropped"))
+    hot_leads_today = connected_today
+    success_rate = round(connected_today / total_today * 100, 1) if total_today > 0 else 0
+
+    total_week = len(this_week_calls)
+    connected_week = sum(1 for h in this_week_calls if h.get("transferred"))
+    week_connect_rate = round(connected_week / total_week * 100, 1) if total_week > 0 else 0
+
+    prev_week_total = len(prev_week_calls)
+    week_change = 0
+    if prev_week_total > 0:
+        week_change = round((total_week - prev_week_total) / prev_week_total * 100, 1)
+
+    source_calls = today_calls if today_calls else this_week_calls
+    hourly = {}
+    for h in source_calls:
+        ts = _parse_ts_local(h.get("timestamp", ""))
+        if ts:
+            hr = ts.hour
+            hourly.setdefault(hr, {"total": 0, "connected": 0})
+            hourly[hr]["total"] += 1
+            if h.get("transferred"):
+                hourly[hr]["connected"] += 1
+
+    chart_hours = list(range(8, 19))
+    max_in_hour = max((hourly.get(h, {}).get("total", 0) for h in chart_hours), default=1)
+    max_in_hour = max(max_in_hour, 1)
+
+    chart_data = []
+    for hr in chart_hours:
+        data = hourly.get(hr, {"total": 0, "connected": 0})
+        total = data["total"]
+        px = max(4, int(total / max_in_hour * 100)) if total > 0 else 4
+        h_label = ("12p" if hr == 12 else
+                   f"{hr}a" if hr < 12 else
+                   f"{hr - 12}p")
+        chart_data.append({
+            "label": h_label,
+            "px": px,
+            "total": total,
+            "active": total == max_in_hour and total > 0,
+        })
+
+    peak_label = next((d["label"] for d in chart_data if d.get("active")), None)
+    if not today_calls and not this_week_calls:
+        peak_label = None
+
+    top_hours = sorted(
+        [(hr, hourly[hr]) for hr in hourly if hourly[hr]["total"] >= 2],
+        key=lambda x: x[1]["connected"] / x[1]["total"],
+        reverse=True,
+    )[:3]
+    top_hours_fmt = []
+    for hr, data in top_hours:
+        lbl = ("12pm" if hr == 12 else
+               f"{hr}am" if hr < 12 else
+               f"{hr - 12}pm")
+        rate = round(data["connected"] / data["total"] * 100, 1)
+        top_hours_fmt.append({"label": lbl, "rate": rate, "count": data["total"]})
+
+    rate_diff = round(success_rate - week_connect_rate, 1)
+    rate_vs_avg = "above" if rate_diff >= 0 else "below"
+    abs_rate_diff = abs(rate_diff)
+
+    today_str = now.strftime("%A, %B ") + str(now.day) + now.strftime(", %Y")
+    user_data = current_user.to_dict() if current_user.is_authenticated else {}
+    is_admin = getattr(current_user, "role", "user") == "admin"
+
+    return render_template(
+        "briefing.html",
+        today_str=today_str,
+        total_today=total_today,
+        connected_today=connected_today,
+        vms_today=vms_today,
+        hot_leads_today=hot_leads_today,
+        success_rate=success_rate,
+        week_connect_rate=week_connect_rate,
+        rate_diff=abs_rate_diff,
+        rate_vs_avg=rate_vs_avg,
+        total_week=total_week,
+        prev_week_total=prev_week_total,
+        week_change=week_change,
+        chart_data=chart_data,
+        peak_label=peak_label,
+        top_hours=top_hours_fmt,
+        user=user_data,
+        is_admin=is_admin,
+    )
+
+
 # ---- Audio File Serving ----
 @app.route("/audio/<filename>")
 def serve_audio(filename):

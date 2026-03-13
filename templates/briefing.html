@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Briefing — Open Humana</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" />
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .font-playfair { font-family: 'Playfair Display', Georgia, serif; }
+  </style>
+</head>
+<body class="bg-[#fafaf8] min-h-screen text-slate-800">
+
+<div class="flex min-h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-[220px] bg-[#f2f1ec] border-r border-[#e8e6df] flex flex-col pt-8 pb-6 shrink-0">
+    <div class="flex items-center gap-2 px-6 mb-10">
+      <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+        <i data-feather="mic" class="w-4 h-4 text-white" style="color:white;width:16px;height:16px;stroke:white;"></i>
+      </div>
+      <span class="font-playfair font-bold text-xl tracking-tight">Open Humana</span>
+    </div>
+
+    <nav class="flex-1 space-y-1 px-3">
+      <a href="/briefing"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white text-amber-700 font-medium shadow-sm transition-all border-l-2 border-l-amber-500 border border-white/80">
+        <i data-feather="grid" style="width:16px;height:16px;stroke:#d97706;"></i>
+        <span class="text-sm">Daily Briefing</span>
+      </a>
+      <a href="/dashboard"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-[#e8e6df]/80 hover:text-slate-900 transition-all">
+        <i data-feather="phone" style="width:16px;height:16px;"></i>
+        <span class="text-sm">Campaigns</span>
+      </a>
+      <a href="/dashboard"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-[#e8e6df]/80 hover:text-slate-900 transition-all">
+        <i data-feather="voicemail" style="width:16px;height:16px;"></i>
+        <span class="text-sm">Voicemails</span>
+      </a>
+      <a href="/dashboard"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-[#e8e6df]/80 hover:text-slate-900 transition-all">
+        <i data-feather="users" style="width:16px;height:16px;"></i>
+        <span class="text-sm">Contacts</span>
+      </a>
+      <a href="/dashboard"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-[#e8e6df]/80 hover:text-slate-900 transition-all">
+        <i data-feather="bar-chart-2" style="width:16px;height:16px;"></i>
+        <span class="text-sm">Reports</span>
+      </a>
+      <a href="/dashboard"
+         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-[#e8e6df]/80 hover:text-slate-900 transition-all">
+        <i data-feather="settings" style="width:16px;height:16px;"></i>
+        <span class="text-sm">Settings</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-4 px-4 border-t border-[#e8e6df] mx-2">
+      <div class="flex items-center gap-3 py-2">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-slate-200 to-slate-300 border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 font-semibold text-sm select-none">
+          {{ (user.profile_name or user.email or 'U')[:2]|upper }}
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-sm font-medium text-slate-900 truncate">{{ user.profile_name or user.email or 'User' }}</span>
+          <span class="text-[10px] text-amber-600 font-medium tracking-wide uppercase">
+            {{ 'Admin' if user.role == 'admin' else 'Pro' }} Plan
+          </span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-y-auto">
+
+    <!-- Header -->
+    <header class="h-20 flex items-center justify-between px-10 border-b border-transparent shrink-0">
+      <div>
+        <span class="font-playfair italic text-slate-500 text-lg">{{ today_str }}</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/briefing"
+           class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 px-3 py-2 rounded-md transition-colors">
+          <i data-feather="refresh-cw" style="width:16px;height:16px;"></i>
+          Refresh Briefing
+        </a>
+        <a href="/dashboard" class="relative w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all">
+          <i data-feather="bell" style="width:16px;height:16px;"></i>
+        </a>
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-200 to-amber-400 border border-amber-300 shadow-sm flex items-center justify-center text-amber-900 font-bold text-sm select-none">
+          {{ (user.profile_name or user.email or 'U')[:1]|upper }}
+        </div>
+      </div>
+    </header>
+
+    <div class="px-10 pb-12 flex flex-col gap-8">
+
+      <!-- Hero Narrative -->
+      <section class="mt-2">
+        <div class="mb-4">
+          <span class="text-xs tracking-widest text-amber-600 font-bold uppercase mb-2 block">Daily Briefing</span>
+          <h1 class="font-playfair text-4xl text-slate-900 tracking-tight">Today's Briefing</h1>
+        </div>
+
+        <div class="bg-white border border-slate-100/80 shadow-sm rounded-2xl overflow-hidden relative">
+          <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+          <div class="p-8 sm:p-10">
+            {% if total_today > 0 %}
+              <p class="font-playfair text-[1.375rem] leading-loose text-slate-700">
+                Your campaign ran
+                <span class="underline decoration-amber-300 decoration-2 underline-offset-4 font-semibold text-slate-900">{{ total_today }} dial{{ 's' if total_today != 1 else '' }}</span>
+                today.
+                <span class="underline decoration-amber-300 decoration-2 underline-offset-4 font-semibold text-emerald-700"> {{ success_rate }}%</span>
+                reached a live person
+                {% if rate_diff > 0 %}
+                  — {{ rate_diff }}% {{ rate_vs_avg }} your {{ week_connect_rate }}% weekly average.
+                {% else %}
+                  — in line with your {{ week_connect_rate }}% weekly average.
+                {% endif %}
+                <span class="underline decoration-amber-300 decoration-2 underline-offset-4 font-semibold text-orange-700"> {{ hot_leads_today }} hot lead{{ 's' if hot_leads_today != 1 else '' }}</span>
+                {{ 'were' if hot_leads_today != 1 else 'was' }} flagged for follow-up.
+                {% if vms_today > 0 %}
+                  <span class="font-semibold text-slate-900">{{ vms_today }} voicemail{{ 's' if vms_today != 1 else '' }}</span> left successfully.
+                {% endif %}
+              </p>
+            {% else %}
+              <p class="font-playfair text-[1.375rem] leading-loose text-slate-600 italic">
+                No calls have been made today yet. Launch a campaign to start seeing your briefing populate with real-time insights.
+              </p>
+            {% endif %}
+
+            <div class="mt-8 flex gap-3 flex-wrap">
+              <a href="/dashboard"
+                 class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full px-5 py-2 text-sm font-medium transition-colors">
+                <i data-feather="play" style="width:14px;height:14px;fill:white;stroke:white;"></i>
+                Review Hot Leads
+              </a>
+              <a href="/dashboard"
+                 class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-full px-5 py-2 text-sm font-medium transition-colors">
+                View Full Call Log
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Insight Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Card 1: Best Time to Call -->
+        <div class="bg-white border border-slate-100/80 shadow-sm rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-6">
+            <i data-feather="clock" style="width:16px;height:16px;stroke:#f59e0b;"></i>
+            <h3 class="text-lg font-semibold text-slate-900">Best Time to Call</h3>
+          </div>
+
+          <div class="relative">
+            {% if peak_label %}
+            <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-sm whitespace-nowrap z-10">
+              Peak: {{ peak_label }}
+            </div>
+            {% endif %}
+
+            <div class="flex items-end gap-1.5 mt-6" style="height:112px;">
+              {% for bar in chart_data %}
+              <div class="flex flex-col items-center gap-1 flex-1 group">
+                <div class="w-full rounded-sm transition-colors"
+                     style="height:{{ bar.px }}px; background-color: {{ '#f59e0b' if bar.active else '#e2e8f0' }};"
+                     title="{{ bar.total }} calls at {{ bar.label }}"></div>
+                <span class="text-[10px] {{ 'text-slate-700 font-medium' if bar.active else 'text-slate-400' }}">{{ bar.label }}</span>
+              </div>
+              {% endfor %}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card 2: Volume Trend -->
+        <div class="bg-white border border-slate-100/80 shadow-sm rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <i data-feather="trending-up" style="width:16px;height:16px;stroke:#2e7d32;"></i>
+              <h3 class="text-lg font-semibold text-slate-900">Volume Trend</h3>
+            </div>
+            {% if week_change != 0 %}
+            <span class="inline-flex items-center gap-1 text-[10px] font-bold tracking-wide uppercase bg-emerald-50 text-emerald-700 px-2 py-1 rounded-full">
+              <i data-feather="{{ 'trending-up' if week_change > 0 else 'trending-down' }}" style="width:10px;height:10px;stroke:#15803d;"></i>
+              {{ '+' if week_change > 0 else '' }}{{ week_change }}%
+            </span>
+            {% endif %}
+          </div>
+
+          <div class="space-y-5 mt-5">
+            <div>
+              <div class="flex justify-between items-end mb-1.5">
+                <span class="text-sm text-slate-500">This Week</span>
+                <span class="font-semibold text-xl text-slate-900">{{ total_week }}</span>
+              </div>
+              <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-slate-800 rounded-full" style="width:100%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-end mb-1.5">
+                <span class="text-sm text-slate-400">Last Week</span>
+                <span class="font-medium text-base text-slate-400">{{ prev_week_total }}</span>
+              </div>
+              <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                {% set prev_pct = [((prev_week_total / total_week * 100) | round | int), 100] | min if total_week > 0 else 0 %}
+                <div class="h-full bg-slate-300 rounded-full" style="width:{{ prev_pct }}%;"></div>
+              </div>
+            </div>
+          </div>
+
+          {% if total_week > prev_week_total and prev_week_total > 0 %}
+          <p class="mt-5 text-[13px] text-slate-500">↑ {{ total_week - prev_week_total }} more calls than last week</p>
+          {% elif prev_week_total > total_week and prev_week_total > 0 %}
+          <p class="mt-5 text-[13px] text-slate-500">↓ {{ prev_week_total - total_week }} fewer calls than last week</p>
+          {% elif total_week == 0 %}
+          <p class="mt-5 text-[13px] text-slate-400">No calls this week yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- Card 3: Top Performing Hours / Connect Rate -->
+        <div class="bg-white border border-slate-100/80 shadow-sm rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-6">
+            <i data-feather="zap" style="width:16px;height:16px;stroke:#94a3b8;"></i>
+            <h3 class="text-lg font-semibold text-slate-900">Top Connect Hours</h3>
+          </div>
+
+          <div class="space-y-1">
+            {% if top_hours %}
+              {% for item in top_hours %}
+              {% set ranks = ['1', '2', '3'] %}
+              <div class="{{ 'bg-amber-50/50 rounded-lg p-2' if loop.first else 'p-2' }}">
+                <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 {{ 'bg-amber-100 text-amber-700' if loop.first else 'bg-slate-100 text-slate-500' }}">
+                      <span class="text-xs font-bold">{{ loop.index }}</span>
+                    </div>
+                    <div>
+                      <p class="text-[15px] leading-none mb-1 {{ 'text-slate-900 font-medium' if loop.first else 'text-slate-700' }}">{{ item.label }}</p>
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide">{{ item.count }} call{{ 's' if item.count != 1 else '' }}</p>
+                    </div>
+                  </div>
+                  <span class="text-[15px] font-semibold {{ 'text-emerald-700' if loop.first else 'text-slate-600' }}">{{ item.rate }}%</span>
+                </div>
+                <div class="ml-10 h-1 bg-slate-100 rounded-full overflow-hidden">
+                  {% set max_rate = top_hours[0].rate if top_hours else 1 %}
+                  <div class="h-full rounded-full {{ 'bg-amber-400' if loop.first else 'bg-slate-300' }}"
+                       style="width:{{ ((item.rate / max_rate) * 100) | round | int }}%;"></div>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-center py-6">
+                <p class="text-sm text-slate-400">Connect rate by hour will appear here once you've run campaigns.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Upcoming Schedule -->
+      <section class="mt-2 pb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-slate-900">Upcoming Schedule</h2>
+          <a href="/dashboard"
+             class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-colors">
+            View Campaigns
+            <i data-feather="arrow-right" style="width:14px;height:14px;"></i>
+          </a>
+        </div>
+
+        <div class="bg-white border border-slate-100/80 shadow-sm rounded-xl overflow-hidden">
+          <div class="divide-y divide-slate-100/80">
+
+            <!-- New Campaign CTA row -->
+            <div class="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group cursor-pointer">
+              <div class="flex items-start gap-5">
+                <div class="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-amber-50 border border-amber-100 shrink-0">
+                  <i data-feather="plus" style="width:20px;height:20px;stroke:#d97706;"></i>
+                </div>
+                <div class="flex flex-col justify-center h-14">
+                  <h4 class="text-[15px] font-semibold text-slate-900 group-hover:text-amber-600 transition-colors mb-1">Start a New Campaign</h4>
+                  <p class="text-[13px] text-slate-500">Upload a contact list and launch your next outbound push.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <a href="/dashboard"
+                   class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors whitespace-nowrap">
+                  New Campaign
+                </a>
+              </div>
+            </div>
+
+            <!-- Quick launch row -->
+            <div class="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+              <div class="flex items-start gap-5">
+                <div class="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-[#fafaf8] border border-slate-200 shrink-0">
+                  <i data-feather="refresh-cw" style="width:20px;height:20px;stroke:#64748b;"></i>
+                </div>
+                <div class="flex flex-col justify-center h-14">
+                  <h4 class="text-[15px] font-semibold text-slate-900 group-hover:text-amber-600 transition-colors mb-1">Quick Launch from Last Campaign</h4>
+                  <p class="text-[13px] text-slate-500">Re-use your previous campaign settings instantly.</p>
+                </div>
+              </div>
+              <a href="/dashboard" class="text-sm text-slate-500 hover:text-slate-900 flex items-center gap-1">
+                Launch <i data-feather="chevron-right" style="width:14px;height:14px;"></i>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </main><!-- /main -->
+</div><!-- /flex wrapper -->
+
+<script>
+  feather.replace({ 'stroke-width': 1.75 });
+</script>
+</body>
+</html>
