@@ -78,6 +78,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                     <span>Settings</span>
                 </a>
+                <a class="gads-nav-item" data-page="integrations" onclick="navigateTo('integrations')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.9;"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
+                    <span>Integrations</span>
+                </a>
             </nav>
             <div class="gads-sidebar-footer">
                 <button class="gads-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebar()">
@@ -1159,14 +1163,20 @@
                         </div>
                     </div>
 
-                    <!-- ══════════════ INTEGRATIONS CARD ══════════════ -->
-                    <div class="gads-card" style="margin-top:20px;" id="integrations-card">
+                    <!-- ══════════════ INTEGRATIONS SHORTCUT ══════════════ -->
+                    <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> CRM Integrations</h3>
-                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadIntegrationStatus()">Refresh</button>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.85;"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg> CRM Integrations</h3>
                         </div>
-                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:16px;">Connect your CRM or spreadsheet so every completed call is logged automatically — no manual data entry.</p>
+                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:14px;">Connect HubSpot, GoHighLevel, Pipedrive, Google Sheets and more — every completed call logged automatically.</p>
+                        <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="navigateTo('integrations')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                            Open Integrations
+                        </button>
+                    </div>
 
+                    <!-- ══════════════ INTEGRATIONS CARD (kept for legacy removal marker) ══════════════ -->
+                    <div id="integrations-card" style="display:none;">
                         <!-- ── OUTBOUND WEBHOOKS ── -->
                         <div class="intg-panel" id="intg-webhook-panel">
                             <div class="intg-panel-header">
@@ -1370,6 +1380,217 @@
 
                 </div>
 
+                <!-- ══════════════ INTEGRATIONS PAGE ══════════════ -->
+                <div class="gads-page" id="page-integrations" style="display:none">
+                    <div class="gads-page-header">
+                        <h2>Integrations</h2>
+                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadIntegrationStatus()">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Refresh
+                        </button>
+                    </div>
+                    <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 20px;">Connect your CRM or spreadsheet — every completed call is logged automatically, no manual data entry needed.</p>
+
+                    <div class="gads-card" id="integrations-page-card">
+
+                        <!-- ── OUTBOUND WEBHOOKS ── -->
+                        <div class="intg-panel" id="intg-webhook-panel2">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">Outbound Webhooks</div>
+                                    <div class="intg-panel-desc">Fire a POST to any URL on call completion — works with Zapier, Make, n8n, and any custom endpoint.</div>
+                                </div>
+                                <span class="intg-badge" id="webhook-badge2">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div class="pvm-section" style="margin-top:0;">
+                                    <label>Webhook URL</label>
+                                    <input type="url" id="webhookUrl2" class="gads-input" placeholder="https://hooks.zapier.com/hooks/catch/…">
+                                </div>
+                                <div class="pvm-section">
+                                    <label>Signing Secret <span style="font-weight:400;color:var(--gads-text-secondary);">(optional — enables HMAC-SHA256 header)</span></label>
+                                    <input type="password" id="webhookSecret2" class="gads-input" placeholder="Leave blank to skip signing" autocomplete="new-password">
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveWebhookConfig2()">Save Webhook</button>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testWebhook2()">Send Test Payload</button>
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-left:auto;">
+                                        <input type="checkbox" id="webhookEnabled2" onchange="saveWebhookEnabled2(this)"> Enable
+                                    </label>
+                                </div>
+                                <div id="webhookMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- ── HUBSPOT ── -->
+                        <div class="intg-panel" id="intg-hubspot-panel2">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-hs">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">HubSpot CRM</div>
+                                    <div class="intg-panel-desc">Auto-create contacts and log call activities in your HubSpot portal after every call.</div>
+                                </div>
+                                <span class="intg-badge" id="hubspot-badge2">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="hubspot-connected-view2" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Connected to portal <strong id="hubspot-portal-id2"></strong>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectHubSpot()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="hubspotEnabled2" onchange="toggleHubspot(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="hubspot-disconnected-view2" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In HubSpot go to <strong>Settings → Integrations → Private Apps</strong>, create a new app with scopes <code>crm.objects.contacts.write/read</code> + <code>crm.objects.engagements.write</code>, then copy the token below.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>Private App Access Token</label>
+                                        <input type="password" id="hubspotToken2" class="gads-input" placeholder="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="new-password">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectHubSpot2()">Verify &amp; Connect</button>
+                                    <div id="hubspotMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── GOHIGHLEVEL ── -->
+                        <div class="intg-panel" id="intg-ghl-panel2">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-ghl" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">GoHighLevel (GHL)</div>
+                                    <div class="intg-panel-desc">Auto-create contacts and log call notes in your GHL sub-account after every completed call.</div>
+                                </div>
+                                <span class="intg-badge" id="ghl-badge2">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="ghl-connected-view2" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Connected<span id="ghl-location-label2"></span>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGHL()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="ghlEnabled2" onchange="toggleGHL(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="ghl-disconnected-view2" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In GHL go to <strong>Settings → Business Info → API Keys</strong>, copy your <strong>Location API Key</strong>, and paste it below.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>Location API Key</label>
+                                        <input type="password" id="ghlApiKey2" class="gads-input" placeholder="eyJhbGci…" autocomplete="new-password">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectGHL2()">Verify &amp; Connect</button>
+                                    <div id="ghlMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── PIPEDRIVE ── -->
+                        <div class="intg-panel" id="intg-pipedrive-panel2">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-pd" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">Pipedrive</div>
+                                    <div class="intg-panel-desc">Find or create a person and log a call activity in Pipedrive for every completed outbound call.</div>
+                                </div>
+                                <span class="intg-badge" id="pipedrive-badge2">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="pipedrive-connected-view2" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Connected<span id="pipedrive-company-label2"></span>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectPipedrive()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="pipedriveEnabled2" onchange="togglePipedrive(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="pipedrive-disconnected-view2" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In Pipedrive go to <strong>Settings → Personal Preferences → API</strong>, copy your <strong>API Token</strong>, and paste it below.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>API Token</label>
+                                        <input type="password" id="pipedriveToken2" class="gads-input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectPipedrive2()">Verify &amp; Connect</button>
+                                    <div id="pipedriveMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── GOOGLE SHEETS ── -->
+                        <div class="intg-panel" id="intg-gsheets-panel2" style="border-bottom:none;">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-gs">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">Google Sheets</div>
+                                    <div class="intg-panel-desc">Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.</div>
+                                </div>
+                                <span class="intg-badge" id="gsheets-badge2">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="gsheets-not-configured2" style="display:none;">
+                                    <div class="intg-setup-notice">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>To enable: (1) Go to <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:var(--gads-primary);">Google Cloud → Service Accounts</a>, create a service account, download the JSON key. (2) Enable the <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank" rel="noopener" style="color:var(--gads-primary);">Sheets API</a>. (3) Set <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> in Replit Secrets.</span>
+                                    </div>
+                                </div>
+                                <div id="gsheets-configured-view2" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:14px;flex-wrap:wrap;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>Service account: <code id="gsheets-sa-email2" style="font-size:11px;"></code></span>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-left:auto;">
+                                            <input type="checkbox" id="gsheetsEnabled2" onchange="saveGSheetsEnabled(this)"> Enable
+                                        </label>
+                                    </div>
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;background:rgba(52,168,83,0.06);border-color:rgba(52,168,83,0.2);">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>Share your Google Sheet with <strong><span id="gsheets-share-email2"></span></strong> (Editor access), then paste the Sheet URL below.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>Google Sheet URL or ID</label>
+                                        <input type="text" id="gsheetsSheetId2" class="gads-input" placeholder="https://docs.google.com/spreadsheets/d/… or paste the Sheet ID">
+                                    </div>
+                                    <div class="pvm-section">
+                                        <label>Sheet / Tab Name</label>
+                                        <input type="text" id="gsheetsSheetName2" class="gads-input" placeholder="Call Log">
+                                    </div>
+                                    <p style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">Columns: Timestamp · Phone · From · Status · Transferred · VM Dropped · AMD · Duration · Hangup Cause</p>
+                                    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                                        <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveGSheetsConfig2()">Save</button>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testGSheetsConfig()">Test Connection</button>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGSheets()">Clear</button>
+                                    </div>
+                                    <div id="gsheetsMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /integrations-page-card -->
+                </div><!-- /page-integrations -->
+
             </div><!-- end gads-content -->
         </div><!-- end gads-main -->
 
@@ -1396,15 +1617,16 @@
     <script>
         var _gadsCurrentPage = 'dashboard';
         var _gadsPageTitles = {
-            dashboard: 'Dashboard',
-            campaigns: 'Campaigns',
-            voicemails: 'Voicemails',
-            contacts: 'Contacts & Lists',
+            dashboard:    'Dashboard',
+            campaigns:    'Campaigns',
+            voicemails:   'Voicemails',
+            contacts:     'Contacts & Lists',
             phonenumbers: 'Phone Numbers',
-            livecalls: 'Live Calls',
-            reports: 'Reports',
-            testdialer: 'Test Dialer',
-            settings: 'Settings'
+            livecalls:    'Live Calls',
+            reports:      'Reports',
+            testdialer:   'Test Dialer',
+            settings:     'Settings',
+            integrations: 'Integrations'
         };
 
         function navigateTo(page) {
@@ -1448,6 +1670,8 @@
                 if (typeof loadTemplates === 'function') loadTemplates();
                 if (typeof loadWebhookStatus === 'function') loadWebhookStatus();
                 if (typeof presetLoadVoices === 'function') presetLoadVoices();
+            }
+            if (page === 'integrations') {
                 if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus();
             }
             if (page === 'voicemails') {
@@ -4819,86 +5043,104 @@
         if (el) el.style.display = show ? '' : 'none';
     }
 
+    function _setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+    function _setVal(id, val)  { var el = document.getElementById(id); if (el && !el.value) el.value = val; }
+    function _setChk(id, val)  { var el = document.getElementById(id); if (el) el.checked = val; }
+
     window.loadIntegrationStatus = function() {
         apiFetch('/api/integrations/status').then(function(r){ return r.json(); }).then(function(d) {
 
             // ── Webhooks ──
             var wh = d.webhook || {};
-            _badge('webhook-badge',
-                wh.enabled && wh.connected ? 'Active' : (wh.connected ? 'Saved · Disabled' : 'Not set'),
-                wh.enabled && wh.connected ? 'active' : 'inactive');
-            var urlEl = document.getElementById('webhookUrl');
-            if (urlEl && !urlEl.value) urlEl.value = wh.url || '';
-            var enEl = document.getElementById('webhookEnabled');
-            if (enEl) enEl.checked = !!wh.enabled;
+            var whLabel = wh.enabled && wh.connected ? 'Active' : (wh.connected ? 'Saved · Disabled' : 'Not set');
+            var whCls   = wh.enabled && wh.connected ? 'active' : 'inactive';
+            _badge('webhook-badge',  whLabel, whCls);
+            _badge('webhook-badge2', whLabel, whCls);
+            _setVal('webhookUrl',  wh.url || '');
+            _setVal('webhookUrl2', wh.url || '');
+            _setChk('webhookEnabled',  !!wh.enabled);
+            _setChk('webhookEnabled2', !!wh.enabled);
 
-            // ── HubSpot (Private App token flow) ──
+            // ── HubSpot ──
             var hs = d.hubspot || {};
             var hsConn = hs.connected;
-            _badge('hubspot-badge',
-                hsConn && hs.enabled ? 'Connected · Active' : (hsConn ? 'Connected · Disabled' : 'Not connected'),
-                hsConn && hs.enabled ? 'active' : 'inactive');
-            _show('hubspot-connected-view',  hsConn);
-            _show('hubspot-disconnected-view', !hsConn);
+            var hsLabel = hsConn && hs.enabled ? 'Connected · Active' : (hsConn ? 'Connected · Disabled' : 'Not connected');
+            var hsCls   = hsConn && hs.enabled ? 'active' : 'inactive';
+            _badge('hubspot-badge',  hsLabel, hsCls);
+            _badge('hubspot-badge2', hsLabel, hsCls);
+            _show('hubspot-connected-view',     hsConn);
+            _show('hubspot-disconnected-view',  !hsConn);
+            _show('hubspot-connected-view2',    hsConn);
+            _show('hubspot-disconnected-view2', !hsConn);
             if (hsConn) {
-                var pid = document.getElementById('hubspot-portal-id');
-                if (pid) pid.textContent = hs.portal_id || '—';
-                var enhs = document.getElementById('hubspotEnabled');
-                if (enhs) enhs.checked = !!hs.enabled;
+                _setText('hubspot-portal-id',  hs.portal_id || '—');
+                _setText('hubspot-portal-id2', hs.portal_id || '—');
+                _setChk('hubspotEnabled',  !!hs.enabled);
+                _setChk('hubspotEnabled2', !!hs.enabled);
             }
 
             // ── GoHighLevel ──
-            var ghl     = d.gohighlevel || {};
+            var ghl = d.gohighlevel || {};
             var ghlConn = ghl.connected;
-            _badge('ghl-badge',
-                ghlConn && ghl.enabled ? 'Connected · Active' : (ghlConn ? 'Connected · Disabled' : 'Not connected'),
-                ghlConn && ghl.enabled ? 'active' : 'inactive');
-            _show('ghl-connected-view',    ghlConn);
-            _show('ghl-disconnected-view', !ghlConn);
+            var ghlLabel = ghlConn && ghl.enabled ? 'Connected · Active' : (ghlConn ? 'Connected · Disabled' : 'Not connected');
+            var ghlCls   = ghlConn && ghl.enabled ? 'active' : 'inactive';
+            _badge('ghl-badge',  ghlLabel, ghlCls);
+            _badge('ghl-badge2', ghlLabel, ghlCls);
+            _show('ghl-connected-view',     ghlConn);
+            _show('ghl-disconnected-view',  !ghlConn);
+            _show('ghl-connected-view2',    ghlConn);
+            _show('ghl-disconnected-view2', !ghlConn);
             if (ghlConn) {
-                var ghlLoc = document.getElementById('ghl-location-label');
-                if (ghlLoc) ghlLoc.textContent = ghl.location_id ? ' · Location ' + ghl.location_id : '';
-                var enGhl = document.getElementById('ghlEnabled');
-                if (enGhl) enGhl.checked = !!ghl.enabled;
+                var locTxt = ghl.location_id ? ' · Location ' + ghl.location_id : '';
+                _setText('ghl-location-label',  locTxt);
+                _setText('ghl-location-label2', locTxt);
+                _setChk('ghlEnabled',  !!ghl.enabled);
+                _setChk('ghlEnabled2', !!ghl.enabled);
             }
 
             // ── Pipedrive ──
-            var pd     = d.pipedrive || {};
+            var pd = d.pipedrive || {};
             var pdConn = pd.connected;
-            _badge('pipedrive-badge',
-                pdConn && pd.enabled ? 'Connected · Active' : (pdConn ? 'Connected · Disabled' : 'Not connected'),
-                pdConn && pd.enabled ? 'active' : 'inactive');
-            _show('pipedrive-connected-view',    pdConn);
-            _show('pipedrive-disconnected-view', !pdConn);
+            var pdLabel = pdConn && pd.enabled ? 'Connected · Active' : (pdConn ? 'Connected · Disabled' : 'Not connected');
+            var pdCls   = pdConn && pd.enabled ? 'active' : 'inactive';
+            _badge('pipedrive-badge',  pdLabel, pdCls);
+            _badge('pipedrive-badge2', pdLabel, pdCls);
+            _show('pipedrive-connected-view',     pdConn);
+            _show('pipedrive-disconnected-view',  !pdConn);
+            _show('pipedrive-connected-view2',    pdConn);
+            _show('pipedrive-disconnected-view2', !pdConn);
             if (pdConn) {
-                var pdCo = document.getElementById('pipedrive-company-label');
-                if (pdCo) pdCo.textContent = pd.company ? ' · ' + pd.company : '';
-                var enPd = document.getElementById('pipedriveEnabled');
-                if (enPd) enPd.checked = !!pd.enabled;
+                var coTxt = pd.company ? ' · ' + pd.company : '';
+                _setText('pipedrive-company-label',  coTxt);
+                _setText('pipedrive-company-label2', coTxt);
+                _setChk('pipedriveEnabled',  !!pd.enabled);
+                _setChk('pipedriveEnabled2', !!pd.enabled);
             }
 
-            // ── Google Sheets (Service Account flow) ──
+            // ── Google Sheets ──
             var gs = d.google_sheets || {};
             var gsSA   = gs.service_account_configured;
-            var gsHas  = gs.connected; // has a sheet_id saved
-            var gsActv = gsHas && gs.enabled;
-            _badge('gsheets-badge',
-                gsActv ? 'Active' : (gsHas ? 'Saved · Disabled' : (gsSA ? 'Ready to configure' : 'Setup needed')),
-                gsActv ? 'active' : 'inactive');
-            _show('gsheets-not-configured', !gsSA);
-            _show('gsheets-configured-view', gsSA);
+            var gsActv = gs.connected && gs.enabled;
+            var gsLabel = gsActv ? 'Active' : (gs.connected ? 'Saved · Disabled' : (gsSA ? 'Ready to configure' : 'Setup needed'));
+            var gsCls   = gsActv ? 'active' : 'inactive';
+            _badge('gsheets-badge',  gsLabel, gsCls);
+            _badge('gsheets-badge2', gsLabel, gsCls);
+            _show('gsheets-not-configured',  !gsSA);
+            _show('gsheets-not-configured2', !gsSA);
+            _show('gsheets-configured-view',  gsSA);
+            _show('gsheets-configured-view2', gsSA);
             if (gsSA) {
-                var saEl = document.getElementById('gsheets-sa-email');
-                var shEl = document.getElementById('gsheets-share-email');
                 var email = gs.service_account_email || '';
-                if (saEl) saEl.textContent = email;
-                if (shEl) shEl.textContent = email;
-                var sid = document.getElementById('gsheetsSheetId');
-                if (sid && !sid.value) sid.value = gs.sheet_id || '';
-                var sname = document.getElementById('gsheetsSheetName');
-                if (sname && !sname.value) sname.value = gs.sheet_name || 'Call Log';
-                var engs = document.getElementById('gsheetsEnabled');
-                if (engs) engs.checked = !!gs.enabled;
+                _setText('gsheets-sa-email',    email);
+                _setText('gsheets-sa-email2',   email);
+                _setText('gsheets-share-email',  email);
+                _setText('gsheets-share-email2', email);
+                _setVal('gsheetsSheetId',   gs.sheet_id || '');
+                _setVal('gsheetsSheetId2',  gs.sheet_id || '');
+                _setVal('gsheetsSheetName',  gs.sheet_name || 'Call Log');
+                _setVal('gsheetsSheetName2', gs.sheet_name || 'Call Log');
+                _setChk('gsheetsEnabled',  !!gs.enabled);
+                _setChk('gsheetsEnabled2', !!gs.enabled);
             }
 
         }).catch(function(e){ if (e.message === 'auth') return; });
@@ -5062,16 +5304,82 @@
             .catch(function(){});
     };
 
-    // Auto-load on page navigation to settings
-    var _origNav = window.navigateTo;
-    if (typeof _origNav === 'function') {
-        window.navigateTo = function(page) {
-            _origNav(page);
-            if (page === 'settings') {
-                setTimeout(function(){ if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus(); }, 100);
-            }
-        };
-    }
+    // ── Page-2 bridge functions (Integrations dedicated page) ──
+
+    window.saveWebhookConfig2 = function() {
+        var url    = (document.getElementById('webhookUrl2') || {}).value || '';
+        var secret = (document.getElementById('webhookSecret2') || {}).value || '';
+        var enabled = (document.getElementById('webhookEnabled2') || {}).checked;
+        var body = { url: url, enabled: enabled };
+        if (secret) body.secret = secret;
+        apiFetch('/api/integrations/webhook', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) })
+            .then(function(r){ return r.json(); })
+            .then(function(){ _intgMsg('webhookMsg2', 'Webhook saved', true); loadIntegrationStatus(); })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('webhookMsg2', 'Save failed', false); });
+    };
+    window.saveWebhookEnabled2 = function(chk) {
+        apiFetch('/api/integrations/webhook', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ enabled: chk.checked }) })
+            .then(function(r){ return r.json(); }).then(function(){ loadIntegrationStatus(); }).catch(function(){});
+    };
+    window.testWebhook2 = function() {
+        _intgMsg('webhookMsg2', 'Firing test…', true);
+        apiFetch('/api/integrations/webhook/test', { method: 'POST' })
+            .then(function(r){ return r.json(); })
+            .then(function(d){ _intgMsg('webhookMsg2', d.error || 'Test payload sent!', !d.error); })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('webhookMsg2', 'Request failed', false); });
+    };
+    window.connectHubSpot2 = function() {
+        var token = (document.getElementById('hubspotToken2') || {}).value || '';
+        if (!token.trim()) { _intgMsg('hubspotMsg2', 'Paste your Private App access token first.', false); return; }
+        _intgMsg('hubspotMsg2', 'Verifying…', true);
+        apiFetch('/api/integrations/hubspot', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ access_token: token.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('hubspotMsg2', d.error, false); return; }
+                _intgMsg('hubspotMsg2', 'Connected! Portal ' + (d.portal_id || ''), true);
+                var inp = document.getElementById('hubspotToken2'); if (inp) inp.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('hubspotMsg2', 'Request failed', false); });
+    };
+    window.connectGHL2 = function() {
+        var key = (document.getElementById('ghlApiKey2') || {}).value || '';
+        if (!key.trim()) { _intgMsg('ghlMsg2', 'Paste your Location API Key first.', false); return; }
+        _intgMsg('ghlMsg2', 'Verifying…', true);
+        apiFetch('/api/integrations/ghl', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_key: key.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('ghlMsg2', d.error, false); return; }
+                _intgMsg('ghlMsg2', 'Connected!' + (d.location_id ? ' Location: ' + d.location_id : ''), true);
+                var inp = document.getElementById('ghlApiKey2'); if (inp) inp.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('ghlMsg2', 'Request failed', false); });
+    };
+    window.connectPipedrive2 = function() {
+        var token = (document.getElementById('pipedriveToken2') || {}).value || '';
+        if (!token.trim()) { _intgMsg('pipedriveMsg2', 'Paste your API Token first.', false); return; }
+        _intgMsg('pipedriveMsg2', 'Verifying…', true);
+        apiFetch('/api/integrations/pipedrive', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_token: token.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('pipedriveMsg2', d.error, false); return; }
+                _intgMsg('pipedriveMsg2', 'Connected!' + (d.company ? ' Company: ' + d.company : ''), true);
+                var inp = document.getElementById('pipedriveToken2'); if (inp) inp.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('pipedriveMsg2', 'Request failed', false); });
+    };
+    window.saveGSheetsConfig2 = function() {
+        var sheetId   = (document.getElementById('gsheetsSheetId2') || {}).value || '';
+        var sheetName = (document.getElementById('gsheetsSheetName2') || {}).value || 'Call Log';
+        var enabled   = (document.getElementById('gsheetsEnabled2') || {}).checked;
+        apiFetch('/api/integrations/google-sheets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ sheet_id: sheetId, sheet_name: sheetName, enabled: enabled }) })
+            .then(function(r){ return r.json(); })
+            .then(function(){ _intgMsg('gsheetsMsg2', 'Sheet config saved', true); loadIntegrationStatus(); })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('gsheetsMsg2', 'Save failed', false); });
+    };
+
 })();
 </script>
 
