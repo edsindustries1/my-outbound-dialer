@@ -2,7 +2,7 @@
   'use strict';
 
   /* ══ PRICING CALCULATOR ══ */
-  var COST_PER_DIAL   = 0.015;   // Telnyx + ElevenLabs per dial
+  var COST_PER_DIAL   = 0.015;   // carrier fees + AI voicemail synthesis per dial
   var HUMAN_SDR_COST  = 5000;    // avg human SDR monthly cost
 
   var dialSlider    = document.getElementById('dialSlider');
