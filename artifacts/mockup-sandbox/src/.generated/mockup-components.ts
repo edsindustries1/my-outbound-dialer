@@ -2,7 +2,11 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/dashboard-variants/ActionFirst.tsx": () => import("../components/mockups/dashboard-variants/ActionFirst.tsx"),
+  "./components/mockups/dashboard-variants/ActionFirstFocused.tsx": () => import("../components/mockups/dashboard-variants/ActionFirstFocused.tsx"),
+  "./components/mockups/dashboard-variants/ActionFirstStreamlined.tsx": () => import("../components/mockups/dashboard-variants/ActionFirstStreamlined.tsx"),
   "./components/mockups/dashboard-variants/CommandCenter.tsx": () => import("../components/mockups/dashboard-variants/CommandCenter.tsx"),
   "./components/mockups/dashboard-variants/DailyBriefing.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefing.tsx"),
+  "./components/mockups/dashboard-variants/DailyBriefingEditorial.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingEditorial.tsx"),
+  "./components/mockups/dashboard-variants/DailyBriefingPolished.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingPolished.tsx"),
   "./components/mockups/dashboard-variants/PipelineFunnel.tsx": () => import("../components/mockups/dashboard-variants/PipelineFunnel.tsx")
 };
