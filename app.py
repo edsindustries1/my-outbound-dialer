@@ -2190,6 +2190,78 @@ def api_integrations_gsheets_test():
     return jsonify({"error": result}), 400
 
 
+# ── GoHighLevel (Location API Key) ────────────────────────────────────────────
+
+@app.route("/api/integrations/ghl", methods=["GET"])
+@login_required
+def api_integrations_ghl_get():
+    from integrations import get_integration_config, KEY_GHL
+    cfg = get_integration_config(current_user.id, KEY_GHL)
+    return jsonify({
+        "connected":   bool(cfg.get("api_key")),
+        "enabled":     bool(cfg.get("enabled")),
+        "location_id": cfg.get("location_id", ""),
+    })
+
+
+@app.route("/api/integrations/ghl", methods=["POST"])
+@login_required
+def api_integrations_ghl_save():
+    from integrations import get_integration_config, set_integration_config, KEY_GHL, ghl_verify_token
+    data    = request.get_json() or {}
+    cfg     = get_integration_config(current_user.id, KEY_GHL)
+    api_key = data.get("api_key", "").strip()
+    if api_key:
+        ok, result = ghl_verify_token(api_key)
+        if not ok:
+            return jsonify({"error": f"Invalid API key: {result}"}), 400
+        cfg["api_key"]     = api_key
+        cfg["location_id"] = result
+        cfg["enabled"]     = True
+    if "enabled" in data:
+        cfg["enabled"] = bool(data["enabled"])
+    if data.get("disconnect"):
+        cfg = {}
+    set_integration_config(current_user.id, KEY_GHL, cfg)
+    return jsonify({"ok": True, "location_id": cfg.get("location_id", "")})
+
+
+# ── Pipedrive (API Token) ──────────────────────────────────────────────────────
+
+@app.route("/api/integrations/pipedrive", methods=["GET"])
+@login_required
+def api_integrations_pipedrive_get():
+    from integrations import get_integration_config, KEY_PIPEDRIVE
+    cfg = get_integration_config(current_user.id, KEY_PIPEDRIVE)
+    return jsonify({
+        "connected": bool(cfg.get("api_token")),
+        "enabled":   bool(cfg.get("enabled")),
+        "company":   cfg.get("company_domain", ""),
+    })
+
+
+@app.route("/api/integrations/pipedrive", methods=["POST"])
+@login_required
+def api_integrations_pipedrive_save():
+    from integrations import get_integration_config, set_integration_config, KEY_PIPEDRIVE, pipedrive_verify_token
+    data      = request.get_json() or {}
+    cfg       = get_integration_config(current_user.id, KEY_PIPEDRIVE)
+    api_token = data.get("api_token", "").strip()
+    if api_token:
+        ok, result = pipedrive_verify_token(api_token)
+        if not ok:
+            return jsonify({"error": f"Invalid API token: {result}"}), 400
+        cfg["api_token"]      = api_token
+        cfg["company_domain"] = result
+        cfg["enabled"]        = True
+    if "enabled" in data:
+        cfg["enabled"] = bool(data["enabled"])
+    if data.get("disconnect"):
+        cfg = {}
+    set_integration_config(current_user.id, KEY_PIPEDRIVE, cfg)
+    return jsonify({"ok": True, "company": cfg.get("company_domain", "")})
+
+
 @app.route("/api/campaign_history")
 @login_required
 def campaign_history():

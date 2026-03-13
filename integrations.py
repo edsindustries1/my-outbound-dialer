@@ -4,6 +4,8 @@ integrations.py - CRM and webhook integration module for Open Humana.
 Handles:
   - Outbound webhooks (fires on call completion to any user-configured URL)
   - HubSpot CRM sync via Private App access token (paste-and-go, no OAuth)
+  - GoHighLevel (GHL) CRM sync via Location API Key (paste-and-go)
+  - Pipedrive CRM sync via API Token (paste-and-go)
   - Google Sheets sync via Service Account (operator sets GOOGLE_SERVICE_ACCOUNT_JSON)
 
 All per-user configs stored in UserAppData (key-value store).
@@ -24,6 +26,8 @@ GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
 KEY_WEBHOOK     = "outbound_webhook"
 KEY_HUBSPOT     = "hubspot_config"
+KEY_GHL         = "ghl_config"
+KEY_PIPEDRIVE   = "pipedrive_config"
 KEY_GSHEETS_CFG = "google_sheets_config"
 
 
@@ -65,15 +69,17 @@ def integration_status(user_id):
     """Return a summary of which integrations are connected and enabled."""
     wh  = get_integration_config(user_id, KEY_WEBHOOK)
     hs  = get_integration_config(user_id, KEY_HUBSPOT)
+    ghl = get_integration_config(user_id, KEY_GHL)
+    pd  = get_integration_config(user_id, KEY_PIPEDRIVE)
     gs  = get_integration_config(user_id, KEY_GSHEETS_CFG)
 
     gs_service_account_ok = bool(GOOGLE_SERVICE_ACCOUNT_JSON)
 
     return {
         "webhook": {
-            "connected": bool(wh.get("url")),
-            "enabled":   bool(wh.get("enabled")),
-            "url":       wh.get("url", ""),
+            "connected":  bool(wh.get("url")),
+            "enabled":    bool(wh.get("enabled")),
+            "url":        wh.get("url", ""),
             "has_secret": bool(wh.get("secret")),
         },
         "hubspot": {
@@ -81,13 +87,23 @@ def integration_status(user_id):
             "enabled":   bool(hs.get("enabled")),
             "portal_id": hs.get("portal_id", ""),
         },
+        "gohighlevel": {
+            "connected":   bool(ghl.get("api_key")),
+            "enabled":     bool(ghl.get("enabled")),
+            "location_id": ghl.get("location_id", ""),
+        },
+        "pipedrive": {
+            "connected":  bool(pd.get("api_token")),
+            "enabled":    bool(pd.get("enabled")),
+            "company":    pd.get("company_domain", ""),
+        },
         "google_sheets": {
-            "connected":              bool(gs.get("sheet_id")),
-            "enabled":                bool(gs.get("enabled")),
-            "sheet_id":               gs.get("sheet_id", ""),
-            "sheet_name":             gs.get("sheet_name", "Call Log"),
+            "connected":                  bool(gs.get("sheet_id")),
+            "enabled":                    bool(gs.get("enabled")),
+            "sheet_id":                   gs.get("sheet_id", ""),
+            "sheet_name":                 gs.get("sheet_name", "Call Log"),
             "service_account_configured": gs_service_account_ok,
-            "service_account_email":  _get_sa_email(),
+            "service_account_email":      _get_sa_email(),
         },
     }
 
@@ -255,6 +271,237 @@ def hubspot_verify_token(token):
         return False, str(e)
 
 
+# ── GoHighLevel (Location API Key) ────────────────────────────────────────────
+
+GHL_BASE = "https://rest.gohighlevel.com/v1"
+
+
+def ghl_verify_token(api_key):
+    """
+    Verify a GHL Location API Key by fetching the location profile.
+    Returns (True, location_id) or (False, error_message).
+    """
+    try:
+        resp = requests.get(
+            f"{GHL_BASE}/locations/",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            loc = data.get("location") or {}
+            location_id = loc.get("id", "")
+            return True, location_id
+        return False, f"Invalid API key (HTTP {resp.status_code})"
+    except Exception as e:
+        return False, str(e)
+
+
+def sync_to_ghl(user_id, call_record):
+    """
+    Find or create a GHL contact by phone, then log a note for the call.
+    Uses GoHighLevel v1 REST API with a Location API Key.
+    """
+    cfg = get_integration_config(user_id, KEY_GHL)
+    if not cfg.get("enabled") or not cfg.get("api_key"):
+        return
+
+    api_key = cfg["api_key"]
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type":  "application/json",
+    }
+    phone = (call_record.get("number") or "").strip()
+    if not phone:
+        return
+
+    contact_id = None
+
+    # Search for existing contact by phone
+    try:
+        search = requests.get(
+            f"{GHL_BASE}/contacts/",
+            headers=headers,
+            params={"query": phone, "limit": 1},
+            timeout=10,
+        )
+        if search.status_code == 200:
+            contacts = search.json().get("contacts", [])
+            if contacts:
+                contact_id = contacts[0].get("id")
+    except Exception as e:
+        logger.error(f"[GHL] Contact search error for user {user_id}: {e}")
+
+    # Create contact if not found
+    if not contact_id:
+        try:
+            create = requests.post(
+                f"{GHL_BASE}/contacts/",
+                headers=headers,
+                json={"phone": phone, "tags": ["open-humana"]},
+                timeout=10,
+            )
+            if create.status_code in (200, 201):
+                contact_id = create.json().get("contact", {}).get("id")
+        except Exception as e:
+            logger.error(f"[GHL] Contact create error for user {user_id}: {e}")
+
+    if not contact_id:
+        logger.warning(f"[GHL] Could not find/create contact for {phone}, user {user_id}")
+        return
+
+    # Build note body
+    notes_parts = [
+        f"Outbound Call — Open Humana",
+        f"Status: {call_record.get('status_description', call_record.get('status', ''))}",
+    ]
+    if call_record.get("voicemail_dropped"):
+        notes_parts.append("Voicemail dropped")
+    if call_record.get("transferred"):
+        notes_parts.append("Transferred to live agent")
+    if call_record.get("amd_result"):
+        notes_parts.append(f"AMD: {call_record['amd_result']}")
+    if call_record.get("ring_duration"):
+        notes_parts.append(f"Duration: {call_record['ring_duration']}s")
+
+    try:
+        note = requests.post(
+            f"{GHL_BASE}/contacts/{contact_id}/notes/",
+            headers=headers,
+            json={"body": " | ".join(notes_parts)},
+            timeout=10,
+        )
+        if note.status_code in (200, 201):
+            logger.info(f"[GHL] Note logged for contact {contact_id}, user {user_id}")
+        else:
+            logger.warning(f"[GHL] Note failed ({note.status_code}): {note.text[:200]}")
+    except Exception as e:
+        logger.error(f"[GHL] Note error for user {user_id}: {e}")
+
+
+# ── Pipedrive (API Token) ──────────────────────────────────────────────────────
+
+PD_BASE = "https://api.pipedrive.com/v1"
+
+
+def pipedrive_verify_token(api_token):
+    """
+    Verify a Pipedrive API token by fetching the current user profile.
+    Returns (True, company_domain) or (False, error_message).
+    """
+    try:
+        resp = requests.get(
+            f"{PD_BASE}/users/me",
+            params={"api_token": api_token},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json().get("data", {})
+            company_domain = data.get("company_domain", "")
+            return True, company_domain
+        return False, f"Invalid API token (HTTP {resp.status_code})"
+    except Exception as e:
+        return False, str(e)
+
+
+def sync_to_pipedrive(user_id, call_record):
+    """
+    Find or create a Pipedrive person by phone, then create a call activity.
+    Uses Pipedrive v1 REST API with a simple API token.
+    """
+    cfg = get_integration_config(user_id, KEY_PIPEDRIVE)
+    if not cfg.get("enabled") or not cfg.get("api_token"):
+        return
+
+    token  = cfg["api_token"]
+    params = {"api_token": token}
+    phone  = (call_record.get("number") or "").strip()
+    if not phone:
+        return
+
+    person_id = None
+
+    # Search for existing person by phone
+    try:
+        search = requests.get(
+            f"{PD_BASE}/persons/search",
+            params={**params, "term": phone, "fields": "phone", "limit": 1},
+            timeout=10,
+        )
+        if search.status_code == 200:
+            items = search.json().get("data", {}).get("items", [])
+            if items:
+                person_id = items[0].get("item", {}).get("id")
+    except Exception as e:
+        logger.error(f"[PIPEDRIVE] Person search error for user {user_id}: {e}")
+
+    # Create person if not found
+    if not person_id:
+        try:
+            create = requests.post(
+                f"{PD_BASE}/persons",
+                params=params,
+                json={"name": phone, "phone": [{"value": phone, "primary": True}]},
+                timeout=10,
+            )
+            if create.status_code in (200, 201):
+                person_id = create.json().get("data", {}).get("id")
+        except Exception as e:
+            logger.error(f"[PIPEDRIVE] Person create error for user {user_id}: {e}")
+
+    if not person_id:
+        logger.warning(f"[PIPEDRIVE] Could not find/create person for {phone}, user {user_id}")
+
+    # Build note text
+    status      = call_record.get("status_description", call_record.get("status", ""))
+    flags       = []
+    if call_record.get("voicemail_dropped"): flags.append("Voicemail dropped")
+    if call_record.get("transferred"):       flags.append("Transferred to agent")
+    if call_record.get("amd_result"):        flags.append(f"AMD: {call_record['amd_result']}")
+    note_text   = f"[Open Humana] Outbound call | {status}"
+    if flags: note_text += " | " + " | ".join(flags)
+
+    # Create a note (attached to person if found)
+    try:
+        note_payload = {"content": note_text}
+        if person_id:
+            note_payload["person_id"] = person_id
+        note = requests.post(
+            f"{PD_BASE}/notes",
+            params=params,
+            json=note_payload,
+            timeout=10,
+        )
+        if note.status_code in (200, 201):
+            logger.info(f"[PIPEDRIVE] Note logged for person {person_id}, user {user_id}")
+        else:
+            logger.warning(f"[PIPEDRIVE] Note failed ({note.status_code}): {note.text[:200]}")
+    except Exception as e:
+        logger.error(f"[PIPEDRIVE] Note error for user {user_id}: {e}")
+
+    # Log a call activity if we have a person
+    if person_id:
+        try:
+            duration_sec = int(call_record.get("ring_duration") or 0)
+            activity = requests.post(
+                f"{PD_BASE}/activities",
+                params=params,
+                json={
+                    "subject":    "Outbound Call — Open Humana",
+                    "type":       "call",
+                    "person_id":  person_id,
+                    "done":       1,
+                    "duration":   f"{duration_sec // 60:02d}:{duration_sec % 60:02d}",
+                    "note":       note_text,
+                },
+                timeout=10,
+            )
+            if activity.status_code in (200, 201):
+                logger.info(f"[PIPEDRIVE] Activity logged for person {person_id}, user {user_id}")
+        except Exception as e:
+            logger.error(f"[PIPEDRIVE] Activity error for user {user_id}: {e}")
+
+
 # ── Google Sheets (Service Account) ───────────────────────────────────────────
 
 GSHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -406,9 +653,11 @@ def fire_all_integrations(user_id, call_record):
 
     def _run():
         for name, fn in [
-            ("webhook", fire_webhook),
-            ("hubspot", sync_to_hubspot),
-            ("gsheets", sync_to_google_sheets),
+            ("webhook",       fire_webhook),
+            ("hubspot",       sync_to_hubspot),
+            ("gohighlevel",   sync_to_ghl),
+            ("pipedrive",     sync_to_pipedrive),
+            ("gsheets",       sync_to_google_sheets),
         ]:
             try:
                 fn(user_id, call_record)

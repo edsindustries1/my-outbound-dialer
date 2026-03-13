@@ -1239,6 +1239,82 @@
                             </div>
                         </div>
 
+                        <!-- ── GOHIGHLEVEL ── -->
+                        <div class="intg-panel" id="intg-ghl-panel">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-ghl" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">GoHighLevel (GHL)</div>
+                                    <div class="intg-panel-desc">Auto-create contacts and log call notes in your GHL sub-account after every completed call.</div>
+                                </div>
+                                <span class="intg-badge" id="ghl-badge">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="ghl-connected-view" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Connected<span id="ghl-location-label"></span>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGHL()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="ghlEnabled" onchange="toggleGHL(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="ghl-disconnected-view" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In GHL go to <strong>Settings → Business Info → API Keys</strong>, copy your <strong>Location API Key</strong>, and paste it below. No OAuth or redirect URIs needed.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>Location API Key</label>
+                                        <input type="password" id="ghlApiKey" class="gads-input" placeholder="eyJhbGci…" autocomplete="new-password">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectGHL()">Verify &amp; Connect</button>
+                                    <div id="ghlMsg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── PIPEDRIVE ── -->
+                        <div class="intg-panel" id="intg-pipedrive-panel">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo intg-logo-pd" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title">Pipedrive</div>
+                                    <div class="intg-panel-desc">Find or create a person and log a call activity in Pipedrive for every completed outbound call.</div>
+                                </div>
+                                <span class="intg-badge" id="pipedrive-badge">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="pipedrive-connected-view" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Connected<span id="pipedrive-company-label"></span>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectPipedrive()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="pipedriveEnabled" onchange="togglePipedrive(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="pipedrive-disconnected-view" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In Pipedrive go to <strong>Settings → Personal Preferences → API</strong>, copy your <strong>API Token</strong>, and paste it below.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>API Token</label>
+                                        <input type="password" id="pipedriveToken" class="gads-input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectPipedrive()">Verify &amp; Connect</button>
+                                    <div id="pipedriveMsg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- ── GOOGLE SHEETS ── -->
                         <div class="intg-panel" id="intg-gsheets-panel" style="border-bottom:none;">
                             <div class="intg-panel-header">
@@ -4771,6 +4847,36 @@
                 if (enhs) enhs.checked = !!hs.enabled;
             }
 
+            // ── GoHighLevel ──
+            var ghl     = d.gohighlevel || {};
+            var ghlConn = ghl.connected;
+            _badge('ghl-badge',
+                ghlConn && ghl.enabled ? 'Connected · Active' : (ghlConn ? 'Connected · Disabled' : 'Not connected'),
+                ghlConn && ghl.enabled ? 'active' : 'inactive');
+            _show('ghl-connected-view',    ghlConn);
+            _show('ghl-disconnected-view', !ghlConn);
+            if (ghlConn) {
+                var ghlLoc = document.getElementById('ghl-location-label');
+                if (ghlLoc) ghlLoc.textContent = ghl.location_id ? ' · Location ' + ghl.location_id : '';
+                var enGhl = document.getElementById('ghlEnabled');
+                if (enGhl) enGhl.checked = !!ghl.enabled;
+            }
+
+            // ── Pipedrive ──
+            var pd     = d.pipedrive || {};
+            var pdConn = pd.connected;
+            _badge('pipedrive-badge',
+                pdConn && pd.enabled ? 'Connected · Active' : (pdConn ? 'Connected · Disabled' : 'Not connected'),
+                pdConn && pd.enabled ? 'active' : 'inactive');
+            _show('pipedrive-connected-view',    pdConn);
+            _show('pipedrive-disconnected-view', !pdConn);
+            if (pdConn) {
+                var pdCo = document.getElementById('pipedrive-company-label');
+                if (pdCo) pdCo.textContent = pd.company ? ' · ' + pd.company : '';
+                var enPd = document.getElementById('pipedriveEnabled');
+                if (enPd) enPd.checked = !!pd.enabled;
+            }
+
             // ── Google Sheets (Service Account flow) ──
             var gs = d.google_sheets || {};
             var gsSA   = gs.service_account_configured;
@@ -4854,6 +4960,68 @@
 
     window.toggleHubspot = function(chk) {
         apiFetch('/api/integrations/hubspot', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ enabled: chk.checked }) })
+            .then(function(r){ return r.json(); }).then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    // ── GoHighLevel functions ──
+
+    window.connectGHL = function() {
+        var key = (document.getElementById('ghlApiKey') || {}).value || '';
+        if (!key.trim()) { _intgMsg('ghlMsg', 'Paste your Location API Key first.', false); return; }
+        _intgMsg('ghlMsg', 'Verifying…', true);
+        apiFetch('/api/integrations/ghl', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_key: key.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('ghlMsg', d.error, false); return; }
+                _intgMsg('ghlMsg', 'Connected!' + (d.location_id ? ' Location: ' + d.location_id : ''), true);
+                var inp = document.getElementById('ghlApiKey');
+                if (inp) inp.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('ghlMsg', 'Request failed', false); });
+    };
+
+    window.disconnectGHL = function() {
+        if (!confirm('Disconnect GoHighLevel? Call data will no longer sync.')) return;
+        apiFetch('/api/integrations/ghl', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ disconnect: true }) })
+            .then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    window.toggleGHL = function(chk) {
+        apiFetch('/api/integrations/ghl', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ enabled: chk.checked }) })
+            .then(function(r){ return r.json(); }).then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    // ── Pipedrive functions ──
+
+    window.connectPipedrive = function() {
+        var token = (document.getElementById('pipedriveToken') || {}).value || '';
+        if (!token.trim()) { _intgMsg('pipedriveMsg', 'Paste your API Token first.', false); return; }
+        _intgMsg('pipedriveMsg', 'Verifying…', true);
+        apiFetch('/api/integrations/pipedrive', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_token: token.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('pipedriveMsg', d.error, false); return; }
+                _intgMsg('pipedriveMsg', 'Connected!' + (d.company ? ' Company: ' + d.company : ''), true);
+                var inp = document.getElementById('pipedriveToken');
+                if (inp) inp.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('pipedriveMsg', 'Request failed', false); });
+    };
+
+    window.disconnectPipedrive = function() {
+        if (!confirm('Disconnect Pipedrive? Call data will no longer sync.')) return;
+        apiFetch('/api/integrations/pipedrive', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ disconnect: true }) })
+            .then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    window.togglePipedrive = function(chk) {
+        apiFetch('/api/integrations/pipedrive', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ enabled: chk.checked }) })
             .then(function(r){ return r.json(); }).then(function(){ loadIntegrationStatus(); })
             .catch(function(){});
     };
