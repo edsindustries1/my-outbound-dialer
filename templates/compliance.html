@@ -3,13 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TCPA Compliance — Open Humana</title>
+  <title>TCPA Compliance Guide — Open Humana</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/landing.css">
   <link rel="stylesheet" href="/static/pages.css">
+  <style>
+    .comp-hero { background: #0a0a0a; color: #fff; padding: 120px 0 80px; text-align: center; }
+    .comp-hero-inner { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+    .comp-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 6px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a3e635; margin-bottom: 28px; }
+    .comp-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 20px; }
+    .comp-hero h1 em { font-style: normal; color: #a3e635; }
+    .comp-hero p { font-size: 18px; color: rgba(255,255,255,0.6); line-height: 1.7; margin: 0; }
+
+    .comp-wrap { max-width: 860px; margin: 0 auto; padding: 64px 24px; }
+
+    .comp-tldr { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 32px 36px; margin-bottom: 56px; }
+    .comp-tldr-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #16a34a; margin-bottom: 12px; }
+    .comp-tldr h3 { font-size: 20px; font-weight: 700; color: #14532d; margin: 0 0 12px; }
+    .comp-tldr p { font-size: 15px; color: #166534; line-height: 1.7; margin: 0; }
+
+    .comp-section { margin-bottom: 56px; }
+    .comp-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
+    .comp-section h2 { font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .comp-section .comp-section-sub { font-size: 16px; color: #4b5563; line-height: 1.7; margin: 0 0 28px; }
+
+    .comp-zone { border-radius: 14px; padding: 28px 32px; margin-bottom: 16px; }
+    .comp-zone-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .comp-zone-amber { background: #fffbeb; border: 1px solid #fde68a; }
+    .comp-zone-red { background: #fef2f2; border: 1px solid #fecaca; }
+    .comp-zone-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .comp-zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .comp-zone-dot-green { background: #16a34a; }
+    .comp-zone-dot-amber { background: #d97706; }
+    .comp-zone-dot-red { background: #dc2626; }
+    .comp-zone-title { font-size: 16px; font-weight: 700; }
+    .comp-zone-green .comp-zone-title { color: #14532d; }
+    .comp-zone-amber .comp-zone-title { color: #92400e; }
+    .comp-zone-red .comp-zone-title { color: #991b1b; }
+    .comp-zone ul { margin: 0; padding: 0 0 0 20px; }
+    .comp-zone li { font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
+    .comp-zone-green li { color: #166534; }
+    .comp-zone-amber li { color: #78350f; }
+    .comp-zone-red li { color: #7f1d1d; }
+
+    .comp-shield-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .comp-shield-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
+    .comp-shield-icon { width: 40px; height: 40px; background: #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+    .comp-shield-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 6px; }
+    .comp-shield-card p { font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0; }
+
+    .comp-sla { background: #0a0a0a; border-radius: 16px; padding: 40px; color: #fff; }
+    .comp-sla h3 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 8px; }
+    .comp-sla .comp-sla-sub { font-size: 15px; color: rgba(255,255,255,0.55); margin: 0 0 28px; }
+    .comp-sla-steps { display: flex; flex-direction: column; gap: 16px; }
+    .comp-sla-step { display: flex; gap: 16px; align-items: flex-start; }
+    .comp-sla-num { width: 28px; height: 28px; border-radius: 50%; background: #a3e635; color: #0a0a0a; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .comp-sla-step-text { font-size: 15px; color: rgba(255,255,255,0.75); line-height: 1.65; }
+    .comp-sla-step-text strong { color: #fff; }
+
+    .comp-industry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .comp-industry-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
+    .comp-industry-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+    .comp-industry-card ul { margin: 0; padding: 0 0 0 18px; }
+    .comp-industry-card li { font-size: 13px; color: #4b5563; line-height: 1.7; margin-bottom: 4px; }
+
+    .comp-disclaimer { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px 28px; margin-top: 48px; }
+    .comp-disclaimer p { font-size: 13px; color: #6b7280; line-height: 1.7; margin: 0; }
+    .comp-disclaimer strong { color: #374151; }
+
+    .comp-contact-bar { display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px 32px; margin-top: 32px; flex-wrap: wrap; gap: 16px; }
+    .comp-contact-bar h4 { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 4px; }
+    .comp-contact-bar p { font-size: 14px; color: #6b7280; margin: 0; }
+    .comp-contact-btn { display: inline-flex; align-items: center; gap: 8px; background: #0a0a0a; color: #fff; border-radius: 8px; padding: 12px 22px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+    .comp-contact-btn:hover { background: #1a1a1a; color: #fff; }
+
+    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 48px 0; }
+
+    @media (max-width: 600px) {
+      .comp-wrap { padding: 40px 16px; }
+      .comp-zone { padding: 20px; }
+      .comp-sla { padding: 28px 20px; }
+      .comp-contact-bar { flex-direction: column; }
+    }
+  </style>
 </head>
 <body class="subpage">
 
@@ -21,8 +100,8 @@
       <div class="nav-links">
         <a href="/#features">Features</a>
         <a href="/#how-it-works">How It Works</a>
-        <a href="/#pricing">Pricing</a>
-        <a href="/about">About</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/compliance" style="font-weight:700;">Compliance</a>
         <a href="/help">Help</a>
       </div>
       <div class="nav-actions">
@@ -32,90 +111,220 @@
     </div>
   </nav>
 
-  <section class="subpage-hero">
-    <h1>TCPA Compliance</h1>
-    <p>Our commitment to regulatory compliance and responsible communication practices.</p>
-  </section>
+  <div class="comp-hero">
+    <div class="comp-hero-inner">
+      <div class="comp-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        TCPA Compliance Guide
+      </div>
+      <h1>Will this get me sued?<br><em>Here's the honest answer.</em></h1>
+      <p>The FCC has confirmed that AI-generated voices fall under TCPA restrictions. We're not going to hide from that. This page explains exactly which use cases are legal, which require consent, and what we do — and what you must do — to stay on the right side of the law.</p>
+    </div>
+  </div>
 
-  <div class="subpage-content legal-content">
-    <div class="legal-disclaimer">
-      <p><strong>Disclaimer:</strong> The information provided on this page is for informational purposes only and does not constitute legal advice. Open Humana is a technology provider — compliance with all applicable laws, including the TCPA, is the sole responsibility of the user. We strongly recommend consulting with a qualified telecommunications attorney regarding your specific compliance obligations.</p>
+  <div class="comp-wrap">
+
+    <div class="comp-tldr">
+      <div class="comp-tldr-label">Bottom Line Up Front</div>
+      <h3>B2B outbound calling is generally legal without prior consent. B2C consumer calling requires it.</h3>
+      <p>If you're calling businesses (insurance agencies, real estate brokers, solar companies, etc.) during business hours, you are in the green zone under TCPA. If you're calling individual consumers on their cell phones for marketing purposes, you need prior express written consent first. Open Humana is built for B2B outbound — but we give you the tools to handle either scenario compliantly.</p>
     </div>
 
-    <h2>What is TCPA?</h2>
-    <p>The Telephone Consumer Protection Act (TCPA) is a federal law enacted in 1991 that regulates telemarketing calls, auto-dialed calls, prerecorded calls, text messages, and unsolicited faxes. The TCPA was designed to protect consumers from unwanted and intrusive communications.</p>
-    <p>Key provisions of the TCPA include:</p>
-    <ul>
-      <li>Restrictions on the use of automatic telephone dialing systems (ATDS)</li>
-      <li>Requirements for prior express consent before making certain types of calls</li>
-      <li>Regulations regarding prerecorded or artificial voice messages</li>
-      <li>Maintenance of company-specific Do Not Call (DNC) lists</li>
-      <li>Compliance with the National Do Not Call Registry</li>
-      <li>Time-of-day restrictions for telemarketing calls (8 AM to 9 PM local time)</li>
-    </ul>
+    <!-- Section 1: Use Case Zones -->
+    <div class="comp-section">
+      <div class="comp-section-label">Use Cases &amp; Legality</div>
+      <h2>What's legal, what needs consent, what's off-limits</h2>
+      <p class="comp-section-sub">TCPA treats B2B and B2C calls differently. Know which zone your use case falls in before you launch a campaign.</p>
 
-    <h2>Our Compliance Measures</h2>
-    <p>While compliance is ultimately your responsibility, Open Humana provides tools and features designed to help you stay compliant:</p>
-    <ul>
-      <li><strong>DNC List Management:</strong> Built-in tools to upload, manage, and maintain your internal Do Not Call lists directly within the platform.</li>
-      <li><strong>Auto-Scrubbing:</strong> Automatic scrubbing of your contact lists against your internal DNC lists before any campaign launches, preventing calls to numbers that have opted out.</li>
-      <li><strong>Call Logging:</strong> Comprehensive logging of all calls, including timestamps, durations, and outcomes, providing an audit trail for compliance purposes.</li>
-      <li><strong>Consent Tracking:</strong> Tools to document and track consent records for each contact, helping you maintain verifiable proof of authorization.</li>
-      <li><strong>Time Zone Detection:</strong> Automatic detection of recipient time zones to help ensure calls are made within permitted hours.</li>
-      <li><strong>Opt-Out Handling:</strong> Easy mechanisms for recipients to opt out, with automatic addition to your DNC list.</li>
-      <li><strong>Caller ID Compliance:</strong> Proper caller ID transmission on all outbound calls.</li>
-    </ul>
+      <div class="comp-zone comp-zone-green">
+        <div class="comp-zone-header">
+          <div class="comp-zone-dot comp-zone-dot-green"></div>
+          <div class="comp-zone-title">Green Zone — Generally Legal Without Prior Consent</div>
+        </div>
+        <ul>
+          <li><strong>B2B calls to businesses and their employees</strong> — calling a commercial entity, its employees, or their direct business line is not covered by TCPA's consumer consent requirements</li>
+          <li><strong>Existing customer relationships</strong> — calling someone with whom you have an established business relationship (EBR) within the applicable window</li>
+          <li><strong>Warm or opted-in leads</strong> — individuals who provided their number on a form, webinar, or inquiry where calling was a clear expectation</li>
+          <li><strong>Informational and non-marketing calls</strong> — appointment reminders, transactional updates, and service notifications to consenting customers</li>
+        </ul>
+      </div>
 
-    <h2>User Responsibilities</h2>
-    <p>When you use Open Humana's Digital Employee services, you act as the "Employer" and are responsible for all calls made on your behalf. Your key responsibilities include:</p>
-    <ul>
-      <li>Obtain proper consent from all individuals before initiating automated calls or voicemail drops</li>
-      <li>Maintain accurate and up-to-date Do Not Call lists</li>
-      <li>Honor opt-out requests within the required timeframe</li>
-      <li>Comply with all applicable state-level telemarketing laws, which may be stricter than federal requirements</li>
-      <li>Keep records of consent for a minimum of 5 years</li>
-      <li>Ensure all calls are made within permitted hours (8 AM to 9 PM in the recipient's local time zone)</li>
-      <li>Provide accurate caller ID information on all outbound calls</li>
-    </ul>
+      <div class="comp-zone comp-zone-amber">
+        <div class="comp-zone-header">
+          <div class="comp-zone-dot comp-zone-dot-amber"></div>
+          <div class="comp-zone-title">Amber Zone — Requires Prior Express Written Consent</div>
+        </div>
+        <ul>
+          <li><strong>B2C marketing calls to consumers on cell phones</strong> — any autodialed or prerecorded marketing call to a consumer mobile number requires prior express written consent</li>
+          <li><strong>Voicemail drops to consumer lists</strong> — if your list includes consumer cell numbers that were not opted in for AI-generated voice contact, you need written consent first</li>
+          <li><strong>Calling numbers on the National DNC Registry</strong> — even with consent, you must maintain and honor DNC registrations</li>
+          <li><strong>Calling outside 8 AM – 9 PM in the recipient's local time</strong> — prohibited regardless of consent or list type</li>
+        </ul>
+      </div>
 
-    <h2>Consent Requirements</h2>
-    <p>Under the TCPA, prior express written consent is required before making telemarketing calls using an automatic dialing system or prerecorded voice. This consent must:</p>
-    <ul>
-      <li>Be in writing (electronic signatures are acceptable)</li>
-      <li>Clearly authorize the specific type of communication (calls, texts, voicemails)</li>
-      <li>Include the telephone number to be contacted</li>
-      <li>Include the name of the party giving consent</li>
-      <li>Not be a condition of purchasing any goods or services</li>
-    </ul>
-    <p>For informational (non-marketing) calls, prior express consent (which can be oral) is generally sufficient. However, we strongly recommend documenting all consent in writing for all automated communications to maintain a clear compliance record.</p>
+      <div class="comp-zone comp-zone-red">
+        <div class="comp-zone-header">
+          <div class="comp-zone-dot comp-zone-dot-red"></div>
+          <div class="comp-zone-title">Red Zone — Do Not Do This</div>
+        </div>
+        <ul>
+          <li><strong>Calling numbers on your own internal DNC list</strong> — once someone opts out, all automated contact must stop permanently</li>
+          <li><strong>Purchasing cold consumer lists and calling without consent</strong> — this is the #1 source of TCPA class action lawsuits. Don't do it.</li>
+          <li><strong>Calling emergency lines, healthcare facilities, or government numbers</strong> — explicitly prohibited under TCPA</li>
+          <li><strong>Misrepresenting caller ID or concealing your identity</strong> — required to transmit accurate caller ID on every call</li>
+        </ul>
+      </div>
+    </div>
 
-    <h2>Do-Not-Call Lists</h2>
-    <p>The National Do Not Call Registry is managed by the Federal Trade Commission (FTC). As a user of Open Humana's services, you must:</p>
-    <ul>
-      <li>Check and scrub your calling lists against the National DNC Registry at least every 31 days</li>
-      <li>Maintain your own internal DNC list of individuals who have requested not to be called</li>
-      <li>Honor all opt-out requests within 30 days of receipt</li>
-      <li>Train all personnel involved in telemarketing on DNC compliance procedures</li>
-      <li>Keep records demonstrating your DNC compliance efforts</li>
-    </ul>
+    <hr class="divider">
 
-    <h2>Penalties for Non-Compliance</h2>
-    <p>Violations of the TCPA can result in significant financial penalties:</p>
-    <ul>
-      <li><strong>$500 per violation</strong> for each call made in violation of TCPA regulations</li>
-      <li><strong>Up to $1,500 per violation</strong> for willful or knowing violations (treble damages)</li>
-      <li>Violations are assessed on a per-call basis, meaning a campaign of 1,000 non-compliant calls could result in penalties ranging from $500,000 to $1,500,000</li>
-      <li>Class action lawsuits are common in TCPA cases and can result in multi-million dollar settlements</li>
-      <li>State attorneys general may also bring enforcement actions with additional penalties</li>
-    </ul>
-    <p>These penalties apply to the entity on whose behalf the calls are made — not to the technology provider.</p>
+    <!-- Section 2: Platform Safeguards -->
+    <div class="comp-section">
+      <div class="comp-section-label">Platform Safeguards</div>
+      <h2>What Open Humana builds in to protect you</h2>
+      <p class="comp-section-sub">We can't make compliance decisions for you — but we've built the tooling so that doing it right is the easiest path.</p>
 
-    <h2>Contact Us</h2>
-    <p>If you have questions about TCPA compliance or how Open Humana's tools can help you stay compliant, please reach out to our team:</p>
-    <p><strong>Email:</strong> <a href="mailto:support@openhumana.com">support@openhumana.com</a></p>
-    <p><strong>Help Center:</strong> <a href="/help">Visit our Help Center</a></p>
-    <p><strong>Contact Form:</strong> <a href="/contact">Get in touch</a></p>
-    <p>For specific legal advice regarding your compliance obligations, we recommend consulting with a telecommunications attorney.</p>
+      <div class="comp-shield-grid">
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <h4>DNC List Management</h4>
+          <p>Upload and maintain your internal Do Not Call list. Any number on your DNC list is automatically excluded from every campaign — before dialing begins.</p>
+        </div>
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h4>Time Zone Enforcement</h4>
+          <p>Alex automatically detects the recipient's time zone and will not dial outside the 8 AM – 9 PM local window, regardless of when your campaign is running.</p>
+        </div>
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h4>STIR/SHAKEN &amp; Number Rotation</h4>
+          <p>All outbound calls use STIR/SHAKEN attestation. Automatic number rotation prevents flagging and ensures your caller ID displays as a legitimate business line.</p>
+        </div>
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          </div>
+          <h4>Instant Opt-Out Handling</h4>
+          <p>When a contact says "stop calling" or requests removal, they are added to your DNC list immediately and excluded from all future campaigns automatically.</p>
+        </div>
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h4>Full Call Audit Logs</h4>
+          <p>Every call is logged with timestamp, number, outcome, AMD result, and duration. Your complete call history is always available to export for compliance documentation.</p>
+        </div>
+        <div class="comp-shield-card">
+          <div class="comp-shield-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h4>AMD — Machine-Only Voicemail</h4>
+          <p>Answering Machine Detection (AMD) ensures voicemail drops only occur when an actual answering machine or voicemail is detected — never when a human picks up.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Section 3: If you get a complaint -->
+    <div class="comp-section">
+      <div class="comp-section-label">If Something Goes Wrong</div>
+      <h2>You received a TCPA complaint. Here's what to do.</h2>
+      <p class="comp-section-sub">Complaints happen even to compliant operations. How you respond in the first 48 hours matters more than the complaint itself.</p>
+
+      <div class="comp-sla">
+        <h3>Open Humana's Response Protocol</h3>
+        <p class="comp-sla-sub">We can't provide legal representation — but we can provide everything your attorney needs to defend you.</p>
+        <div class="comp-sla-steps">
+          <div class="comp-sla-step">
+            <div class="comp-sla-num">1</div>
+            <div class="comp-sla-step-text"><strong>Contact us immediately at support@openhumana.com</strong> with the complainant's phone number and the approximate date of the call. Do not wait.</div>
+          </div>
+          <div class="comp-sla-step">
+            <div class="comp-sla-num">2</div>
+            <div class="comp-sla-step-text"><strong>Within 24 hours</strong> we will provide a full call log export showing every call made to that number from your account, including timestamps, AMD results, and campaign source.</div>
+          </div>
+          <div class="comp-sla-step">
+            <div class="comp-sla-num">3</div>
+            <div class="comp-sla-step-text"><strong>Add the number to your DNC list immediately</strong> — this is required by law and also demonstrates good-faith compliance to any regulator or plaintiff's attorney.</div>
+          </div>
+          <div class="comp-sla-step">
+            <div class="comp-sla-num">4</div>
+            <div class="comp-sla-step-text"><strong>Engage a telecommunications attorney.</strong> TCPA litigation moves fast. An attorney experienced in TCPA class actions can often resolve individual complaints quickly and cost-effectively if you have clean records — which you will.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Section 4: Industry Guidance -->
+    <div class="comp-section">
+      <div class="comp-section-label">By Industry</div>
+      <h2>Specific guidance for high-scrutiny sectors</h2>
+      <p class="comp-section-sub">Insurance, real estate, and finance face extra regulatory attention. Here's how to set up your campaigns correctly in each.</p>
+
+      <div class="comp-industry-grid">
+        <div class="comp-industry-card">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Insurance
+          </h4>
+          <ul>
+            <li>Call licensed agents and agency owners, not individual policyholders, unless you have written consent</li>
+            <li>B2B calls to insurance businesses are in the green zone</li>
+            <li>Use DNC scrubbing on every list — state insurance commissioners actively pursue TCPA complaints</li>
+            <li>Keep a 5-year consent record for any consumer calls</li>
+          </ul>
+        </div>
+        <div class="comp-industry-card">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Real Estate
+          </h4>
+          <ul>
+            <li>Calling real estate agents and brokers at their business lines is B2B and generally permitted</li>
+            <li>Calling homeowners (FSBO leads, expired listings) on cell phones requires documented consent</li>
+            <li>Use the Property DNC list where required by state law</li>
+            <li>Do not call numbers listed on the National DNC Registry without an EBR or consent</li>
+          </ul>
+        </div>
+        <div class="comp-industry-card">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            Finance &amp; Solar
+          </h4>
+          <ul>
+            <li>Calling business owners and commercial decision-makers is B2B — permitted without consent</li>
+            <li>Consumer financial marketing calls (debt, mortgages, loans) to cell phones require prior consent</li>
+            <li>The FCC's 2024 one-to-one consent rule applies — consent must be specific to your company, not generic lead form aggregators</li>
+            <li>Consult a telecom attorney before calling purchased consumer lead lists</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-disclaimer">
+      <p><strong>Legal Disclaimer:</strong> This page provides general informational guidance only and does not constitute legal advice. TCPA compliance is your responsibility as the user of this platform. Open Humana is a technology provider — we cannot determine whether your specific use case or contact list meets legal requirements. Laws vary by state and change frequently. We strongly recommend consulting a qualified telecommunications attorney before launching any outbound calling campaign, particularly for consumer-facing use cases.</p>
+    </div>
+
+    <div class="comp-contact-bar">
+      <div>
+        <h4>Questions about your specific setup?</h4>
+        <p>Our team will review your use case and tell you exactly which tools to enable before you launch.</p>
+      </div>
+      <a href="mailto:support@openhumana.com" class="comp-contact-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email Compliance Team
+      </a>
+    </div>
+
   </div>
 
   <footer class="footer">
@@ -133,7 +342,7 @@
         <a href="/help">Help</a>
         <a href="/privacy">Privacy</a>
         <a href="/terms">Terms</a>
-        <a href="/compliance">TCPA</a>
+        <a href="/compliance">Compliance</a>
         <a href="/contact">Contact</a>
       </nav>
       <div class="footer-right">
