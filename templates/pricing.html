@@ -77,6 +77,7 @@
           <button class="plan-btn plan-btn-outline" data-plan="starter" data-amount="99">
             <span class="btn-label">Get Started</span>
           </button>
+          <a href="#calculator" class="calc-anchor-link">+ usage costs — see calculator ↓</a>
         </div>
       </div>
 
@@ -125,6 +126,7 @@
           <button class="plan-btn plan-btn-fill" data-plan="business" data-amount="399">
             <span class="btn-label">Get Started</span>
           </button>
+          <a href="#calculator" class="calc-anchor-link" style="color:rgba(255,255,255,0.6);">+ usage costs — see calculator ↓</a>
         </div>
       </div>
 
@@ -171,6 +173,102 @@
         </div>
       </div>
     </div>
+
+    <!-- ══ PRICING CALCULATOR ══ -->
+    <section class="calc-section" id="calculator">
+      <div class="calc-header">
+        <p class="calc-eyebrow">Pricing Calculator</p>
+        <h2 class="calc-title">See exactly what you'll pay</h2>
+        <p class="calc-subtitle">No surprises. Enter your daily dial volume and get a transparent breakdown — platform fee plus real usage costs — before you sign up.</p>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-inputs">
+
+          <div class="calc-field">
+            <div class="calc-field-header">
+              <label class="calc-field-label" for="dialSlider">Dials per day</label>
+              <span class="calc-field-value" id="dialDisplay">200</span>
+            </div>
+            <input type="range" class="calc-slider" id="dialSlider" min="10" max="2000" step="10" value="200">
+            <div class="calc-slider-ticks">
+              <span>10</span>
+              <span>500</span>
+              <span>1,000</span>
+              <span>1,500</span>
+              <span>2,000</span>
+            </div>
+          </div>
+
+          <div class="calc-field">
+            <div class="calc-field-header">
+              <label class="calc-field-label" for="daysSlider">Working days / month</label>
+              <span class="calc-field-value" id="daysDisplay">22</span>
+            </div>
+            <input type="range" class="calc-slider" id="daysSlider" min="10" max="31" step="1" value="22">
+            <div class="calc-slider-ticks">
+              <span>10</span>
+              <span>20</span>
+              <span>31</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="calc-divider"></div>
+
+        <div class="calc-results">
+          <div class="calc-breakdown">
+            <div class="calc-line">
+              <div class="calc-line-left">
+                <span id="planBadge" class="calc-plan-badge">Starter Plan</span>
+                <span class="calc-line-label">Platform fee</span>
+              </div>
+              <span class="calc-line-amount" id="platformFeeDisplay">$99</span>
+            </div>
+            <div class="calc-line">
+              <div class="calc-line-left">
+                <span class="calc-line-label">Usage estimate</span>
+                <span class="calc-line-note" id="usageNote">200 dials × 22 days × $0.015/dial</span>
+              </div>
+              <span class="calc-line-amount" id="usageDisplay">$66</span>
+            </div>
+            <div class="calc-line calc-total-line">
+              <span class="calc-line-label">Estimated monthly total</span>
+              <span class="calc-total-amount" id="totalDisplay">$165 / mo</span>
+            </div>
+          </div>
+
+          <div class="calc-vs-block">
+            <div class="calc-vs-row">
+              <div class="calc-vs-col calc-vs-us">
+                <div class="calc-vs-logo">
+                  <img src="/static/images/logo.png" alt="Open Humana" style="height:28px;width:auto;filter:brightness(0);">
+                </div>
+                <div class="calc-vs-amount-large" id="vsUsDisplay">$165</div>
+                <div class="calc-vs-sublabel">/ month</div>
+              </div>
+              <div class="calc-vs-center">
+                <div class="calc-vs-badge">vs</div>
+                <div class="calc-savings-pill" id="savingsPill">Save ~$4,835/mo</div>
+              </div>
+              <div class="calc-vs-col calc-vs-sdr">
+                <div class="calc-vs-sdr-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </div>
+                <div class="calc-vs-amount-large calc-vs-sdr-amount">$5,000</div>
+                <div class="calc-vs-sublabel">/ month (human SDR)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-footer">
+          <button class="plan-btn plan-btn-fill calc-cta-btn" id="calcCtaBtn">Get Started</button>
+          <p class="calc-disclaimer">Usage estimate based on ~$0.015 per dial (Telnyx carrier fees + ElevenLabs voicemail synthesis). Actual costs vary by call duration and answer rate. No contract — cancel anytime.</p>
+        </div>
+      </div>
+    </section>
 
     <div class="pricing-why">
       <h2 class="why-title">Why hire Alex?</h2>
