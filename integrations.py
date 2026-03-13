@@ -3,8 +3,8 @@ integrations.py - CRM and webhook integration module for Open Humana.
 
 Handles:
   - Outbound webhooks (fires on call completion to any user-configured URL)
-  - HubSpot CRM sync (creates contacts, logs call activities via OAuth)
-  - Google Sheets sync (appends rows via OAuth)
+  - HubSpot CRM sync via Private App access token (paste-and-go, no OAuth)
+  - Google Sheets sync via Service Account (operator sets GOOGLE_SERVICE_ACCOUNT_JSON)
 
 All per-user configs stored in UserAppData (key-value store).
 """
@@ -20,17 +20,10 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger("voicemail_app")
 
-HUBSPOT_CLIENT_ID     = os.environ.get("HUBSPOT_CLIENT_ID", "")
-HUBSPOT_CLIENT_SECRET = os.environ.get("HUBSPOT_CLIENT_SECRET", "")
-HUBSPOT_SCOPES        = "crm.objects.contacts.write crm.objects.contacts.read crm.objects.engagements.write"
-
-GOOGLE_CLIENT_ID      = os.environ.get("GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET  = os.environ.get("GOOGLE_CLIENT_SECRET", "")
-GSHEETS_SCOPE         = "https://www.googleapis.com/auth/spreadsheets"
+GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 
 KEY_WEBHOOK     = "outbound_webhook"
-KEY_HUBSPOT     = "hubspot_tokens"
-KEY_GSHEETS_TOK = "google_sheets_tokens"
+KEY_HUBSPOT     = "hubspot_config"
 KEY_GSHEETS_CFG = "google_sheets_config"
 
 
@@ -40,7 +33,7 @@ def get_integration_config(user_id, key):
     """Read a JSON blob from UserAppData for the given user and key."""
     try:
         from app import app as _app
-        from models import db, UserAppData
+        from models import UserAppData
         with _app.app_context():
             row = UserAppData.query.filter_by(user_id=user_id, data_key=key).first()
             if not row:
@@ -70,31 +63,44 @@ def set_integration_config(user_id, key, data):
 
 def integration_status(user_id):
     """Return a summary of which integrations are connected and enabled."""
-    wh = get_integration_config(user_id, KEY_WEBHOOK)
-    hs = get_integration_config(user_id, KEY_HUBSPOT)
-    gs_tok = get_integration_config(user_id, KEY_GSHEETS_TOK)
-    gs_cfg = get_integration_config(user_id, KEY_GSHEETS_CFG)
+    wh  = get_integration_config(user_id, KEY_WEBHOOK)
+    hs  = get_integration_config(user_id, KEY_HUBSPOT)
+    gs  = get_integration_config(user_id, KEY_GSHEETS_CFG)
+
+    gs_service_account_ok = bool(GOOGLE_SERVICE_ACCOUNT_JSON)
+
     return {
         "webhook": {
             "connected": bool(wh.get("url")),
-            "enabled": bool(wh.get("enabled")),
-            "url": wh.get("url", ""),
+            "enabled":   bool(wh.get("enabled")),
+            "url":       wh.get("url", ""),
             "has_secret": bool(wh.get("secret")),
         },
         "hubspot": {
             "connected": bool(hs.get("access_token")),
-            "enabled": bool(hs.get("enabled")),
+            "enabled":   bool(hs.get("enabled")),
             "portal_id": hs.get("portal_id", ""),
-            "credentials_configured": bool(HUBSPOT_CLIENT_ID and HUBSPOT_CLIENT_SECRET),
         },
         "google_sheets": {
-            "connected": bool(gs_tok.get("access_token")),
-            "enabled": bool(gs_cfg.get("enabled")),
-            "sheet_id": gs_cfg.get("sheet_id", ""),
-            "sheet_name": gs_cfg.get("sheet_name", "Call Log"),
-            "credentials_configured": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+            "connected":              bool(gs.get("sheet_id")),
+            "enabled":                bool(gs.get("enabled")),
+            "sheet_id":               gs.get("sheet_id", ""),
+            "sheet_name":             gs.get("sheet_name", "Call Log"),
+            "service_account_configured": gs_service_account_ok,
+            "service_account_email":  _get_sa_email(),
         },
     }
+
+
+def _get_sa_email():
+    """Extract the service account email from the JSON env var, if set."""
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return ""
+    try:
+        sa = json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        return sa.get("client_email", "")
+    except Exception:
+        return ""
 
 
 # ── Outbound Webhook ──────────────────────────────────────────────────────────
@@ -107,15 +113,15 @@ def fire_webhook(user_id, call_record):
     url    = cfg["url"]
     secret = cfg.get("secret", "")
     payload = {
-        "event": "call.completed",
+        "event":     "call.completed",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "source": "open_humana",
-        "data": call_record,
+        "source":    "open_humana",
+        "data":      call_record,
     }
     body    = json.dumps(payload, default=str)
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "OpenHumana-Webhook/1.0",
+        "User-Agent":   "OpenHumana-Webhook/1.0",
     }
     if secret:
         sig = hmac.new(secret.encode(), body.encode(), hashlib.sha256).hexdigest()
@@ -127,54 +133,23 @@ def fire_webhook(user_id, call_record):
         logger.warning(f"[WEBHOOK] user={user_id} → {url} failed: {e}")
 
 
-# ── HubSpot ───────────────────────────────────────────────────────────────────
-
-def _hs_refresh(tokens, user_id):
-    """Refresh an expired HubSpot access token using the refresh token."""
-    if not HUBSPOT_CLIENT_ID or not HUBSPOT_CLIENT_SECRET:
-        return tokens
-    try:
-        resp = requests.post("https://api.hubapi.com/oauth/v1/token", data={
-            "grant_type":    "refresh_token",
-            "client_id":     HUBSPOT_CLIENT_ID,
-            "client_secret": HUBSPOT_CLIENT_SECRET,
-            "refresh_token": tokens["refresh_token"],
-        }, timeout=10)
-        if resp.status_code == 200:
-            new_tok = resp.json()
-            tokens["access_token"] = new_tok["access_token"]
-            tokens["expires_at"]   = (datetime.utcnow() + timedelta(seconds=new_tok.get("expires_in", 1800))).timestamp()
-            if new_tok.get("refresh_token"):
-                tokens["refresh_token"] = new_tok["refresh_token"]
-            set_integration_config(user_id, KEY_HUBSPOT, tokens)
-    except Exception as e:
-        logger.error(f"[HUBSPOT] Token refresh error for user {user_id}: {e}")
-    return tokens
-
-
-def _hs_auth_headers(user_id):
-    """Return valid HubSpot auth headers, refreshing token if needed."""
-    tokens = get_integration_config(user_id, KEY_HUBSPOT)
-    if not tokens or not tokens.get("access_token"):
-        return None
-    expires_at = tokens.get("expires_at", 0)
-    if datetime.utcnow().timestamp() > expires_at - 300:
-        tokens = _hs_refresh(tokens, user_id)
-    return {
-        "Authorization": f"Bearer {tokens['access_token']}",
-        "Content-Type": "application/json",
-    }
-
+# ── HubSpot (Private App token) ───────────────────────────────────────────────
 
 def sync_to_hubspot(user_id, call_record):
-    """Find or create a HubSpot contact by phone, then log the call activity."""
+    """
+    Find or create a HubSpot contact by phone, then log the call activity.
+    Uses HubSpot Private App access token — no OAuth required.
+    """
     cfg = get_integration_config(user_id, KEY_HUBSPOT)
     if not cfg.get("enabled") or not cfg.get("access_token"):
         return
-    headers = _hs_auth_headers(user_id)
-    if not headers:
-        return
-    phone = call_record.get("number", "").strip()
+
+    token   = cfg["access_token"]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type":  "application/json",
+    }
+    phone = (call_record.get("number") or "").strip()
     if not phone:
         return
 
@@ -194,7 +169,7 @@ def sync_to_hubspot(user_id, call_record):
             if results:
                 contact_id = results[0]["id"]
     except Exception as e:
-        logger.error(f"[HUBSPOT] Contact search error: {e}")
+        logger.error(f"[HUBSPOT] Contact search error for user {user_id}: {e}")
 
     if not contact_id:
         try:
@@ -207,7 +182,7 @@ def sync_to_hubspot(user_id, call_record):
             if create.status_code == 201:
                 contact_id = create.json().get("id")
         except Exception as e:
-            logger.error(f"[HUBSPOT] Contact create error: {e}")
+            logger.error(f"[HUBSPOT] Contact create error for user {user_id}: {e}")
 
     if not contact_id:
         logger.warning(f"[HUBSPOT] Could not find/create contact for {phone}, user {user_id}")
@@ -223,8 +198,8 @@ def sync_to_hubspot(user_id, call_record):
     if call_record.get("ring_duration"):
         notes_parts.append(f"Duration: {call_record['ring_duration']}s")
 
-    connected = call_record.get("transferred") or call_record.get("voicemail_dropped")
-    outcome   = "CONNECTED" if connected else "NO_ANSWER"
+    connected   = call_record.get("transferred") or call_record.get("voicemail_dropped")
+    outcome     = "CONNECTED" if connected else "NO_ANSWER"
     duration_ms = int((call_record.get("ring_duration") or 0) * 1000)
 
     try:
@@ -255,12 +230,34 @@ def sync_to_hubspot(user_id, call_record):
             )
             logger.info(f"[HUBSPOT] Call logged for contact {contact_id}, user {user_id}")
         else:
-            logger.warning(f"[HUBSPOT] Engagement create failed ({eng.status_code}): {eng.text[:200]}")
+            logger.warning(f"[HUBSPOT] Engagement failed ({eng.status_code}): {eng.text[:200]}")
     except Exception as e:
         logger.error(f"[HUBSPOT] Engagement error for user {user_id}: {e}")
 
 
-# ── Google Sheets ─────────────────────────────────────────────────────────────
+def hubspot_verify_token(token):
+    """
+    Verify a HubSpot Private App token by calling the account info endpoint.
+    Returns (True, portal_id) on success or (False, error_message) on failure.
+    """
+    try:
+        resp = requests.get(
+            "https://api.hubapi.com/account-info/v3/details",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            portal_id = str(data.get("portalId", ""))
+            return True, portal_id
+        return False, f"Invalid token (HTTP {resp.status_code})"
+    except Exception as e:
+        return False, str(e)
+
+
+# ── Google Sheets (Service Account) ───────────────────────────────────────────
+
+GSHEETS_SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 GSHEETS_HEADER = [
     "Timestamp", "Phone Number", "From Number", "Status",
@@ -268,54 +265,88 @@ GSHEETS_HEADER = [
 ]
 
 
-def _gs_refresh(tokens, user_id):
-    """Refresh an expired Google access token."""
-    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
-        return tokens
+def _get_sa_access_token():
+    """
+    Obtain a short-lived Google access token using Service Account JWT.
+    Returns access_token string or None on failure.
+    """
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return None
     try:
+        import base64
+        import time
+        import json as _json
+
+        sa = _json.loads(GOOGLE_SERVICE_ACCOUNT_JSON)
+        private_key_pem = sa["private_key"]
+        client_email    = sa["client_email"]
+
+        # Build JWT header + payload
+        now = int(time.time())
+        header  = {"alg": "RS256", "typ": "JWT"}
+        payload = {
+            "iss":   client_email,
+            "scope": " ".join(GSHEETS_SCOPES),
+            "aud":   "https://oauth2.googleapis.com/token",
+            "iat":   now,
+            "exp":   now + 3600,
+        }
+
+        def b64url(data):
+            return base64.urlsafe_b64encode(
+                _json.dumps(data, separators=(",", ":")).encode()
+            ).rstrip(b"=").decode()
+
+        signing_input = f"{b64url(header)}.{b64url(payload)}".encode()
+
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import padding
+
+        private_key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
+        signature   = private_key.sign(signing_input, padding.PKCS1v15(), hashes.SHA256())
+        sig_b64     = base64.urlsafe_b64encode(signature).rstrip(b"=").decode()
+
+        jwt_token = f"{signing_input.decode()}.{sig_b64}"
+
         resp = requests.post("https://oauth2.googleapis.com/token", data={
-            "grant_type":    "refresh_token",
-            "client_id":     GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "refresh_token": tokens["refresh_token"],
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "assertion":  jwt_token,
         }, timeout=10)
+
         if resp.status_code == 200:
-            new_tok = resp.json()
-            tokens["access_token"] = new_tok["access_token"]
-            tokens["expires_at"]   = (datetime.utcnow() + timedelta(seconds=new_tok.get("expires_in", 3600))).timestamp()
-            set_integration_config(user_id, KEY_GSHEETS_TOK, tokens)
+            return resp.json().get("access_token")
+        logger.error(f"[GSHEETS] Token exchange failed: {resp.text[:200]}")
+        return None
+    except ImportError:
+        logger.error("[GSHEETS] cryptography package not installed — cannot use Service Account")
+        return None
     except Exception as e:
-        logger.error(f"[GSHEETS] Token refresh error for user {user_id}: {e}")
-    return tokens
+        logger.error(f"[GSHEETS] SA token error: {e}")
+        return None
 
 
 def sync_to_google_sheets(user_id, call_record):
     """Append a row for this call to the user's configured Google Sheet."""
-    tokens  = get_integration_config(user_id, KEY_GSHEETS_TOK)
-    cfg     = get_integration_config(user_id, KEY_GSHEETS_CFG)
-    if not tokens or not tokens.get("access_token"):
-        return
+    cfg = get_integration_config(user_id, KEY_GSHEETS_CFG)
     if not cfg.get("enabled") or not cfg.get("sheet_id"):
         return
 
-    if tokens.get("expires_at") and datetime.utcnow().timestamp() > tokens["expires_at"] - 300:
-        tokens = _gs_refresh(tokens, user_id)
-
-    access_token = tokens.get("access_token", "")
+    access_token = _get_sa_access_token()
     if not access_token:
+        logger.warning(f"[GSHEETS] No service account token — skipping for user {user_id}")
         return
 
     sheet_id   = cfg["sheet_id"].strip()
-    sheet_name = cfg.get("sheet_name", "Call Log").strip() or "Call Log"
-
+    sheet_name = (cfg.get("sheet_name") or "Call Log").strip()
     ts = call_record.get("timestamp", datetime.utcnow().isoformat())
+
     row = [
         ts,
         call_record.get("number", ""),
         call_record.get("from_number", ""),
         call_record.get("status_description", call_record.get("status", "")),
-        "Yes" if call_record.get("transferred")      else "No",
-        "Yes" if call_record.get("voicemail_dropped") else "No",
+        "Yes" if call_record.get("transferred")       else "No",
+        "Yes" if call_record.get("voicemail_dropped")  else "No",
         call_record.get("amd_result", "") or "",
         str(call_record.get("ring_duration") or ""),
         call_record.get("hangup_cause", "") or "",
@@ -337,18 +368,48 @@ def sync_to_google_sheets(user_id, call_record):
         logger.error(f"[GSHEETS] Append error for user {user_id}: {e}")
 
 
+def google_sheets_test_connection(sheet_id, sheet_name="Call Log"):
+    """
+    Test write access to a Google Sheet using the service account.
+    Returns (True, "") on success or (False, error_message) on failure.
+    """
+    if not GOOGLE_SERVICE_ACCOUNT_JSON:
+        return False, "GOOGLE_SERVICE_ACCOUNT_JSON not configured"
+    access_token = _get_sa_access_token()
+    if not access_token:
+        return False, "Could not get service account token"
+    try:
+        resp = requests.get(
+            f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}?fields=properties.title",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            title = resp.json().get("properties", {}).get("title", "")
+            return True, title
+        if resp.status_code == 403:
+            return False, f"Access denied — share the sheet with {_get_sa_email()}"
+        return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
+    except Exception as e:
+        return False, str(e)
+
+
 # ── Fire all integrations ─────────────────────────────────────────────────────
 
 def fire_all_integrations(user_id, call_record):
     """
     Asynchronously fire all enabled integrations for a completed call.
-    Must be called from a daemon background thread (non-blocking).
+    Spawns a daemon background thread — non-blocking.
     """
     if not user_id:
         return
 
     def _run():
-        for name, fn in [("webhook", fire_webhook), ("hubspot", sync_to_hubspot), ("gsheets", sync_to_google_sheets)]:
+        for name, fn in [
+            ("webhook", fire_webhook),
+            ("hubspot", sync_to_hubspot),
+            ("gsheets", sync_to_google_sheets),
+        ]:
             try:
                 fn(user_id, call_record)
             except Exception as e:

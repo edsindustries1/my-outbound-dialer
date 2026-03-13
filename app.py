@@ -2099,168 +2099,59 @@ def api_integrations_webhook_test():
         return jsonify({"error": str(e)}), 500
 
 
-# ── HubSpot OAuth ──────────────────────────────────────────────────────────────
+# ── HubSpot (Private App token — no OAuth needed) ─────────────────────────────
 
-@app.route("/api/integrations/hubspot/connect", methods=["GET"])
+@app.route("/api/integrations/hubspot", methods=["POST"])
 @login_required
-def integrations_hubspot_connect():
-    import secrets as _secrets
-    from integrations import HUBSPOT_CLIENT_ID, HUBSPOT_SCOPES
-    if not HUBSPOT_CLIENT_ID:
-        return redirect(url_for("index") + "#page-settings&integrations-error=hubspot-not-configured")
-    state = _secrets.token_urlsafe(24)
-    session["hubspot_oauth_state"] = state
-    session["hubspot_oauth_user_id"] = current_user.id
-    redirect_uri = url_for("integrations_hubspot_callback", _external=True)
-    import urllib.parse
-    auth_url = (
-        "https://app.hubspot.com/oauth/authorize"
-        f"?client_id={urllib.parse.quote(HUBSPOT_CLIENT_ID)}"
-        f"&redirect_uri={urllib.parse.quote(redirect_uri)}"
-        f"&scope={urllib.parse.quote(HUBSPOT_SCOPES)}"
-        f"&state={state}"
-    )
-    return redirect(auth_url)
-
-
-@app.route("/api/integrations/hubspot/callback", methods=["GET"])
-@login_required
-def integrations_hubspot_callback():
-    import urllib.parse
-    from integrations import HUBSPOT_CLIENT_ID, HUBSPOT_CLIENT_SECRET, set_integration_config, KEY_HUBSPOT
-    code  = request.args.get("code", "")
-    state = request.args.get("state", "")
-    if state != session.get("hubspot_oauth_state") or current_user.id != session.get("hubspot_oauth_user_id"):
-        flash("Invalid OAuth state — please try connecting HubSpot again.", "error")
-        return redirect(url_for("index"))
-    session.pop("hubspot_oauth_state", None)
-    session.pop("hubspot_oauth_user_id", None)
-    redirect_uri = url_for("integrations_hubspot_callback", _external=True)
-    try:
-        resp = requests.post("https://api.hubapi.com/oauth/v1/token", data={
-            "grant_type":    "authorization_code",
-            "client_id":     HUBSPOT_CLIENT_ID,
-            "client_secret": HUBSPOT_CLIENT_SECRET,
-            "redirect_uri":  redirect_uri,
-            "code":          code,
-        }, timeout=15)
-        resp.raise_for_status()
-        tok = resp.json()
-        from datetime import timedelta
-        cfg = {
-            "access_token":  tok["access_token"],
-            "refresh_token": tok.get("refresh_token", ""),
-            "expires_at":    (datetime.utcnow() + timedelta(seconds=tok.get("expires_in", 1800))).timestamp(),
-            "enabled":       True,
-        }
-        info_resp = requests.get(
-            "https://api.hubapi.com/oauth/v1/access-tokens/" + tok["access_token"],
-            timeout=10
-        )
-        if info_resp.status_code == 200:
-            cfg["portal_id"] = str(info_resp.json().get("hub_id", ""))
-        set_integration_config(current_user.id, KEY_HUBSPOT, cfg)
-        logger.info(f"[HUBSPOT] Connected for user {current_user.id}, portal {cfg.get('portal_id')}")
-    except Exception as e:
-        logger.error(f"[HUBSPOT] OAuth callback error: {e}")
-        flash(f"HubSpot connection failed: {e}", "error")
-    return redirect(url_for("index") + "?page=settings")
-
-
-@app.route("/api/integrations/hubspot/disconnect", methods=["POST"])
-@login_required
-def integrations_hubspot_disconnect():
-    from integrations import set_integration_config, KEY_HUBSPOT
-    set_integration_config(current_user.id, KEY_HUBSPOT, {})
-    return jsonify({"ok": True})
-
-
-@app.route("/api/integrations/hubspot/toggle", methods=["POST"])
-@login_required
-def integrations_hubspot_toggle():
-    from integrations import get_integration_config, set_integration_config, KEY_HUBSPOT
-    data = request.get_json() or {}
-    cfg  = get_integration_config(current_user.id, KEY_HUBSPOT)
-    cfg["enabled"] = bool(data.get("enabled", not cfg.get("enabled")))
+def api_integrations_hubspot_save():
+    """Save/verify a HubSpot Private App access token."""
+    from integrations import get_integration_config, set_integration_config, KEY_HUBSPOT, hubspot_verify_token
+    data  = request.get_json() or {}
+    cfg   = get_integration_config(current_user.id, KEY_HUBSPOT)
+    token = data.get("access_token", "").strip()
+    if token:
+        ok, result = hubspot_verify_token(token)
+        if not ok:
+            return jsonify({"error": f"Invalid token: {result}"}), 400
+        cfg["access_token"] = token
+        cfg["portal_id"]    = result
+        cfg["enabled"]      = True
+    if "enabled" in data:
+        cfg["enabled"] = bool(data["enabled"])
+    if data.get("disconnect"):
+        cfg = {}
     set_integration_config(current_user.id, KEY_HUBSPOT, cfg)
-    return jsonify({"ok": True, "enabled": cfg["enabled"]})
+    return jsonify({"ok": True, "portal_id": cfg.get("portal_id", "")})
 
 
-# ── Google Sheets OAuth ────────────────────────────────────────────────────────
-
-@app.route("/api/integrations/google-sheets/connect", methods=["GET"])
+@app.route("/api/integrations/hubspot", methods=["GET"])
 @login_required
-def integrations_google_sheets_connect():
-    import secrets as _secrets
-    import urllib.parse
-    from integrations import GOOGLE_CLIENT_ID, GSHEETS_SCOPE
-    if not GOOGLE_CLIENT_ID:
-        return redirect(url_for("index") + "?page=settings")
-    state = _secrets.token_urlsafe(24)
-    session["gsheets_oauth_state"]   = state
-    session["gsheets_oauth_user_id"] = current_user.id
-    redirect_uri = url_for("integrations_google_sheets_callback", _external=True)
-    auth_url = (
-        "https://accounts.google.com/o/oauth2/v2/auth"
-        f"?client_id={urllib.parse.quote(GOOGLE_CLIENT_ID)}"
-        f"&redirect_uri={urllib.parse.quote(redirect_uri)}"
-        f"&response_type=code"
-        f"&scope={urllib.parse.quote(GSHEETS_SCOPE)}"
-        f"&access_type=offline"
-        f"&prompt=consent"
-        f"&state={state}"
-    )
-    return redirect(auth_url)
+def api_integrations_hubspot_get():
+    from integrations import get_integration_config, KEY_HUBSPOT
+    cfg = get_integration_config(current_user.id, KEY_HUBSPOT)
+    return jsonify({
+        "connected": bool(cfg.get("access_token")),
+        "enabled":   bool(cfg.get("enabled")),
+        "portal_id": cfg.get("portal_id", ""),
+    })
 
 
-@app.route("/api/integrations/google-sheets/callback", methods=["GET"])
-@login_required
-def integrations_google_sheets_callback():
-    import urllib.parse
-    from integrations import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, set_integration_config, KEY_GSHEETS_TOK
-    code  = request.args.get("code", "")
-    state = request.args.get("state", "")
-    if state != session.get("gsheets_oauth_state") or current_user.id != session.get("gsheets_oauth_user_id"):
-        flash("Invalid OAuth state — please try connecting Google Sheets again.", "error")
-        return redirect(url_for("index"))
-    session.pop("gsheets_oauth_state", None)
-    session.pop("gsheets_oauth_user_id", None)
-    redirect_uri = url_for("integrations_google_sheets_callback", _external=True)
-    try:
-        resp = requests.post("https://oauth2.googleapis.com/token", data={
-            "grant_type":    "authorization_code",
-            "client_id":     GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri":  redirect_uri,
-            "code":          code,
-        }, timeout=15)
-        resp.raise_for_status()
-        tok = resp.json()
-        from datetime import timedelta
-        cfg = {
-            "access_token":  tok["access_token"],
-            "refresh_token": tok.get("refresh_token", ""),
-            "expires_at":    (datetime.utcnow() + timedelta(seconds=tok.get("expires_in", 3600))).timestamp(),
-        }
-        set_integration_config(current_user.id, KEY_GSHEETS_TOK, cfg)
-        logger.info(f"[GSHEETS] Connected for user {current_user.id}")
-    except Exception as e:
-        logger.error(f"[GSHEETS] OAuth callback error: {e}")
-        flash(f"Google Sheets connection failed: {e}", "error")
-    return redirect(url_for("index") + "?page=settings")
-
+# ── Google Sheets (Service Account) ───────────────────────────────────────────
 
 @app.route("/api/integrations/google-sheets", methods=["GET"])
 @login_required
 def api_integrations_gsheets_get():
-    from integrations import get_integration_config, KEY_GSHEETS_CFG, KEY_GSHEETS_TOK
+    from integrations import get_integration_config, KEY_GSHEETS_CFG, integration_status
+    st  = integration_status(current_user.id)
     cfg = get_integration_config(current_user.id, KEY_GSHEETS_CFG)
-    tok = get_integration_config(current_user.id, KEY_GSHEETS_TOK)
+    gs  = st.get("google_sheets", {})
     return jsonify({
-        "connected":  bool(tok.get("access_token")),
-        "enabled":    bool(cfg.get("enabled")),
-        "sheet_id":   cfg.get("sheet_id", ""),
-        "sheet_name": cfg.get("sheet_name", "Call Log"),
+        "service_account_configured": gs.get("service_account_configured", False),
+        "service_account_email":      gs.get("service_account_email", ""),
+        "connected":                  bool(cfg.get("sheet_id")),
+        "enabled":                    bool(cfg.get("enabled")),
+        "sheet_id":                   cfg.get("sheet_id", ""),
+        "sheet_name":                 cfg.get("sheet_name", "Call Log"),
     })
 
 
@@ -2268,30 +2159,35 @@ def api_integrations_gsheets_get():
 @login_required
 def api_integrations_gsheets_save():
     from integrations import get_integration_config, set_integration_config, KEY_GSHEETS_CFG
+    import re as _re
     data = request.get_json() or {}
     cfg  = get_integration_config(current_user.id, KEY_GSHEETS_CFG)
     if "sheet_id" in data:
         raw = data["sheet_id"].strip()
-        import re as _re
-        m = _re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', raw)
+        m   = _re.search(r'/spreadsheets/d/([a-zA-Z0-9-_]+)', raw)
         cfg["sheet_id"] = m.group(1) if m else raw
     if "sheet_name" in data:
         cfg["sheet_name"] = data["sheet_name"].strip() or "Call Log"
     if "enabled" in data:
         cfg["enabled"] = bool(data["enabled"])
+    if data.get("disconnect"):
+        cfg = {}
     set_integration_config(current_user.id, KEY_GSHEETS_CFG, cfg)
     return jsonify({"ok": True})
 
 
-@app.route("/api/integrations/google-sheets/disconnect", methods=["POST"])
+@app.route("/api/integrations/google-sheets/test", methods=["POST"])
 @login_required
-def integrations_google_sheets_disconnect():
-    from integrations import set_integration_config, KEY_GSHEETS_TOK, KEY_GSHEETS_CFG, get_integration_config
-    set_integration_config(current_user.id, KEY_GSHEETS_TOK, {})
-    cfg = get_integration_config(current_user.id, KEY_GSHEETS_CFG)
-    cfg["enabled"] = False
-    set_integration_config(current_user.id, KEY_GSHEETS_CFG, cfg)
-    return jsonify({"ok": True})
+def api_integrations_gsheets_test():
+    from integrations import get_integration_config, KEY_GSHEETS_CFG, google_sheets_test_connection
+    cfg      = get_integration_config(current_user.id, KEY_GSHEETS_CFG)
+    sheet_id = cfg.get("sheet_id", "").strip()
+    if not sheet_id:
+        return jsonify({"error": "No Sheet ID saved yet"}), 400
+    ok, result = google_sheets_test_connection(sheet_id, cfg.get("sheet_name", "Call Log"))
+    if ok:
+        return jsonify({"ok": True, "title": result})
+    return jsonify({"error": result}), 400
 
 
 @app.route("/api/campaign_history")
