@@ -7,86 +7,99 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/landing.css">
   <link rel="stylesheet" href="/static/pages.css">
   <style>
-    .comp-hero { background: #0a0a0a; color: #fff; padding: 120px 0 80px; text-align: center; }
-    .comp-hero-inner { max-width: 760px; margin: 0 auto; padding: 0 24px; }
-    .comp-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 6px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a3e635; margin-bottom: 28px; }
-    .comp-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 20px; }
-    .comp-hero h1 em { font-style: normal; color: #a3e635; }
-    .comp-hero p { font-size: 18px; color: rgba(255,255,255,0.6); line-height: 1.7; margin: 0; }
+    /* ── Reset body bg for this page ── */
+    body.subpage { background: #fff; }
 
-    .comp-wrap { max-width: 860px; margin: 0 auto; padding: 64px 24px; }
+    /* ── Hero ── */
+    .comp-hero { background: #000; color: #fff; padding: 110px 0 90px; text-align: center; border-bottom: 1px solid #1a1a1a; }
+    .comp-hero-inner { max-width: 740px; margin: 0 auto; padding: 0 24px; }
+    .comp-badge { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 2px; padding: 5px 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 32px; }
+    .comp-hero h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(36px, 5.5vw, 58px); font-weight: 400; font-style: italic; line-height: 1.08; letter-spacing: -0.01em; margin: 0 0 24px; color: #fff; }
+    .comp-hero h1 em { font-style: normal; color: #fff; }
+    .comp-hero p { font-size: 16px; color: rgba(255,255,255,0.5); line-height: 1.8; margin: 0; max-width: 580px; margin-left: auto; margin-right: auto; }
 
-    .comp-tldr { background: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 32px 36px; margin-bottom: 56px; }
-    .comp-tldr-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #16a34a; margin-bottom: 12px; }
-    .comp-tldr h3 { font-size: 20px; font-weight: 700; color: #14532d; margin: 0 0 12px; }
-    .comp-tldr p { font-size: 15px; color: #166534; line-height: 1.7; margin: 0; }
+    /* ── Body ── */
+    .comp-wrap { max-width: 840px; margin: 0 auto; padding: 72px 24px 80px; }
 
-    .comp-section { margin-bottom: 56px; }
-    .comp-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
-    .comp-section h2 { font-size: 26px; font-weight: 800; color: #111827; margin: 0 0 8px; letter-spacing: -0.01em; }
-    .comp-section .comp-section-sub { font-size: 16px; color: #4b5563; line-height: 1.7; margin: 0 0 28px; }
+    /* ── TL;DR ── */
+    .comp-tldr { border-left: 3px solid #000; padding: 24px 0 24px 32px; margin-bottom: 64px; }
+    .comp-tldr-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+    .comp-tldr h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; font-weight: 400; color: #0a0a0a; margin: 0 0 10px; line-height: 1.3; }
+    .comp-tldr p { font-size: 15px; color: #444; line-height: 1.75; margin: 0; }
 
-    .comp-zone { border-radius: 14px; padding: 28px 32px; margin-bottom: 16px; }
-    .comp-zone-green { background: #f0fdf4; border: 1px solid #bbf7d0; }
-    .comp-zone-amber { background: #fffbeb; border: 1px solid #fde68a; }
-    .comp-zone-red { background: #fef2f2; border: 1px solid #fecaca; }
+    /* ── Sections ── */
+    .comp-section { margin-bottom: 64px; }
+    .comp-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+    .comp-section h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; font-weight: 400; color: #0a0a0a; margin: 0 0 10px; line-height: 1.2; }
+    .comp-section .comp-section-sub { font-size: 15px; color: #555; line-height: 1.75; margin: 0 0 32px; }
+
+    /* ── Use-case zones ── */
+    .comp-zone { border: 1px solid #e8e8e8; padding: 28px 32px; margin-bottom: 12px; position: relative; }
+    .comp-zone-green { border-left: 4px solid #000; }
+    .comp-zone-amber { border-left: 4px solid #888; }
+    .comp-zone-red  { border-left: 4px solid #ccc; }
     .comp-zone-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .comp-zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .comp-zone-dot-green { background: #16a34a; }
-    .comp-zone-dot-amber { background: #d97706; }
-    .comp-zone-dot-red { background: #dc2626; }
-    .comp-zone-title { font-size: 16px; font-weight: 700; }
-    .comp-zone-green .comp-zone-title { color: #14532d; }
-    .comp-zone-amber .comp-zone-title { color: #92400e; }
-    .comp-zone-red .comp-zone-title { color: #991b1b; }
-    .comp-zone ul { margin: 0; padding: 0 0 0 20px; }
-    .comp-zone li { font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
-    .comp-zone-green li { color: #166534; }
-    .comp-zone-amber li { color: #78350f; }
-    .comp-zone-red li { color: #7f1d1d; }
+    .comp-zone-marker { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; flex-shrink: 0; }
+    .comp-zone-green  .comp-zone-marker { background: #000; color: #fff; }
+    .comp-zone-amber  .comp-zone-marker { background: #555; color: #fff; }
+    .comp-zone-red    .comp-zone-marker { background: #bbb; color: #fff; }
+    .comp-zone-title { font-size: 15px; font-weight: 600; color: #0a0a0a; }
+    .comp-zone ul { margin: 0; padding: 0; list-style: none; }
+    .comp-zone li { font-size: 14px; line-height: 1.75; color: #444; padding: 5px 0 5px 18px; position: relative; border-top: 1px solid #f2f2f2; }
+    .comp-zone li:first-child { border-top: none; }
+    .comp-zone li::before { content: '—'; position: absolute; left: 0; color: #bbb; font-size: 12px; top: 7px; }
 
-    .comp-shield-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-    .comp-shield-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
-    .comp-shield-icon { width: 40px; height: 40px; background: #0a0a0a; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-    .comp-shield-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 6px; }
-    .comp-shield-card p { font-size: 14px; color: #6b7280; line-height: 1.6; margin: 0; }
+    /* ── Safeguard cards ── */
+    .comp-shield-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(248px, 1fr)); gap: 1px; background: #e8e8e8; border: 1px solid #e8e8e8; }
+    .comp-shield-card { background: #fff; padding: 28px 24px; }
+    .comp-shield-icon { width: 36px; height: 36px; background: #000; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .comp-shield-card h4 { font-size: 14px; font-weight: 700; color: #0a0a0a; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .comp-shield-card p { font-size: 13px; color: #666; line-height: 1.65; margin: 0; }
 
-    .comp-sla { background: #0a0a0a; border-radius: 16px; padding: 40px; color: #fff; }
-    .comp-sla h3 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 8px; }
-    .comp-sla .comp-sla-sub { font-size: 15px; color: rgba(255,255,255,0.55); margin: 0 0 28px; }
-    .comp-sla-steps { display: flex; flex-direction: column; gap: 16px; }
-    .comp-sla-step { display: flex; gap: 16px; align-items: flex-start; }
-    .comp-sla-num { width: 28px; height: 28px; border-radius: 50%; background: #a3e635; color: #0a0a0a; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-    .comp-sla-step-text { font-size: 15px; color: rgba(255,255,255,0.75); line-height: 1.65; }
-    .comp-sla-step-text strong { color: #fff; }
+    /* ── SLA block ── */
+    .comp-sla { background: #000; padding: 48px 48px 44px; color: #fff; }
+    .comp-sla h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; font-weight: 400; color: #fff; margin: 0 0 6px; }
+    .comp-sla .comp-sla-sub { font-size: 14px; color: rgba(255,255,255,0.4); margin: 0 0 36px; }
+    .comp-sla-steps { display: flex; flex-direction: column; gap: 0; border-top: 1px solid rgba(255,255,255,0.1); }
+    .comp-sla-step { display: flex; gap: 24px; align-items: flex-start; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .comp-sla-num { font-family: 'DM Serif Display', Georgia, serif; font-size: 22px; font-weight: 400; color: rgba(255,255,255,0.25); flex-shrink: 0; width: 28px; padding-top: 2px; }
+    .comp-sla-step-text { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.7; }
+    .comp-sla-step-text strong { color: #fff; font-weight: 600; }
 
-    .comp-industry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .comp-industry-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
-    .comp-industry-card h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
-    .comp-industry-card ul { margin: 0; padding: 0 0 0 18px; }
-    .comp-industry-card li { font-size: 13px; color: #4b5563; line-height: 1.7; margin-bottom: 4px; }
+    /* ── Industry cards ── */
+    .comp-industry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: #e8e8e8; border: 1px solid #e8e8e8; }
+    .comp-industry-card { background: #fff; padding: 28px 24px; }
+    .comp-industry-card h4 { font-size: 13px; font-weight: 700; color: #0a0a0a; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .comp-industry-card ul { margin: 0; padding: 0; list-style: none; }
+    .comp-industry-card li { font-size: 13px; color: #555; line-height: 1.7; padding: 5px 0 5px 14px; position: relative; border-top: 1px solid #f4f4f4; }
+    .comp-industry-card li:first-child { border-top: none; }
+    .comp-industry-card li::before { content: '–'; position: absolute; left: 0; color: #ccc; top: 6px; }
 
-    .comp-disclaimer { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px 28px; margin-top: 48px; }
-    .comp-disclaimer p { font-size: 13px; color: #6b7280; line-height: 1.7; margin: 0; }
-    .comp-disclaimer strong { color: #374151; }
+    /* ── Disclaimer ── */
+    .comp-disclaimer { border: 1px solid #e8e8e8; border-left: 3px solid #ccc; padding: 20px 24px; margin-top: 48px; }
+    .comp-disclaimer p { font-size: 12px; color: #888; line-height: 1.75; margin: 0; }
+    .comp-disclaimer strong { color: #555; }
 
-    .comp-contact-bar { display: flex; align-items: center; justify-content: space-between; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px 32px; margin-top: 32px; flex-wrap: wrap; gap: 16px; }
-    .comp-contact-bar h4 { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 4px; }
-    .comp-contact-bar p { font-size: 14px; color: #6b7280; margin: 0; }
-    .comp-contact-btn { display: inline-flex; align-items: center; gap: 8px; background: #0a0a0a; color: #fff; border-radius: 8px; padding: 12px 22px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
-    .comp-contact-btn:hover { background: #1a1a1a; color: #fff; }
+    /* ── Contact bar ── */
+    .comp-contact-bar { display: flex; align-items: center; justify-content: space-between; border: 1px solid #0a0a0a; padding: 28px 32px; margin-top: 20px; flex-wrap: wrap; gap: 16px; }
+    .comp-contact-bar h4 { font-size: 16px; font-weight: 700; color: #0a0a0a; margin: 0 0 4px; }
+    .comp-contact-bar p { font-size: 13px; color: #777; margin: 0; }
+    .comp-contact-btn { display: inline-flex; align-items: center; gap: 8px; background: #000; color: #fff; padding: 12px 24px; font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 0.03em; white-space: nowrap; transition: background 0.15s; }
+    .comp-contact-btn:hover { background: #222; color: #fff; }
 
-    .divider { border: none; border-top: 1px solid #f3f4f6; margin: 48px 0; }
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid #ebebeb; margin: 56px 0; }
 
-    @media (max-width: 600px) {
-      .comp-wrap { padding: 40px 16px; }
+    @media (max-width: 640px) {
+      .comp-wrap { padding: 48px 16px 64px; }
       .comp-zone { padding: 20px; }
-      .comp-sla { padding: 28px 20px; }
-      .comp-contact-bar { flex-direction: column; }
+      .comp-sla { padding: 32px 20px; }
+      .comp-contact-bar { flex-direction: column; align-items: flex-start; }
+      .comp-shield-grid, .comp-industry-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -138,8 +151,8 @@
 
       <div class="comp-zone comp-zone-green">
         <div class="comp-zone-header">
-          <div class="comp-zone-dot comp-zone-dot-green"></div>
-          <div class="comp-zone-title">Green Zone — Generally Legal Without Prior Consent</div>
+          <div class="comp-zone-marker">Permitted</div>
+          <div class="comp-zone-title">Generally Legal Without Prior Consent</div>
         </div>
         <ul>
           <li><strong>B2B calls to businesses and their employees</strong> — calling a commercial entity, its employees, or their direct business line is not covered by TCPA's consumer consent requirements</li>
@@ -151,8 +164,8 @@
 
       <div class="comp-zone comp-zone-amber">
         <div class="comp-zone-header">
-          <div class="comp-zone-dot comp-zone-dot-amber"></div>
-          <div class="comp-zone-title">Amber Zone — Requires Prior Express Written Consent</div>
+          <div class="comp-zone-marker">Caution</div>
+          <div class="comp-zone-title">Requires Prior Express Written Consent</div>
         </div>
         <ul>
           <li><strong>B2C marketing calls to consumers on cell phones</strong> — any autodialed or prerecorded marketing call to a consumer mobile number requires prior express written consent</li>
@@ -164,8 +177,8 @@
 
       <div class="comp-zone comp-zone-red">
         <div class="comp-zone-header">
-          <div class="comp-zone-dot comp-zone-dot-red"></div>
-          <div class="comp-zone-title">Red Zone — Do Not Do This</div>
+          <div class="comp-zone-marker">Prohibited</div>
+          <div class="comp-zone-title">Do Not Do This</div>
         </div>
         <ul>
           <li><strong>Calling numbers on your own internal DNC list</strong> — once someone opts out, all automated contact must stop permanently</li>
@@ -187,42 +200,42 @@
       <div class="comp-shield-grid">
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
           </div>
           <h4>DNC List Management</h4>
           <p>Upload and maintain your internal Do Not Call list. Any number on your DNC list is automatically excluded from every campaign — before dialing begins.</p>
         </div>
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <h4>Time Zone Enforcement</h4>
           <p>Alex automatically detects the recipient's time zone and will not dial outside the 8 AM – 9 PM local window, regardless of when your campaign is running.</p>
         </div>
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <h4>STIR/SHAKEN &amp; Number Rotation</h4>
           <p>All outbound calls use STIR/SHAKEN attestation. Automatic number rotation prevents flagging and ensures your caller ID displays as a legitimate business line.</p>
         </div>
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
           </div>
           <h4>Instant Opt-Out Handling</h4>
           <p>When a contact says "stop calling" or requests removal, they are added to your DNC list immediately and excluded from all future campaigns automatically.</p>
         </div>
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
           <h4>Full Call Audit Logs</h4>
           <p>Every call is logged with timestamp, number, outcome, AMD result, and duration. Your complete call history is always available to export for compliance documentation.</p>
         </div>
         <div class="comp-shield-card">
           <div class="comp-shield-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a3e635" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <h4>AMD — Machine-Only Voicemail</h4>
           <p>Answering Machine Detection (AMD) ensures voicemail drops only occur when an actual answering machine or voicemail is detected — never when a human picks up.</p>
