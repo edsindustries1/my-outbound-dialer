@@ -3,14 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About Us — Open Humana</title>
-  <meta name="description" content="Learn about Open Humana, your Digital Employee Agency. Bridging the gap between human talent and AI efficiency.">
+  <title>About — Open Humana</title>
+  <meta name="description" content="Meet Alex, the solo founder behind Open Humana. Learn why this product exists and what it means for your sales team.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/landing.css">
   <link rel="stylesheet" href="/static/pages.css">
+  <style>
+    body.subpage { background: #fff; }
+
+    .about-hero { background: #000; color: #fff; padding: 110px 0 90px; text-align: center; border-bottom: 1px solid #1a1a1a; }
+    .about-hero-inner { max-width: 740px; margin: 0 auto; padding: 0 24px; }
+    .about-badge { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 2px; padding: 5px 14px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 32px; }
+    .about-hero h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(36px, 5.5vw, 58px); font-weight: 400; font-style: italic; line-height: 1.08; letter-spacing: -0.01em; margin: 0 0 24px; color: #fff; }
+    .about-hero p { font-size: 16px; color: rgba(255,255,255,0.5); line-height: 1.8; margin: 0; max-width: 580px; margin-left: auto; margin-right: auto; }
+
+    .about-wrap { max-width: 840px; margin: 0 auto; padding: 72px 24px 80px; }
+
+    .about-section { margin-bottom: 64px; }
+    .about-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+    .about-section h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; font-weight: 400; color: #0a0a0a; margin: 0 0 16px; line-height: 1.2; }
+    .about-section p { font-size: 15px; color: #444; line-height: 1.85; margin: 0 0 16px; }
+    .about-section p:last-child { margin-bottom: 0; }
+
+    .about-photo-block { text-align: center; margin-bottom: 64px; }
+    .about-photo { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f0f0; background: #e8e8e8; display: inline-block; }
+    .about-photo-caption { font-size: 13px; color: #888; margin-top: 14px; letter-spacing: 0.02em; }
+
+    .about-guarantee { border-left: 3px solid #000; padding: 28px 0 28px 32px; margin-bottom: 64px; }
+    .about-guarantee-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+    .about-guarantee h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; font-weight: 400; color: #0a0a0a; margin: 0 0 16px; line-height: 1.3; }
+    .about-guarantee p { font-size: 15px; color: #444; line-height: 1.85; margin: 0; }
+
+    .about-cta-block { background: #000; padding: 56px 48px; text-align: center; margin-top: 16px; }
+    .about-cta-block h3 { font-family: 'DM Serif Display', Georgia, serif; font-size: 28px; font-weight: 400; color: #fff; margin: 0 0 12px; }
+    .about-cta-block p { font-size: 15px; color: rgba(255,255,255,0.5); line-height: 1.7; margin: 0 0 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .about-cta-btn { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: #000; padding: 14px 32px; font-size: 14px; font-weight: 600; text-decoration: none; letter-spacing: 0.02em; transition: background 0.15s, transform 0.15s; }
+    .about-cta-btn:hover { background: #f0f0f0; color: #000; transform: translateY(-1px); }
+    .about-cta-btn svg { flex-shrink: 0; }
+
+    .divider { border: none; border-top: 1px solid #ebebeb; margin: 0 0 64px; }
+
+    @media (max-width: 640px) {
+      .about-wrap { padding: 48px 16px 64px; }
+      .about-guarantee { padding: 20px 0 20px 20px; }
+      .about-cta-block { padding: 40px 20px; }
+      .about-photo { width: 140px; height: 140px; }
+    }
+  </style>
 </head>
 <body class="subpage">
 
@@ -22,8 +64,8 @@
       <div class="nav-links">
         <a href="/#features">Features</a>
         <a href="/#how-it-works">How It Works</a>
-        <a href="/#pricing">Pricing</a>
-        <a href="/about">About</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/about" style="font-weight:700;">About</a>
         <a href="/help">Help</a>
       </div>
       <div class="nav-actions">
@@ -33,82 +75,55 @@
     </div>
   </nav>
 
-  <section class="subpage-hero">
-    <h1>About Open Humana</h1>
-    <p>Your Digital Employee Agency — bridging the gap between human talent and AI-powered efficiency to transform outbound sales forever.</p>
-  </section>
-
-  <div class="subpage-content">
-    <div class="subpage-section">
-      <h2>Our Vision</h2>
-      <p>Open Humana was founded on a simple but powerful idea: every business deserves access to silicon-based teammates that never sleep, never quit, and never underperform. We believe that business owners should focus on strategy, relationships, and growth — while Digital Employees handle the grunt work.</p>
-      <p>We envision a future where hiring an AI-powered employee is as natural as hiring a human one — except faster, cheaper, and infinitely more scalable. Our Digital Employees are built to augment your team, not replace it, giving you the leverage to compete with companies ten times your size.</p>
-    </div>
-
-    <div class="subpage-section">
-      <h2>Our Mission</h2>
-      <p>Our mission is to make world-class AI employees accessible to every business, regardless of size or budget. Whether you're a solo entrepreneur or a growing sales organization, Open Humana gives you the same caliber of digital workforce that was previously only available to enterprise-level companies.</p>
-      <p>We're democratizing access to AI-powered outbound sales, personalized voicemail drops, live call transfers, and intelligent campaign management — all wrapped in a simple, intuitive platform that anyone can use.</p>
-    </div>
-
-    <div class="subpage-section">
-      <h2>Our Values</h2>
-      <div class="values-grid">
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <h3>Innovation</h3>
-          <p>We push the boundaries of what AI can do for sales teams, constantly improving and iterating on our technology to stay ahead of the curve.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>Reliability</h3>
-          <p>Your Digital Employee works 24/7/365 with perfect consistency. No sick days, no off days, no excuses — just dependable performance around the clock.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          </div>
-          <h3>Transparency</h3>
-          <p>Clear pricing, honest communication, and full visibility into every call, voicemail, and result your Digital Employee produces.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-          </div>
-          <h3>Scalability</h3>
-          <p>From one Digital Employee to an entire agency, our platform grows with your business — scale up or down instantly without long-term commitments.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-          </div>
-          <h3>Simplicity</h3>
-          <p>Powerful technology shouldn't be complicated. We design every feature to be intuitive, so you can launch campaigns in minutes — not hours.</p>
-        </div>
-        <div class="value-card">
-          <div class="value-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          </div>
-          <h3>Security</h3>
-          <p>Your data and your prospects' data are protected with enterprise-grade encryption, strict access controls, and full TCPA compliance built in.</p>
-        </div>
+  <div class="about-hero">
+    <div class="about-hero-inner">
+      <div class="about-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        About Open Humana
       </div>
+      <h1>The Person Behind<br>the Product.</h1>
+      <p>No corporate story. No "our team of 50 experts." Just one founder solving one problem — and being honest about it.</p>
+    </div>
+  </div>
+
+  <div class="about-wrap">
+
+    <div class="about-section">
+      <div class="about-section-label">Who Built This</div>
+      <h2>Hi, I'm Alex.</h2>
+      <p>I built Open Humana because I watched small sales teams waste half their day on calls that go nowhere — listening to rings, leaving voicemails, logging dead ends. The closers were good. The process was broken. I figured AI could fix the boring part so the humans could focus on the human part. So I built it. No VC money. No big team. Just me, working on this every single day because I genuinely believe it solves a real problem that costs real businesses real money.</p>
     </div>
 
-    <div class="subpage-section">
-      <h2>Who's Behind This</h2>
-      <p>Open Humana was built by a solo founder who got tired of watching great sales teams burn hours on manual dialing. No VC backing, no big team — just a genuine belief that every small business deserves the same outbound firepower as a 50-person sales floor. We're early, we're honest about it, and we're building this in public. If you try it and have feedback, we actually read every email.</p>
-      <p>Questions? Email us directly: support@openhumana.com</p>
+    <hr class="divider">
+
+    <div class="about-section">
+      <div class="about-section-label">Where We Are</div>
+      <h2>We're early. Here's what that means for you.</h2>
+      <p>Open Humana is not a 50-person company with a $10 million runway. It's a focused product built for one purpose — giving small and mid-size sales teams the outbound firepower that used to cost $5,000 a month in human labor. We're onboarding our first customers now and I'm obsessive about making sure the product works exactly as described before we scale. That means you get something most software companies can't offer — direct access to the person who built it.</p>
     </div>
 
-    <div class="subpage-section">
-      <h2>Get In Touch</h2>
-      <p>Have questions about Open Humana or want to learn more about how Digital Employees can transform your outbound sales? We'd love to hear from you. Visit our <a href="/contact">Contact Support</a> page to reach our team directly.</p>
+    <hr class="divider">
+
+    <div class="about-guarantee">
+      <div class="about-guarantee-label">The Founder Promise</div>
+      <h2>My personal guarantee.</h2>
+      <p>If you sign up and something doesn't work the way it should, email me directly at support@openhumana.com. I read every message. I respond the same day. That is not a support ticket promise — that is a founder promise. At this stage, your honest feedback is worth more to me than your subscription fee. If the product doesn't deliver what I say it does, I will refund you personally and fix it.</p>
     </div>
+
+    <div class="about-photo-block">
+      <img src="/static/images/founder.jpg" alt="Alex — Founder of Open Humana" class="about-photo" onerror="this.style.background='#e0e0e0';this.alt='Photo coming soon';">
+      <div class="about-photo-caption">Alex — Founder, Open Humana</div>
+    </div>
+
+    <div class="about-cta-block">
+      <h3>Want to try it before you commit?</h3>
+      <p>Sign up free. No credit card required to start. If it works, you'll know within your first campaign.</p>
+      <a href="/register" class="about-cta-btn">
+        Start Free Trial
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
   </div>
 
   <footer class="footer">
