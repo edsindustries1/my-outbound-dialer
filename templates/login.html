@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Humana - Login</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
+    <link rel="icon" type="image/png" href="/static/images/logo.png">
+    <link rel="apple-touch-icon" href="/static/images/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -375,10 +376,10 @@
             </div>
             {% if app_password_set %}
             <div class="login-toggle" style="margin-top:4px;">
-                <a href="#" id="adminToggle" onclick="toggleAdminLogin(event)">Login as Admin</a>
+                <a href="#" id="adminToggle" onclick="toggleAdminLogin(event)" style="display:none">Login as Admin</a>
             </div>
             <div class="login-toggle" style="margin-top:4px;">
-                <a href="#" id="superAdminToggle" onclick="toggleSuperAdminLogin(event)">Login as Super Admin</a>
+                <a href="#" id="superAdminToggle" onclick="toggleSuperAdminLogin(event)" style="display:none">Login as Super Admin</a>
             </div>
             {% endif %}
 
