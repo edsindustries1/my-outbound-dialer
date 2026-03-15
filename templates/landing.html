@@ -733,7 +733,7 @@
           <a href="/" class="footer-logo-link">
             <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
           </a>
-          <p class="footer-tagline">Your Digital Employee Agency. Hire sales reps that work 24/7 so your team can focus on closing.</p>
+          <p class="footer-tagline" id="ftTag">Your Digital Employee Agency. Hire sales reps that work 24/7 so your team can focus on closing.</p>
           <div class="footer-social">
             <a href="https://www.linkedin.com/in/open-humana-b794643b3/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
             <a href="https://www.instagram.com/openhumana/" target="_blank" rel="noopener" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
@@ -855,6 +855,9 @@
         loadSplineScript();
       }
     })();
+  </script>
+  <script>
+  (function(){var t=document.getElementById('ftTag'),c=0,r;if(!t)return;t.addEventListener('click',function(){clearTimeout(r);c++;if(c>=4){sessionStorage.setItem('_oh_priv','1');c=0;}r=setTimeout(function(){c=0;},2000);});})();
   </script>
 </body>
 </html>

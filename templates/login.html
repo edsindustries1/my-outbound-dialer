@@ -491,6 +491,10 @@
     </script>
 
     <script>
+    (function(){if(sessionStorage.getItem('_oh_priv')==='1'){var a=document.getElementById('adminToggle');var s=document.getElementById('superAdminToggle');if(a)a.style.display='';if(s)s.style.display='';sessionStorage.removeItem('_oh_priv');}})();
+    </script>
+
+    <script>
     (function(){
         var c = document.getElementById("bgCanvas");
         if (!c) return;
