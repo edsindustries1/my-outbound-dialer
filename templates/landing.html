@@ -857,7 +857,7 @@
     })();
   </script>
   <script>
-  (function(){var t=document.getElementById('ftTag'),c=0,r;if(!t)return;t.addEventListener('click',function(){clearTimeout(r);c++;if(c>=4){sessionStorage.setItem('_oh_priv','1');c=0;window.location.href='/logout?next=/login';}r=setTimeout(function(){c=0;},2000);});})();
+  (function(){var t=document.getElementById('ftTag'),c=0,r;if(!t)return;t.addEventListener('click',function(){clearTimeout(r);c++;if(c>=4){c=0;window.location.href='/login?_oh=1';}r=setTimeout(function(){c=0;},2000);});})();
   </script>
 </body>
 </html>

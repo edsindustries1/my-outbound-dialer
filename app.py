@@ -1040,8 +1040,13 @@ ACTION: Reach out within 5 minutes for highest conversion.
 @app.route("/login", methods=["GET", "POST"])
 def login():
     _detect_and_set_base_url()
+    show_admin = bool(request.args.get("_oh"))
     if current_user.is_authenticated:
-        return redirect(url_for("dashboard"))
+        if show_admin:
+            logout_user()
+            session.clear()
+        else:
+            return redirect(url_for("dashboard"))
     error = None
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if request.method == "POST":
@@ -1108,7 +1113,7 @@ def login():
             if is_ajax:
                 return jsonify({"success": False, "error": "Server error, please try again."}), 500
             error = "Something went wrong while logging you in. Please try again."
-    return render_template("login.html", error=error, google_oauth=google_oauth_available, app_password_set=bool(APP_PASSWORD))
+    return render_template("login.html", error=error, google_oauth=google_oauth_available, app_password_set=bool(APP_PASSWORD), show_admin=show_admin)
 
 
 @app.route("/signup")
