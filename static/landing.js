@@ -332,6 +332,128 @@
   });
 
   /* ==========================================================
+     DEMO REQUEST MODAL
+     ========================================================== */
+  var demoModalHTML =
+    '<div class="lead-overlay" id="demoOverlay">' +
+      '<div class="lead-backdrop" id="demoBackdrop"></div>' +
+      '<div class="lead-modal" id="demoModal">' +
+        '<button class="lead-close" id="demoClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+        '<div class="lead-modal-inner">' +
+          '<div class="lead-left">' +
+            '<div class="lead-left-content">' +
+              '<div class="lead-logo-wrap"><img src="/static/images/logo.png" alt="Open Humana" class="lead-logo-img"></div>' +
+              '<h2>Book a Free Demo</h2>' +
+              '<p>See Alex in action. We\'ll walk you through a live call demo tailored to your industry — no commitment, no credit card.</p>' +
+              '<div class="lead-features">' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Live outbound calling demo</div>' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> AI voicemail drop preview</div>' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Live transfer to your phone</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="lead-right">' +
+            '<h3>Request Your Demo</h3>' +
+            '<p class="lead-right-sub">Fill in your details and one of our digital employees will reach out shortly.</p>' +
+            '<form class="lead-form" id="demoForm">' +
+              '<div class="lead-field">' +
+                '<label>Full Name *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="name" required placeholder="John Smith"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Phone Number *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><input type="tel" name="phone" required placeholder="+1 (555) 000-0000"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Email Address *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="email" name="email" required placeholder="john@company.com"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Company / Industry</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><input type="text" name="company" placeholder="Acme Corp / Real Estate"></div>' +
+              '</div>' +
+              '<button type="submit" class="lead-submit" id="demoSubmit"><span>Request Free Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
+            '</form>' +
+            '<div class="lead-success" id="demoSuccess">' +
+              '<div class="lead-success-icon" style="font-size:3rem;color:#22c55e;">&#10003;</div>' +
+              '<h3>Demo Requested!</h3>' +
+              '<p>Thank you for your interest! One of our digital employees will reach out to you shortly. Keep an eye on your inbox.</p>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  var demoContainer = document.createElement('div');
+  demoContainer.innerHTML = demoModalHTML;
+  document.body.appendChild(demoContainer);
+
+  var demoOverlay = document.getElementById('demoOverlay');
+  var demoBackdrop = document.getElementById('demoBackdrop');
+  var demoModal = document.getElementById('demoModal');
+  var demoCloseBtn = document.getElementById('demoClose');
+  var demoForm = document.getElementById('demoForm');
+  var demoSuccess = document.getElementById('demoSuccess');
+
+  function openDemoModal() {
+    demoOverlay.classList.add('active');
+    setTimeout(function () { demoModal.classList.add('show'); }, 50);
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDemoModal() {
+    demoModal.classList.remove('show');
+    setTimeout(function () { demoOverlay.classList.remove('active'); }, 400);
+    document.body.style.overflow = '';
+  }
+
+  demoCloseBtn.addEventListener('click', closeDemoModal);
+  demoBackdrop.addEventListener('click', closeDemoModal);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDemoModal(); });
+
+  document.querySelectorAll('[data-open-demo]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openDemoModal();
+    });
+  });
+
+  demoForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var submitBtn = document.getElementById('demoSubmit');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="lead-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Sending...';
+
+    var formData = {
+      name: demoForm.querySelector('[name="name"]').value.trim(),
+      phone: demoForm.querySelector('[name="phone"]').value.trim(),
+      email: demoForm.querySelector('[name="email"]').value.trim(),
+      company: demoForm.querySelector('[name="company"]').value.trim()
+    };
+
+    try {
+      await fetch('/api/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+    } catch (err) { /* still show success */ }
+
+    demoForm.style.display = 'none';
+    demoSuccess.style.display = 'flex';
+    setTimeout(function () { demoSuccess.classList.add('show'); }, 50);
+
+    setTimeout(closeDemoModal, 4000);
+    setTimeout(function () {
+      demoForm.style.display = '';
+      demoSuccess.style.display = '';
+      demoSuccess.classList.remove('show');
+      demoForm.reset();
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Request Free Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    }, 5000);
+  });
+
+  /* ==========================================================
      ALEX CHAT WIDGET
      ========================================================== */
   var chatHTML =

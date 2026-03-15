@@ -872,6 +872,170 @@ ACTION: Reach out within 5 minutes for highest conversion.
         return jsonify({"success": False, "error": "Server error"}), 500
 
 
+@app.route("/api/demo", methods=["POST"])
+def api_demo():
+    try:
+        data = request.get_json(silent=True) or {}
+        if not data:
+            data = {
+                "name": request.form.get("name", ""),
+                "email": request.form.get("email", ""),
+                "phone": request.form.get("phone", ""),
+                "company": request.form.get("company", ""),
+            }
+        name_raw = data.get("name", "").strip()
+        email_raw = data.get("email", "").strip()
+        phone = data.get("phone", "").strip()
+        company = data.get("company", "").strip()
+
+        if not name_raw or not email_raw or not phone:
+            return jsonify({"success": False, "error": "Name, email, and phone are required"}), 400
+
+        name = html_module.escape(name_raw)
+        email = html_module.escape(email_raw)
+        phone = html_module.escape(phone)
+        company = html_module.escape(company)
+
+        now = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+
+        admin_html = f"""
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 20px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+<tr><td style="background:linear-gradient(135deg,#065f46 0%,#059669 100%);padding:36px 40px;text-align:center;">
+  <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">&#127911; Demo Request Received!</h1>
+  <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:14px;">A prospect wants to see Alex in action</p>
+</td></tr>
+
+<tr><td style="padding:36px 40px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;overflow:hidden;">
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #d1fae5;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#059669;margin-bottom:4px;">Full Name</span>
+        <span style="font-size:16px;font-weight:700;color:#111827;">{name}</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #d1fae5;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#059669;margin-bottom:4px;">Email Address</span>
+        <a href="mailto:{email}" style="font-size:16px;font-weight:600;color:#065f46;text-decoration:none;">{email}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;border-bottom:1px solid #d1fae5;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#059669;margin-bottom:4px;">Phone Number</span>
+        <a href="tel:{phone}" style="font-size:16px;font-weight:600;color:#065f46;text-decoration:none;">{phone}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 24px;">
+        <span style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#059669;margin-bottom:4px;">Company / Industry</span>
+        <span style="font-size:16px;font-weight:600;color:#111827;">{company or 'Not provided'}</span>
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+    <tr>
+      <td style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:16px 20px;">
+        <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
+          <strong>&#9889; Action Required:</strong> This prospect requested a live demo on {now}. Reach out within the next 5 minutes for the highest conversion rate.
+        </p>
+      </td>
+    </tr>
+  </table>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+    <tr>
+      <td align="center">
+        <a href="mailto:{email}" style="display:inline-block;padding:14px 36px;background:#059669;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Reply to {name.split()[0] if name else 'Prospect'} Now</a>
+      </td>
+    </tr>
+  </table>
+</td></tr>
+
+<tr><td style="background:#f8f9fa;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+  <p style="margin:0;font-size:12px;color:#9ca3af;">This demo request was captured from your Open Humana landing page.<br>&#169; 2026 Open Humana &mdash; Your Digital Employee Agency</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
+"""
+
+        text_body = f"""
+DEMO REQUEST RECEIVED - {now}
+
+Name: {name}
+Email: {email}
+Phone: {phone}
+Company/Industry: {company or 'Not provided'}
+
+ACTION: Reach out within 5 minutes for highest conversion.
+"""
+
+        from gmail_client import send_email
+        import threading
+
+        def _send_admin_demo_email():
+            try:
+                result = send_email(
+                    to_email=os.environ.get("ADMIN_EMAIL", "openhumana@gmail.com"),
+                    subject=f"NEW DEMO REQUEST: {name_raw or 'Unknown'}",
+                    html_body=admin_html,
+                    text_body=text_body,
+                )
+                if result:
+                    logger.info(f"Demo request emailed: {name} ({email}, {phone})")
+                else:
+                    logger.error(f"Demo captured but admin email failed: {name} ({email})")
+            except Exception as e:
+                logger.exception(f"Background admin demo email failed for {email}: {e}")
+
+        threading.Thread(target=_send_admin_demo_email, daemon=True).start()
+
+        from invite_email import send_demo_confirmation_async
+        send_demo_confirmation_async(email_raw, name_raw)
+
+        def _send_telegram_demo_alert():
+            try:
+                bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if not bot_token or not chat_id:
+                    return
+                msg = (
+                    f"🎯 *Demo Request Received*\n\n"
+                    f"*Name:* {name_raw}\n"
+                    f"*Email:* {email_raw}\n"
+                    f"*Phone:* {phone}\n"
+                    f"*Company:* {company or 'Not provided'}\n"
+                    f"*Time:* {now}"
+                )
+                requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"},
+                    timeout=10,
+                )
+                logger.info(f"Telegram demo alert sent for {name_raw}")
+            except Exception as e:
+                logger.error(f"Telegram demo alert failed: {e}")
+
+        threading.Thread(target=_send_telegram_demo_alert, daemon=True).start()
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        logger.error(f"Demo capture error: {e}")
+        return jsonify({"success": False, "error": "Server error"}), 500
+
+
 # ---- Login Route ----
 @app.route("/login", methods=["GET", "POST"])
 def login():

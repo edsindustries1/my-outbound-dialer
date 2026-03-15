@@ -532,6 +532,100 @@ def send_lead_confirmation_async(to_email, name):
     threading.Thread(target=_send, daemon=True).start()
 
 
+def build_demo_confirmation_html(name):
+    base = _get_base_url()
+    first_name = name.split()[0] if name else "there"
+    return f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#ebebf0;font-family:'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ebebf0;padding:40px 20px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#ffffff;border:1px solid #d8d8de;border-radius:14px;overflow:hidden;">
+
+<tr><td style="padding:16px 52px 20px;text-align:center;background:#ffffff;">
+  <img src="{base}/static/images/logo.png" alt="Open Humana" style="height:80px;width:auto;" />
+  <p style="margin:8px 0 0;font-size:11px;color:#999;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Your Digital Employee Agency</p>
+</td></tr>
+
+<tr><td style="padding:0 52px;background:#ffffff;">
+  <hr style="border:none;border-top:1px solid #e8e8ed;margin:0;">
+</td></tr>
+
+<tr><td style="padding:32px 52px 0;background:#ffffff;">
+  <h1 style="margin:0 0 20px;font-size:22px;font-weight:700;color:#111827;letter-spacing:-0.02em;">Your Demo Request is Confirmed</h1>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">Dear {first_name},</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">Thank you for showing your interest in <strong style="color:#111;">Open Humana</strong>. We&rsquo;ve received your demo request and one of our digital employees will reach out to you shortly.</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#444;line-height:1.85;">Keep an eye on your inbox (and phone) &mdash; when we reach out, it will feel like nothing you&rsquo;ve experienced before.</p>
+</td></tr>
+
+<tr><td style="padding:8px 52px 0;background:#ffffff;">
+  <p style="margin:0 0 16px;font-size:13px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:1.5px;">What to expect from your demo</p>
+</td></tr>
+
+<tr><td style="padding:0 52px 24px;background:#ffffff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9ff;border:1px solid #e8e8f4;border-radius:10px;">
+    <tr><td style="padding:16px 20px;border-bottom:1px solid #e8e8f4;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td width="28" style="vertical-align:top;padding-top:2px;"><span style="display:inline-block;width:22px;height:22px;background:#059669;border-radius:50%;text-align:center;line-height:22px;color:#fff;font-size:12px;font-weight:700;">1</span></td>
+        <td style="padding-left:12px;font-size:14px;color:#333;line-height:1.6;"><strong>Live outbound call demonstration</strong> using AI voice technology</td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:16px 20px;border-bottom:1px solid #e8e8f4;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td width="28" style="vertical-align:top;padding-top:2px;"><span style="display:inline-block;width:22px;height:22px;background:#059669;border-radius:50%;text-align:center;line-height:22px;color:#fff;font-size:12px;font-weight:700;">2</span></td>
+        <td style="padding-left:12px;font-size:14px;color:#333;line-height:1.6;"><strong>AI-personalized voicemail drop</strong> &mdash; hear it yourself</td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:16px 20px;border-bottom:1px solid #e8e8f4;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td width="28" style="vertical-align:top;padding-top:2px;"><span style="display:inline-block;width:22px;height:22px;background:#059669;border-radius:50%;text-align:center;line-height:22px;color:#fff;font-size:12px;font-weight:700;">3</span></td>
+        <td style="padding-left:12px;font-size:14px;color:#333;line-height:1.6;"><strong>Live call transfer</strong> directly to your phone</td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:16px 20px;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td width="28" style="vertical-align:top;padding-top:2px;"><span style="display:inline-block;width:22px;height:22px;background:#059669;border-radius:50%;text-align:center;line-height:22px;color:#fff;font-size:12px;font-weight:700;">4</span></td>
+        <td style="padding-left:12px;font-size:14px;color:#333;line-height:1.6;"><strong>Dashboard walkthrough</strong> and campaign setup</td>
+      </tr></table>
+    </td></tr>
+  </table>
+</td></tr>
+
+<tr><td style="padding:0 52px 32px;background:#ffffff;" align="center">
+  <a href="{base}" style="display:inline-block;padding:14px 40px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;letter-spacing:-0.01em;">Visit Open Humana</a>
+</td></tr>
+
+<tr><td style="padding:0 52px 32px;background:#ffffff;">
+  <p style="margin:0 0 4px;font-size:15px;color:#444;line-height:1.85;">We&rsquo;ll be in touch shortly.</p>
+  <p style="margin:16px 0 0;font-size:15px;color:#444;line-height:1.85;">Respectfully,</p>
+  <p style="margin:4px 0 0;font-size:17px;color:#111;font-weight:700;">Alex</p>
+  <p style="margin:2px 0 0;font-size:12px;color:#888;letter-spacing:0.5px;">Senior Digital Associate &bull; Open Humana</p>
+</td></tr>
+
+<tr><td style="background:#f9fafb;padding:24px 52px;text-align:center;border-top:1px solid #e5e7eb;">
+  <p style="margin:0;font-size:12px;color:#9ca3af;">&copy; 2026 Open Humana &mdash; Your Digital Employee Agency</p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+def send_demo_confirmation_async(to_email, name):
+    def _send():
+        try:
+            first_name = name.split()[0] if name else "there"
+            html = build_demo_confirmation_html(name)
+            send_email(to_email, f"Hi {first_name} — Your Open Humana Demo is Confirmed", html,
+                       f"Dear {first_name},\n\nThank you for showing your interest in Open Humana. We've received your demo request and one of our digital employees will reach out to you shortly.\n\nKeep an eye on your inbox and phone — when we reach out, it will feel like nothing you've experienced before.\n\nWhat to expect from your demo:\n1. Live outbound call demonstration using AI voice\n2. AI-personalized voicemail drop — hear it yourself\n3. Live call transfer directly to your phone\n4. Dashboard walkthrough and campaign setup\n\nWe'll be in touch shortly.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
+        except Exception as e:
+            logger.exception(f"Failed to send demo confirmation to {to_email}: {e}")
+    threading.Thread(target=_send, daemon=True).start()
+
+
 def send_password_reset_async(to_email, reset_token):
     def _send():
         try:
