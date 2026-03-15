@@ -49,7 +49,7 @@ def api_library():
                 "id": v.get("_id") or v.get("id", ""),
                 "title": v.get("title", "Unnamed Voice"),
                 "description": v.get("description", ""),
-                "cover_image": v.get("cover_image") or v.get("cover_image_url", ""),
+                "cover_image": fish_client.resolve_cover_image(v.get("cover_image") or v.get("cover_image_url", "")),
                 "languages": v.get("languages", []),
                 "sample_url": (
                     (v.get("samples") or [{}])[0].get("audio", "")

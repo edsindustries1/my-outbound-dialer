@@ -1,7 +1,8 @@
 import os
 import requests
 
-FISH_AUDIO_BASE_URL = "https://api.fish.audio/v1"
+FISH_AUDIO_BASE_URL = "https://api.fish.audio"
+FISH_AUDIO_CDN = "https://api.fish.audio"
 
 
 def _get_headers(extra=None):
@@ -10,6 +11,15 @@ def _get_headers(extra=None):
     if extra:
         h.update(extra)
     return h
+
+
+def resolve_cover_image(raw):
+    """Turn a relative cover_image path into a full URL."""
+    if not raw:
+        return ""
+    if raw.startswith("http"):
+        return raw
+    return f"{FISH_AUDIO_CDN}/{raw}"
 
 
 def list_voices(query="", page=1):
@@ -31,8 +41,8 @@ def create_voice_model(audio_bytes, filename, name):
     resp = requests.post(
         f"{FISH_AUDIO_BASE_URL}/model",
         headers=_get_headers(),
-        data={"title": name, "type": "svc", "train_mode": "fast"},
-        files={"voices": (filename, audio_bytes, "audio/mpeg")},
+        data={"title": name, "type": "tts", "train_mode": "fast"},
+        files={"voices": (filename, audio_bytes)},
         timeout=120,
     )
     if not resp.ok:
@@ -57,10 +67,9 @@ def text_to_speech(voice_id, text, speed=1.0, emotion="neutral"):
         "text": text,
         "format": "mp3",
         "speed": speed,
-        "emotion": emotion,
     }
     resp = requests.post(
-        f"{FISH_AUDIO_BASE_URL}/tts",
+        f"{FISH_AUDIO_BASE_URL}/v1/tts",
         headers=_get_headers({"Content-Type": "application/json"}),
         json=payload,
         stream=True,
