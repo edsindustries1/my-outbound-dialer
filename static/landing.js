@@ -465,13 +465,13 @@
       '<div class="alex-chat-header">' +
         '<div class="alex-chat-avatar">A</div>' +
         '<div class="alex-chat-header-info">' +
-          '<div class="alex-chat-header-name">Alex — Digital BDR</div>' +
+          '<div class="alex-chat-header-name">Alex</div>' +
           '<div class="alex-chat-header-status">Online now</div>' +
         '</div>' +
         '<button class="alex-chat-close" id="alexClose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
       '</div>' +
       '<div class="alex-chat-messages" id="alexMessages">' +
-        '<div class="alex-msg bot">Hi! I\'m Alex, your Digital BDR at Open Humana. How can I help you scale your outbound today?</div>' +
+        '<div class="alex-msg bot">Hi! I\'m Alex at Open Humana. How can I help you scale your outbound today?</div>' +
       '</div>' +
       '<div class="alex-chat-input-area">' +
         '<input class="alex-chat-input" id="alexInput" type="text" placeholder="Type your message..." autocomplete="off">' +
