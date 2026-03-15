@@ -443,6 +443,11 @@
           ratesInfo.textContent = 'Rates: AMD $' + data.rates.amd_per_call + '/call \u00b7 Voice $' + data.rates.voice_per_min + '/min \u00b7 Transcription $' + data.rates.transcription_per_min + '/min \u00b7 ElevenLabs $' + data.rates.elevenlabs_per_1k_chars + '/1k chars \u00b7 Credit charge $' + data.rates.credit_per_call + '/call';
           body.appendChild(ratesInfo);
 
+          var estNote = document.createElement('div');
+          estNote.style.cssText = 'font-size:0.72rem;color:rgba(255,255,255,0.2);margin-bottom:16px;padding:0 4px;font-style:italic;';
+          estNote.textContent = 'Estimates based on call history and standard rates. Revenue assumes $99/mo subscription + $0.10/call credit charge. Actual Telnyx/ElevenLabs billing may vary.';
+          body.appendChild(estNote);
+
           var wrap = document.createElement('div');
           wrap.className = 'table-wrap';
           wrap.style.overflowX = 'auto';
