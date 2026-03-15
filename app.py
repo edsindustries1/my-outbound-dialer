@@ -171,6 +171,8 @@ def load_user(user_id):
 
 from google_auth import google_oauth, google_oauth_available
 app.register_blueprint(google_oauth)
+from humana_voice.routes import humana_voice_bp
+app.register_blueprint(humana_voice_bp)
 
 from supa_auth import supabase_available, supabase_sign_up, supabase_sign_in, supabase_send_otp, supabase_verify_otp
 

@@ -219,3 +219,19 @@ def _place_single_call(number, from_number=None, user_id=None):
             logger.error(f"Could not dial {number}: {call_error}")
     except Exception as e:
         logger.exception(f"Exception in single call to {number}: {e}")
+
+
+def get_active_humana_voice(user_id):
+    """Return the active Humana Voice config for a user (voice_id, style_speed, style_emotion)."""
+    try:
+        from humana_voice.models import HumanaVoice
+        voice = HumanaVoice.query.filter_by(user_id=user_id, is_active=True).first()
+        if voice:
+            return {
+                "voice_id": voice.voice_id,
+                "style_speed": voice.style_speed,
+                "style_emotion": voice.style_emotion,
+            }
+    except Exception:
+        pass
+    return None
