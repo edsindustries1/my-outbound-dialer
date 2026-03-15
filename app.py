@@ -3800,6 +3800,125 @@ def super_admin():
     return render_template("super_admin.html", users=user_data, stats=stats)
 
 
+@app.route("/api/admin/cost-usage")
+@admin_required
+def api_admin_cost_usage():
+    from storage import _load_call_history
+    from decimal import Decimal, ROUND_HALF_UP
+
+    AMD_COST = Decimal("0.00625")
+    VOICE_RATE = Decimal("0.004")
+    NO_ANSWER_MINS = Decimal("0.58")
+    MACHINE_MINS = Decimal("1.5")
+    HUMAN_MINS = Decimal("2.0")
+    TRANSCRIPTION_RATE = Decimal("0.05")
+    TRANSCRIPTION_MINS = Decimal("2.0")
+    RECORDING_RATE = Decimal("0.002")
+    RECORDING_MINS = Decimal("2.0")
+    TRANSFER_BRIDGE_RATE = Decimal("0.004")
+    TRANSFER_BRIDGE_MINS = Decimal("4.0")
+    PHONE_NUMBER_MONTHLY = Decimal("1.00")
+    ELEVENLABS_CHARS_PER_VM = 350
+    ELEVENLABS_PER_1K_CHARS = Decimal("0.30")
+    REPLIT_MONTHLY = Decimal("25.00")
+    SUBSCRIPTION_MONTHLY = Decimal("99.00")
+    CREDIT_PER_CALL = Decimal("0.10")
+
+    users_list = User.query.order_by(User.created_at.desc()).all()
+    active_user_count = max(1, sum(1 for u in users_list if getattr(u, 'is_active_account', True)))
+
+    infra_share = (REPLIT_MONTHLY / Decimal(str(active_user_count))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    user_costs = []
+    platform_total_cost = Decimal("0")
+    platform_total_revenue = Decimal("0")
+
+    for u in users_list:
+        calls = _load_call_history(user_id=u.id)
+        active_numbers = ProvisionedNumber.query.filter_by(user_id=u.id, status='active').count()
+
+        calls_total = len(calls)
+        voicemails_dropped = sum(1 for c in calls if c.get("voicemail_dropped"))
+        transfers_done = sum(1 for c in calls if c.get("transferred"))
+        machines_detected = sum(1 for c in calls if c.get("machine_detected"))
+        humans_detected = transfers_done
+        no_answers = max(0, calls_total - machines_detected - humans_detected)
+
+        telnyx_amd = AMD_COST * calls_total
+        voice_no_answer = VOICE_RATE * NO_ANSWER_MINS * no_answers
+        voice_machine = VOICE_RATE * MACHINE_MINS * machines_detected
+        voice_human = VOICE_RATE * HUMAN_MINS * humans_detected
+        telnyx_voice = (voice_no_answer + voice_machine + voice_human).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        telnyx_transcription = (TRANSCRIPTION_RATE * TRANSCRIPTION_MINS * humans_detected).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        telnyx_recording = (RECORDING_RATE * RECORDING_MINS * humans_detected).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        telnyx_transfer_bridge = (TRANSFER_BRIDGE_RATE * TRANSFER_BRIDGE_MINS * transfers_done).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        telnyx_phone = PHONE_NUMBER_MONTHLY * active_numbers
+        telnyx_total = (telnyx_amd + telnyx_voice + telnyx_transcription + telnyx_recording + telnyx_transfer_bridge + telnyx_phone).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        el_chars = voicemails_dropped * ELEVENLABS_CHARS_PER_VM
+        elevenlabs_cost = (Decimal(str(el_chars)) * ELEVENLABS_PER_1K_CHARS / Decimal("1000")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        total_cost = (telnyx_total + elevenlabs_cost + infra_share).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        revenue_credits = (CREDIT_PER_CALL * calls_total).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        revenue_total = (SUBSCRIPTION_MONTHLY + revenue_credits).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if calls_total > 0 else Decimal("0")
+
+        gross_profit = revenue_total - total_cost
+        margin_pct = round(float(gross_profit / revenue_total * 100), 1) if revenue_total > 0 else 0
+
+        platform_total_cost += total_cost
+        platform_total_revenue += revenue_total
+
+        user_costs.append({
+            "id": u.id,
+            "name": u.profile_name or u.email.split("@")[0],
+            "email": u.email,
+            "calls_total": calls_total,
+            "voicemails_dropped": voicemails_dropped,
+            "transfers_done": transfers_done,
+            "machines_detected": machines_detected,
+            "telnyx_amd": float(telnyx_amd.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "telnyx_voice": float(telnyx_voice),
+            "telnyx_transcription": float(telnyx_transcription),
+            "telnyx_recording": float(telnyx_recording),
+            "telnyx_transfer_bridge": float(telnyx_transfer_bridge),
+            "telnyx_phone": float(telnyx_phone),
+            "telnyx_total": float(telnyx_total),
+            "elevenlabs_cost": float(elevenlabs_cost),
+            "infra_share": float(infra_share),
+            "total_cost": float(total_cost),
+            "revenue_credits": float(revenue_credits),
+            "revenue_total": float(revenue_total),
+            "gross_profit": float(gross_profit.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "margin_pct": margin_pct,
+        })
+
+    platform_gross_profit = platform_total_revenue - platform_total_cost
+    platform_margin = round(float(platform_gross_profit / platform_total_revenue * 100), 1) if platform_total_revenue > 0 else 0
+
+    return jsonify({
+        "users": user_costs,
+        "platform": {
+            "total_cost": float(platform_total_cost.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "total_revenue": float(platform_total_revenue.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "gross_profit": float(platform_gross_profit.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+            "margin_pct": platform_margin,
+            "replit_cost": float(REPLIT_MONTHLY),
+            "active_users": active_user_count,
+        },
+        "rates": {
+            "amd_per_call": float(AMD_COST),
+            "voice_per_min": float(VOICE_RATE),
+            "transcription_per_min": float(TRANSCRIPTION_RATE),
+            "recording_per_min": float(RECORDING_RATE),
+            "transfer_bridge_per_min": float(TRANSFER_BRIDGE_RATE),
+            "phone_monthly": float(PHONE_NUMBER_MONTHLY),
+            "elevenlabs_per_1k_chars": float(ELEVENLABS_PER_1K_CHARS),
+            "credit_per_call": float(CREDIT_PER_CALL),
+        }
+    })
+
+
 @app.route("/api/admin/user-activity/<int:uid>")
 @admin_required
 def api_admin_user_activity(uid):

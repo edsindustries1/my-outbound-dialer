@@ -61,9 +61,13 @@
     .btn-view { padding: 5px 12px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
     .btn-view:hover { background: rgba(16,185,129,0.12); color: #10b981; border-color: rgba(16,185,129,0.25); }
 
+    .btn-cost { padding: 8px 18px; background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.08)); color: #10b981; border: 1px solid rgba(16,185,129,0.25); border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; margin-bottom: 14px; }
+    .btn-cost:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
+
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal-overlay.active { display: flex; }
     .modal { background: #161616; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; width: 92%; max-width: 640px; max-height: 85vh; overflow-y: auto; }
+    .modal.wide { max-width: 1100px; }
     .modal-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
     .modal-header h2 { font-size: 1rem; font-weight: 700; }
     .modal-close { background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 1.4rem; padding: 4px; line-height: 1; }
@@ -112,6 +116,7 @@
   <div class="admin-header">
     <h1><span>Super</span> Admin</h1>
     <div class="header-links">
+      <a href="#" onclick="viewCostUsage(); return false;">Cost & Usage</a>
       <a href="/admin">User Management</a>
       <a href="/dashboard">Dashboard</a>
       <a href="/logout">Logout</a>
@@ -182,7 +187,10 @@
       </div>
     </div>
 
-    <div class="section-title">User Directory</div>
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:4px;">
+      <div class="section-title" style="margin-bottom:0;">User Directory</div>
+      <button class="btn-cost" onclick="viewCostUsage()">View Cost & Usage</button>
+    </div>
     <div class="table-section">
       <div class="table-wrap">
         <table>
@@ -253,6 +261,18 @@
       </div>
       <div class="modal-body" id="modalBody">
         <div class="loading">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="costModal">
+    <div class="modal wide">
+      <div class="modal-header">
+        <h2>Cost & Usage</h2>
+        <button class="modal-close" onclick="closeCostModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="costModalBody">
+        <div class="loading">Loading cost data...</div>
       </div>
     </div>
   </div>
@@ -376,6 +396,164 @@
 
     document.getElementById('activityModal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
+    });
+
+    function viewCostUsage() {
+      var modal = document.getElementById('costModal');
+      var body = document.getElementById('costModalBody');
+      modal.classList.add('active');
+      body.innerHTML = '<div class="loading">Loading cost data...</div>';
+
+      fetch('/api/admin/cost-usage')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          body.innerHTML = '';
+          var p = data.platform;
+
+          function $(v) { return '$' + v.toFixed(2); }
+          function mc(v) { return v >= 60 ? '#10b981' : v >= 40 ? '#f59e0b' : '#ef4444'; }
+
+          var summary = document.createElement('div');
+          summary.className = 'modal-stats';
+          summary.style.gridTemplateColumns = 'repeat(4, 1fr)';
+          var items = [
+            {val: $(p.total_cost), label: 'Total Cost', cls: ''},
+            {val: $(p.total_revenue), label: 'Total Revenue', cls: 'green'},
+            {val: $(p.gross_profit), label: 'Gross Profit', cls: p.gross_profit >= 0 ? 'green' : ''},
+            {val: p.margin_pct + '%', label: 'Margin', cls: ''}
+          ];
+          items.forEach(function(item) {
+            var s = document.createElement('div');
+            s.className = 'modal-stat' + (item.cls ? ' ' + item.cls : '');
+            var v = document.createElement('div');
+            v.className = 'ms-val';
+            v.textContent = item.val;
+            if (item.label === 'Margin') v.style.color = mc(p.margin_pct);
+            s.appendChild(v);
+            var l = document.createElement('div');
+            l.className = 'ms-label';
+            l.textContent = item.label;
+            s.appendChild(l);
+            summary.appendChild(s);
+          });
+          body.appendChild(summary);
+
+          var ratesInfo = document.createElement('div');
+          ratesInfo.style.cssText = 'font-size:0.72rem;color:rgba(255,255,255,0.25);margin-bottom:16px;padding:0 4px;';
+          ratesInfo.textContent = 'Rates: AMD $' + data.rates.amd_per_call + '/call \u00b7 Voice $' + data.rates.voice_per_min + '/min \u00b7 Transcription $' + data.rates.transcription_per_min + '/min \u00b7 ElevenLabs $' + data.rates.elevenlabs_per_1k_chars + '/1k chars \u00b7 Credit charge $' + data.rates.credit_per_call + '/call';
+          body.appendChild(ratesInfo);
+
+          var wrap = document.createElement('div');
+          wrap.className = 'table-wrap';
+          wrap.style.overflowX = 'auto';
+          var tbl = document.createElement('table');
+          tbl.style.minWidth = '1000px';
+          var thead = document.createElement('thead');
+          var hrow = document.createElement('tr');
+          var cols = ['User','Calls','VMs','Transfers','Telnyx','ElevenLabs','Infra','Total Cost','Revenue','Profit','Margin'];
+          cols.forEach(function(c, i) {
+            var th = document.createElement('th');
+            th.textContent = c;
+            if (i >= 3) th.className = 'right';
+            hrow.appendChild(th);
+          });
+          thead.appendChild(hrow);
+          tbl.appendChild(thead);
+
+          var tbody = document.createElement('tbody');
+          data.users.forEach(function(u) {
+            var tr = document.createElement('tr');
+
+            var tdUser = document.createElement('td');
+            var nameDiv = document.createElement('div');
+            nameDiv.style.cssText = 'font-weight:600;color:#fff;font-size:0.84rem;';
+            nameDiv.textContent = u.name;
+            var emailDiv = document.createElement('div');
+            emailDiv.style.cssText = 'font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:2px;';
+            emailDiv.textContent = u.email;
+            tdUser.appendChild(nameDiv);
+            tdUser.appendChild(emailDiv);
+            tr.appendChild(tdUser);
+
+            function addCell(val, cls) {
+              var td = document.createElement('td');
+              td.className = 'right';
+              td.textContent = val;
+              if (cls) td.style.color = cls;
+              tr.appendChild(td);
+            }
+
+            addCell(u.calls_total);
+            addCell(u.voicemails_dropped);
+            addCell(u.transfers_done);
+            addCell($(u.telnyx_total));
+            addCell($(u.elevenlabs_cost));
+            addCell($(u.infra_share));
+            addCell($(u.total_cost), '#fff');
+            addCell($(u.revenue_total), u.revenue_total > 0 ? '#10b981' : 'rgba(255,255,255,0.3)');
+            addCell($(u.gross_profit), u.gross_profit >= 0 ? '#10b981' : '#ef4444');
+            addCell(u.margin_pct + '%', mc(u.margin_pct));
+
+            tbody.appendChild(tr);
+          });
+          tbl.appendChild(tbody);
+          wrap.appendChild(tbl);
+          body.appendChild(wrap);
+
+          if (data.users.length > 0) {
+            var detail = document.createElement('div');
+            detail.style.cssText = 'margin-top:20px;';
+            var dtitle = document.createElement('div');
+            dtitle.className = 'modal-calls-title';
+            dtitle.textContent = 'Telnyx Breakdown (Per User)';
+            detail.appendChild(dtitle);
+
+            data.users.forEach(function(u) {
+              if (u.calls_total === 0) return;
+              var sec = document.createElement('div');
+              sec.style.cssText = 'background:rgba(255,255,255,0.02);border-radius:8px;padding:14px;margin-bottom:8px;';
+              var hd = document.createElement('div');
+              hd.style.cssText = 'font-weight:700;font-size:0.84rem;color:#fff;margin-bottom:8px;';
+              hd.textContent = u.name;
+              sec.appendChild(hd);
+
+              var rows = [
+                ['AMD Premium (' + u.calls_total + ' calls)', $(u.telnyx_amd)],
+                ['Voice Minutes', $(u.telnyx_voice)],
+                ['Transcription (humans only)', $(u.telnyx_transcription)],
+                ['Recording (humans only)', $(u.telnyx_recording)],
+                ['Transfer Bridge (' + u.transfers_done + ' transfers)', $(u.telnyx_transfer_bridge)],
+                ['Phone Number', $(u.telnyx_phone)],
+              ];
+              rows.forEach(function(r) {
+                var row = document.createElement('div');
+                row.className = 'modal-info-row';
+                var lbl = document.createElement('span');
+                lbl.className = 'lbl';
+                lbl.textContent = r[0];
+                var val = document.createElement('span');
+                val.className = 'val';
+                val.textContent = r[1];
+                row.appendChild(lbl);
+                row.appendChild(val);
+                sec.appendChild(row);
+              });
+              detail.appendChild(sec);
+            });
+            body.appendChild(detail);
+          }
+        })
+        .catch(function() {
+          body.innerHTML = '<div class="loading">Failed to load cost data.</div>';
+        });
+    }
+
+    function closeCostModal() {
+      document.getElementById('costModal').classList.remove('active');
+    }
+
+    document.getElementById('costModal').addEventListener('click', function(e) {
+      if (e.target === this) closeCostModal();
     });
   </script>
 </body>
