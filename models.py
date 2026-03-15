@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
     credit_balance = db.Column(Numeric(10, 2), default=5.00, nullable=False)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
+    navigator_persona = db.Column(db.Text, nullable=True)
     
     app_data = db.relationship('UserAppData', backref='user', lazy=True, cascade='all, delete-orphan')
     instance = db.relationship('UserInstance', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
@@ -184,6 +185,11 @@ def _ensure_schema():
         if "reset_token" not in existing_cols:
             db.session.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)"))
             db.session.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires TIMESTAMP"))
+            db.session.commit()
+
+        if "navigator_persona" not in existing_cols:
+            logger.warning("DB schema missing users.navigator_persona; applying ALTER TABLE")
+            db.session.execute(text("ALTER TABLE users ADD COLUMN navigator_persona TEXT"))
             db.session.commit()
 
         if "invitations" in inspector.get_table_names():

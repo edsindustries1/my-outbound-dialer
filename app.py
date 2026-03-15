@@ -123,6 +123,7 @@ _detected_base_url = None
 os.makedirs("logs", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("uploads/personalized", exist_ok=True)
+os.makedirs("uploads/gatekeeper", exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -172,6 +173,7 @@ def load_user(user_id):
 from google_auth import google_oauth, google_oauth_available
 app.register_blueprint(google_oauth)
 from humana_voice.routes import humana_voice_bp
+from gatekeeper import navigator as gk_navigator
 app.register_blueprint(humana_voice_bp)
 
 from supa_auth import supabase_available, supabase_sign_up, supabase_sign_in, supabase_send_otp, supabase_verify_otp
@@ -1299,6 +1301,15 @@ def serve_personalized_audio(filename):
     return response
 
 
+@app.route("/audio/gatekeeper/<filename>")
+def serve_gatekeeper_audio(filename):
+    """Serve gatekeeper navigator TTS audio (no auth - Telnyx needs direct access)."""
+    gk_dir = os.path.join(UPLOAD_FOLDER, "gatekeeper")
+    response = send_from_directory(gk_dir, filename)
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 # ---- Start Campaign ----
 @app.route("/start", methods=["POST"])
 @login_required
@@ -1471,9 +1482,23 @@ def start():
         except Exception:
             pass
 
+    gk_enabled = request.form.get("gatekeeper_navigator_enabled") == "1"
+    gk_prospect_name = request.form.get("prospect_name", "").strip()
+    gk_prospect_company = request.form.get("prospect_company", "").strip()
+    gk_voice_id = request.form.get("navigator_voice_id", "").strip() or None
+    gk_persona = request.form.get("navigator_persona", "").strip()
+    if gk_persona:
+        try:
+            current_user.navigator_persona = gk_persona
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     # ---- Start the campaign ----
-    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}")
-    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number, user_id=current_user.id)
+    logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}, gk={gk_enabled}")
+    set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number, user_id=current_user.id,
+                 gatekeeper_navigator_enabled=gk_enabled, prospect_name=gk_prospect_name,
+                 prospect_company=gk_prospect_company, navigator_voice_id=gk_voice_id)
 
     if voicemail_type == "personalized":
         pvm_template_id = request.form.get("pvm_template_id", "").strip()
@@ -2877,6 +2902,22 @@ def _handle_webhook():
             camp = get_campaign(user_id=webhook_user_id)
             transfer_num = camp.get("transfer_number") or ""
             customer_num = (get_call_state(call_control_id) or {}).get("number", "")
+
+            # ---- Gatekeeper Navigator ----
+            if camp.get("gatekeeper_navigator_enabled") and not state.get("gatekeeper_mode_active"):
+                nav_voice_id = camp.get("navigator_voice_id")
+                update_call_state(
+                    call_control_id,
+                    gatekeeper_mode_active=True,
+                    navigator_voice_id=nav_voice_id,
+                    status="gatekeeper_active",
+                    status_description="Gatekeeper Navigator active — listening...",
+                    status_color="blue",
+                )
+                logger.info(f"[GATEKEEPER] {call_control_id} | Navigator activated (voice_id={nav_voice_id})")
+                return "", 200
+            # ---- End Gatekeeper Navigator ----
+
             if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | HUMAN detected, transferring to {transfer_num} (caller ID: {customer_num})")
                 try:
@@ -3089,6 +3130,69 @@ def _handle_webhook():
                     logger.info(f"[VM KEYWORDS] {call_control_id} | Voicemail keywords detected: '{transcript_text[:100]}' — continuing to wait for beep (will NOT drop without beep)")
                     update_call_state(call_control_id, voicemail_confirmed=True,
                                       status_description="Voicemail keywords heard - waiting for beep", status_color="blue")
+
+            # ---- Gatekeeper Navigator logic ----
+            if (state and state.get("gatekeeper_mode_active")
+                    and is_final
+                    and not state.get("gatekeeper_resolved")
+                    and not state.get("transferred")
+                    and not state.get("voicemail_dropped")):
+                try:
+                    gk_camp = get_campaign(user_id=webhook_user_id)
+                    gk_category = gk_navigator.classify_gatekeeper(transcript_text)
+                    turn = state.get("gatekeeper_turn_count", 0)
+                    logger.info(f"[GATEKEEPER] {call_control_id} | turn={turn} category={gk_category} text='{transcript_text[:80]}'")
+                    update_call_state(call_control_id, gatekeeper_type=gk_category)
+
+                    if gk_category == "human_prospect" or turn >= 4:
+                        update_call_state(call_control_id, gatekeeper_resolved=True,
+                                          status_description="Prospect reached — transferring",
+                                          status_color="green")
+                        gk_transfer_num = gk_camp.get("transfer_number") or ""
+                        gk_customer_num = state.get("number", "")
+                        if gk_transfer_num and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
+                            logger.info(f"[GATEKEEPER] {call_control_id} | Prospect reached — transferring to {gk_transfer_num}")
+                            try:
+                                gk_success = transfer_call(call_control_id, gk_transfer_num, customer_number=gk_customer_num)
+                            except Exception as te:
+                                logger.error(f"[GATEKEEPER TRANSFER ERROR] {call_control_id} | {te}")
+                                gk_success = False
+                            if gk_success:
+                                pause_for_transfer(call_control_id, user_id=webhook_user_id)
+                                update_call_state(call_control_id, status="transferred",
+                                                  status_description="Transferred after gatekeeper navigation", status_color="green")
+                            else:
+                                update_call_state(call_control_id, status="transfer_failed",
+                                                  status_description="Transfer failed after navigation", status_color="red")
+                                hangup_call(call_control_id)
+                        else:
+                            hangup_call(call_control_id)
+                    else:
+                        prospect_name = gk_camp.get("prospect_name") or "the decision maker"
+                        prospect_company = gk_camp.get("prospect_company") or "their company"
+                        nav_voice_id = state.get("navigator_voice_id") or gk_camp.get("navigator_voice_id")
+                        agent_persona = "Alex, a friendly business development representative"
+                        if webhook_user_id:
+                            try:
+                                gk_user = User.query.get(webhook_user_id)
+                                if gk_user and gk_user.navigator_persona:
+                                    agent_persona = gk_user.navigator_persona
+                            except Exception:
+                                pass
+                        response_text = gk_navigator.build_navigator_response(
+                            gk_category, transcript_text, prospect_name, prospect_company, agent_persona
+                        )
+                        logger.info(f"[GATEKEEPER] {call_control_id} | Response: '{response_text[:100]}'")
+                        base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+                        if nav_voice_id and response_text:
+                            gk_navigator.speak_response(call_control_id, response_text, nav_voice_id, base_url)
+                        update_call_state(call_control_id,
+                                          gatekeeper_turn_count=turn + 1,
+                                          status_description=f"Gatekeeper turn {turn + 1} — {gk_category}",
+                                          status_color="blue")
+                except Exception as gke:
+                    logger.error(f"[GATEKEEPER ERROR] {call_control_id} | {gke}")
+            # ---- End Gatekeeper Navigator logic ----
 
     # ---- call.recording.saved ----
     elif event_type == "call.recording.saved":

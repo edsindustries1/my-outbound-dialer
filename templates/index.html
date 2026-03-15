@@ -591,6 +591,45 @@
                                         <span id="carrierCheckLabel" style="font-size:13px;color:var(--gads-text-secondary);">Disabled</span>
                                     </div>
                                 </div>
+
+                                <div class="wiz-settings-group" style="border-top:1px solid var(--gads-border);padding-top:18px;margin-top:4px;">
+                                    <label style="display:flex;align-items:center;gap:8px;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                        Gatekeeper Navigator
+                                    </label>
+                                    <p class="wiz-settings-hint">When a human answers but turns out to be a receptionist, AI screener, or IVR, Alex will navigate the gatekeeper and only transfer once the prospect picks up. Requires a Fish Audio voice and GROQ_API_KEY.</p>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+                                        <label class="gads-toggle" style="margin:0;">
+                                            <input type="checkbox" id="gkNavigatorToggle" value="1">
+                                            <span class="gads-toggle-slider"></span>
+                                        </label>
+                                        <span id="gkNavigatorLabel" style="font-size:13px;color:var(--gads-text-secondary);">Disabled</span>
+                                    </div>
+                                    <input type="hidden" name="gatekeeper_navigator_enabled" id="gkNavigatorEnabled" value="0">
+
+                                    <div id="gkNavigatorOptions" style="display:none;margin-top:14px;flex-direction:column;gap:12px;">
+                                        <div>
+                                            <label style="font-size:12px;margin-bottom:4px;display:block;color:var(--gads-text-secondary);">Prospect Name</label>
+                                            <input type="text" name="prospect_name" id="gkProspectName" class="gads-input" placeholder="e.g. John Smith" style="width:100%;">
+                                        </div>
+                                        <div>
+                                            <label style="font-size:12px;margin-bottom:4px;display:block;color:var(--gads-text-secondary);">Prospect Company</label>
+                                            <input type="text" name="prospect_company" id="gkProspectCompany" class="gads-input" placeholder="e.g. Acme Corp" style="width:100%;">
+                                        </div>
+                                        <div>
+                                            <label style="font-size:12px;margin-bottom:4px;display:block;color:var(--gads-text-secondary);">Navigator Voice (Fish Audio)</label>
+                                            <select name="navigator_voice_id" id="gkVoiceSelect" class="gads-input" style="width:100%;">
+                                                <option value="">— Select a voice —</option>
+                                            </select>
+                                            <p style="font-size:11px;color:var(--gads-text-tertiary);margin-top:4px;">Add voices in Humana Voice first. No voice = navigator text only (no audio response).</p>
+                                        </div>
+                                        <div>
+                                            <label style="font-size:12px;margin-bottom:4px;display:block;color:var(--gads-text-secondary);">Navigator Persona</label>
+                                            <textarea name="navigator_persona" id="gkPersona" class="gads-input" rows="3" placeholder="e.g. Alex, a business development rep at OpenHumana. I'm calling to connect with decision makers about our outreach automation platform." style="width:100%;resize:vertical;font-size:13px;">{{ current_user.navigator_persona if current_user.navigator_persona else 'Alex, a friendly business development representative calling on behalf of my company.' }}</textarea>
+                                            <p style="font-size:11px;color:var(--gads-text-tertiary);margin-top:4px;">The AI uses this to speak naturally as your agent when navigating gatekeepers.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Step 5: Review & Launch -->
@@ -2824,6 +2863,39 @@
             document.getElementById("enableCarrierCheck").addEventListener("change", function() {
                 document.getElementById("carrierCheckLabel").textContent = this.checked ? "Enabled" : "Disabled";
             });
+
+            // ---- Gatekeeper Navigator toggle ----
+            (function() {
+                var gkToggle = document.getElementById("gkNavigatorToggle");
+                var gkEnabled = document.getElementById("gkNavigatorEnabled");
+                var gkOptions = document.getElementById("gkNavigatorOptions");
+                var gkLabel = document.getElementById("gkNavigatorLabel");
+                var gkVoiceSelect = document.getElementById("gkVoiceSelect");
+                var gkVoicesLoaded = false;
+
+                function setGkState(enabled) {
+                    gkEnabled.value = enabled ? "1" : "0";
+                    gkLabel.textContent = enabled ? "Enabled" : "Disabled";
+                    gkOptions.style.display = enabled ? "flex" : "none";
+                    if (enabled && !gkVoicesLoaded) {
+                        gkVoicesLoaded = true;
+                        apiFetch("/humana-voice/api/my-voices").then(function(r){ return r.json(); }).then(function(data) {
+                            var voices = data.voices || [];
+                            gkVoiceSelect.innerHTML = '<option value="">— No voice (text only) —</option>';
+                            voices.forEach(function(v) {
+                                var opt = document.createElement("option");
+                                opt.value = v.voice_id;
+                                opt.textContent = v.voice_name + (v.is_active ? " ✓" : "");
+                                if (v.is_active) opt.selected = true;
+                                gkVoiceSelect.appendChild(opt);
+                            });
+                        }).catch(function(){});
+                    }
+                }
+
+                gkToggle.addEventListener("change", function() { setGkState(this.checked); });
+            })();
+            // ---- End Gatekeeper Navigator toggle ----
 
             // ---- Download Report ----
             var downloadBtn = document.getElementById("downloadReportBtn");
