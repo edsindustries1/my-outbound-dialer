@@ -86,25 +86,34 @@ def build_navigator_response(
     prospect_name: str,
     prospect_company: str,
     agent_persona: str,
+    knowledge_base: str = "",
 ) -> str:
     """
     Generate a short spoken response appropriate for the gatekeeper type.
     Returns the text the AI agent should say out loud.
     """
+    kb_section = (
+        f"\n\nKnowledge base about your purpose and product:\n{knowledge_base.strip()}"
+        if knowledge_base and knowledge_base.strip()
+        else ""
+    )
     system_prompt = (
         f"You are {agent_persona}\n\n"
         f"You are on a live phone call trying to reach {prospect_name} at "
         f"{prospect_company}. Something answered the call before you reached them. "
-        "Your job is to navigate past it naturally and get connected to the prospect.\n\n"
+        "Your job is to navigate past it naturally and get connected to the prospect."
+        f"{kb_section}\n\n"
         "Rules:\n"
         "- Speak like a real human, naturally and confidently\n"
         "- Keep responses SHORT — maximum 2 sentences\n"
         "- Never say you are an AI or automated system\n"
         "- Never read out punctuation\n"
+        "- Use the knowledge base above to give a genuine, specific reason for calling "
+        "(don't be vague, reference your actual product/service naturally)\n"
         "- For ai_screener: state your name from the persona and give a brief genuine "
-        "reason for calling\n"
+        "reason for calling drawn from the knowledge base\n"
         "- For human_receptionist: greet warmly, ask for the prospect by name, give "
-        "one short reason\n"
+        "one short specific reason from the knowledge base\n"
         "- For ivr_menu: you cannot press buttons, so say \"representative\" or \"agent\" "
         "to try to reach a human\n"
         "- For human_prospect: this is the person — greet them and introduce yourself "
@@ -114,7 +123,7 @@ def build_navigator_response(
         "Respond with ONLY what the agent should say out loud, nothing else. "
         "No quotes, no labels, no explanation."
     )
-    response = _groq_chat(system_prompt, transcript_text or "(silence)", max_tokens=120)
+    response = _groq_chat(system_prompt, transcript_text or "(silence)", max_tokens=150)
     if not response:
         if category == "ivr_menu":
             return "Representative."

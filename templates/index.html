@@ -628,6 +628,14 @@
                                             <textarea name="navigator_persona" id="gkPersona" class="gads-input" rows="3" placeholder="e.g. Alex, a business development rep at OpenHumana. I'm calling to connect with decision makers about our outreach automation platform." style="width:100%;resize:vertical;font-size:13px;">{{ current_user.navigator_persona if current_user.navigator_persona else 'Alex, a friendly business development representative calling on behalf of my company.' }}</textarea>
                                             <p style="font-size:11px;color:var(--gads-text-tertiary);margin-top:4px;">The AI uses this to speak naturally as your agent when navigating gatekeepers.</p>
                                         </div>
+                                        <div style="border-top:1px solid var(--gads-border);padding-top:12px;">
+                                            <label style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px;color:var(--gads-text-secondary);">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                                Knowledge Base
+                                            </label>
+                                            <textarea name="navigator_knowledge_base" id="gkKnowledgeBase" class="gads-input" rows="6" placeholder="Tell Alex what to say and why. Examples:&#10;&#10;- Company: OpenHumana — AI-powered outbound call automation for sales teams&#10;- Product: Voicemail drop + live transfer platform&#10;- Value prop: Helps SDRs reach 10x more prospects per day without manual dialing&#10;- Reason for calling: We help {prospect_company} reduce dial time and increase contact rates&#10;- Common objection: 'We already have a dialer' → 'Ours integrates directly with your CRM and includes AI voicemails'&#10;- Tone: Professional, confident, brief" style="width:100%;resize:vertical;font-size:12px;line-height:1.5;">{{ current_user.navigator_knowledge_base if current_user.navigator_knowledge_base else '' }}</textarea>
+                                            <p style="font-size:11px;color:var(--gads-text-tertiary);margin-top:4px;">Alex reads this before every gatekeeper interaction. Include your product, value prop, reason for calling, and how to handle pushbacks. The more specific, the more convincing Alex sounds.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

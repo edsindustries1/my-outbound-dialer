@@ -55,6 +55,7 @@ def _default_campaign():
         "prospect_name": "",
         "prospect_company": "",
         "navigator_voice_id": None,
+        "navigator_knowledge_base": "",
     }
 
 
@@ -286,7 +287,7 @@ def reset_campaign(user_id=None):
 
 
 def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None, is_test=False,
-                 gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None):
+                 gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None, navigator_knowledge_base=""):
     key = _campaign_key(user_id)
     _get_pause_event(user_id).set()
     with lock:
@@ -307,6 +308,7 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
         camp["prospect_name"] = prospect_name or ""
         camp["prospect_company"] = prospect_company or ""
         camp["navigator_voice_id"] = navigator_voice_id or None
+        camp["navigator_knowledge_base"] = navigator_knowledge_base or ""
         _campaigns[key] = camp
         if user_id is None:
             call_states.clear()

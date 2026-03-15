@@ -1487,9 +1487,13 @@ def start():
     gk_prospect_company = request.form.get("prospect_company", "").strip()
     gk_voice_id = request.form.get("navigator_voice_id", "").strip() or None
     gk_persona = request.form.get("navigator_persona", "").strip()
-    if gk_persona:
+    gk_knowledge_base = request.form.get("navigator_knowledge_base", "").strip()
+    if gk_persona or gk_knowledge_base:
         try:
-            current_user.navigator_persona = gk_persona
+            if gk_persona:
+                current_user.navigator_persona = gk_persona
+            if gk_knowledge_base:
+                current_user.navigator_knowledge_base = gk_knowledge_base
             db.session.commit()
         except Exception:
             db.session.rollback()
@@ -1498,7 +1502,8 @@ def start():
     logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}, gk={gk_enabled}")
     set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number, user_id=current_user.id,
                  gatekeeper_navigator_enabled=gk_enabled, prospect_name=gk_prospect_name,
-                 prospect_company=gk_prospect_company, navigator_voice_id=gk_voice_id)
+                 prospect_company=gk_prospect_company, navigator_voice_id=gk_voice_id,
+                 navigator_knowledge_base=gk_knowledge_base)
 
     if voicemail_type == "personalized":
         pvm_template_id = request.form.get("pvm_template_id", "").strip()
@@ -3172,15 +3177,20 @@ def _handle_webhook():
                         prospect_company = gk_camp.get("prospect_company") or "their company"
                         nav_voice_id = state.get("navigator_voice_id") or gk_camp.get("navigator_voice_id")
                         agent_persona = "Alex, a friendly business development representative"
+                        gk_knowledge_base = gk_camp.get("navigator_knowledge_base", "")
                         if webhook_user_id:
                             try:
                                 gk_user = User.query.get(webhook_user_id)
-                                if gk_user and gk_user.navigator_persona:
-                                    agent_persona = gk_user.navigator_persona
+                                if gk_user:
+                                    if gk_user.navigator_persona:
+                                        agent_persona = gk_user.navigator_persona
+                                    if not gk_knowledge_base and gk_user.navigator_knowledge_base:
+                                        gk_knowledge_base = gk_user.navigator_knowledge_base
                             except Exception:
                                 pass
                         response_text = gk_navigator.build_navigator_response(
-                            gk_category, transcript_text, prospect_name, prospect_company, agent_persona
+                            gk_category, transcript_text, prospect_name, prospect_company,
+                            agent_persona, knowledge_base=gk_knowledge_base
                         )
                         logger.info(f"[GATEKEEPER] {call_control_id} | Response: '{response_text[:100]}'")
                         base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")

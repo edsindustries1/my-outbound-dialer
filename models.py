@@ -34,6 +34,7 @@ class User(UserMixin, db.Model):
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
     navigator_persona = db.Column(db.Text, nullable=True)
+    navigator_knowledge_base = db.Column(db.Text, nullable=True)
     
     app_data = db.relationship('UserAppData', backref='user', lazy=True, cascade='all, delete-orphan')
     instance = db.relationship('UserInstance', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
@@ -190,6 +191,11 @@ def _ensure_schema():
         if "navigator_persona" not in existing_cols:
             logger.warning("DB schema missing users.navigator_persona; applying ALTER TABLE")
             db.session.execute(text("ALTER TABLE users ADD COLUMN navigator_persona TEXT"))
+            db.session.commit()
+
+        if "navigator_knowledge_base" not in existing_cols:
+            logger.warning("DB schema missing users.navigator_knowledge_base; applying ALTER TABLE")
+            db.session.execute(text("ALTER TABLE users ADD COLUMN navigator_knowledge_base TEXT"))
             db.session.commit()
 
         if "invitations" in inspector.get_table_names():
