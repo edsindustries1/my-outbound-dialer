@@ -2778,16 +2778,6 @@ def _handle_webhook():
                           status_description="Answered - detecting...", status_color="blue")
         logger.info(f"[CALL ANSWERED] {call_control_id} | to: {to_number} | from: {from_number}")
 
-        try:
-            start_transcription(call_control_id)
-        except Exception as e:
-            logger.error(f"Failed to start transcription: {e}")
-
-        try:
-            start_recording(call_control_id)
-        except Exception as e:
-            logger.error(f"Failed to start recording: {e}")
-
         def _amd_fallback(ccid):
             """If AMD event never arrives within 8s, default to transfer (treat as human)."""
             state = get_call_state(ccid)
@@ -2795,6 +2785,14 @@ def _handle_webhook():
                 logger.warning(f"[AMD TIMEOUT] {ccid} | No AMD result in 8s, defaulting to HUMAN (transfer)")
                 update_call_state(ccid, amd_received=True, amd_result="timeout",
                                   status_description="AMD timeout - treating as human", status_color="blue")
+                try:
+                    start_transcription(ccid)
+                except Exception as e:
+                    logger.error(f"Failed to start transcription on AMD timeout: {e}")
+                try:
+                    start_recording(ccid)
+                except Exception as e:
+                    logger.error(f"Failed to start recording on AMD timeout: {e}")
                 uid = get_user_for_call(ccid)
                 camp = get_campaign(user_id=uid)
                 t_num = camp.get("transfer_number") or ""
@@ -2858,6 +2856,14 @@ def _handle_webhook():
         if result == "human":
             update_call_state(call_control_id, machine_detected=False, status="human_detected",
                               amd_result="human", status_description="Human detected", status_color="blue")
+            try:
+                start_transcription(call_control_id)
+            except Exception as e:
+                logger.error(f"Failed to start transcription on human detection: {e}")
+            try:
+                start_recording(call_control_id)
+            except Exception as e:
+                logger.error(f"Failed to start recording on human detection: {e}")
             camp = get_campaign(user_id=webhook_user_id)
             transfer_num = camp.get("transfer_number") or ""
             customer_num = (get_call_state(call_control_id) or {}).get("number", "")
@@ -2928,6 +2934,14 @@ def _handle_webhook():
             logger.info(f"[AMD RESULT] {call_control_id} | NOT_SURE, treating as human (transferring)")
             update_call_state(call_control_id, amd_result="not_sure",
                               status_description="Detection unclear - treating as human", status_color="blue")
+            try:
+                start_transcription(call_control_id)
+            except Exception as e:
+                logger.error(f"Failed to start transcription on not_sure detection: {e}")
+            try:
+                start_recording(call_control_id)
+            except Exception as e:
+                logger.error(f"Failed to start recording on not_sure detection: {e}")
             if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | not_sure -> transferring to {transfer_num}")
                 try:
