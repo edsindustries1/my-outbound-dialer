@@ -1041,11 +1041,7 @@ ACTION: Reach out within 5 minutes for highest conversion.
 def login():
     _detect_and_set_base_url()
     if current_user.is_authenticated:
-        if request.args.get("_r"):
-            logout_user()
-            session.clear()
-        else:
-            return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard"))
     error = None
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if request.method == "POST":
@@ -1207,6 +1203,9 @@ def profile_setup():
 def logout():
     logout_user()
     session.clear()
+    next_url = request.args.get("next")
+    if next_url and next_url.startswith("/"):
+        return redirect(next_url)
     return redirect(url_for("landing"))
 
 
