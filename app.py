@@ -1067,7 +1067,6 @@ def login():
         else:
             return redirect(url_for("dashboard"))
     error = None
-    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if request.method == "POST":
         try:
             login_mode = request.form.get("login_mode", "user")
@@ -1089,49 +1088,40 @@ def login():
                     session.permanent = True
                     redirect_target = url_for("super_admin") if login_mode == "super_admin" else url_for("dashboard")
                     logger.info(f"Admin successfully authenticated, redirecting to {redirect_target}")
-                    if is_ajax:
-                        return jsonify({"success": True, "redirect": redirect_target})
-                    return redirect(redirect_target)
+                    return jsonify({"success": True, "redirect": redirect_target})
                 else:
                     logger.warning(f"Admin login failed - password mismatch")
-                    error = "Invalid admin password"
+                    return jsonify({"success": False, "error": "Invalid admin password"}), 401
             else:
                 email = request.form.get("email", "").strip().lower()
                 password = request.form.get("password", "")
                 if not email or not password:
-                    error = "Please enter email and password"
+                    return jsonify({"success": False, "error": "Please enter email and password"}), 400
+                authenticated = False
+                user = User.query.filter_by(email=email).first()
+                if not user:
+                    return jsonify({"success": False, "error": "No account found. Access is by invitation only."}), 401
+                elif not getattr(user, 'is_active_account', True):
+                    return jsonify({"success": False, "error": "Your account has been deactivated. Please contact the administrator."}), 403
                 else:
-                    authenticated = False
-                    user = User.query.filter_by(email=email).first()
-                    if not user:
-                        error = "No account found. Access is by invitation only."
-                    elif not getattr(user, 'is_active_account', True):
-                        error = "Your account has been deactivated. Please contact the administrator."
-                    else:
-                        if supabase_available:
-                            result, err = supabase_sign_in(email, password)
-                            if result:
-                                if not user.supabase_id:
-                                    user.supabase_id = result["user_id"]
-                                    db.session.commit()
-                                authenticated = True
-                        if not authenticated and user.check_password(password):
+                    if supabase_available:
+                        result, err = supabase_sign_in(email, password)
+                        if result:
+                            if not user.supabase_id:
+                                user.supabase_id = result["user_id"]
+                                db.session.commit()
                             authenticated = True
-                        if authenticated:
-                            login_user(user)
-                            session.permanent = True
-                            if is_ajax:
-                                return jsonify({"success": True, "redirect": url_for("dashboard")})
-                            return redirect(url_for("dashboard"))
-                        else:
-                            error = "Invalid email or password"
-            if is_ajax and error:
-                return jsonify({"success": False, "error": error}), 401
+                    if not authenticated and user.check_password(password):
+                        authenticated = True
+                    if authenticated:
+                        login_user(user)
+                        session.permanent = True
+                        return jsonify({"success": True, "redirect": url_for("dashboard")})
+                    else:
+                        return jsonify({"success": False, "error": "Invalid email or password"}), 401
         except Exception as e:
             logger.exception(f"Login POST handler crashed: {e}")
-            if is_ajax:
-                return jsonify({"success": False, "error": "Server error, please try again."}), 500
-            error = "Something went wrong while logging you in. Please try again."
+            return jsonify({"success": False, "error": "Server error, please try again."}), 500
     return render_template("login.html", error=error, google_oauth=google_oauth_available, app_password_set=bool(APP_PASSWORD), show_admin=show_admin)
 
 
