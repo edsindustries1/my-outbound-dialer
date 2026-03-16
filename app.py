@@ -136,21 +136,36 @@ logging.basicConfig(
 logger = logging.getLogger("voicemail_app")
 
 # ---- Flask App ----
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import timedelta as _td
+
+app = Flask(__name__)
+
+_secret = os.environ.get("SESSION_SECRET")
+if not _secret:
+    import secrets as _secrets
+    _secret = _secrets.token_hex(32)
+    logger.warning("SESSION_SECRET not set — generated a temporary key. Sessions will NOT survive restarts. Set SESSION_SECRET in your environment.")
+app.secret_key = _secret
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+_is_dev = os.environ.get("FLASK_ENV") == "development" or os.environ.get("INSECURE_COOKIES") == "1"
 app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") != "development"
+app.config["SESSION_COOKIE_SECURE"] = not _is_dev
 app.config["REMEMBER_COOKIE_HTTPONLY"] = True
 app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
-app.config["REMEMBER_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") != "development"
+app.config["REMEMBER_COOKIE_SECURE"] = not _is_dev
 app.config["REMEMBER_COOKIE_DURATION"] = _td(days=7)
 
 # ---- Database & Auth Setup ----
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+_db_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+if _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 

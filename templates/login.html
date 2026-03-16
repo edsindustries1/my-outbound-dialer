@@ -432,9 +432,16 @@
                     }
                     errDiv.textContent = data.error || "Login failed";
                 }
-            }).catch(function() {
+            }).catch(function(err) {
                 btn.disabled = false;
                 btn.textContent = "Sign In";
+                var errDiv = document.querySelector(".login-error");
+                if (!errDiv) {
+                    errDiv = document.createElement("div");
+                    errDiv.className = "login-error";
+                    loginForm.parentNode.insertBefore(errDiv, loginForm);
+                }
+                errDiv.textContent = "Connection error — please try again.";
             });
         });
     })();
