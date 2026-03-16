@@ -349,8 +349,8 @@
             {% endif %}
 
             <form method="POST" action="/login" class="login-form" id="loginForm">
-                <input type="hidden" name="login_mode" id="loginMode" value="user">
-                <div id="userLoginFields">
+                <input type="hidden" name="login_mode" id="loginMode" value="{{ login_mode_post if login_mode_post else 'user' }}">
+                <div id="userLoginFields" style="{% if login_mode_post in ('admin','super_admin') %}display:none;{% endif %}">
                     <label>Email</label>
                     <div class="login-input-wrap">
                         <input type="email" name="email" placeholder="you@example.com" autocomplete="email" autofocus>
@@ -362,14 +362,14 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                     </div>
                 </div>
-                <div id="adminLoginFields" style="display:none;">
+                <div id="adminLoginFields" style="display:{% if login_mode_post in ('admin','super_admin') %}block{% else %}none{% endif %};">
                     <label>App Password</label>
                     <div class="login-input-wrap">
                         <input type="password" name="app_password" placeholder="Enter admin password" autocomplete="off">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     </div>
                 </div>
-                <button type="submit" class="login-btn" id="loginSubmitBtn">Sign In</button>
+                <button type="submit" class="login-btn" id="loginSubmitBtn">{% if login_mode_post == 'super_admin' %}Login as Super Admin{% elif login_mode_post == 'admin' %}Login as Admin{% else %}Sign In{% endif %}</button>
             </form>
             <div class="login-toggle">
                 <a href="/forgot-password">Forgot your password?</a>
@@ -398,51 +398,16 @@
         var loginForm = document.getElementById("loginForm");
         if (!loginForm) return;
         loginForm.addEventListener("submit", function(e) {
-            e.preventDefault();
-            var formData = new FormData(loginForm);
             var btn = document.getElementById("loginSubmitBtn");
             btn.disabled = true;
             btn.textContent = "Signing in...";
-            fetch("/login", {
-                method: "POST",
-                body: formData,
-                headers: {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"},
-                credentials: "include"
-            }).then(function(res) { return res.json(); }).then(function(data) {
-                if (data.success) {
-                    var overlay = document.getElementById("splashOverlay");
-                    var video = document.getElementById("splashVideo");
-                    overlay.style.display = "block";
-                    video.play();
-                    video.addEventListener("ended", function() {
-                        window.location.href = data.redirect || "/dashboard";
-                    });
-                    setTimeout(function() {
-                        window.location.href = data.redirect || "/dashboard";
-                    }, 8000);
-                } else {
-                    btn.disabled = false;
-                    var mode = loginForm.querySelector("#loginMode").value;
-                    btn.textContent = mode === "super_admin" ? "Login as Super Admin" : mode === "admin" ? "Login as Admin" : "Sign In";
-                    var errDiv = document.querySelector(".login-error");
-                    if (!errDiv) {
-                        errDiv = document.createElement("div");
-                        errDiv.className = "login-error";
-                        loginForm.parentNode.insertBefore(errDiv, loginForm);
-                    }
-                    errDiv.textContent = data.error || "Login failed";
-                }
-            }).catch(function(err) {
-                btn.disabled = false;
-                btn.textContent = "Sign In";
-                var errDiv = document.querySelector(".login-error");
-                if (!errDiv) {
-                    errDiv = document.createElement("div");
-                    errDiv.className = "login-error";
-                    loginForm.parentNode.insertBefore(errDiv, loginForm);
-                }
-                errDiv.textContent = "Connection error — please try again.";
-            });
+            var overlay = document.getElementById("splashOverlay");
+            var video = document.getElementById("splashVideo");
+            if (overlay && video) {
+                overlay.style.display = "block";
+                try { video.play(); } catch(ex) {}
+            }
+            // Let the form POST naturally — server handles redirect and errors
         });
     })();
     </script>
