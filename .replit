@@ -52,6 +52,10 @@ externalPort = 3002
 localPort = 23637
 externalPort = 3001
 
+[[ports]]
+localPort = 23638
+externalPort = 3003
+
 [userenv]
 
 [userenv.shared]
@@ -77,3 +81,7 @@ PUBLIC_BASE_URL = "https://voice-blast.replit.app"
 deploymentTarget = "vm"
 run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--reload", "main:app"]
 build = ["bash", "-c", "pip install -r requirements.txt"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
