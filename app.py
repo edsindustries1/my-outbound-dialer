@@ -2888,7 +2888,7 @@ def _handle_webhook():
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
-        timer = threading.Timer(8.0, _amd_fallback, args=[call_control_id])
+        timer = threading.Timer(20.0, _amd_fallback, args=[call_control_id])
         timer.daemon = True
         _amd_timers[call_control_id] = timer
         timer.start()
