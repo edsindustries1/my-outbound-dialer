@@ -148,7 +148,7 @@ if not _secret:
     logger.warning("SESSION_SECRET not set — generated a temporary key. Sessions will NOT survive restarts. Set SESSION_SECRET in your environment.")
 app.secret_key = _secret
 
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 _is_dev = os.environ.get("FLASK_ENV") == "development" or os.environ.get("INSECURE_COOKIES") == "1"
 app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
