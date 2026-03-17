@@ -4,9 +4,37 @@ import requests
 FISH_AUDIO_BASE_URL = "https://api.fish.audio"
 FISH_AUDIO_CDN = "https://api.fish.audio"
 
+_KEY_CANDIDATES = [
+    "FISH_AUDIO_API_KEY",
+    "FISH_AUDIO_KEY",
+    "fish_audio_api_key",
+    "fish_audio_key",
+    "FISHAUDIO_API_KEY",
+]
+
+
+def _read_api_key():
+    """Read Fish Audio API key from env, trying several common name variants.
+    Strips surrounding whitespace and accidental quote characters."""
+    for name in _KEY_CANDIDATES:
+        val = os.environ.get(name, "")
+        if val:
+            val = val.strip().strip('"').strip("'").strip()
+            if val:
+                return val
+    return ""
+
+
+def get_api_key():
+    return _read_api_key()
+
+
+def is_configured():
+    return bool(_read_api_key())
+
 
 def _get_headers(extra=None):
-    key = os.environ.get("FISH_AUDIO_API_KEY", "")
+    key = _read_api_key()
     h = {"Authorization": f"Bearer {key}"}
     if extra:
         h.update(extra)

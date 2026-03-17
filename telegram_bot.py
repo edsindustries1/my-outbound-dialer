@@ -16,7 +16,21 @@ logger = logging.getLogger("voicemail_app")
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip() or os.environ.get("BOT_TOKEN", "").strip()
 ADMIN_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip() or os.environ.get("ADMIN_CHAT_ID", "").strip()
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+
+_GROQ_KEY_CANDIDATES = ["GROQ_API_KEY", "GROQ_KEY", "groq_api_key", "groq_key"]
+
+
+def _read_groq_key():
+    for name in _GROQ_KEY_CANDIDATES:
+        val = os.environ.get(name, "")
+        if val:
+            val = val.strip().strip('"').strip("'").strip()
+            if val:
+                return val
+    return ""
+
+
+GROQ_API_KEY = _read_groq_key()
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 _conversation_history = []

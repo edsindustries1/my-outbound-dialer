@@ -12,7 +12,6 @@ import requests
 
 logger = logging.getLogger("voicemail_app")
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama3-70b-8192"
 
@@ -21,16 +20,31 @@ VALID_CATEGORIES = {"human_prospect", "human_receptionist", "ai_screener", "ivr_
 GATEKEEPER_DIR = os.path.join("uploads", "gatekeeper")
 os.makedirs(GATEKEEPER_DIR, exist_ok=True)
 
+_GROQ_KEY_CANDIDATES = ["GROQ_API_KEY", "GROQ_KEY", "groq_api_key", "groq_key"]
+_FISH_KEY_CANDIDATES = ["FISH_AUDIO_API_KEY", "FISH_AUDIO_KEY", "fish_audio_api_key", "FISHAUDIO_API_KEY"]
+
+
+def _read_env_key(candidates):
+    """Read an API key from env, trying several name variants and stripping quotes/whitespace."""
+    for name in candidates:
+        val = os.environ.get(name, "")
+        if val:
+            val = val.strip().strip('"').strip("'").strip()
+            if val:
+                return val
+    return ""
+
 
 def _groq_chat(system_prompt: str, user_message: str, max_tokens: int = 200) -> str:
-    if not GROQ_API_KEY:
+    groq_key = _read_env_key(_GROQ_KEY_CANDIDATES)
+    if not groq_key:
         logger.warning("[Navigator] GROQ_API_KEY not set — skipping LLM call")
         return ""
     try:
         resp = requests.post(
             GROQ_URL,
             headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Authorization": f"Bearer {groq_key}",
                 "Content-Type": "application/json",
             },
             json={

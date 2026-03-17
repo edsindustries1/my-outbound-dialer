@@ -11,7 +11,20 @@ import requests
 
 logger = logging.getLogger("voicemail_app")
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+_GROQ_KEY_CANDIDATES = ["GROQ_API_KEY", "GROQ_KEY", "groq_api_key", "groq_key"]
+
+
+def _read_groq_key():
+    for name in _GROQ_KEY_CANDIDATES:
+        val = os.environ.get(name, "")
+        if val:
+            val = val.strip().strip('"').strip("'").strip()
+            if val:
+                return val
+    return ""
+
+
+GROQ_API_KEY = _read_groq_key()
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 POLLINATIONS_URL = "https://text.pollinations.ai/openai"
 MAX_HISTORY_MESSAGES = 10

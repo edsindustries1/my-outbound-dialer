@@ -1,4 +1,3 @@
-import os
 from flask import Blueprint, render_template, request, jsonify, Response, stream_with_context
 from flask_login import login_required, current_user
 from app import db
@@ -23,7 +22,7 @@ def _active_voice(user_id):
 def index():
     voices = HumanaVoice.query.filter_by(user_id=current_user.id).order_by(HumanaVoice.created_at.desc()).all()
     active = _active_voice(current_user.id)
-    api_key_set = bool(os.environ.get("FISH_AUDIO_API_KEY", ""))
+    api_key_set = fish_client.is_configured()
     return render_template(
         "humana_voice/index.html",
         voices=voices,
