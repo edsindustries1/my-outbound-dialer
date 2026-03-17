@@ -70,6 +70,6 @@ TELNYX_FROM_NUMBER = "+12137688605"
 PUBLIC_BASE_URL = "https://voice-blast.replit.app"
 
 [deployment]
-deploymentTarget = "autoscale"
-run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+deploymentTarget = "vm"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--reload", "main:app"]
 build = ["bash", "-c", "pip install -r requirements.txt"]
