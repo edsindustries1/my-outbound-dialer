@@ -1464,6 +1464,79 @@ def clear_contacts(user_id=None):
         _save_contacts([], user_id)
 
 
+# ── Quick Call Status ──────────────────────────────────────────────────────────
+
+QUICK_CALL_STATUSES_FILE = "quick_call_statuses.json"
+
+
+def _load_quick_call_statuses(user_id):
+    f = _user_file(user_id, QUICK_CALL_STATUSES_FILE)
+    try:
+        if os.path.exists(f):
+            with open(f, "r") as fh:
+                return json.load(fh)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_quick_call_statuses(statuses, user_id):
+    d = _user_logs_dir(user_id)
+    os.makedirs(d, exist_ok=True)
+    f = _user_file(user_id, QUICK_CALL_STATUSES_FILE)
+    try:
+        with open(f, "w") as fh:
+            json.dump(statuses, fh, indent=2)
+    except Exception:
+        pass
+
+
+def _qc_key(crm_source, crm_contact_id):
+    """Return a composite key scoped to the CRM source to avoid ID collisions across CRMs."""
+    src = (crm_source or "unknown").strip()
+    return f"{src}:{crm_contact_id}"
+
+
+def set_quick_call_status(user_id, crm_contact_id, status, call_control_id=None, extra=None, crm_source=None):
+    """Set the quick call status for a contact scoped by (crm_source, crm_contact_id)."""
+    _extra = extra or {}
+    _src = crm_source or _extra.get("crm_source", "") or "unknown"
+    key = _qc_key(_src, str(crm_contact_id))
+    with _file_lock:
+        statuses = _load_quick_call_statuses(user_id)
+        statuses[key] = {
+            "status": status,
+            "crm_source": _src,
+            "crm_contact_id": str(crm_contact_id),
+            "call_control_id": call_control_id,
+            "updated_at": datetime.utcnow().isoformat(),
+            **{k: v for k, v in _extra.items() if k != "crm_source"},
+        }
+        _save_quick_call_statuses(statuses, user_id)
+
+
+def get_quick_call_statuses(user_id):
+    """Return dict of composite_key -> status record for a user."""
+    with _file_lock:
+        return _load_quick_call_statuses(user_id)
+
+
+def get_quick_call_status(user_id, crm_contact_id, crm_source=None):
+    """Return the status record for a specific contact, or None.
+    Always requires crm_source to correctly resolve composite keys.
+    Falls back to scanning all statuses by crm_contact_id if crm_source is omitted.
+    """
+    with _file_lock:
+        statuses = _load_quick_call_statuses(user_id)
+        if crm_source:
+            return statuses.get(_qc_key(crm_source, str(crm_contact_id)))
+        cid = str(crm_contact_id)
+        for rec in statuses.values():
+            if isinstance(rec, dict) and rec.get("crm_contact_id") == cid:
+                return rec
+        return None
+
+
 # ── Call Recording URLs ──────────────────────────────────────────────────
 
 def store_recording_url(call_control_id, recording_url):

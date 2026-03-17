@@ -94,6 +94,9 @@ from storage import (
     store_recording_url,
     get_user_for_call,
     claim_call_action,
+    set_quick_call_status,
+    get_quick_call_statuses,
+    get_quick_call_status,
 )
 from telnyx_client import (
     transfer_call, play_audio, stop_playback, hangup_call, make_call, validate_connection_id,
@@ -2501,6 +2504,153 @@ def api_integrations_pipedrive_save():
     return jsonify({"ok": True, "company": cfg.get("company_domain", "")})
 
 
+@app.route("/api/crm-contacts", methods=["GET"])
+@login_required
+def api_crm_contacts():
+    """Return paginated, searchable contacts from the user's connected CRM(s)."""
+    from integrations import (
+        get_integration_config, KEY_HUBSPOT, KEY_GHL, KEY_PIPEDRIVE,
+        list_contacts_hubspot, list_contacts_ghl, list_contacts_pipedrive,
+        PER_PAGE,
+    )
+    user_id = current_user.id
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid page parameter"}), 400
+    search  = (request.args.get("search", "") or "").strip()
+    _VALID_SOURCES = {"", "hubspot", "gohighlevel", "pipedrive"}
+    source  = (request.args.get("source", "") or "").strip()
+    if source not in _VALID_SOURCES:
+        return jsonify({"error": "Invalid source parameter"}), 400
+    # HubSpot cursor token for cursor-based paging (passed from frontend)
+    hs_cursor = (request.args.get("hs_cursor", "") or "").strip() or None
+
+    all_contacts = []
+    has_more     = False
+    next_hs_cursor = None
+
+    hs_cfg = get_integration_config(user_id, KEY_HUBSPOT)
+    if (not source or source == "hubspot") and hs_cfg.get("enabled") and hs_cfg.get("access_token"):
+        try:
+            contacts, cursor = list_contacts_hubspot(
+                hs_cfg["access_token"], page=page, search=search, after_cursor=hs_cursor
+            )
+            all_contacts.extend(contacts)
+            if cursor:
+                has_more = True
+                next_hs_cursor = cursor
+        except Exception as e:
+            logger.error(f"[QUICK CALL] HubSpot list error: {e}")
+
+    ghl_cfg = get_integration_config(user_id, KEY_GHL)
+    if (not source or source == "gohighlevel") and ghl_cfg.get("enabled") and ghl_cfg.get("api_key"):
+        try:
+            contacts, more = list_contacts_ghl(ghl_cfg["api_key"], page=page, search=search)
+            all_contacts.extend(contacts)
+            if more:
+                has_more = True
+        except Exception as e:
+            logger.error(f"[QUICK CALL] GHL list error: {e}")
+
+    pd_cfg = get_integration_config(user_id, KEY_PIPEDRIVE)
+    if (not source or source == "pipedrive") and pd_cfg.get("enabled") and pd_cfg.get("api_token"):
+        try:
+            contacts, more = list_contacts_pipedrive(
+                pd_cfg["api_token"],
+                company_domain=pd_cfg.get("company_domain", ""),
+                page=page,
+                search=search,
+            )
+            all_contacts.extend(contacts)
+            if more:
+                has_more = True
+        except Exception as e:
+            logger.error(f"[QUICK CALL] Pipedrive list error: {e}")
+
+    from storage import _qc_key as _mk_qc_key
+    statuses = get_quick_call_statuses(user_id)
+    for c in all_contacts:
+        cid = str(c.get("id", ""))
+        csrc = c.get("crm_source", "")
+        rec = statuses.get(_mk_qc_key(csrc, cid))
+        c["last_call_status"] = rec.get("status") if rec else None
+        c["last_call_updated"] = rec.get("updated_at") if rec else None
+
+    return jsonify({
+        "contacts": all_contacts,
+        "page": page,
+        "per_page": PER_PAGE,
+        "has_more": has_more,
+        "next_hs_cursor": next_hs_cursor,
+        "search": search,
+    })
+
+
+@app.route("/api/quick-call", methods=["POST"])
+@login_required
+def api_quick_call():
+    """Initiate a quick outbound call to a CRM contact."""
+    data           = request.get_json() or {}
+    phone          = (data.get("phone") or "").strip()
+    contact_name   = (data.get("contact_name") or "").strip()
+    crm_contact_id = str(data.get("crm_contact_id") or "")
+    crm_source     = (data.get("crm_source") or "").strip()
+
+    _VALID_CRM_SOURCES = {"hubspot", "gohighlevel", "pipedrive"}
+    if not phone:
+        return jsonify({"error": "Phone number is required"}), 400
+    if not crm_contact_id:
+        return jsonify({"error": "crm_contact_id is required"}), 400
+    if crm_source and crm_source not in _VALID_CRM_SOURCES:
+        return jsonify({"error": "Invalid crm_source"}), 400
+
+    user_id = current_user.id
+
+    user_pn = ProvisionedNumber.query.filter_by(user_id=user_id, status="active").first()
+    from_number = (user_pn.phone_number if user_pn else None) or os.environ.get("TELNYX_FROM_NUMBER", "")
+    if not from_number:
+        return jsonify({"error": "No caller ID configured. Please provision a phone number first."}), 400
+
+    camp = get_campaign(user_id=user_id)
+    transfer_number = camp.get("transfer_number") or ""
+    if not transfer_number:
+        return jsonify({"error": "No transfer number configured. Please start or configure a campaign with a transfer number."}), 400
+
+    call_control_id, err = make_call(phone, from_number_override=from_number)
+    if err or not call_control_id:
+        return jsonify({"error": err or "Failed to place call"}), 500
+
+    create_call_state(call_control_id, phone, user_id=user_id)
+    update_call_state(
+        call_control_id,
+        quick_call=True,
+        quick_call_contact_name=contact_name,
+        quick_call_crm_contact_id=crm_contact_id,
+        quick_call_crm_source=crm_source,
+        from_number=from_number,
+    )
+
+    set_quick_call_status(
+        user_id, crm_contact_id, "calling",
+        call_control_id=call_control_id,
+        crm_source=crm_source,
+        extra={"contact_name": contact_name, "phone": phone},
+    )
+
+    logger.info(f"[QUICK CALL] user={user_id} contact_id={crm_contact_id} phone={phone} ccid={call_control_id}")
+    return jsonify({"ok": True, "call_control_id": call_control_id})
+
+
+@app.route("/api/quick-call-status", methods=["GET"])
+@login_required
+def api_quick_call_status():
+    """Return all quick call statuses for the current user."""
+    user_id  = current_user.id
+    statuses = get_quick_call_statuses(user_id)
+    return jsonify({"statuses": statuses})
+
+
 @app.route("/api/campaign_history")
 @login_required
 def campaign_history():
@@ -2960,6 +3110,12 @@ def _handle_webhook():
 
             if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | HUMAN detected, transferring to {transfer_num} (caller ID: {customer_num})")
+                if state.get("quick_call") and webhook_user_id:
+                    _qc_cid = state.get("quick_call_crm_contact_id", "")
+                    if _qc_cid:
+                        set_quick_call_status(webhook_user_id, _qc_cid, "connected",
+                                              call_control_id=call_control_id,
+                                              crm_source=state.get("quick_call_crm_source", ""))
                 try:
                     success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
                 except Exception as e:
@@ -3035,6 +3191,13 @@ def _handle_webhook():
                 logger.error(f"Failed to start recording on not_sure detection: {e}")
             if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
                 logger.info(f"[TRANSFER] {call_control_id} | not_sure -> transferring to {transfer_num}")
+                _ns_state = get_call_state(call_control_id) or {}
+                if _ns_state.get("quick_call") and webhook_user_id:
+                    _qc_cid2 = _ns_state.get("quick_call_crm_contact_id", "")
+                    if _qc_cid2:
+                        set_quick_call_status(webhook_user_id, _qc_cid2, "connected",
+                                              call_control_id=call_control_id,
+                                              crm_source=_ns_state.get("quick_call_crm_source", ""))
                 try:
                     success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
                 except Exception as e:
@@ -3336,10 +3499,67 @@ def _handle_webhook():
                     "ring_duration":     _ring_dur,
                     "hangup_cause":      hangup_cause,
                 }
-                from integrations import fire_all_integrations
-                fire_all_integrations(webhook_user_id, _call_record)
+                is_quick = bool(state.get("quick_call"))
+                _qc_crm_src = state.get("quick_call_crm_source", "") if is_quick else ""
+                if is_quick and _qc_crm_src:
+                    # Quick calls: targeted writeback to the specific CRM only
+                    # (plus webhook and Google Sheets which are not CRM-specific)
+                    from integrations import (
+                        fire_webhook, sync_to_hubspot, sync_to_ghl,
+                        sync_to_pipedrive, sync_to_google_sheets,
+                    )
+                    import threading as _threading
+                    _qc_rec = dict(_call_record)
+                    _qc_rec["contact_id"] = state.get("quick_call_crm_contact_id", "")
+                    _qc_rec["contact_name"] = state.get("quick_call_contact_name", "")
+                    _qc_crm_fn_map = {
+                        "hubspot": sync_to_hubspot,
+                        "gohighlevel": sync_to_ghl,
+                        "pipedrive": sync_to_pipedrive,
+                    }
+                    _qc_crm_fn = _qc_crm_fn_map.get(_qc_crm_src)
+                    def _run_quick_writeback(_uid=webhook_user_id, _rec=_qc_rec, _fn=_qc_crm_fn):
+                        for _name, _fn2 in [("webhook", fire_webhook), ("gsheets", sync_to_google_sheets)]:
+                            try:
+                                _fn2(_uid, _rec)
+                            except Exception as _e:
+                                logger.error(f"[INTEGRATIONS] quick-call {_name}: {_e}")
+                        if _fn:
+                            try:
+                                _fn(_uid, _rec)
+                            except Exception as _e:
+                                logger.error(f"[INTEGRATIONS] quick-call crm ({_qc_crm_src}): {_e}")
+                    _threading.Thread(target=_run_quick_writeback, daemon=True).start()
+                else:
+                    from integrations import fire_all_integrations
+                    fire_all_integrations(webhook_user_id, _call_record)
             except Exception as _ie:
                 logger.error(f"[INTEGRATIONS] Hook error: {_ie}")
+
+        if state and state.get("quick_call") and webhook_user_id:
+            try:
+                cid = state.get("quick_call_crm_contact_id", "")
+                crm_src = state.get("quick_call_crm_source", "")
+                if cid:
+                    if state.get("transferred"):
+                        qc_status = "connected"
+                    elif state.get("voicemail_dropped"):
+                        qc_status = "voicemail_left"
+                    elif hangup_cause in ("NO_ANSWER", "ORIGINATOR_CANCEL"):
+                        qc_status = "no_answer"
+                    elif hangup_cause in ("BUSY", "USER_BUSY", "CALL_REJECTED"):
+                        qc_status = "failed"
+                    else:
+                        qc_status = "no_answer"
+                    set_quick_call_status(
+                        webhook_user_id, cid, qc_status,
+                        call_control_id=call_control_id,
+                        crm_source=crm_src,
+                        extra={"hangup_cause": hangup_cause},
+                    )
+                    logger.info(f"[QUICK CALL] Contact {cid} status -> {qc_status}")
+            except Exception as _qce:
+                logger.error(f"[QUICK CALL] Status update error: {_qce}")
 
         if state:
             try:

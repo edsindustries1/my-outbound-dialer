@@ -169,23 +169,27 @@ def sync_to_hubspot(user_id, call_record):
     if not phone:
         return
 
-    contact_id = None
-    try:
-        search = requests.post(
-            "https://api.hubapi.com/crm/v3/objects/contacts/search",
-            headers=headers,
-            json={
-                "filterGroups": [{"filters": [{"propertyName": "phone", "operator": "EQ", "value": phone}]}],
-                "limit": 1,
-            },
-            timeout=10,
-        )
-        if search.status_code == 200:
-            results = search.json().get("results", [])
-            if results:
-                contact_id = results[0]["id"]
-    except Exception as e:
-        logger.error(f"[HUBSPOT] Contact search error for user {user_id}: {e}")
+    # Quick-call path: use known contact_id if provided (avoids phone-based lookup)
+    contact_id = call_record.get("contact_id") or None
+    if contact_id:
+        contact_id = str(contact_id)
+    else:
+        try:
+            search = requests.post(
+                "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                headers=headers,
+                json={
+                    "filterGroups": [{"filters": [{"propertyName": "phone", "operator": "EQ", "value": phone}]}],
+                    "limit": 1,
+                },
+                timeout=10,
+            )
+            if search.status_code == 200:
+                results = search.json().get("results", [])
+                if results:
+                    contact_id = results[0]["id"]
+        except Exception as e:
+            logger.error(f"[HUBSPOT] Contact search error for user {user_id}: {e}")
 
     if not contact_id:
         try:
@@ -315,36 +319,39 @@ def sync_to_ghl(user_id, call_record):
     if not phone:
         return
 
-    contact_id = None
-
-    # Search for existing contact by phone
-    try:
-        search = requests.get(
-            f"{GHL_BASE}/contacts/",
-            headers=headers,
-            params={"query": phone, "limit": 1},
-            timeout=10,
-        )
-        if search.status_code == 200:
-            contacts = search.json().get("contacts", [])
-            if contacts:
-                contact_id = contacts[0].get("id")
-    except Exception as e:
-        logger.error(f"[GHL] Contact search error for user {user_id}: {e}")
-
-    # Create contact if not found
-    if not contact_id:
+    # Quick-call path: use known contact_id if provided (avoids phone-based lookup)
+    contact_id = call_record.get("contact_id") or None
+    if contact_id:
+        contact_id = str(contact_id)
+    else:
+        # Search for existing contact by phone
         try:
-            create = requests.post(
+            search = requests.get(
                 f"{GHL_BASE}/contacts/",
                 headers=headers,
-                json={"phone": phone, "tags": ["open-humana"]},
+                params={"query": phone, "limit": 1},
                 timeout=10,
             )
-            if create.status_code in (200, 201):
-                contact_id = create.json().get("contact", {}).get("id")
+            if search.status_code == 200:
+                contacts = search.json().get("contacts", [])
+                if contacts:
+                    contact_id = contacts[0].get("id")
         except Exception as e:
-            logger.error(f"[GHL] Contact create error for user {user_id}: {e}")
+            logger.error(f"[GHL] Contact search error for user {user_id}: {e}")
+
+        # Create contact if not found
+        if not contact_id:
+            try:
+                create = requests.post(
+                    f"{GHL_BASE}/contacts/",
+                    headers=headers,
+                    json={"phone": phone, "tags": ["open-humana"]},
+                    timeout=10,
+                )
+                if create.status_code in (200, 201):
+                    contact_id = create.json().get("contact", {}).get("id")
+            except Exception as e:
+                logger.error(f"[GHL] Contact create error for user {user_id}: {e}")
 
     if not contact_id:
         logger.warning(f"[GHL] Could not find/create contact for {phone}, user {user_id}")
@@ -419,35 +426,39 @@ def sync_to_pipedrive(user_id, call_record):
     if not phone:
         return
 
+    # Quick-call path: use known contact_id if provided (avoids phone-based lookup)
     person_id = None
-
-    # Search for existing person by phone
-    try:
-        search = requests.get(
-            f"{PD_BASE}/persons/search",
-            params={**params, "term": phone, "fields": "phone", "limit": 1},
-            timeout=10,
-        )
-        if search.status_code == 200:
-            items = search.json().get("data", {}).get("items", [])
-            if items:
-                person_id = items[0].get("item", {}).get("id")
-    except Exception as e:
-        logger.error(f"[PIPEDRIVE] Person search error for user {user_id}: {e}")
-
-    # Create person if not found
-    if not person_id:
+    _direct_id = call_record.get("contact_id") or None
+    if _direct_id:
+        person_id = int(_direct_id) if str(_direct_id).isdigit() else _direct_id
+    else:
+        # Search for existing person by phone
         try:
-            create = requests.post(
-                f"{PD_BASE}/persons",
-                params=params,
-                json={"name": phone, "phone": [{"value": phone, "primary": True}]},
+            search = requests.get(
+                f"{PD_BASE}/persons/search",
+                params={**params, "term": phone, "fields": "phone", "limit": 1},
                 timeout=10,
             )
-            if create.status_code in (200, 201):
-                person_id = create.json().get("data", {}).get("id")
+            if search.status_code == 200:
+                items = search.json().get("data", {}).get("items", [])
+                if items:
+                    person_id = items[0].get("item", {}).get("id")
         except Exception as e:
-            logger.error(f"[PIPEDRIVE] Person create error for user {user_id}: {e}")
+            logger.error(f"[PIPEDRIVE] Person search error for user {user_id}: {e}")
+
+        # Create person if not found
+        if not person_id:
+            try:
+                create = requests.post(
+                    f"{PD_BASE}/persons",
+                    params=params,
+                    json={"name": phone, "phone": [{"value": phone, "primary": True}]},
+                    timeout=10,
+                )
+                if create.status_code in (200, 201):
+                    person_id = create.json().get("data", {}).get("id")
+            except Exception as e:
+                logger.error(f"[PIPEDRIVE] Person create error for user {user_id}: {e}")
 
     if not person_id:
         logger.warning(f"[PIPEDRIVE] Could not find/create person for {phone}, user {user_id}")
@@ -639,6 +650,196 @@ def google_sheets_test_connection(sheet_id, sheet_name="Call Log"):
         return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
     except Exception as e:
         return False, str(e)
+
+
+# ── CRM Contact Listing ────────────────────────────────────────────────────────
+
+PER_PAGE = 20
+
+
+def list_contacts_hubspot(token, page=1, search="", after_cursor=None):
+    """
+    List HubSpot contacts with optional search.
+    For non-search: uses HubSpot cursor-based pagination via `after` token.
+      Pass after_cursor=None for page 1; pass the cursor returned from the
+      previous call to advance to the next page.
+    Returns (contacts, next_cursor) where next_cursor is the HubSpot paging
+    cursor (a string) or None if there are no more pages.
+    """
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    results = []
+    next_cursor = None
+
+    try:
+        if search:
+            payload = {
+                "filterGroups": [
+                    {"filters": [{"propertyName": "firstname", "operator": "CONTAINS_TOKEN", "value": f"*{search}*"}]},
+                    {"filters": [{"propertyName": "lastname", "operator": "CONTAINS_TOKEN", "value": f"*{search}*"}]},
+                    {"filters": [{"propertyName": "phone", "operator": "CONTAINS_TOKEN", "value": f"*{search}*"}]},
+                ],
+                "properties": ["firstname", "lastname", "company", "phone"],
+                "limit": PER_PAGE,
+            }
+            if after_cursor:
+                payload["after"] = after_cursor
+            resp = requests.post(
+                "https://api.hubapi.com/crm/v3/objects/contacts/search",
+                headers=headers,
+                json=payload,
+                timeout=15,
+            )
+        else:
+            params = {
+                "limit": PER_PAGE,
+                "properties": "firstname,lastname,company,phone",
+            }
+            if after_cursor:
+                params["after"] = after_cursor
+            resp = requests.get(
+                "https://api.hubapi.com/crm/v3/objects/contacts",
+                headers=headers,
+                params=params,
+                timeout=15,
+            )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            paging = data.get("paging", {}).get("next", {})
+            next_cursor = paging.get("after") or None
+            for c in data.get("results", []):
+                props = c.get("properties", {})
+                fname = props.get("firstname") or ""
+                lname = props.get("lastname") or ""
+                name = (fname + " " + lname).strip() or "Unknown"
+                results.append({
+                    "id": c.get("id", ""),
+                    "name": name,
+                    "company": props.get("company") or "",
+                    "phone": props.get("phone") or "",
+                    "crm_source": "hubspot",
+                })
+        else:
+            logger.warning(f"[HUBSPOT] list_contacts failed {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        logger.error(f"[HUBSPOT] list_contacts error: {e}")
+
+    return results, next_cursor
+
+
+def list_contacts_ghl(api_key, page=1, search=""):
+    """
+    List GHL contacts with optional search.
+    Returns (contacts, has_more) where contacts is a list of normalized dicts.
+    """
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    results = []
+    has_more = False
+
+    try:
+        params = {"limit": 20, "startAfter": (page - 1) * 20}
+        if search:
+            params["query"] = search
+
+        resp = requests.get(
+            f"{GHL_BASE}/contacts/",
+            headers=headers,
+            params=params,
+            timeout=15,
+        )
+
+        if resp.status_code == 200:
+            data = resp.json()
+            contacts = data.get("contacts", [])
+            meta = data.get("meta", {})
+            has_more = meta.get("currentPage", 1) < meta.get("totalPages", 1) or len(contacts) == 20
+            for c in contacts:
+                first = c.get("firstName") or ""
+                last = c.get("lastName") or ""
+                name = (first + " " + last).strip() or c.get("name") or "Unknown"
+                phone = ""
+                phones = c.get("phone") or ""
+                if isinstance(phones, list) and phones:
+                    phone = phones[0] if isinstance(phones[0], str) else (phones[0].get("number") or "")
+                elif isinstance(phones, str):
+                    phone = phones
+                results.append({
+                    "id": c.get("id", ""),
+                    "name": name,
+                    "company": c.get("companyName") or "",
+                    "phone": phone,
+                    "crm_source": "gohighlevel",
+                })
+        else:
+            logger.warning(f"[GHL] list_contacts failed {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        logger.error(f"[GHL] list_contacts error: {e}")
+
+    return results, has_more
+
+
+def list_contacts_pipedrive(api_token, company_domain="", page=1, search=""):
+    """
+    List Pipedrive persons with optional search.
+    Returns (contacts, has_more) where contacts is a list of normalized dicts.
+    """
+    params_base = {"api_token": api_token}
+    results = []
+    has_more = False
+
+    try:
+        if search:
+            resp = requests.get(
+                f"{PD_BASE}/persons/search",
+                params={**params_base, "term": search, "limit": 20, "start": (page - 1) * 20},
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                items = data.get("data", {}).get("items", []) or []
+                has_more = data.get("additional_data", {}).get("pagination", {}).get("more_items_in_collection", False)
+                for item in items:
+                    c = item.get("item", {})
+                    phones = c.get("phones", [])
+                    phone = phones[0] if phones else ""
+                    results.append({
+                        "id": str(c.get("id", "")),
+                        "name": c.get("name") or "Unknown",
+                        "company": (c.get("organization") or {}).get("name") or "",
+                        "phone": phone,
+                        "crm_source": "pipedrive",
+                    })
+        else:
+            resp = requests.get(
+                f"{PD_BASE}/persons",
+                params={**params_base, "limit": 20, "start": (page - 1) * 20},
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                persons = data.get("data") or []
+                pagination = data.get("additional_data", {}).get("pagination", {})
+                has_more = pagination.get("more_items_in_collection", False)
+                for c in persons:
+                    phones_list = c.get("phone", []) or []
+                    phone = ""
+                    for ph in phones_list:
+                        if isinstance(ph, dict) and ph.get("value"):
+                            phone = ph["value"]
+                            break
+                    results.append({
+                        "id": str(c.get("id", "")),
+                        "name": c.get("name") or "Unknown",
+                        "company": (c.get("org_id") or {}).get("name") if isinstance(c.get("org_id"), dict) else "",
+                        "phone": phone,
+                        "crm_source": "pipedrive",
+                    })
+            else:
+                logger.warning(f"[PIPEDRIVE] list_contacts failed {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        logger.error(f"[PIPEDRIVE] list_contacts error: {e}")
+
+    return results, has_more
 
 
 # ── Fire all integrations ─────────────────────────────────────────────────────

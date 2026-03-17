@@ -1284,6 +1284,26 @@
                                             <input type="checkbox" id="hubspotEnabled" onchange="toggleHubspot(this)"> Enable
                                         </label>
                                     </div>
+                                    <div id="crm-contacts-panel-hubspot" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('hubspot')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-hubspot" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-hubspot" placeholder="Search by name or phone…" oninput="crmContactSearch('hubspot', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-hubspot">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-hubspot"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-hubspot" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-hubspot" onclick="crmContactPage('hubspot', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-hubspot">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-hubspot" onclick="crmContactPage('hubspot', 1)">Next →</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <!-- Token input (always shown when not connected) -->
                                 <div id="hubspot-disconnected-view" style="display:none;">
@@ -1323,6 +1343,26 @@
                                             <input type="checkbox" id="ghlEnabled" onchange="toggleGHL(this)"> Enable
                                         </label>
                                     </div>
+                                    <div id="crm-contacts-panel-gohighlevel" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('gohighlevel')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-gohighlevel" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-gohighlevel" placeholder="Search by name or phone…" oninput="crmContactSearch('gohighlevel', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-gohighlevel">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-gohighlevel"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-gohighlevel" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-gohighlevel" onclick="crmContactPage('gohighlevel', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-gohighlevel">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-gohighlevel" onclick="crmContactPage('gohighlevel', 1)">Next →</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div id="ghl-disconnected-view" style="display:none;">
                                     <div class="intg-setup-notice" style="margin-bottom:12px;">
@@ -1360,6 +1400,26 @@
                                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
                                             <input type="checkbox" id="pipedriveEnabled" onchange="togglePipedrive(this)"> Enable
                                         </label>
+                                    </div>
+                                    <div id="crm-contacts-panel-pipedrive" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('pipedrive')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-pipedrive" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-pipedrive" placeholder="Search by name or phone…" oninput="crmContactSearch('pipedrive', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-pipedrive">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-pipedrive"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-pipedrive" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-pipedrive" onclick="crmContactPage('pipedrive', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-pipedrive">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-pipedrive" onclick="crmContactPage('pipedrive', 1)">Next →</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="pipedrive-disconnected-view" style="display:none;">
@@ -1498,6 +1558,26 @@
                                             <input type="checkbox" id="hubspotEnabled2" onchange="toggleHubspot(this)"> Enable
                                         </label>
                                     </div>
+                                    <div id="crm-contacts-panel-hubspot2" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('hubspot2')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-hubspot2" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-hubspot2" placeholder="Search by name or phone…" oninput="crmContactSearch('hubspot2', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-hubspot2">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-hubspot2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-hubspot2" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-hubspot2" onclick="crmContactPage('hubspot2', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-hubspot2">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-hubspot2" onclick="crmContactPage('hubspot2', 1)">Next →</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div id="hubspot-disconnected-view2" style="display:none;">
                                     <div class="intg-setup-notice" style="margin-bottom:12px;">
@@ -1536,6 +1616,26 @@
                                             <input type="checkbox" id="ghlEnabled2" onchange="toggleGHL(this)"> Enable
                                         </label>
                                     </div>
+                                    <div id="crm-contacts-panel-gohighlevel2" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('gohighlevel2')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-gohighlevel2" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-gohighlevel2" placeholder="Search by name or phone…" oninput="crmContactSearch('gohighlevel2', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-gohighlevel2">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-gohighlevel2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-gohighlevel2" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-gohighlevel2" onclick="crmContactPage('gohighlevel2', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-gohighlevel2">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-gohighlevel2" onclick="crmContactPage('gohighlevel2', 1)">Next →</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div id="ghl-disconnected-view2" style="display:none;">
                                     <div class="intg-setup-notice" style="margin-bottom:12px;">
@@ -1573,6 +1673,26 @@
                                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
                                             <input type="checkbox" id="pipedriveEnabled2" onchange="togglePipedrive(this)"> Enable
                                         </label>
+                                    </div>
+                                    <div id="crm-contacts-panel-pipedrive2" class="crm-contacts-panel">
+                                        <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('pipedrive2')">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                                            <span>Contacts</span>
+                                            <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                                        </div>
+                                        <div class="crm-contacts-body" id="crm-contacts-body-pipedrive2" style="display:none;">
+                                            <div class="crm-contacts-search-wrap">
+                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-pipedrive2" placeholder="Search by name or phone…" oninput="crmContactSearch('pipedrive2', this.value)">
+                                            </div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-pipedrive2">
+                                                <div class="crm-contacts-spinner" id="crm-spinner-pipedrive2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
+                                            </div>
+                                            <div class="crm-contacts-pagination" id="crm-pagination-pipedrive2" style="display:none;">
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-pipedrive2" onclick="crmContactPage('pipedrive2', -1)" disabled>← Prev</button>
+                                                <span id="crm-page-label-pipedrive2">Page 1</span>
+                                                <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-next-pipedrive2" onclick="crmContactPage('pipedrive2', 1)">Next →</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="pipedrive-disconnected-view2" style="display:none;">
@@ -5107,6 +5227,142 @@
     font-size: 11px;
     color: var(--gads-text, #f1f5f9);
 }
+
+/* ── Spinner (small) ── */
+.gads-spinner-sm {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: var(--gads-primary, #6366f1);
+    border-radius: 50%;
+    display: inline-block;
+    animation: gads-spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes gads-spin { to { transform: rotate(360deg); } }
+
+/* ── CRM Quick-Call Contacts Panel ── */
+.crm-contacts-panel {
+    border: 1px solid var(--gads-border, rgba(255,255,255,0.09));
+    border-radius: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+}
+.crm-contacts-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gads-text-secondary, #94a3b8);
+    user-select: none;
+    transition: background 0.15s;
+}
+.crm-contacts-panel-header:hover {
+    background: rgba(255,255,255,0.04);
+}
+.crm-contacts-panel-header span {
+    flex: 1;
+}
+.crm-contacts-chevron {
+    transition: transform 0.2s;
+}
+.crm-contacts-panel.open .crm-contacts-chevron {
+    transform: rotate(180deg);
+}
+.crm-contacts-body {
+    border-top: 1px solid var(--gads-border, rgba(255,255,255,0.07));
+    padding: 10px 12px 12px;
+}
+.crm-contacts-search-wrap {
+    margin-bottom: 10px;
+}
+.crm-contacts-search-wrap .gads-input {
+    width: 100%;
+    font-size: 12px;
+    padding: 6px 10px;
+    height: auto;
+}
+.crm-contacts-table-wrap {
+    overflow-x: auto;
+}
+.crm-contacts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.crm-contacts-table th {
+    text-align: left;
+    padding: 5px 8px;
+    color: var(--gads-text-secondary, #94a3b8);
+    font-weight: 600;
+    border-bottom: 1px solid var(--gads-border, rgba(255,255,255,0.07));
+    white-space: nowrap;
+}
+.crm-contacts-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--gads-text, #f1f5f9);
+    vertical-align: middle;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-contacts-table tr:last-child td {
+    border-bottom: none;
+}
+.crm-contacts-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--gads-text-secondary, #94a3b8);
+}
+.crm-contacts-pagination span {
+    flex: 1;
+    text-align: center;
+}
+.crm-contacts-spinner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    font-size: 12px;
+    color: var(--gads-text-secondary, #94a3b8);
+}
+.crm-empty-msg {
+    padding: 12px 4px;
+    font-size: 12px;
+    color: var(--gads-text-secondary, #94a3b8);
+    text-align: center;
+}
+.crm-qc-btn {
+    font-size: 11px !important;
+    padding: 3px 10px !important;
+    white-space: nowrap;
+}
+.crm-qc-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.crm-status-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.crm-status-calling      { background: rgba(251,191,36,0.15); color:#fbbf24; border:1px solid rgba(251,191,36,0.3); }
+.crm-status-connected    { background: rgba(74,222,128,0.12); color:#4ade80; border:1px solid rgba(74,222,128,0.3); }
+.crm-status-voicemail_left { background: rgba(147,197,253,0.12); color:#93c5fd; border:1px solid rgba(147,197,253,0.3); }
+.crm-status-no_answer    { background: rgba(148,163,184,0.10); color:#94a3b8; border:1px solid rgba(148,163,184,0.2); }
+.crm-status-failed       { background: rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.3); }
 </style>
 
 <!-- ═══════════ INTEGRATIONS JS ═══════════ -->
@@ -5465,6 +5721,247 @@
             .then(function(r){ return r.json(); })
             .then(function(){ _intgMsg('gsheetsMsg2', 'Sheet config saved', true); loadIntegrationStatus(); })
             .catch(function(e){ if (e.message === 'auth') return; _intgMsg('gsheetsMsg2', 'Save failed', false); });
+    };
+
+    // ── CRM Quick-Call Contacts Panel ──
+    var _crmState = {};
+
+    function _crmSourceToApi(src) {
+        if (src === 'hubspot' || src === 'hubspot2') return 'hubspot';
+        if (src === 'gohighlevel' || src === 'gohighlevel2') return 'gohighlevel';
+        if (src === 'pipedrive' || src === 'pipedrive2') return 'pipedrive';
+        return src;
+    }
+
+    function _crmEl(suffix, src) { return document.getElementById('crm-' + suffix + '-' + src); }
+
+    window.toggleCrmContactsPanel = function(src) {
+        var panel = document.getElementById('crm-contacts-panel-' + src);
+        var body  = document.getElementById('crm-contacts-body-' + src);
+        if (!panel || !body) return;
+        var isOpen = panel.classList.contains('open');
+        if (isOpen) {
+            panel.classList.remove('open');
+            body.style.display = 'none';
+        } else {
+            panel.classList.add('open');
+            body.style.display = '';
+            if (!_crmState[src]) {
+                _crmState[src] = { page: 1, search: '', contacts: [], hasMore: false, hsCursor: null, hsCursorStack: [], nextHsCursor: null };
+                _loadCrmContacts(src);
+            }
+        }
+    };
+
+    var _crmCallStatuses = {};
+    var _crmPollTimer = null;
+    var _crmActiveCalls = {};
+
+    var _CALL_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;vertical-align:-1px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>';
+
+    function _loadCrmContacts(src) {
+        var st = _crmState[src];
+        if (!st) return;
+        var apiSrc = _crmSourceToApi(src);
+        var tableEl = _crmEl('table', src);
+        var paginEl = _crmEl('pagination', src);
+        var prevBtn = _crmEl('prev', src);
+        var nextBtn = _crmEl('next', src);
+        var pageLabel = _crmEl('page-label', src);
+        if (tableEl) tableEl.innerHTML = '<div class="crm-contacts-spinner"><div class="gads-spinner-sm"></div> Loading contacts\u2026</div>';
+        if (paginEl) paginEl.style.display = 'none';
+        var url = '/api/crm-contacts?source=' + encodeURIComponent(apiSrc) + '&page=' + st.page;
+        if (st.search) url += '&search=' + encodeURIComponent(st.search);
+        if (st.hsCursor) url += '&hs_cursor=' + encodeURIComponent(st.hsCursor);
+        apiFetch(url).then(function(r){ return r.json(); }).then(function(d) {
+            if (d.error) {
+                if (tableEl) tableEl.innerHTML = '<div class="crm-empty-msg" style="color:#f87171;">' + (d.error || 'Error loading contacts') + '</div>';
+                return;
+            }
+            var contacts = d.contacts || [];
+            st.contacts = contacts;
+            st.hasMore = !!d.has_more;
+            st.nextHsCursor = d.next_hs_cursor || null;
+            _renderCrmTable(src, contacts);
+            var showPag = st.page > 1 || st.hasMore;
+            if (paginEl) paginEl.style.display = showPag ? 'flex' : 'none';
+            if (pageLabel) pageLabel.textContent = 'Page ' + st.page;
+            if (prevBtn) prevBtn.disabled = st.page <= 1;
+            if (nextBtn) nextBtn.disabled = !st.hasMore;
+        }).catch(function(e) {
+            if (e && e.message === 'auth') return;
+            if (tableEl) tableEl.innerHTML = '<div class="crm-empty-msg" style="color:#f87171;">Failed to load contacts.</div>';
+        });
+    }
+
+    function _htmlEsc(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function _renderCrmTable(src, contacts) {
+        var tableEl = _crmEl('table', src);
+        if (!tableEl) return;
+        if (!contacts || contacts.length === 0) {
+            tableEl.innerHTML = '<div class="crm-empty-msg">No contacts found.</div>';
+            return;
+        }
+        var html = '<table class="crm-contacts-table"><thead><tr>'
+            + '<th>Name</th><th>Company</th><th>Phone</th><th>Status</th><th></th>'
+            + '</tr></thead><tbody>';
+        contacts.forEach(function(c) {
+            var cidRaw = (c.id || '').toString();
+            var cid   = _htmlEsc(cidRaw);
+            var name  = _htmlEsc(c.name || '\u2014');
+            var co    = _htmlEsc(c.company || '\u2014');
+            var phRaw = (c.phone || '').trim();
+            var ph    = _htmlEsc(phRaw);
+            var csrc  = _htmlEsc(c.crm_source || _crmSourceToApi(src));
+            var persistedStatus = c.last_call_status || '';
+            var _compKey = _crmSourceToApi(src) + ':' + cidRaw;
+            if (persistedStatus && !_crmCallStatuses[_compKey]) {
+                _crmCallStatuses[_compKey] = persistedStatus;
+            }
+            var stBadge = _crmStatusBadge(cidRaw, src);
+            var hasPhone = !!phRaw;
+            var callOnclick = 'fireQuickCall(' + JSON.stringify(phRaw) + ',' + JSON.stringify(c.name || '') + ',' + JSON.stringify(cidRaw) + ',' + JSON.stringify(c.crm_source || _crmSourceToApi(src)) + ',' + JSON.stringify(src) + ')';
+            html += '<tr>'
+                + '<td title="' + name + '">' + name + '</td>'
+                + '<td title="' + co + '">' + co + '</td>'
+                + '<td>' + (ph || '<span style="color:#64748b;">\u2014</span>') + '</td>'
+                + '<td id="crm-row-status-' + src + '-' + cid + '">' + stBadge + '</td>'
+                + '<td><button class="gads-btn gads-btn-primary gads-btn-sm crm-qc-btn"'
+                + (hasPhone ? '' : ' disabled')
+                + ' id="crm-call-btn-' + src + '-' + cid + '"'
+                + ' onclick="' + _htmlEsc(callOnclick) + '">'
+                + _CALL_SVG + 'Call</button></td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        tableEl.innerHTML = html;
+    }
+
+    function _crmStatusBadge(contactId, src) {
+        var st = _crmCallStatuses[_crmSourceToApi(src) + ':' + contactId] || _crmCallStatuses[src + ':' + contactId] || '';
+        if (!st) return '';
+        var labels = { calling:'Calling\u2026', connected:'Connected', voicemail_left:'Voicemail', no_answer:'No Answer', failed:'Failed' };
+        var label = labels[st] || st;
+        return '<span class="crm-status-badge crm-status-' + st + '">' + label + '</span>';
+    }
+
+    window.fireQuickCall = function(phone, name, contactId, crmSource, panelSrc) {
+        if (!phone) { alert('No phone number for this contact.'); return; }
+        var apiSrc = _crmSourceToApi(panelSrc);
+        var compositeKey = apiSrc + ':' + contactId;
+        var btnEl = document.getElementById('crm-call-btn-' + panelSrc + '-' + contactId);
+        if (btnEl) { btnEl.disabled = true; btnEl.innerHTML = _CALL_SVG + 'Calling\u2026'; }
+        _crmCallStatuses[compositeKey] = 'calling';
+        _updateCrmRowStatus(contactId, panelSrc, 'calling');
+        apiFetch('/api/quick-call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone, contact_name: name, crm_contact_id: contactId, crm_source: crmSource })
+        }).then(function(r){ return r.json(); }).then(function(d) {
+            if (d.error) {
+                _crmCallStatuses[compositeKey] = 'failed';
+                _updateCrmRowStatus(contactId, panelSrc, 'failed');
+                if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = _CALL_SVG + 'Call'; }
+                alert(d.error);
+                return;
+            }
+            _crmActiveCalls[compositeKey] = { panelSrc: panelSrc, contactId: contactId };
+            _startCrmPoll();
+        }).catch(function(e) {
+            if (e && e.message === 'auth') return;
+            _crmCallStatuses[compositeKey] = 'failed';
+            _updateCrmRowStatus(contactId, panelSrc, 'failed');
+            if (btnEl) { btnEl.disabled = false; btnEl.innerHTML = _CALL_SVG + 'Call'; }
+        });
+    };
+
+    function _updateCrmRowStatus(contactId, panelSrc, status) {
+        var el = document.getElementById('crm-row-status-' + panelSrc + '-' + contactId);
+        var labels = { calling:'Calling\u2026', connected:'Connected \u2013 transferred', voicemail_left:'Voicemail left', no_answer:'No answer', failed:'Failed' };
+        var label = labels[status] || status;
+        if (el) el.innerHTML = status ? '<span class="crm-status-badge crm-status-' + status + '">' + label + '</span>' : '';
+        var btnEl = document.getElementById('crm-call-btn-' + panelSrc + '-' + contactId);
+        if (!btnEl) return;
+        var btnLabels = {
+            calling: 'Calling\u2026',
+            connected: 'Connected \u2013 transferring',
+            voicemail_left: 'Voicemail dropped',
+            no_answer: 'No answer',
+            failed: 'Failed'
+        };
+        var doneStatuses = ['connected', 'voicemail_left', 'no_answer', 'failed'];
+        if (status === 'calling') {
+            btnEl.disabled = true;
+            btnEl.innerHTML = _CALL_SVG + 'Calling\u2026';
+        } else if (doneStatuses.indexOf(status) !== -1) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = _CALL_SVG + (btnLabels[status] || 'Call');
+            setTimeout(function() {
+                if (btnEl) btnEl.innerHTML = _CALL_SVG + 'Call';
+            }, 4000);
+        }
+    }
+
+    function _startCrmPoll() {
+        if (_crmPollTimer) return;
+        _crmPollTimer = setInterval(_pollCrmStatuses, 3000);
+    }
+
+    function _pollCrmStatuses() {
+        var active = Object.keys(_crmActiveCalls);
+        if (!active.length) { clearInterval(_crmPollTimer); _crmPollTimer = null; return; }
+        apiFetch('/api/quick-call-status').then(function(r){ return r.json(); }).then(function(d) {
+            var statuses = d.statuses || {};
+            var doneStatuses = ['connected', 'voicemail_left', 'no_answer', 'failed'];
+            Object.keys(_crmActiveCalls).forEach(function(activeKey) {
+                var info = _crmActiveCalls[activeKey];
+                var panelSrc = info.panelSrc;
+                var contactId = info.contactId;
+                var stInfo = statuses[activeKey];
+                if (!stInfo) return;
+                var status = stInfo.status || '';
+                if (!status || status === (_crmCallStatuses[activeKey] || '')) return;
+                _crmCallStatuses[activeKey] = status;
+                _updateCrmRowStatus(contactId, panelSrc, status);
+                if (doneStatuses.indexOf(status) !== -1) {
+                    delete _crmActiveCalls[activeKey];
+                }
+            });
+        }).catch(function(){});
+    }
+
+    window.crmContactSearch = function(src, val) {
+        if (!_crmState[src]) return;
+        clearTimeout(_crmState[src]._searchTimer);
+        _crmState[src]._searchTimer = setTimeout(function() {
+            _crmState[src].search = val;
+            _crmState[src].page = 1;
+            _crmState[src].hsCursor = null;
+            _crmState[src].hsCursorStack = [];
+            _loadCrmContacts(src);
+        }, 400);
+    };
+
+    window.crmContactPage = function(src, dir) {
+        var st = _crmState[src];
+        if (!st) return;
+        if (dir > 0) {
+            if (!st.hasMore) return;
+            st.hsCursorStack = st.hsCursorStack || [];
+            st.hsCursorStack.push(st.hsCursor || null);
+            st.hsCursor = st.nextHsCursor || null;
+            st.page = (st.page || 1) + 1;
+        } else {
+            if ((st.page || 1) <= 1) return;
+            st.hsCursorStack = st.hsCursorStack || [];
+            var prevCursor = st.hsCursorStack.pop();
+            st.hsCursor = (prevCursor !== undefined ? prevCursor : null);
+            st.page = Math.max(1, (st.page || 1) - 1);
+        }
+        _loadCrmContacts(src);
     };
 
 })();
