@@ -27,6 +27,7 @@ from storage import (
     stop_campaign,
     pause_campaign,
     resume_campaign,
+    is_campaign_active,
     is_campaign_paused,
     get_all_statuses,
     get_campaign,
@@ -1345,6 +1346,14 @@ def start():
     Start a new calling campaign.
     Accepts: phone numbers (pasted or CSV), audio (file or URL), transfer number.
     """
+    # ---- Pre-flight: reject if calling service is not configured ----
+    if not os.environ.get("TELNYX_API_KEY", "").strip():
+        return jsonify({"error": "Calling service is not configured. Please add your Telnyx API key in Settings before launching a campaign."}), 400
+
+    # ---- Pre-flight: reject if a campaign is already running ----
+    if is_campaign_active(user_id=current_user.id):
+        return jsonify({"error": "A campaign is already running. Stop it before starting a new one."}), 400
+
     _detect_and_set_base_url()
     transfer_number = request.form.get("transfer_number", "").strip()
     pasted_numbers = request.form.get("numbers", "").strip()
