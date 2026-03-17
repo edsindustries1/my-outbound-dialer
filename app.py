@@ -3215,6 +3215,47 @@ def _handle_webhook():
                 update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
                 hangup_call(call_control_id)
 
+        elif result == "silence":
+            camp = get_campaign(user_id=webhook_user_id)
+            transfer_num = camp.get("transfer_number") or ""
+            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
+            logger.info(f"[AMD RESULT] {call_control_id} | SILENCE detected, treating as human (transferring)")
+            update_call_state(call_control_id, amd_result="silence",
+                              status_description="Silence detected - treating as human", status_color="blue")
+            try:
+                start_transcription(call_control_id)
+            except Exception:
+                pass
+            try:
+                start_recording(call_control_id)
+            except Exception:
+                pass
+            _sil_state = get_call_state(call_control_id) or {}
+            if transfer_num and not _sil_state.get("transferred") and not _sil_state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
+                logger.info(f"[TRANSFER] {call_control_id} | silence -> transferring to {transfer_num}")
+                if _sil_state.get("quick_call") and webhook_user_id:
+                    _qc_cid3 = _sil_state.get("quick_call_crm_contact_id", "")
+                    if _qc_cid3:
+                        set_quick_call_status(webhook_user_id, _qc_cid3, "connected",
+                                              call_control_id=call_control_id,
+                                              crm_source=_sil_state.get("quick_call_crm_source", ""))
+                try:
+                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
+                except Exception as e:
+                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
+                    success = False
+                if success:
+                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
+                    update_call_state(call_control_id, status="transferred",
+                                      status_description="Silence - transferred as human", status_color="green")
+                else:
+                    update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
+                    hangup_call(call_control_id)
+            elif not transfer_num:
+                logger.warning(f"[NO TRANSFER] {call_control_id} | silence, no transfer number, hanging up")
+                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
+                hangup_call(call_control_id)
+
         else:
             update_call_state(call_control_id, status="no_answer",
                               amd_result=result, status_description=f"Unknown AMD result: {result}", status_color="yellow")
