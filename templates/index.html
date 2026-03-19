@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Humana</title>
     <link rel="stylesheet" href="/static/style.css?v=5">
+    <link rel="stylesheet" href="/static/humana_voice/hv.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
@@ -79,7 +80,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                     <span>Settings</span>
                 </a>
-                <a class="gads-nav-item" href="/humana-voice" style="text-decoration:none;">
+                <a class="gads-nav-item" data-page="humana-voice" onclick="navigateTo('humana-voice')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                     <span>Humana Voice</span>
                 </a>
@@ -1862,6 +1863,97 @@
                     </div><!-- /integrations-page-card -->
                 </div><!-- /page-integrations -->
 
+                <!-- ==================== PAGE: HUMANA VOICE ==================== -->
+                <div class="gads-page" id="page-humana-voice" style="display:none">
+                  <div class="hv-body">
+
+                    <!-- API Key Warning -->
+                    <div class="hv-api-warn" id="hvApiWarn" style="display:none">
+                      ⚠️ <strong>FISH_AUDIO_API_KEY</strong> is not set. Go to Settings → Fish Audio API Key to enable voice library browsing, cloning, and previews.
+                    </div>
+
+                    <!-- Active voice row -->
+                    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:16px;gap:12px;">
+                      <span class="hv-active-none" id="hvNoActive">No active voice set</span>
+                      <div class="hv-active-badge" id="hvActiveDot" style="display:none;">
+                        <div class="hv-active-badge-dot"></div>
+                        Active: <span id="hvActiveName"></span>
+                      </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="hv-tabs">
+                      <button class="hv-tab active" data-tab="library">Voice Library</button>
+                      <button class="hv-tab" data-tab="clone">Clone Your Voice</button>
+                      <button class="hv-tab" data-tab="my-voices">My Voices</button>
+                    </div>
+
+                    <!-- Panel 1: Voice Library -->
+                    <div class="hv-tab-panel active" id="panel-library">
+                      <div class="hv-search-bar">
+                        <input class="hv-search-input" id="hvSearchInput" type="text" placeholder="Search voices by name…">
+                        <button class="hv-search-btn" id="hvSearchBtn">Search</button>
+                      </div>
+                      <div class="hv-grid" id="hvLibraryGrid"></div>
+                      <div class="hv-load-more">
+                        <button class="hv-btn" id="hvLoadMore" style="display:none;padding:10px 28px;font-size:13px;">Load More</button>
+                      </div>
+                    </div>
+
+                    <!-- Panel 2: Clone Your Voice -->
+                    <div class="hv-tab-panel" id="panel-clone">
+                      <div class="hv-clone-grid">
+                        <div class="hv-clone-card">
+                          <h3>Upload Audio</h3>
+                          <p>Upload a pre-recorded audio file to create your custom voice.</p>
+                          <div class="hv-dropzone" id="hvDropzone">
+                            <div class="hv-dropzone-icon">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gads-text-tertiary)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            </div>
+                            <p>Drag &amp; drop or click to upload</p>
+                            <small>MP3, WAV, M4A — max 50 MB</small>
+                            <input type="file" id="hvFileInput" accept=".mp3,.wav,.m4a,audio/*" style="display:none;">
+                          </div>
+                          <div class="hv-file-chosen" id="hvFileChosen"></div>
+                          <p class="hv-tip">💡 Use a clear 30–120 second recording with minimal background noise for best results.</p>
+                          <label class="hv-label">Voice Name</label>
+                          <input class="hv-input" id="hvUploadName" type="text" placeholder="e.g. My Sales Voice">
+                          <div class="hv-progress" id="hvUploadProgress" style="display:none;">
+                            <div class="hv-progress-bar" id="hvUploadProgressBar"></div>
+                          </div>
+                          <button class="hv-btn hv-btn-primary" id="hvUploadBtn" style="width:100%;justify-content:center;padding:10px;">Upload &amp; Create</button>
+                        </div>
+                        <div class="hv-clone-card">
+                          <h3>Record Live</h3>
+                          <p>Record your voice directly in the browser to create a custom voice.</p>
+                          <div class="hv-recorder">
+                            <div class="hv-timer" id="hvTimer">00:00</div>
+                            <button class="hv-record-btn" id="hvRecordBtn" title="Start / Stop recording">
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+                            </button>
+                            <div class="hv-waveform" id="hvWaveform"></div>
+                          </div>
+                          <audio id="hvRecordPlayback" controls style="display:none;width:100%;margin-bottom:12px;" class="hv-audio-preview"></audio>
+                          <label class="hv-label">Voice Name</label>
+                          <input class="hv-input" id="hvRecordName" type="text" placeholder="e.g. My Recorded Voice">
+                          <button class="hv-btn hv-btn-primary" id="hvCreateRecordBtn" style="display:none;width:100%;justify-content:center;padding:10px;">Create Voice</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Panel 3: My Voices -->
+                    <div class="hv-tab-panel" id="panel-my-voices">
+                      <div class="hv-voices-list" id="hvMyVoicesList">
+                        <div class="hv-empty">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                          <div>Loading voices…</div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div><!-- /.hv-body -->
+                </div><!-- /page-humana-voice -->
+
             </div><!-- end gads-content -->
         </div><!-- end gads-main -->
 
@@ -1896,8 +1988,9 @@
             livecalls:    'Live Calls',
             reports:      'Reports',
             testdialer:   'Test Dialer',
-            settings:     'Settings',
-            integrations: 'Integrations'
+            settings:        'Settings',
+            integrations:    'Integrations',
+            'humana-voice':  'Humana Voice'
         };
 
         function navigateTo(page) {
@@ -1945,6 +2038,9 @@
             }
             if (page === 'integrations') {
                 if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus();
+            }
+            if (page === 'humana-voice') {
+                if (typeof hvInit === 'function') hvInit();
             }
             if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
@@ -6282,5 +6378,7 @@
 })();
 </script>
 
+<div class="hv-toast" id="hvToast"></div>
+<script src="/static/humana_voice/hv.js"></script>
 </body>
 </html>

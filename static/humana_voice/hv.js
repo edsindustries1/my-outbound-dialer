@@ -528,7 +528,16 @@
   }
 
   /* ── Init ────────────────────────────────────────────── */
-  loadLibrary(true);
-  loadMyVoices();
+  var _hvInited = false;
+  window.hvInit = function () {
+    if (_hvInited) { loadMyVoices(); return; }
+    _hvInited = true;
+    fetch('/api/fish-audio-key').then(function(r){ return r.json(); }).then(function(d){
+      var w = document.getElementById('hvApiWarn');
+      if (w) w.style.display = d.configured ? 'none' : '';
+    }).catch(function(){});
+    loadLibrary(true);
+    loadMyVoices();
+  };
 
 })();
