@@ -52,10 +52,6 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     <span>Campaigns</span>
                 </a>
-                <a class="gads-nav-item" data-page="voicemails" onclick="navigateTo('voicemails')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                    <span>Voicemails</span>
-                </a>
                 <a class="gads-nav-item" data-page="contacts" onclick="navigateTo('contacts')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                     <span>Contacts</span>
@@ -82,7 +78,7 @@
                 </a>
                 <a class="gads-nav-item" data-page="humana-voice" onclick="navigateTo('humana-voice')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                    <span>Humana Voice</span>
+                    <span>Voice Studio</span>
                 </a>
                 <a class="gads-nav-item" data-page="integrations" onclick="navigateTo('integrations')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.9;"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
@@ -790,108 +786,8 @@
                     </div>
                 </div>
 
-                <!-- ==================== PAGE: VOICEMAILS ==================== -->
-                <div class="gads-page" id="page-voicemails" style="display:none">
-                    <div class="gads-page-header">
-                        <h2>Voicemail Library</h2>
-                        <button type="button" class="gads-btn gads-btn-primary" onclick="vmtOpenCreate()">+ Create Template</button>
-                    </div>
-
-                    <div class="gads-card" id="vmtListCard">
-                        <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Saved Templates</h3>
-                        </div>
-                        <div id="vmtList" class="vmt-grid">
-                            <div class="gads-empty">Loading templates...</div>
-                        </div>
-                    </div>
-
-                    <div class="gads-card vmt-form-card" id="vmtFormCard" style="display:none;">
-                        <div class="gads-card-header">
-                            <h3 id="vmtFormTitle">Create Voicemail Template</h3>
-                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtCloseForm()">&times; Cancel</button>
-                        </div>
-                        <div class="vmt-form">
-                            <input type="hidden" id="vmtEditId" value="">
-                            <div class="vmt-form-group">
-                                <label>Template Name</label>
-                                <input type="text" id="vmtName" class="gads-input" placeholder="e.g. Debt Reminder, Follow Up Call">
-                            </div>
-                            <div class="vmt-form-group">
-                                <label>Template Type</label>
-                                <div class="vmt-type-toggle">
-                                    <button type="button" class="vmt-type-btn active" data-type="audio_url" onclick="vmtSwitchType('audio_url')">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
-                                        Audio URL
-                                    </button>
-                                    <button type="button" class="vmt-type-btn" data-type="script" onclick="vmtSwitchType('script')">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                        Script Template
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="vmtAudioUrlSection">
-                                <div class="vmt-form-group">
-                                    <label>Audio URL</label>
-                                    <input type="text" id="vmtAudioUrl" class="gads-input" placeholder="https://example.com/voicemail.mp3">
-                                    <p class="vmt-hint">Paste a public URL to an MP3 or WAV file</p>
-                                </div>
-                            </div>
-                            <div id="vmtScriptSection" style="display:none;">
-                                <div class="vmt-form-group">
-                                    <label>Voicemail Script</label>
-                                    <p class="vmt-hint">Click tags to insert placeholders into your script.</p>
-                                    <div class="pvm-placeholders" id="vmtPlaceholderTags">
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('first_name')">{first_name}</span>
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('last_name')">{last_name}</span>
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('amount')">{amount}</span>
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('date')">{date}</span>
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('email')">{email}</span>
-                                        <span class="pvm-placeholder-tag" onclick="vmtInsertTag('address')">{address}</span>
-                                    </div>
-                                    <div id="vmtCustomTags" class="pvm-placeholders" style="margin-top:4px;"></div>
-                                    <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
-                                        <input type="text" id="vmtNewVarInput" class="gads-input" placeholder="e.g. account_number" style="max-width:200px;font-size:12px;" maxlength="50">
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtAddCustomVar()" style="font-size:11px;white-space:nowrap;">+ Add Variable</button>
-                                    </div>
-                                    <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
-                                </div>
-                            </div>
-                            <div class="vmt-form-actions">
-                                <button type="button" class="gads-btn gads-btn-primary" onclick="vmtSave()">Save Template</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gads-card" style="margin-top:20px;">
-                        <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Default Voicemail URL</h3>
-                        </div>
-                        <label>Voicemail Audio URL</label>
-                        <div class="gads-input-row">
-                            <input type="text" id="vmUrlInput" class="gads-input" placeholder="https://example.com/voicemail.mp3 or .wav">
-                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="saveVmBtn">Save</button>
-                        </div>
-                        <div class="vm-preview" id="vmPreview" style="display:none;">
-                            <label>Audio Preview</label>
-                            <audio id="vmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:8px;"></audio>
-                            <div class="vm-duration" id="vmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
-                        </div>
-                        <label style="margin-top:14px;display:block;">Voicemail Script (word-for-word transcript)</label>
-                        <p style="font-size:12px;color:var(--gads-text-secondary);margin:2px 0 6px 0;">Paste the exact words spoken in the voicemail audio above. This text appears in call transcripts so you can see the full conversation.</p>
-                        <textarea id="vmScriptInput" class="gads-input" rows="4" placeholder="Hi there, this is Mike calling from OpenHumana. I'm reaching out because..." style="resize:vertical;font-size:13px;line-height:1.5;"></textarea>
-                        <div id="vmSaveResult" style="margin-top:8px;font-size:13px;"></div>
-                    </div>
-
-                    <div class="gads-card" style="margin-top:20px;">
-                        <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Personalized Voicemail (AI)</h3>
-                        </div>
-                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Create script templates here with placeholders. When you start a campaign, select "Personalized (AI)" voicemail and the system will auto-generate unique voicemails for each contact using your CSV data.</p>
-                        <p class="pvm-hint" style="margin-bottom:8px;">Built-in placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{amount}</code> <code>{date}</code> <code>{email}</code> <code>{address}</code>. You can also create custom variables that match any column in your CSV.</p>
-                        <p class="pvm-hint">Script templates are saved in the template library above. Use the "+ Create Template" button and select "Script Template" type.</p>
-                    </div>
-                </div>
+                <!-- page-voicemails: content moved to Voice Studio → Voicemail Templates tab -->
+                <div class="gads-page" id="page-voicemails" style="display:none"></div>
 
                 <!-- ==================== PAGE: CONTACTS ==================== -->
                 <div class="gads-page" id="page-contacts" style="display:none">
@@ -1235,54 +1131,7 @@
                 <div class="gads-page" id="page-settings" style="display:none">
                     <div class="gads-page-header"><h2>Settings</h2></div>
 
-                    {% if is_admin %}
-                    <div class="gads-card" style="margin-top:20px;" id="fishAudioKeyCard">
-                        <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Fish Audio API Key</h3>
-                            <span id="fishKeyStatusBadge" style="font-size:12px;padding:2px 8px;border-radius:12px;background:#fee2e2;color:#dc2626;">Not configured</span>
-                        </div>
-                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Enter your Fish Audio API key to enable the Humana Voice library, voice cloning, and TTS previews. This is stored securely in the database.</p>
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <input type="password" id="fishAudioKeyInput" class="gads-input" placeholder="Enter Fish Audio API key…" style="flex:1;min-width:200px;" autocomplete="off">
-                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveFishAudioKey()">Save Key</button>
-                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="toggleFishKeyVisibility()" id="fishKeyToggleBtn">Show</button>
-                        </div>
-                        <div id="fishKeyCurrentStatus" style="margin-top:8px;font-size:13px;color:var(--gads-text-secondary);"></div>
-                    </div>
-                    {% endif %}
-
-                    <div class="gads-card" style="margin-top:20px;">
-                        <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Default Voice Preset</h3>
-                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoicePreset()">Refresh</button>
-                        </div>
-                        <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Save a default voice to auto-populate when creating personalized voicemail campaigns.</p>
-                        <div class="pvm-section">
-                            <label>Voice</label>
-                            <div class="pvm-voice-row">
-                                <select id="presetVoiceSelect" class="gads-select"><option value="">Loading voices...</option></select>
-                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="presetLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
-                            </div>
-                        </div>
-                        <div class="pvm-section" style="margin-top:8px;">
-                            <label>TTS Model</label>
-                            <select id="presetModel" class="gads-select">
-                                <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
-                                <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
-                                <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
-                                <option value="eleven_english_v1">English v1 (Classic)</option>
-                            </select>
-                        </div>
-                        <div class="pvm-voice-controls" style="margin-top:8px;">
-                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="presetStabilityVal">0.35</span></div><input type="range" id="presetStability" min="0" max="100" value="35" class="pvm-slider" oninput="presetUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>Variable</span><span>Stable</span></div></div>
-                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="presetSimilarityVal">0.80</span></div><input type="range" id="presetSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="presetUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
-                            <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="presetSpeedVal">0.82</span></div><input type="range" id="presetSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="presetUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
-                        </div>
-                        <div style="margin-top:12px;">
-                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveVoicePreset()">Save Voice Preset</button>
-                            <span id="presetSaveResult" style="margin-left:8px;font-size:13px;"></span>
-                        </div>
-                    </div>
+                    <!-- Voice preset and API key moved to Voice Studio → Voice Settings tab -->
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
@@ -2014,96 +1863,256 @@
                     </div><!-- /intg-detail-area -->
                 </div><!-- /page-integrations -->
 
-                <!-- ==================== PAGE: HUMANA VOICE ==================== -->
+                <!-- ==================== PAGE: VOICE STUDIO ==================== -->
                 <div class="gads-page" id="page-humana-voice" style="display:none">
-                  <div class="hv-body">
+
+                    <!-- Page header -->
+                    <div class="gads-page-header">
+                        <h2>Voice Studio</h2>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <span class="hv-active-none" id="hvNoActive">No active voice set</span>
+                            <div class="hv-active-badge" id="hvActiveDot" style="display:none;">
+                                <div class="hv-active-badge-dot"></div>
+                                Active: <span id="hvActiveName"></span>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- API Key Warning -->
                     <div class="hv-api-warn" id="hvApiWarn" style="display:none">
-                      ⚠️ <strong>FISH_AUDIO_API_KEY</strong> is not set. Go to Settings → Fish Audio API Key to enable voice library browsing, cloning, and previews.
-                    </div>
-
-                    <!-- Active voice row -->
-                    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:16px;gap:12px;">
-                      <span class="hv-active-none" id="hvNoActive">No active voice set</span>
-                      <div class="hv-active-badge" id="hvActiveDot" style="display:none;">
-                        <div class="hv-active-badge-dot"></div>
-                        Active: <span id="hvActiveName"></span>
-                      </div>
+                        ⚠️ Voice API key is not configured. Go to the <strong>Voice Settings</strong> tab to set it up and enable the voice library, cloning, and previews.
                     </div>
 
                     <!-- Tabs -->
                     <div class="hv-tabs">
-                      <button class="hv-tab active" data-tab="library">Voice Library</button>
-                      <button class="hv-tab" data-tab="clone">Clone Your Voice</button>
-                      <button class="hv-tab" data-tab="my-voices">My Voices</button>
+                        <button class="hv-tab active" data-tab="my-voices">My Voices</button>
+                        <button class="hv-tab" data-tab="library">Voice Library</button>
+                        <button class="hv-tab" data-tab="clone">Clone Your Voice</button>
+                        <button class="hv-tab" data-tab="vm-templates">Voicemail Templates</button>
+                        <button class="hv-tab" data-tab="voice-settings">Voice Settings</button>
                     </div>
 
-                    <!-- Panel 1: Voice Library -->
-                    <div class="hv-tab-panel active" id="panel-library">
-                      <div class="hv-search-bar">
-                        <input class="hv-search-input" id="hvSearchInput" type="text" placeholder="Search voices by name…">
-                        <button class="hv-search-btn" id="hvSearchBtn">Search</button>
-                      </div>
-                      <div class="hv-grid" id="hvLibraryGrid"></div>
-                      <div class="hv-load-more">
-                        <button class="hv-btn" id="hvLoadMore" style="display:none;padding:10px 28px;font-size:13px;">Load More</button>
-                      </div>
-                    </div>
-
-                    <!-- Panel 2: Clone Your Voice -->
-                    <div class="hv-tab-panel" id="panel-clone">
-                      <div class="hv-clone-grid">
-                        <div class="hv-clone-card">
-                          <h3>Upload Audio</h3>
-                          <p>Upload a pre-recorded audio file to create your custom voice.</p>
-                          <div class="hv-dropzone" id="hvDropzone">
-                            <div class="hv-dropzone-icon">
-                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gads-text-tertiary)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <!-- ── Panel: My Voices (default) ── -->
+                    <div class="hv-tab-panel active" id="panel-my-voices">
+                        <div class="hv-voices-list" id="hvMyVoicesList">
+                            <div class="hv-empty">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                                <div>Loading voices…</div>
                             </div>
-                            <p>Drag &amp; drop or click to upload</p>
-                            <small>MP3, WAV, M4A — max 50 MB</small>
-                            <input type="file" id="hvFileInput" accept=".mp3,.wav,.m4a,audio/*" style="display:none;">
-                          </div>
-                          <div class="hv-file-chosen" id="hvFileChosen"></div>
-                          <p class="hv-tip">💡 Use a clear 30–120 second recording with minimal background noise for best results.</p>
-                          <label class="hv-label">Voice Name</label>
-                          <input class="hv-input" id="hvUploadName" type="text" placeholder="e.g. My Sales Voice">
-                          <div class="hv-progress" id="hvUploadProgress" style="display:none;">
-                            <div class="hv-progress-bar" id="hvUploadProgressBar"></div>
-                          </div>
-                          <button class="hv-btn hv-btn-primary" id="hvUploadBtn" style="width:100%;justify-content:center;padding:10px;">Upload &amp; Create</button>
                         </div>
-                        <div class="hv-clone-card">
-                          <h3>Record Live</h3>
-                          <p>Record your voice directly in the browser to create a custom voice.</p>
-                          <div class="hv-recorder">
-                            <div class="hv-timer" id="hvTimer">00:00</div>
-                            <button class="hv-record-btn" id="hvRecordBtn" title="Start / Stop recording">
-                              <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
-                            </button>
-                            <div class="hv-waveform" id="hvWaveform"></div>
-                          </div>
-                          <audio id="hvRecordPlayback" controls style="display:none;width:100%;margin-bottom:12px;" class="hv-audio-preview"></audio>
-                          <label class="hv-label">Voice Name</label>
-                          <input class="hv-input" id="hvRecordName" type="text" placeholder="e.g. My Recorded Voice">
-                          <button class="hv-btn hv-btn-primary" id="hvCreateRecordBtn" style="display:none;width:100%;justify-content:center;padding:10px;">Create Voice</button>
-                        </div>
-                      </div>
                     </div>
 
-                    <!-- Panel 3: My Voices -->
-                    <div class="hv-tab-panel" id="panel-my-voices">
-                      <div class="hv-voices-list" id="hvMyVoicesList">
-                        <div class="hv-empty">
-                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                          <div>Loading voices…</div>
+                    <!-- ── Panel: Voice Library ── -->
+                    <div class="hv-tab-panel" id="panel-library">
+                        <div class="hv-search-bar">
+                            <input class="hv-search-input" id="hvSearchInput" type="text" placeholder="Search voices by name…">
+                            <button class="hv-search-btn" id="hvSearchBtn">Search</button>
                         </div>
-                      </div>
+                        <div class="hv-grid" id="hvLibraryGrid"></div>
+                        <div class="hv-load-more">
+                            <button class="hv-btn" id="hvLoadMore" style="display:none;padding:10px 28px;font-size:13px;">Load More</button>
+                        </div>
                     </div>
 
-                  </div><!-- /.hv-body -->
-                </div><!-- /page-humana-voice -->
+                    <!-- ── Panel: Clone Your Voice ── -->
+                    <div class="hv-tab-panel" id="panel-clone">
+                        <div class="hv-clone-grid">
+                            <div class="hv-clone-card">
+                                <h3>Upload Audio</h3>
+                                <p>Upload a pre-recorded audio file to create your custom voice.</p>
+                                <div class="hv-dropzone" id="hvDropzone">
+                                    <div class="hv-dropzone-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gads-text-tertiary)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    </div>
+                                    <p>Drag &amp; drop or click to upload</p>
+                                    <small>MP3, WAV, M4A — max 50 MB</small>
+                                    <input type="file" id="hvFileInput" accept=".mp3,.wav,.m4a,audio/*" style="display:none;">
+                                </div>
+                                <div class="hv-file-chosen" id="hvFileChosen"></div>
+                                <p class="hv-tip">💡 Use a clear 30–120 second recording with minimal background noise for best results.</p>
+                                <label class="hv-label">Voice Name</label>
+                                <input class="hv-input" id="hvUploadName" type="text" placeholder="e.g. My Sales Voice">
+                                <div class="hv-progress" id="hvUploadProgress" style="display:none;">
+                                    <div class="hv-progress-bar" id="hvUploadProgressBar"></div>
+                                </div>
+                                <button class="hv-btn hv-btn-primary" id="hvUploadBtn" style="width:100%;justify-content:center;padding:10px;">Upload &amp; Create</button>
+                            </div>
+                            <div class="hv-clone-card">
+                                <h3>Record Live</h3>
+                                <p>Record your voice directly in the browser to create a custom voice.</p>
+                                <div class="hv-recorder">
+                                    <div class="hv-timer" id="hvTimer">00:00</div>
+                                    <button class="hv-record-btn" id="hvRecordBtn" title="Start / Stop recording">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+                                    </button>
+                                    <div class="hv-waveform" id="hvWaveform"></div>
+                                </div>
+                                <audio id="hvRecordPlayback" controls style="display:none;width:100%;margin-bottom:12px;" class="hv-audio-preview"></audio>
+                                <label class="hv-label">Voice Name</label>
+                                <input class="hv-input" id="hvRecordName" type="text" placeholder="e.g. My Recorded Voice">
+                                <button class="hv-btn hv-btn-primary" id="hvCreateRecordBtn" style="display:none;width:100%;justify-content:center;padding:10px;">Create Voice</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Panel: Voicemail Templates ── -->
+                    <div class="hv-tab-panel" id="panel-vm-templates">
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 12px 0;">
+                            <span style="font-size:15px;font-weight:600;color:var(--gads-text-primary);">Voicemail Templates</span>
+                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="vmtOpenCreate()">+ Create Template</button>
+                        </div>
+
+                        <div class="gads-card" id="vmtListCard">
+                            <div class="gads-card-header">
+                                <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Saved Templates</h3>
+                            </div>
+                            <div id="vmtList" class="vmt-grid">
+                                <div class="gads-empty">Loading templates...</div>
+                            </div>
+                        </div>
+
+                        <div class="gads-card vmt-form-card" id="vmtFormCard" style="display:none;margin-top:16px;">
+                            <div class="gads-card-header">
+                                <h3 id="vmtFormTitle">Create Voicemail Template</h3>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtCloseForm()">&times; Cancel</button>
+                            </div>
+                            <div class="vmt-form">
+                                <input type="hidden" id="vmtEditId" value="">
+                                <div class="vmt-form-group">
+                                    <label>Template Name</label>
+                                    <input type="text" id="vmtName" class="gads-input" placeholder="e.g. Debt Reminder, Follow Up Call">
+                                </div>
+                                <div class="vmt-form-group">
+                                    <label>Template Type</label>
+                                    <div class="vmt-type-toggle">
+                                        <button type="button" class="vmt-type-btn active" data-type="audio_url" onclick="vmtSwitchType('audio_url')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                            Audio URL
+                                        </button>
+                                        <button type="button" class="vmt-type-btn" data-type="script" onclick="vmtSwitchType('script')">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            Script Template
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="vmtAudioUrlSection">
+                                    <div class="vmt-form-group">
+                                        <label>Audio URL</label>
+                                        <input type="text" id="vmtAudioUrl" class="gads-input" placeholder="https://example.com/voicemail.mp3">
+                                        <p class="vmt-hint">Paste a public URL to an MP3 or WAV file</p>
+                                    </div>
+                                </div>
+                                <div id="vmtScriptSection" style="display:none;">
+                                    <div class="vmt-form-group">
+                                        <label>Voicemail Script</label>
+                                        <p class="vmt-hint">Click tags to insert placeholders into your script.</p>
+                                        <div class="pvm-placeholders" id="vmtPlaceholderTags">
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('first_name')">{first_name}</span>
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('last_name')">{last_name}</span>
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('amount')">{amount}</span>
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('date')">{date}</span>
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('email')">{email}</span>
+                                            <span class="pvm-placeholder-tag" onclick="vmtInsertTag('address')">{address}</span>
+                                        </div>
+                                        <div id="vmtCustomTags" class="pvm-placeholders" style="margin-top:4px;"></div>
+                                        <div style="display:flex;gap:6px;align-items:center;margin-top:8px;">
+                                            <input type="text" id="vmtNewVarInput" class="gads-input" placeholder="e.g. account_number" style="max-width:200px;font-size:12px;" maxlength="50">
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtAddCustomVar()" style="font-size:11px;white-space:nowrap;">+ Add Variable</button>
+                                        </div>
+                                        <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="vmt-form-actions">
+                                    <button type="button" class="gads-btn gads-btn-primary" onclick="vmtSave()">Save Template</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="gads-card" style="margin-top:16px;">
+                            <div class="gads-card-header">
+                                <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Default Voicemail URL</h3>
+                            </div>
+                            <label>Voicemail Audio URL</label>
+                            <div class="gads-input-row">
+                                <input type="text" id="vmUrlInput" class="gads-input" placeholder="https://example.com/voicemail.mp3 or .wav">
+                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="saveVmBtn">Save</button>
+                            </div>
+                            <div class="vm-preview" id="vmPreview" style="display:none;">
+                                <label>Audio Preview</label>
+                                <audio id="vmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:8px;"></audio>
+                                <div class="vm-duration" id="vmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
+                            </div>
+                            <label style="margin-top:14px;display:block;">Voicemail Script (word-for-word transcript)</label>
+                            <p style="font-size:12px;color:var(--gads-text-secondary);margin:2px 0 6px 0;">Paste the exact words spoken in the voicemail audio above. This text appears in call transcripts so you can see the full conversation.</p>
+                            <textarea id="vmScriptInput" class="gads-input" rows="4" placeholder="Hi there, this is Mike calling from OpenHumana. I'm reaching out because..." style="resize:vertical;font-size:13px;line-height:1.5;"></textarea>
+                            <div id="vmSaveResult" style="margin-top:8px;font-size:13px;"></div>
+                        </div>
+
+                        <div class="gads-card" style="margin-top:16px;">
+                            <div class="gads-card-header">
+                                <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Personalized Voicemail (AI)</h3>
+                            </div>
+                            <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Create script templates here with placeholders. When you start a campaign, select "Personalized (AI)" voicemail and the system will auto-generate unique voicemails for each contact using your CSV data.</p>
+                            <p class="pvm-hint" style="margin-bottom:8px;">Built-in placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{amount}</code> <code>{date}</code> <code>{email}</code> <code>{address}</code>. You can also create custom variables that match any column in your CSV.</p>
+                            <p class="pvm-hint">Script templates are saved in the template library above. Use the "+ Create Template" button and select "Script Template" type.</p>
+                        </div>
+                    </div>
+
+                    <!-- ── Panel: Voice Settings ── -->
+                    <div class="hv-tab-panel" id="panel-voice-settings">
+
+                        {% if is_admin %}
+                        <div class="gads-card" style="margin-top:16px;" id="fishAudioKeyCard">
+                            <div class="gads-card-header">
+                                <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> Voice API Configuration</h3>
+                                <span id="fishKeyStatusBadge" style="font-size:12px;padding:2px 8px;border-radius:12px;background:#fee2e2;color:#dc2626;">Not configured</span>
+                            </div>
+                            <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Set your voice API key to enable the voice library, cloning, and TTS previews. This is stored securely in the database.</p>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <input type="password" id="fishAudioKeyInput" class="gads-input" placeholder="Enter API key…" style="flex:1;min-width:200px;" autocomplete="off">
+                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveFishAudioKey()">Save Key</button>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="toggleFishKeyVisibility()" id="fishKeyToggleBtn">Show</button>
+                            </div>
+                            <div id="fishKeyCurrentStatus" style="margin-top:8px;font-size:13px;color:var(--gads-text-secondary);"></div>
+                        </div>
+                        {% endif %}
+
+                        <div class="gads-card" style="margin-top:16px;">
+                            <div class="gads-card-header">
+                                <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg> Campaign Voice Preset</h3>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadVoicePreset()">Refresh</button>
+                            </div>
+                            <p style="font-size:13px;color:var(--gads-text-secondary);margin-bottom:12px;">Set a default voice to auto-populate when creating personalized voicemail campaigns.</p>
+                            <div class="pvm-section">
+                                <label>Voice</label>
+                                <div class="pvm-voice-row">
+                                    <select id="presetVoiceSelect" class="gads-select"><option value="">Loading voices...</option></select>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="presetLoadVoices()" title="Refresh voices"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                                </div>
+                            </div>
+                            <div class="pvm-section" style="margin-top:8px;">
+                                <label>Voice Model</label>
+                                <select id="presetModel" class="gads-select">
+                                    <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                    <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
+                                    <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                    <option value="eleven_english_v1">English v1 (Classic)</option>
+                                </select>
+                            </div>
+                            <div class="pvm-voice-controls" style="margin-top:8px;">
+                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Stability</label><span class="pvm-slider-value" id="presetStabilityVal">0.35</span></div><input type="range" id="presetStability" min="0" max="100" value="35" class="pvm-slider" oninput="presetUpdateSlider('Stability')"><div class="pvm-slider-labels"><span>Variable</span><span>Stable</span></div></div>
+                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Similarity</label><span class="pvm-slider-value" id="presetSimilarityVal">0.80</span></div><input type="range" id="presetSimilarity" min="0" max="100" value="80" class="pvm-slider" oninput="presetUpdateSlider('Similarity')"><div class="pvm-slider-labels"><span>Low</span><span>High</span></div></div>
+                                <div class="pvm-slider-group"><div class="pvm-slider-header"><label>Speed</label><span class="pvm-slider-value" id="presetSpeedVal">0.82</span></div><input type="range" id="presetSpeed" min="70" max="120" value="82" class="pvm-slider" oninput="presetUpdateSlider('Speed')"><div class="pvm-slider-labels"><span>Slower</span><span>Faster</span></div></div>
+                            </div>
+                            <div style="margin-top:12px;">
+                                <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveVoicePreset()">Save Voice Preset</button>
+                                <span id="presetSaveResult" style="margin-left:8px;font-size:13px;"></span>
+                            </div>
+                        </div>
+
+                    </div><!-- /panel-voice-settings -->
+
+                </div><!-- /page-humana-voice / Voice Studio -->
 
             </div><!-- end gads-content -->
         </div><!-- end gads-main -->
@@ -2133,7 +2142,6 @@
         var _gadsPageTitles = {
             dashboard:    'Dashboard',
             campaigns:    'Campaigns',
-            voicemails:   'Voicemails',
             contacts:     'Contacts & Lists',
             phonenumbers: 'Phone Numbers',
             livecalls:    'Live Calls',
@@ -2141,10 +2149,12 @@
             testdialer:   'Test Dialer',
             settings:        'Settings',
             integrations:    'Integrations',
-            'humana-voice':  'Humana Voice'
+            'humana-voice':  'Voice Studio'
         };
 
         function navigateTo(page) {
+            // backward compat: 'voicemails' now lives inside Voice Studio
+            if (page === 'voicemails') page = 'humana-voice';
             _gadsCurrentPage = page;
             var pages = document.querySelectorAll('.gads-page');
             pages.forEach(function(p) { p.style.display = 'none'; p.classList.remove('page-flip-enter'); });
@@ -2184,8 +2194,6 @@
                 if (typeof loadSchedules === 'function') loadSchedules();
                 if (typeof loadTemplates === 'function') loadTemplates();
                 if (typeof loadWebhookStatus === 'function') loadWebhookStatus();
-                if (typeof presetLoadVoices === 'function') presetLoadVoices();
-                if (typeof loadFishAudioKeyStatus === 'function') loadFishAudioKeyStatus();
             }
             if (page === 'integrations') {
                 if (typeof intgShowPicker === 'function') intgShowPicker();
@@ -2193,12 +2201,12 @@
             }
             if (page === 'humana-voice') {
                 if (typeof hvInit === 'function') hvInit();
-            }
-            if (page === 'voicemails') {
                 if (typeof loadVmSettings === 'function') loadVmSettings();
                 if (typeof vmtLoad === 'function') vmtLoad();
                 if (typeof vmtLoadCustomVars === 'function') vmtLoadCustomVars();
                 if (typeof pvmInit === 'function') pvmInit();
+                if (typeof presetLoadVoices === 'function') presetLoadVoices();
+                if (typeof loadFishAudioKeyStatus === 'function') loadFishAudioKeyStatus();
             }
             if (page === 'phonenumbers') {
                 if (typeof loadOwnedNumbers === 'function') loadOwnedNumbers();
