@@ -117,7 +117,7 @@ def create_voice_model(audio_bytes, filename, name):
     resp = requests.post(
         f"{FISH_AUDIO_BASE_URL}/model",
         headers=_get_headers(),
-        data={"title": name, "type": "tts", "train_mode": "fast"},
+        data={"title": name, "type": "tts", "train_mode": "fast", "visibility": "private"},
         files={"voices": (filename, audio_bytes)},
         timeout=120,
     )
