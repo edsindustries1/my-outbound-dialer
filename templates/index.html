@@ -1097,59 +1097,6 @@
                         <div id="testResult" style="display:none;"></div>
                     </div>
 
-                    <!-- iPhone Call Screen Overlay -->
-                    <div id="iphoneDialerOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#0f0f1f 0%,#1a0a2e 50%,#0a0f1f 100%);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;">
-                        <style>
-                            @keyframes iph-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.85)} }
-                            @keyframes iph-ripple { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(2.4);opacity:0} }
-                            @keyframes iph-fadein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-                            @keyframes iph-shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px)} 40%{transform:translateX(4px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
-                            .iph-event-row { animation: iph-fadein .3s ease; display:flex; align-items:flex-start; gap:10px; padding:7px 12px; border-radius:10px; background:rgba(255,255,255,0.05); }
-                            .iph-dot-pulse { animation: iph-pulse 1.2s ease-in-out infinite; }
-                            .iph-ripple-ring { position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,0.2);top:0;left:0;right:0;bottom:0; animation: iph-ripple 1.8s ease-out infinite; }
-                        </style>
-                        <!-- Status bar -->
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 28px 0;color:rgba(255,255,255,0.5);font-size:12px;letter-spacing:.3px;">
-                            <span>OpenHumana</span>
-                            <span id="iphoneClockDisplay" style="font-weight:500;"></span>
-                            <span style="font-size:10px;">● ● ●</span>
-                        </div>
-                        <!-- Avatar + number -->
-                        <div style="text-align:center;margin-top:44px;position:relative;">
-                            <div style="position:relative;width:96px;height:96px;margin:0 auto;">
-                                <div id="iphRipple1" class="iph-ripple-ring" style="animation-delay:0s;display:none;"></div>
-                                <div id="iphRipple2" class="iph-ripple-ring" style="animation-delay:.6s;display:none;"></div>
-                                <div id="iphRipple3" class="iph-ripple-ring" style="animation-delay:1.2s;display:none;"></div>
-                                <div id="iphAvatar" style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:38px;color:white;font-weight:700;position:relative;z-index:1;"></div>
-                            </div>
-                            <div id="iphNumber" style="color:white;font-size:30px;font-weight:600;margin-top:18px;letter-spacing:.5px;"></div>
-                            <div id="iphLabel" style="color:rgba(255,255,255,0.45);font-size:14px;margin-top:4px;">Test Call</div>
-                        </div>
-                        <!-- Status badge -->
-                        <div style="text-align:center;margin-top:22px;">
-                            <div id="iphBadge" style="display:inline-flex;align-items:center;gap:9px;padding:9px 22px;border-radius:24px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(12px);">
-                                <span id="iphDot" style="width:9px;height:9px;border-radius:50%;background:#60a5fa;display:inline-block;flex-shrink:0;"></span>
-                                <span id="iphStatusText" style="color:white;font-size:14px;font-weight:500;">Connecting...</span>
-                            </div>
-                        </div>
-                        <!-- Timer -->
-                        <div style="text-align:center;margin-top:10px;">
-                            <span id="iphTimer" style="color:rgba(255,255,255,0.38);font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.5px;"></span>
-                        </div>
-                        <!-- Event feed -->
-                        <div style="margin:20px auto 0;max-width:440px;padding:0 24px;">
-                            <div style="font-size:10px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;padding-left:2px;">Call Log</div>
-                            <div id="iphEventFeed" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;scrollbar-width:none;"></div>
-                        </div>
-                        <!-- End call button -->
-                        <div style="position:absolute;bottom:56px;left:0;right:0;text-align:center;">
-                            <button id="iphEndBtn" style="width:76px;height:76px;border-radius:50%;background:#ef4444;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 32px rgba(239,68,68,0.55);transition:transform .12s,box-shadow .12s;" onmousedown="this.style.transform='scale(.93)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(.93)'" ontouchend="this.style.transform='scale(1)'">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 003.01 3.01l1.61-1.61a2 2 0 012.18-.46c1.21.49 2.53.76 3.92.76a2 2 0 012 2v3.5a2 2 0 01-2 2A18.5 18.5 0 012.5 4.5a2 2 0 012-2H8a2 2 0 012 2c0 1.39.27 2.71.76 3.92a2 2 0 01-.46 2.18l-1.62 1.71z" transform="rotate(135 12 12)"/></svg>
-                            </button>
-                            <div style="color:rgba(255,255,255,0.3);font-size:12px;margin-top:10px;">End Call</div>
-                        </div>
-                    </div>
-
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
                             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Voicemail Audio URL</h3>
@@ -3141,184 +3088,49 @@
                     });
             });
 
-            // ---- Test Call ----
-            // ── iPhone Live Dialer ──────────────────────────────────────────────
+            // ── Test Call → drives the existing iPhone widget ───────────────────
             var _testCallId = null;
             var _testCallNumber = null;
             var _testCallActive = false;
-            var _dialerTimerInterval = null;
-            var _dialerStartTime = null;
-            var _dialerLastStatus = null;
-            var _dialerSeenEvents = {};
-
-            var iphOverlay   = document.getElementById("iphoneDialerOverlay");
-            var iphAvatar    = document.getElementById("iphAvatar");
-            var iphNumber    = document.getElementById("iphNumber");
-            var iphStatusTxt = document.getElementById("iphStatusText");
-            var iphDot       = document.getElementById("iphDot");
-            var iphTimer     = document.getElementById("iphTimer");
-            var iphFeed      = document.getElementById("iphEventFeed");
-            var iphEndBtn    = document.getElementById("iphEndBtn");
-            var iphClock     = document.getElementById("iphoneClockDisplay");
-            var iphRipples   = [document.getElementById("iphRipple1"),document.getElementById("iphRipple2"),document.getElementById("iphRipple3")];
-
-            var IPH_STATES = {
-                dialing:           { dot:"#60a5fa", pulse:true,  ripple:true,  text:"Dialing..." },
-                ringing:           { dot:"#60a5fa", pulse:true,  ripple:true,  text:"Ringing..." },
-                answered:          { dot:"#34d399", pulse:false, ripple:false, text:"Call Answered" },
-                analyzing:         { dot:"#fbbf24", pulse:true,  ripple:false, text:"Analyzing call..." },
-                machine_detected:  { dot:"#fb923c", pulse:true,  ripple:false, text:"Machine Detected — Waiting for beep" },
-                voicemail_playing: { dot:"#a78bfa", pulse:true,  ripple:false, text:"Leaving Voicemail..." },
-                voicemail_complete:{ dot:"#34d399", pulse:false, ripple:false, text:"Voicemail Dropped ✓" },
-                transferred:       { dot:"#34d399", pulse:false, ripple:false, text:"Transferred to Agent ✓" },
-                silence_human:     { dot:"#60a5fa", pulse:true,  ripple:false, text:"Silence — Treating as Human" },
-                not_sure:          { dot:"#fbbf24", pulse:true,  ripple:false, text:"Unclear — Transferring as Human" },
-                no_answer:         { dot:"#9ca3af", pulse:false, ripple:false, text:"No Answer" },
-                fax:               { dot:"#f87171", pulse:false, ripple:false, text:"Fax Detected — Hanging Up" },
-                ended:             { dot:"#9ca3af", pulse:false, ripple:false, text:"Call Ended" },
-                error:             { dot:"#f87171", pulse:false, ripple:false, text:"Call Failed" }
-            };
-
-            function iphSetState(key, overrideText) {
-                var s = IPH_STATES[key] || IPH_STATES.ended;
-                var txt = overrideText || s.text;
-                iphStatusTxt.textContent = txt;
-                iphDot.style.background = s.dot;
-                if (s.pulse) { iphDot.classList.add("iph-dot-pulse"); } else { iphDot.classList.remove("iph-dot-pulse"); }
-                iphRipples.forEach(function(r){ r.style.display = s.ripple ? "block" : "none"; r.style.borderColor = s.dot.replace(")",",0.25)").replace("rgb","rgba"); });
-            }
-
-            function iphAddEvent(icon, text, dotColor) {
-                var key = text;
-                if (_dialerSeenEvents[key]) return;
-                _dialerSeenEvents[key] = true;
-                var now = new Date();
-                var ts = now.getHours().toString().padStart(2,"0") + ":" + now.getMinutes().toString().padStart(2,"0") + ":" + now.getSeconds().toString().padStart(2,"0");
-                var row = document.createElement("div");
-                row.className = "iph-event-row";
-                row.innerHTML = '<span style="font-size:16px;line-height:1;">' + icon + '</span>' +
-                    '<div style="flex:1;min-width:0;"><div style="color:rgba(255,255,255,.85);font-size:13px;font-weight:500;">' + text + '</div></div>' +
-                    '<span style="color:rgba(255,255,255,.28);font-size:11px;white-space:nowrap;padding-top:1px;">' + ts + '</span>';
-                iphFeed.appendChild(row);
-                iphFeed.scrollTop = iphFeed.scrollHeight;
-            }
-
-            function iphStartTimer() {
-                _dialerStartTime = Date.now();
-                iphTimer.textContent = "0:00";
-                if (_dialerTimerInterval) clearInterval(_dialerTimerInterval);
-                _dialerTimerInterval = setInterval(function() {
-                    var elapsed = Math.floor((Date.now() - _dialerStartTime) / 1000);
-                    var m = Math.floor(elapsed / 60);
-                    var s = elapsed % 60;
-                    iphTimer.textContent = m + ":" + (s < 10 ? "0" : "") + s;
-                    var now = new Date();
-                    iphClock.textContent = now.getHours().toString().padStart(2,"0") + ":" + now.getMinutes().toString().padStart(2,"0");
-                }, 1000);
-            }
-
-            function iphStopTimer() {
-                if (_dialerTimerInterval) { clearInterval(_dialerTimerInterval); _dialerTimerInterval = null; }
-            }
-
-            function showIphoneDialer(number) {
-                _dialerSeenEvents = {};
-                iphFeed.innerHTML = "";
-                iphNumber.textContent = number || "Unknown";
-                iphAvatar.textContent = (number || "?")[0] || "?";
-                iphSetState("dialing");
-                iphTimer.textContent = "";
-                iphOverlay.style.display = "block";
-                iphStartTimer();
-                iphAddEvent("📞", "Call initiated", "#60a5fa");
-                var now = new Date();
-                iphClock.textContent = now.getHours().toString().padStart(2,"0") + ":" + now.getMinutes().toString().padStart(2,"0");
-            }
-
-            function hideIphoneDialer() {
-                iphStopTimer();
-                setTimeout(function() { iphOverlay.style.display = "none"; }, 3000);
-            }
-
-            var _backendToIphState = {
-                "test_call_ringing": "ringing",
-                "ringing": "ringing",
-                "answered": "analyzing",
-                "machine_detected": "machine_detected",
-                "voicemail_playing": "voicemail_playing",
-                "voicemail_complete": "voicemail_complete",
-                "transferred": "transferred",
-                "transfer_failed": "error",
-                "human_no_transfer": "ended",
-                "no_answer": "no_answer",
-                "hangup": "ended",
-                "fax": "fax",
-                "silence": "silence_human",
-                "not_sure": "not_sure",
-                "no_voicemail": "ended",
-                "error": "error"
-            };
-
-            var _eventForStatus = {
-                "ringing":           ["📳", "Phone is ringing"],
-                "test_call_ringing": ["📳", "Phone is ringing"],
-                "answered":          ["✅", "Call answered — analyzing caller"],
-                "machine_detected":  ["🤖", "Machine detected — waiting for voicemail beep"],
-                "voicemail_playing": ["🔊", "Playing voicemail message"],
-                "voicemail_complete":["✉️", "Voicemail dropped successfully"],
-                "transferred":       ["🔀", "Human detected — transferred to agent"],
-                "transfer_failed":   ["⚠️", "Transfer failed"],
-                "human_no_transfer": ["👤", "Human detected — no transfer number"],
-                "no_answer":         ["⏱️", "No answer"],
-                "hangup":            ["📵", "Call ended"],
-                "fax":               ["📠", "Fax machine detected — hanging up"],
-                "silence":           ["🔇", "Silence detected — treating as human"],
-                "not_sure":          ["❓", "Detection unclear — treating as human"],
-                "no_voicemail":      ["⚠️", "No voicemail audio configured"],
-                "error":             ["❌", "Call failed"]
-            };
 
             function updateTestStatus(msg, color) {}
+
+            function _iphoneEnsureVisible() {
+                if (typeof iphoneMinimized !== "undefined" && iphoneMinimized) {
+                    if (typeof iphoneToggleMinimize === "function") iphoneToggleMinimize();
+                }
+                var dialer = document.getElementById("iphoneDialer");
+                if (dialer) { dialer.style.display = ""; dialer.style.opacity = "1"; }
+            }
 
             function trackTestCallStatus() {
                 if (!_testCallActive) return;
                 apiFetch("/status")
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
-                        if (!data.calls || !_testCallActive) return;
+                        if (!_testCallActive) return;
+                        var calls = data.calls || [];
                         var found = null;
-                        for (var i = 0; i < data.calls.length; i++) {
-                            var c = data.calls[i];
+                        for (var i = 0; i < calls.length; i++) {
+                            var c = calls[i];
                             if (_testCallId && c.call_id && c.call_id.indexOf(_testCallId.substring(0, 12)) === 0) { found = c; break; }
                             if (!found && c.number === _testCallNumber && c.is_live) { found = c; }
                         }
-                        if (!found) { if (_testCallActive) setTimeout(trackTestCallStatus, 1000); return; }
-
-                        var st = found.status;
-                        var desc = found.status_description || st;
-
-                        if (st !== _dialerLastStatus) {
-                            _dialerLastStatus = st;
-                            var iphKey = _backendToIphState[st] || "ended";
-                            iphSetState(iphKey, desc);
-                            var evtInfo = _eventForStatus[st];
-                            if (evtInfo) iphAddEvent(evtInfo[0], evtInfo[1]);
+                        if (typeof iphoneUpdateDialer === "function") {
+                            iphoneUpdateDialer(found ? [found] : calls, true);
                         }
-
+                        if (!found) { if (_testCallActive) setTimeout(trackTestCallStatus, 1000); return; }
                         var doneStatuses = ["voicemail_complete","transferred","hangup","transfer_failed","human_no_transfer","no_answer","fax","no_voicemail","error"];
-                        if (doneStatuses.indexOf(st) !== -1) {
+                        if (doneStatuses.indexOf(found.status) !== -1) {
                             _testCallActive = false;
                             testCallBtn.disabled = false;
                             testCallBtn.textContent = "Start Test Call";
-                            iphStopTimer();
-                            hideIphoneDialer();
+                            endTestCallBtn.style.display = "none";
                         } else {
                             setTimeout(trackTestCallStatus, 1000);
                         }
                     })
-                    .catch(function() {
-                        if (_testCallActive) setTimeout(trackTestCallStatus, 2000);
-                    });
+                    .catch(function() { if (_testCallActive) setTimeout(trackTestCallStatus, 2000); });
             }
 
             testCallBtn.addEventListener("click", function() {
@@ -3328,11 +3140,15 @@
                 if (!transferNum) { alert("Enter a transfer number for human-answered calls"); return; }
                 testCallBtn.disabled = true;
                 testCallBtn.textContent = "Calling...";
+                endTestCallBtn.style.display = "inline-block";
                 _testCallNumber = number;
                 _testCallId = null;
                 _testCallActive = true;
-                _dialerLastStatus = null;
-                showIphoneDialer(number);
+                _iphoneEnsureVisible();
+                if (typeof iphoneUpdateDialer === "function") {
+                    var fakeCall = { number: number, status: "test_call_ringing", status_description: "Ringing...", status_color: "blue", is_live: true, machine_detected: null };
+                    iphoneUpdateDialer([fakeCall], true);
+                }
                 var formData = new FormData();
                 formData.append("test_number", number);
                 formData.append("transfer_number", transferNum);
@@ -3345,14 +3161,10 @@
                             _testCallActive = false;
                             testCallBtn.disabled = false;
                             testCallBtn.textContent = "Start Test Call";
-                            iphSetState("error", data.error);
-                            iphAddEvent("❌", data.error);
-                            iphStopTimer();
-                            hideIphoneDialer();
+                            endTestCallBtn.style.display = "none";
+                            showToast(data.error, "error");
                         } else {
                             _testCallId = data.call_control_id || null;
-                            iphSetState("ringing");
-                            iphAddEvent("📳", "Phone is ringing");
                             pollStatus();
                             setTimeout(trackTestCallStatus, 1500);
                         }
@@ -3362,14 +3174,14 @@
                         _testCallActive = false;
                         testCallBtn.disabled = false;
                         testCallBtn.textContent = "Start Test Call";
-                        iphSetState("error", "Request failed");
-                        iphStopTimer();
-                        hideIphoneDialer();
+                        endTestCallBtn.style.display = "none";
+                        showToast("Request failed", "error");
                     });
             });
 
             function doHangup() {
-                iphEndBtn.disabled = true;
+                endTestCallBtn.disabled = true;
+                endTestCallBtn.textContent = "Ending...";
                 var payload = {};
                 if (_testCallId) payload.call_control_id = _testCallId;
                 apiFetch("/api/hangup_call", {
@@ -3379,21 +3191,20 @@
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    iphEndBtn.disabled = false;
+                    endTestCallBtn.disabled = false;
+                    endTestCallBtn.textContent = "End Call";
                     _testCallActive = false;
                     testCallBtn.disabled = false;
                     testCallBtn.textContent = "Start Test Call";
-                    iphSetState("ended", "Call ended by you");
-                    iphAddEvent("📵", "Call ended by you");
-                    iphStopTimer();
-                    hideIphoneDialer();
+                    endTestCallBtn.style.display = "none";
+                    if (typeof iphoneUpdateDialer === "function") iphoneUpdateDialer([], false);
                 })
                 .catch(function(e) {
                     if (e.message === "auth") return;
-                    iphEndBtn.disabled = false;
+                    endTestCallBtn.disabled = false;
+                    endTestCallBtn.textContent = "End Call";
                 });
             }
-            iphEndBtn.addEventListener("click", doHangup);
             endTestCallBtn.addEventListener("click", doHangup);
 
             // ---- Start Campaign ----
@@ -3950,7 +3761,7 @@
                             }
                         }
 
-                        if (typeof iphoneUpdateDialer === "function") {
+                        if (typeof iphoneUpdateDialer === "function" && !_testCallActive) {
                             iphoneUpdateDialer(data.calls || [], data.active);
                         }
 
