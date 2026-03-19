@@ -3452,6 +3452,50 @@ def _handle_webhook():
                     logger.info(f"[SILENCE PLAY] {call_control_id} | Playing 60s silence to keep RTP alive while waiting for beep")
                 except Exception as e:
                     logger.error(f"[SILENCE PLAY ERROR] {call_control_id} | {e}")
+
+                # ── LAYER 2: start transcription so Alex can hear the voicemail greeting ──
+                try:
+                    start_transcription(call_control_id)
+                    logger.info(f"[LAYER2] {call_control_id} | Transcription started on machine — Alex is listening for VM keywords")
+                except Exception as e:
+                    logger.error(f"[LAYER2] {call_control_id} | Failed to start transcription on machine: {e}")
+
+                # ── LAYER 3: 22-second safety-net timer ──
+                # If neither beep event nor keyword detection fires within 22s,
+                # the greeting has almost certainly ended — drop the voicemail anyway.
+                _vm_safe_url = audio_url
+                _vm_safe_pvm = is_personalized
+                _vm_safe_cust = customer_number
+                _vm_safe_uid = webhook_user_id
+                _vm_safe_cid = call_control_id
+
+                _TERMINAL_STATUSES = {"transferred", "voicemail_complete", "hangup", "voicemail_playing"}
+
+                def _vm_safety_fallback(ccid, aurl, ispvm, custnum, uid):
+                    _amd_timers.pop(f"vm_safety_{ccid}", None)
+                    st = get_call_state(ccid)
+                    if (st
+                            and not st.get("voicemail_dropped")
+                            and not st.get("transferred")
+                            and st.get("machine_detected")
+                            and st.get("status") not in _TERMINAL_STATUSES):
+                        logger.info(f"[LAYER3] {ccid} | 22s safety timer — no beep/keyword received, dropping voicemail now")
+                        update_call_state(ccid, status_description="Dropping voicemail (safety timer)", status_color="blue")
+                        _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
+                    else:
+                        logger.info(f"[LAYER3] {ccid} | Safety timer fired but call already handled (status={st.get('status') if st else 'gone'}), skipping")
+
+                # Cancel any prior safety timer for this call before registering new one
+                _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
+                if _prev_safe:
+                    _prev_safe.cancel()
+                vm_safety_t = threading.Timer(22.0, _vm_safety_fallback,
+                                              args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
+                vm_safety_t.daemon = True
+                # Store in dict BEFORE start() so hangup cleanup can always find and cancel it
+                _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
+                vm_safety_t.start()
+                logger.info(f"[LAYER3] {call_control_id} | 22s safety fallback timer started")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -3554,6 +3598,16 @@ def _handle_webhook():
         beep_result = payload.get("result", "unknown")
         logger.info(f"[GREETING ENDED] {call_control_id} | result: {beep_result}")
 
+        # Cancel Layer 2/3 timers based on result:
+        # - beep_detected: cancel both (Layer 1 is dropping, nothing else needed)
+        # - no_beep: cancel safety timer only; preserve keyword timer so Layer 2
+        #   can still fire if keywords were already heard during the greeting
+        _prefixes_to_cancel = ["vm_safety_", "vm_kw_"] if beep_result == "beep_detected" else ["vm_safety_"]
+        for _prefix in _prefixes_to_cancel:
+            _t = _amd_timers.pop(f"{_prefix}{call_control_id}", None)
+            if _t:
+                _t.cancel()
+
         if state.get("voicemail_dropped") or state.get("transferred"):
             logger.info(f"[GREETING ENDED] {call_control_id} | Already handled (vm={state.get('voicemail_dropped')}, transfer={state.get('transferred')}), ignoring")
         elif state.get("vm_pending_audio_url") and beep_result == "beep_detected":
@@ -3650,13 +3704,70 @@ def _handle_webhook():
             if state and state.get("machine_detected") and not state.get("voicemail_dropped") and not state.get("transferred"):
                 text_lower = transcript_text.lower()
 
-                vm_keywords = ["leave your message", "leave a message", "after the tone", "after the beep",
-                               "at the tone", "record your message", "record a message",
-                               "press pound", "can't come to the phone", "cannot take your call"]
-                if any(kw in text_lower for kw in vm_keywords) and state.get("vm_pending_audio_url"):
-                    logger.info(f"[VM KEYWORDS] {call_control_id} | Voicemail keywords detected: '{transcript_text[:100]}' — continuing to wait for beep (will NOT drop without beep)")
+                # High-confidence phrases spoken at the END of a voicemail greeting
+                # (right before the beep). Hearing any of these means the greeting
+                # is finishing and recording is about to start.
+                vm_keywords_high = [
+                    "leave your message", "leave a message", "leave me a message",
+                    "after the tone", "after the beep", "at the tone", "at the beep",
+                    "record your message", "record a message", "start recording",
+                    "press pound when done", "hang up when done", "hang up when finished",
+                    "begin your message", "begin recording",
+                ]
+                # Medium-confidence phrases (heard during the greeting body)
+                vm_keywords_medium = [
+                    "can't come to the phone", "cannot come to the phone",
+                    "can't take your call", "cannot take your call",
+                    "not available", "currently unavailable",
+                    "you have reached voicemail", "you've reached voicemail",
+                    "please leave", "not in at the moment",
+                ]
+
+                is_high_confidence = any(kw in text_lower for kw in vm_keywords_high)
+                is_medium_confidence = any(kw in text_lower for kw in vm_keywords_medium)
+
+                if (is_high_confidence or is_medium_confidence) and state.get("vm_pending_audio_url") and not state.get("voicemail_confirmed"):
+                    confidence = "HIGH" if is_high_confidence else "MEDIUM"
+                    delay = 2.0 if is_high_confidence else 4.0
+                    logger.info(f"[LAYER2] {call_control_id} | VM keywords [{confidence}] heard: '{transcript_text[:100]}' — dropping in {delay}s if no beep fires")
                     update_call_state(call_control_id, voicemail_confirmed=True,
-                                      status_description="Voicemail keywords heard - waiting for beep", status_color="blue")
+                                      status_description=f"Voicemail keywords heard [{confidence}] — dropping in {delay:.0f}s", status_color="blue")
+
+                    # Cancel the slower Layer 3 safety timer — Layer 2 has a better signal
+                    existing_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
+                    if existing_safe:
+                        existing_safe.cancel()
+
+                    # Cancel any existing keyword timer to avoid double-drop
+                    existing_kw = _amd_timers.pop(f"vm_kw_{call_control_id}", None)
+                    if existing_kw:
+                        existing_kw.cancel()
+
+                    _vm_kw_cid = call_control_id
+                    _KW_TERMINAL = {"transferred", "voicemail_complete", "hangup", "voicemail_playing"}
+
+                    def _vm_keyword_fallback(ccid):
+                        _amd_timers.pop(f"vm_kw_{ccid}", None)
+                        st = get_call_state(ccid)
+                        if (st
+                                and not st.get("voicemail_dropped")
+                                and not st.get("transferred")
+                                and st.get("voicemail_confirmed")
+                                and st.get("status") not in _KW_TERMINAL):
+                            aurl = st.get("vm_pending_audio_url", "")
+                            ispvm = st.get("vm_pending_personalized", False)
+                            custnum = st.get("vm_pending_customer_number", "")
+                            uid = st.get("vm_pending_user_id")
+                            logger.info(f"[LAYER2] {ccid} | Keyword timer fired — beep event never arrived, dropping voicemail now")
+                            _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
+                        else:
+                            logger.info(f"[LAYER2] {ccid} | Keyword timer fired but call already handled (status={st.get('status') if st else 'gone'}), skipping")
+
+                    # Store in dict BEFORE start() so hangup cleanup can always cancel it
+                    vm_kw_t = threading.Timer(delay, _vm_keyword_fallback, args=[_vm_kw_cid])
+                    vm_kw_t.daemon = True
+                    _amd_timers[f"vm_kw_{call_control_id}"] = vm_kw_t
+                    vm_kw_t.start()
 
             # ---- Gatekeeper Navigator logic ----
             if (state and state.get("gatekeeper_mode_active")
@@ -3741,7 +3852,7 @@ def _handle_webhook():
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":
-        for prefix in ["", "beep_", "nobeep_", "safety_"]:
+        for prefix in ["", "beep_", "nobeep_", "safety_", "vm_safety_", "vm_kw_"]:
             t = _amd_timers.pop(f"{prefix}{call_control_id}", None)
             if t:
                 t.cancel()
