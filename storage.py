@@ -514,6 +514,21 @@ def clear_call_states():
         _cid_to_user.clear()
 
 
+TERMINAL_STATUSES = {"completed", "hangup", "hungup", "failed", "busy", "no_answer", "error"}
+
+
+def count_active_calls(user_id=None):
+    """Count in-progress calls for a user (excludes terminal statuses)."""
+    with lock:
+        count = 0
+        for state in call_states.values():
+            if user_id is not None and state.get("user_id") != user_id:
+                continue
+            if state.get("status", "").lower() not in TERMINAL_STATUSES:
+                count += 1
+        return count
+
+
 _transfer_pause_events = {}
 _active_transfer_cids_per_user = {}
 

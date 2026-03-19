@@ -286,6 +286,21 @@
                         </div>
                     </div>
 
+                    <div class="gads-card" id="channelUsageCard" style="margin-bottom:20px;">
+                        <div class="gads-card-header" style="align-items:center;">
+                            <h3 style="margin:0;">Lines in Use</h3>
+                            <span id="channelUsageBadge" class="gads-badge" style="margin-left:auto;">0 / 5</span>
+                        </div>
+                        <div style="padding:12px 20px 16px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                                    <div id="channelBarFill" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width 0.4s ease;"></div>
+                                </div>
+                                <span id="channelBarText" style="font-size:12px;color:rgba(255,255,255,0.7);min-width:80px;text-align:right;">0 of 5 lines</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="gads-quick-actions">
                         <button class="gads-btn gads-btn-primary" onclick="navigateTo('campaigns'); setTimeout(function(){ openWizard(); }, 100);">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1002,7 +1017,7 @@
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> My Numbers</h3>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Number Pool</h3>
                             <div class="gads-card-actions">
                                 <span id="ownedNumbersCount" class="gads-badge">0 numbers</span>
                                 <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadOwnedNumbers()">
@@ -1011,10 +1026,11 @@
                                 </button>
                             </div>
                         </div>
+                        <p style="font-size:12px;color:var(--gads-text-secondary);margin:0 0 12px;padding:0 4px;">Caller ID is automatically rotated across all active numbers (least-recently-used). Buy multiple numbers to reduce spam flagging.</p>
                         <div class="gads-table-wrap" style="max-height:360px;overflow-y:auto;">
                             <table class="gads-table" id="ownedNumbersTable">
-                                <thead><tr><th>Phone Number</th><th>Status</th><th>Line Config</th><th>Type</th><th>Actions</th></tr></thead>
-                                <tbody id="ownedNumbersBody"><tr><td colspan="5" class="gads-empty">Loading...</td></tr></tbody>
+                                <thead><tr><th>Phone Number</th><th>Status</th><th>Line Config</th><th>Type</th><th>Calls Today</th><th>Actions</th></tr></thead>
+                                <tbody id="ownedNumbersBody"><tr><td colspan="6" class="gads-empty">Loading...</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -4205,6 +4221,31 @@
             pollTimer = setInterval(pollStatus, pollInterval);
             pollStatus();
 
+            function updateChannelUsage() {
+                apiFetch("/api/active-lines").then(function(r){return r.json();}).then(function(data) {
+                    var active = data.active || 0;
+                    var max = data.max || 5;
+                    var badge = document.getElementById("channelUsageBadge");
+                    var fill = document.getElementById("channelBarFill");
+                    var text = document.getElementById("channelBarText");
+                    if (badge) badge.textContent = active + " / " + max;
+                    if (fill) {
+                        var pct = max > 0 ? Math.min(100, Math.round(active / max * 100)) : 0;
+                        fill.style.width = pct + "%";
+                        if (pct >= 90) {
+                            fill.style.background = "linear-gradient(90deg,#ef4444,#dc2626)";
+                        } else if (pct >= 60) {
+                            fill.style.background = "linear-gradient(90deg,#f59e0b,#d97706)";
+                        } else {
+                            fill.style.background = "linear-gradient(90deg,#6366f1,#8b5cf6)";
+                        }
+                    }
+                    if (text) text.textContent = active + " of " + max + " lines";
+                }).catch(function(e){if(e.message==="auth")return;});
+            }
+            updateChannelUsage();
+            setInterval(updateChannelUsage, 10000);
+
             // Wire up number count tracking
             document.getElementById("csvFile").addEventListener("change", function() { wizUpdateNumberCount(); });
             document.getElementById("numbersInput").addEventListener("input", function() { wizUpdateNumberCount(); });
@@ -5206,11 +5247,6 @@
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({phone_number: phoneNumber, auto_setup: true})
                 }).then(function(r){return r.json();}).then(function(data) {
-                    if (data.has_active) {
-                        showToast("Line limit reached. Use 'Request Additional Line' to get more.", "warning");
-                        window._userCanPurchase = false;
-                        return;
-                    }
                     if (data.error) {
                         showToast("Purchase failed: " + data.error, "error");
                         return;
@@ -5227,29 +5263,16 @@
                 apiFetch("/api/numbers/owned").then(function(r){return r.json();}).then(function(data) {
                     var body = document.getElementById("ownedNumbersBody");
                     var badge = document.getElementById("ownedNumbersCount");
-                    // Track governance state for search Buy/Request buttons
-                    window._userCanPurchase = data.can_purchase !== false;
-                    // Update search button if user can't purchase
-                    var searchBtn = document.getElementById("numSearchBtn");
-                    if (searchBtn && !window._userCanPurchase) {
-                        var govNotice = document.getElementById("govNotice");
-                        if (!govNotice) {
-                            var notice = document.createElement("div");
-                            notice.id = "govNotice";
-                            notice.style.cssText = "margin:12px 0;padding:12px 16px;border-radius:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);font-size:13px;color:#f59e0b;";
-                            notice.innerHTML = '<strong>Line Limit Reached</strong> — You have 1 active line. <a href="#" onclick="requestAdditionalLine();return false;" style="color:#f59e0b;text-decoration:underline;font-weight:600;">Request Additional Line</a>';
-                            searchBtn.parentNode.insertBefore(notice, searchBtn.nextSibling);
-                        }
-                    }
+                    window._userCanPurchase = true;
                     if (data.error) {
-                        body.innerHTML = '<tr><td colspan="5" class="gads-empty">Failed to load: ' + data.error + '</td></tr>';
+                        body.innerHTML = '<tr><td colspan="6" class="gads-empty">Failed to load: ' + data.error + '</td></tr>';
                         return;
                     }
                     var nums = data.numbers || [];
                     _ownedNumbersList = nums;
                     badge.textContent = nums.length + " number" + (nums.length !== 1 ? "s" : "");
                     if (nums.length === 0) {
-                        body.innerHTML = '<tr><td colspan="5" class="gads-empty">No numbers yet. Search and buy above.</td></tr>';
+                        body.innerHTML = '<tr><td colspan="6" class="gads-empty">No numbers yet. Search and buy above.</td></tr>';
                         return;
                     }
                     var html = "";
@@ -5260,6 +5283,7 @@
                         html += '<td><span class="gads-badge ' + statusClass + '">' + n.status + '</span></td>';
                         html += '<td style="font-size:12px;">' + (n.connection_name ? '<span class="gads-badge gads-badge-success">Connected</span>' : '<span style="color:var(--gads-text-muted);">Not configured</span>') + '</td>';
                         html += '<td><span class="gads-badge">' + (n.number_type || "-") + '</span></td>';
+                        html += '<td style="text-align:center;"><span class="gads-badge">' + (n.calls_today || 0) + '</span></td>';
                         html += '<td>';
                         {% if is_admin %}
                         if (!n.connection_id) {

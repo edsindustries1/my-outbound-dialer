@@ -100,6 +100,7 @@ from storage import (
     set_quick_call_status,
     get_quick_call_statuses,
     get_quick_call_status,
+    count_active_calls,
 )
 from telnyx_client import (
     transfer_call, play_audio, stop_playback, hangup_call, make_call, validate_connection_id,
@@ -426,6 +427,31 @@ def _send_masterpiece_email(to_email, user_name=None):
         return False
 
 
+PLAN_MAX_CONCURRENT_LINES = {
+    "starter": 5,
+    "business": 15,
+}
+
+
+def _set_max_concurrent_lines(user_id, limit):
+    """Store the user's max concurrent lines in UserAppData."""
+    try:
+        if not user_id:
+            return None
+        existing = UserAppData.query.filter_by(user_id=user_id, data_key="max_concurrent_lines").first()
+        payload = json.dumps({"limit": int(limit)})
+        if existing:
+            existing.data_value = payload
+        else:
+            rec = UserAppData(user_id=user_id, data_key="max_concurrent_lines", data_value=payload)
+            db.session.add(rec)
+        db.session.commit()
+        return limit
+    except Exception as e:
+        logger.error(f"Failed to set max_concurrent_lines for user {user_id}: {e}")
+        return None
+
+
 def _set_employee_instances(user_id, count):
     try:
         if not user_id:
@@ -619,6 +645,8 @@ def paypal_capture_order():
                     matrix = PLAN_MATRIX[plan]
                     amount_val = matrix["amount"]
                     _set_employee_instances(target_user_id, matrix["instances"])
+                    max_lines = PLAN_MAX_CONCURRENT_LINES.get(plan, 5)
+                    _set_max_concurrent_lines(target_user_id, max_lines)
                     credited = _credit_user(target_user_id, amount_val)
                 else:
                     credited = _credit_user(target_user_id, amount_val)
@@ -1639,6 +1667,24 @@ def start():
         except Exception:
             db.session.rollback()
 
+    # ---- Check concurrent line limit ----
+    user_id_for_campaign = current_user.id
+    try:
+        max_lines_rec = UserAppData.query.filter_by(user_id=user_id_for_campaign, data_key="max_concurrent_lines").first()
+        user_max_lines = int(json.loads(max_lines_rec.data_value).get("limit", 5)) if max_lines_rec else 5
+    except Exception:
+        user_max_lines = 5
+    active_now = count_active_calls(user_id=user_id_for_campaign)
+    if active_now >= user_max_lines:
+        return jsonify({
+            "error": f"Line limit reached: {active_now} of {user_max_lines} lines are currently active. Wait for calls to complete or upgrade your plan.",
+            "active_lines": active_now,
+            "max_lines": user_max_lines,
+        }), 429
+    if dial_mode == "simultaneous" and batch_size > user_max_lines:
+        batch_size = user_max_lines
+        logger.info(f"Capping batch_size to user max_concurrent_lines={user_max_lines}")
+
     # ---- Start the campaign ----
     logger.info(f"Starting campaign: {len(numbers)} numbers, transfer to {transfer_number}, mode={dial_mode}, batch={batch_size}, delay={dial_delay}min, vm_type={voicemail_type}, from={campaign_from_number or 'default'}, gk={gk_enabled}")
     set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number, user_id=current_user.id,
@@ -1742,6 +1788,19 @@ def test_call():
     set_campaign(audio, transfer_num, [number], dial_mode="sequential", batch_size=1, user_id=current_user.id, is_test=True)
 
     from_number = request.form.get("from_number", "").strip() or None
+
+    try:
+        ml_rec = UserAppData.query.filter_by(user_id=current_user.id, data_key="max_concurrent_lines").first()
+        _test_max_lines = int(json.loads(ml_rec.data_value).get("limit", 5)) if ml_rec else 5
+    except Exception:
+        _test_max_lines = 5
+    _test_active = count_active_calls(user_id=current_user.id)
+    if _test_active >= _test_max_lines:
+        return jsonify({"error": f"Line limit reached: {_test_active} of {_test_max_lines} lines are currently active."}), 429
+
+    if not from_number:
+        from call_manager import _get_lru_from_number as _lru_num
+        from_number = _lru_num(current_user.id, fallback=None) or os.environ.get("TELNYX_FROM_NUMBER", "")
     logger.info(f"Placing test call to {number}" + (f" from {from_number}" if from_number else ""))
     call_control_id, call_error = make_call(number, from_number_override=from_number)
 
@@ -2819,8 +2878,11 @@ def api_quick_call():
 
     user_id = current_user.id
 
-    user_pn = ProvisionedNumber.query.filter_by(user_id=user_id, status="active").first()
-    from_number = (user_pn.phone_number if user_pn else None) or os.environ.get("TELNYX_FROM_NUMBER", "")
+    from call_manager import _get_lru_from_number as _lru_num
+    from_number = _lru_num(user_id, fallback=None)
+    if not from_number:
+        user_pn = ProvisionedNumber.query.filter_by(user_id=user_id, status="active").first()
+        from_number = (user_pn.phone_number if user_pn else None) or os.environ.get("TELNYX_FROM_NUMBER", "")
     if not from_number:
         return jsonify({"error": "No caller ID configured. Please provision a phone number first."}), 400
 
@@ -2828,6 +2890,15 @@ def api_quick_call():
     transfer_number = camp.get("transfer_number") or ""
     if not transfer_number:
         return jsonify({"error": "No transfer number configured. Please start or configure a campaign with a transfer number."}), 400
+
+    try:
+        _qc_ml_rec = UserAppData.query.filter_by(user_id=user_id, data_key="max_concurrent_lines").first()
+        _qc_max_lines = int(json.loads(_qc_ml_rec.data_value).get("limit", 5)) if _qc_ml_rec else 5
+    except Exception:
+        _qc_max_lines = 5
+    _qc_active = count_active_calls(user_id=user_id)
+    if _qc_active >= _qc_max_lines:
+        return jsonify({"error": f"Line limit reached: {_qc_active} of {_qc_max_lines} lines are currently active."}), 429
 
     call_control_id, err = make_call(phone, from_number_override=from_number)
     if err or not call_control_id:
@@ -3843,17 +3914,8 @@ def api_numbers_search():
 @app.route("/api/numbers/buy", methods=["POST"])
 @login_required
 def api_numbers_buy():
-    """Purchase a number — enforces one-number governance per user."""
+    """Purchase a phone number for the current user. Multiple numbers are allowed."""
     user_id = current_user.id
-
-    # One Number Governance: check if user already has an active number
-    existing_active = ProvisionedNumber.query.filter_by(user_id=user_id, status='active').first()
-    if existing_active:
-        return jsonify({
-            "error": "You already have an active line. Use 'Request Additional Line' to request more.",
-            "has_active": True,
-            "active_number": existing_active.phone_number
-        }), 403
 
     data = request.get_json() or {}
     phone_number = data.get("phone_number", "").strip()
@@ -3913,23 +3975,68 @@ def api_numbers_owned():
     user_numbers = ProvisionedNumber.query.filter_by(user_id=user_id).all()
     user_phone_set = {pn.phone_number for pn in user_numbers}
 
+    # Build a map of phone_number -> calls today from call history
+    calls_today_map = {}
+    try:
+        from storage import get_call_history as _gch
+        today_str = datetime.utcnow().strftime("%Y-%m-%dT00:00:00")
+        today_history = _gch(start_date=today_str, user_id=user_id)
+        for entry in today_history:
+            fn = entry.get("from_number", "")
+            if fn:
+                calls_today_map[fn] = calls_today_map.get(fn, 0) + 1
+    except Exception:
+        pass
+
     # If user has provisioned numbers, filter the Telnyx list to only theirs
     result = list_owned_numbers()
     if result.get("success") and user_phone_set:
         filtered = [n for n in result.get("numbers", []) if n.get("phone_number") in user_phone_set]
+        for n in filtered:
+            n["calls_today"] = calls_today_map.get(n.get("phone_number", ""), 0)
         result["numbers"] = filtered
         result["total"] = len(filtered)
     elif result.get("success") and not user_phone_set:
-        # User has no provisioned numbers — show empty list
         result["numbers"] = []
         result["total"] = 0
 
-    # Include governance info
     active_count = sum(1 for pn in user_numbers if pn.status == 'active')
     result["active_count"] = active_count
-    result["can_purchase"] = active_count < 1
+    result["can_purchase"] = True
+
+    # Also include DB-only numbers that may not appear in Telnyx list
+    if result.get("success"):
+        existing_phones = {n.get("phone_number") for n in result.get("numbers", [])}
+        for pn in user_numbers:
+            if pn.phone_number not in existing_phones:
+                result["numbers"].append({
+                    "phone_number": pn.phone_number,
+                    "status": pn.status,
+                    "id": pn.telnyx_number_id or str(pn.id),
+                    "connection_id": pn.telnyx_connection_id,
+                    "connection_name": None,
+                    "number_type": "local",
+                    "calls_today": calls_today_map.get(pn.phone_number, 0),
+                })
 
     return jsonify(result)
+
+
+@app.route("/api/active-lines", methods=["GET"])
+@login_required
+def api_active_lines():
+    """Return current active call count and user's max concurrent lines limit."""
+    user_id = current_user.id
+    active = count_active_calls(user_id=user_id)
+    max_lines = 5
+    try:
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key="max_concurrent_lines").first()
+        if rec:
+            val = json.loads(rec.data_value)
+            max_lines = int(val.get("limit", 5))
+    except Exception:
+        pass
+    return jsonify({"active": active, "max": max_lines})
 
 
 @app.route("/api/request-additional-line", methods=["POST"])

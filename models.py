@@ -125,6 +125,7 @@ class ProvisionedNumber(db.Model):
     telnyx_connection_id = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(50), default='provisioning', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_used_at = db.Column(db.DateTime, nullable=True)
 
     __table_args__ = (
         db.UniqueConstraint('phone_number', name='uq_provisioned_phone'),
@@ -234,6 +235,13 @@ def _ensure_schema():
                 db.session.execute(text("ALTER TABLE invitations ADD COLUMN expires_at TIMESTAMP"))
                 db.session.commit()
 
+        if "provisioned_numbers" in inspector.get_table_names():
+            pn_cols = {col["name"] for col in inspector.get_columns("provisioned_numbers")}
+            if "last_used_at" not in pn_cols:
+                logger.warning("DB schema missing provisioned_numbers.last_used_at; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN last_used_at TIMESTAMP"))
+                db.session.commit()
+
         if "app_config" not in inspector.get_table_names():
             db.session.execute(text("""
                 CREATE TABLE IF NOT EXISTS app_config (
@@ -244,8 +252,45 @@ def _ensure_schema():
             """))
             db.session.commit()
 
+        _seed_max_concurrent_lines()
+
         pass
 
     except Exception as e:
         logger.exception(f"Schema ensure failed: {e}")
         print(f"Schema ensure failed: {e}")
+
+
+def _seed_max_concurrent_lines():
+    """Ensure every user has a max_concurrent_lines record in UserAppData.
+    
+    Defaults to 5 for free/starter users, 15 for business users.
+    Does not overwrite existing records.
+    """
+    import json as _json
+    try:
+        users = User.query.all()
+        for user in users:
+            existing = UserAppData.query.filter_by(user_id=user.id, data_key="max_concurrent_lines").first()
+            if existing:
+                continue
+            plan_limit = 5
+            try:
+                plan_rec = UserAppData.query.filter_by(user_id=user.id, data_key="active_plan").first()
+                if plan_rec:
+                    plan_val = _json.loads(plan_rec.data_value)
+                    plan_name = (plan_val.get("plan") or "").lower()
+                    if plan_name == "business":
+                        plan_limit = 15
+                    elif plan_name == "starter":
+                        plan_limit = 5
+            except Exception:
+                pass
+            payload = _json.dumps({"limit": plan_limit})
+            rec = UserAppData(user_id=user.id, data_key="max_concurrent_lines", data_value=payload)
+            db.session.add(rec)
+        db.session.commit()
+        logger.info("Seeded max_concurrent_lines for existing users")
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Could not seed max_concurrent_lines: {e}")
