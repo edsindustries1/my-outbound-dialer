@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Humana</title>
-    <link rel="stylesheet" href="/static/style.css?v=5">
+    <link rel="stylesheet" href="/static/style.css?v=6">
     <link rel="stylesheet" href="/static/humana_voice/hv.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -41,7 +41,10 @@
         <!-- ===== SIDEBAR ===== -->
         <div class="gads-sidebar" id="gadsSidebar">
             <div class="gads-sidebar-logo" onclick="navigateTo('dashboard')" style="cursor:pointer;">
-                <img src="/static/images/logo.png" alt="Open Humana" style="height:156px;width:auto;">
+                <div class="gads-sidebar-logo-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <span class="gads-logo-text">OpenHumana</span>
             </div>
             <nav class="gads-sidebar-nav">
                 <a class="gads-nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
@@ -224,90 +227,115 @@
                         </div>
                     </div>
 
-                    <div class="gads-card">
-                        <div class="gads-card-header">
-                            <h3>Recent Activity</h3>
-                            <a class="gads-link" onclick="navigateTo('livecalls')">View All &rarr;</a>
-                        </div>
-                        <div class="gads-table-wrap">
-                            <table class="gads-table">
-                                <thead><tr><th>Time</th><th>Number</th><th>Status</th><th>Ring</th><th>AMD</th><th>Transfer</th><th>VM</th><th>Transcript</th></tr></thead>
-                                <tbody id="dashRecentBody"><tr><td colspan="8" class="gads-empty">No recent calls</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-            <div class="gads-card" id="provisionCard" style="margin-bottom:20px;">
-                <div class="gads-card-header" style="align-items:center;gap:12px;flex-wrap:wrap;">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <h3 style="margin:0;">Alex's Phone Line</h3>
-                        <span id="provisionStatusBadge" class="badge-soft" style="font-size:0.8rem;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);">Checking...</span>
-                    </div>
-                    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                        <div id="creditChip" class="credit-chip">Credits: <span id="creditValue" data-initial="{{ '%.2f' % (user.credit_balance or 0) }}">${{ '%.2f' % (user.credit_balance or 0) }}</span></div>
-                        <button class="gads-btn gads-btn-primary" id="refillBtn" onclick="openAddCreditsModal()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Add Credits
-                        </button>
-                    </div>
-                </div>
-                        <div id="provisionContent" style="padding:16px 20px;">
-                            <p id="provisionMsg" style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin:0 0 14px;">Checking Alex's line status...</p>
-                        <div id="creditBarWrap" style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-                            <div style="flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;">
-                                <div id="creditBarFill" style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width 0.3s ease,background 0.3s ease;"></div>
-                            </div>
-                            <span id="creditBarText" style="font-size:12px;color:rgba(255,255,255,0.7);min-width:72px;text-align:right;">${{ '%.2f' % (user.credit_balance or 0) }}</span>
-                        </div>
-                            <button class="gads-btn gads-btn-primary" id="provisionBtn" onclick="provisionLine()" style="display:none;margin-top:14px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                                Provision Line
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="interruptedBanner" class="gads-card" style="margin-bottom:20px;display:none;border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.06);">
-                        <div style="padding:16px 20px;display:flex;align-items:center;gap:14px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <div style="flex:1;">
-                                <div style="font-weight:600;color:#fbbf24;margin-bottom:4px;">Campaign Interrupted</div>
-                                <div id="interruptedInfo" style="font-size:13px;color:rgba(255,255,255,0.7);">A campaign was running when the server restarted.</div>
-                            </div>
-                            <div style="display:flex;gap:8px;">
-                                <button class="gads-btn gads-btn-primary" id="resumeCampaignBtn" onclick="resumeInterruptedCampaign()" style="font-size:13px;padding:6px 16px;">Resume</button>
-                                <button class="gads-btn gads-btn-outline" id="dismissCampaignBtn" onclick="dismissInterruptedCampaign()" style="font-size:13px;padding:6px 12px;">Dismiss</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gads-card" id="channelUsageCard" style="margin-bottom:20px;">
-                        <div class="gads-card-header" style="align-items:center;">
-                            <h3 style="margin:0;">Lines in Use</h3>
-                            <span id="channelUsageBadge" class="gads-badge" style="margin-left:auto;">0 / 5</span>
-                        </div>
-                        <div style="padding:12px 20px 16px;">
-                            <div style="display:flex;align-items:center;gap:10px;">
-                                <div style="flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;">
-                                    <div id="channelBarFill" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width 0.4s ease;"></div>
+                    <div class="dash-two-col">
+                        <!-- Left: Recent Activity -->
+                        <div class="dash-two-col-main">
+                            <div class="gads-card">
+                                <div class="gads-card-header">
+                                    <h3>Recent Activity</h3>
+                                    <a class="gads-link" onclick="navigateTo('livecalls')">View All &rarr;</a>
                                 </div>
-                                <span id="channelBarText" style="font-size:12px;color:rgba(255,255,255,0.7);min-width:80px;text-align:right;">0 of 5 lines</span>
+                                <div class="gads-table-wrap">
+                                    <table class="gads-table">
+                                        <thead><tr><th>Time</th><th>Number</th><th>Status</th><th>Ring</th><th>AMD</th><th>Transfer</th><th>VM</th><th>Transcript</th></tr></thead>
+                                        <tbody id="dashRecentBody"><tr><td colspan="8" class="gads-empty">No recent calls</td></tr></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="gads-quick-actions">
-                        <button class="gads-btn gads-btn-primary" onclick="navigateTo('campaigns'); setTimeout(function(){ openWizard(); }, 100);">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            New Campaign
-                        </button>
-                        <button class="gads-btn gads-btn-outline" onclick="navigateTo('testdialer')">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/></svg>
-                            Test Call
-                        </button>
-                        <button class="gads-btn gads-btn-outline" onclick="navigateTo('reports')">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                            View Reports
-                        </button>
+                        <!-- Right column -->
+                        <div class="dash-two-col-side">
+                            <!-- Alex's Phone Line -->
+                            <div class="gads-card" id="provisionCard">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <div style="width:28px;height:28px;background:#111827;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                                        </div>
+                                        <h3 style="margin:0;font-size:13.5px;">Alex's Phone Line</h3>
+                                    </div>
+                                    <span id="provisionStatusBadge" class="dash-alex-status inactive">
+                                        <span class="dash-alex-status-dot"></span>Checking...
+                                    </span>
+                                </div>
+                                <p id="provisionMsg" style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 12px;">Checking Alex's line status...</p>
+                                <div class="dash-credit-bar-wrap">
+                                    <div id="creditBarFill" class="dash-credit-bar-fill" style="width:100%;"></div>
+                                </div>
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <div>
+                                        <p style="font-size:10px;color:var(--gads-text-tertiary);margin:0 0 2px;">Credits</p>
+                                        <p id="creditBarText" style="font-size:14px;font-weight:700;color:var(--gads-text-primary);margin:0;">${{ '%.2f' % (user.credit_balance or 0) }}</p>
+                                        <span id="creditValue" data-initial="{{ '%.2f' % (user.credit_balance or 0) }}" style="display:none;">${{ '%.2f' % (user.credit_balance or 0) }}</span>
+                                    </div>
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <button class="gads-btn" id="refillBtn" onclick="openAddCreditsModal()" style="font-size:12px;padding:6px 12px;border-radius:8px;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                            Add Credits
+                                        </button>
+                                        <button class="gads-btn gads-btn-primary" id="provisionBtn" onclick="provisionLine()" style="display:none;font-size:12px;padding:6px 12px;border-radius:8px;">
+                                            Provision Line
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campaign Interrupted Banner -->
+                            <div id="interruptedBanner" class="gads-card" style="display:none;border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.04);">
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;color:#d97706;font-size:13px;margin-bottom:3px;">Campaign Interrupted</div>
+                                        <div id="interruptedInfo" style="font-size:12px;color:var(--gads-text-secondary);">A campaign was running when the server restarted.</div>
+                                    </div>
+                                    <div style="display:flex;gap:6px;">
+                                        <button class="gads-btn gads-btn-primary" id="resumeCampaignBtn" onclick="resumeInterruptedCampaign()" style="font-size:12px;padding:5px 12px;">Resume</button>
+                                        <button class="gads-btn" id="dismissCampaignBtn" onclick="dismissInterruptedCampaign()" style="font-size:12px;padding:5px 10px;">Dismiss</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lines in Use -->
+                            <div class="gads-card" id="channelUsageCard">
+                                <div style="display:flex;align-items:center;justify-content:space-between;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <div style="width:28px;height:28px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72"/></svg>
+                                        </div>
+                                        <h3 style="margin:0;font-size:13.5px;">Lines in Use</h3>
+                                    </div>
+                                    <span id="channelUsageBadge" style="font-size:11.5px;font-weight:600;background:#f3f4f6;color:#4b5563;padding:3px 10px;border-radius:999px;">0 / 5</span>
+                                </div>
+                                <div class="dash-lines-dots" id="channelDots">
+                                    <div class="dash-lines-dot" id="channelDot0"></div>
+                                    <div class="dash-lines-dot" id="channelDot1"></div>
+                                    <div class="dash-lines-dot" id="channelDot2"></div>
+                                    <div class="dash-lines-dot" id="channelDot3"></div>
+                                    <div class="dash-lines-dot" id="channelDot4"></div>
+                                </div>
+                                <p id="channelBarText" style="font-size:11.5px;color:var(--gads-text-tertiary);margin-top:6px;">All lines available</p>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="gads-card">
+                                <div class="dash-quick-label">Quick Actions</div>
+                                <div class="gads-quick-actions">
+                                    <button class="gads-btn gads-btn-primary" onclick="navigateTo('campaigns'); setTimeout(function(){ openWizard(); }, 100);">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        New Campaign
+                                    </button>
+                                    <button class="gads-btn" onclick="navigateTo('testdialer')" style="border:1px solid var(--gads-border);">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3"/></svg>
+                                        Test Call
+                                    </button>
+                                    <button class="gads-btn" onclick="navigateTo('reports')" style="border:1px solid var(--gads-border);">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                                        View Reports
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4273,21 +4301,20 @@
                     var active = data.active || 0;
                     var max = data.max || 5;
                     var badge = document.getElementById("channelUsageBadge");
-                    var fill = document.getElementById("channelBarFill");
                     var text = document.getElementById("channelBarText");
                     if (badge) badge.textContent = active + " / " + max;
-                    if (fill) {
-                        var pct = max > 0 ? Math.min(100, Math.round(active / max * 100)) : 0;
-                        fill.style.width = pct + "%";
-                        if (pct >= 90) {
-                            fill.style.background = "linear-gradient(90deg,#ef4444,#dc2626)";
-                        } else if (pct >= 60) {
-                            fill.style.background = "linear-gradient(90deg,#f59e0b,#d97706)";
-                        } else {
-                            fill.style.background = "linear-gradient(90deg,#6366f1,#8b5cf6)";
+                    for (var i = 0; i < 5; i++) {
+                        var dot = document.getElementById("channelDot" + i);
+                        if (!dot) continue;
+                        dot.classList.remove("in-use");
+                        if (i < active) {
+                            dot.classList.add("in-use");
+                            if (active >= max * 0.9) dot.style.background = "#ef4444";
+                            else if (active >= max * 0.6) dot.style.background = "#f59e0b";
+                            else dot.style.background = "";
                         }
                     }
-                    if (text) text.textContent = active + " of " + max + " lines";
+                    if (text) text.textContent = active === 0 ? "All lines available" : (active + " of " + max + " lines in use");
                 }).catch(function(e){if(e.message==="auth")return;});
             }
             updateChannelUsage();
@@ -5573,31 +5600,26 @@
                         var badge = document.getElementById('provisionStatusBadge');
                         var msg = document.getElementById('provisionMsg');
                         var btn = document.getElementById('provisionBtn');
+                        var dot = badge ? badge.querySelector('.dash-alex-status-dot') : null;
                         if (data.provisioned) {
-                            badge.style.background = 'rgba(16,185,129,0.12)';
-                            badge.style.color = '#10b981';
-                            badge.textContent = 'Active';
-                            msg.innerHTML = '<span style="color:#10b981;font-weight:600;">Alex is Ready.</span> Local line: <strong style="color:#fff;">' + data.phone_number + '</strong>';
-                            btn.style.display = 'none';
+                            if (badge) { badge.className = 'dash-alex-status active'; badge.innerHTML = '<span class="dash-alex-status-dot"></span>Active'; }
+                            if (msg) msg.innerHTML = '<span style="color:#16a34a;font-weight:600;">Alex is Ready.</span> Line: <strong>' + data.phone_number + '</strong>';
+                            if (btn) btn.style.display = 'none';
                         } else if (data.status === 'provisioning') {
-                            badge.style.background = 'rgba(245,158,11,0.12)';
-                            badge.style.color = '#f59e0b';
-                            badge.textContent = 'Provisioning';
-                            msg.textContent = 'Assigning Alex a local line...';
-                            btn.style.display = 'none';
+                            if (badge) { badge.className = 'dash-alex-status'; badge.style.background='#fffbeb'; badge.style.color='#d97706'; badge.style.border='1px solid #fde68a'; badge.innerHTML = '<span class="dash-alex-status-dot"></span>Provisioning'; }
+                            if (msg) msg.textContent = 'Assigning Alex a local line...';
+                            if (btn) btn.style.display = 'none';
                         } else {
-                            badge.style.background = 'rgba(255,255,255,0.06)';
-                            badge.style.color = 'rgba(255,255,255,0.4)';
-                            badge.textContent = 'Not Active';
-                            msg.textContent = 'Alex needs a local phone line to start making calls.';
-                            btn.style.display = '';
+                            if (badge) { badge.className = 'dash-alex-status inactive'; badge.innerHTML = '<span class="dash-alex-status-dot"></span>Not Active'; }
+                            if (msg) msg.textContent = 'Alex needs a local phone line to start making calls.';
+                            if (btn) btn.style.display = '';
                         }
                     })
                     .catch(function() {
                         var btn = document.getElementById('provisionBtn');
                         var msg = document.getElementById('provisionMsg');
-                        msg.textContent = 'Alex needs a local phone line to start making calls.';
-                        btn.style.display = '';
+                        if (msg) msg.textContent = 'Alex needs a local phone line to start making calls.';
+                        if (btn) btn.style.display = '';
                     });
             }
 
@@ -5607,10 +5629,8 @@
                 var badge = document.getElementById('provisionStatusBadge');
                 btn.disabled = true;
                 btn.textContent = 'Provisioning...';
-                msg.textContent = 'Assigning Alex a local line...';
-                badge.style.background = 'rgba(245,158,11,0.12)';
-                badge.style.color = '#f59e0b';
-                badge.textContent = 'Provisioning';
+                if (msg) msg.textContent = 'Assigning Alex a local line...';
+                if (badge) { badge.className = 'dash-alex-status'; badge.style.background='#fffbeb'; badge.style.color='#d97706'; badge.style.border='1px solid #fde68a'; badge.innerHTML = '<span class="dash-alex-status-dot"></span>Provisioning'; }
 
                 fetch('/api/provision-line', {
                     method: 'POST',
