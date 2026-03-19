@@ -1594,18 +1594,114 @@
 
                 <!-- ══════════════ INTEGRATIONS PAGE ══════════════ -->
                 <div class="gads-page" id="page-integrations" style="display:none">
-                    <div class="gads-page-header">
-                        <h2>Integrations</h2>
-                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadIntegrationStatus()">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Refresh
-                        </button>
+                    <!-- PICKER header -->
+                    <div id="intg-picker-header">
+                        <div class="gads-page-header" style="margin-bottom:6px;">
+                            <h2>Integrations</h2>
+                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="loadIntegrationStatus()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Refresh
+                            </button>
+                        </div>
+                        <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 20px;">Connect your CRM or spreadsheet — every completed call is logged automatically.</p>
                     </div>
-                    <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 20px;">Connect your CRM or spreadsheet — every completed call is logged automatically, no manual data entry needed.</p>
+                    <!-- DETAIL header -->
+                    <div id="intg-detail-header" style="display:none;margin-bottom:20px;">
+                        <button type="button" class="intg-back-btn" onclick="intgShowPicker()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            All Integrations
+                        </button>
+                        <h2 id="intg-detail-title" style="margin:12px 0 0;font-size:18px;font-weight:700;color:var(--gads-text-primary);"></h2>
+                    </div>
 
+                    <!-- ═══ PICKER GRID ═══ -->
+                    <div id="intg-picker-view">
+                        <div class="intg-picker-grid">
+
+                            <!-- Webhooks card -->
+                            <div class="intg-pick-card" onclick="intgOpen('webhook')">
+                                <div class="intg-logo" style="flex-shrink:0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">Outbound Webhooks</div>
+                                    <div class="intg-pick-desc">Fire a POST to any URL on call completion — works with Zapier, Make, and custom endpoints.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="webhook-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- HubSpot card -->
+                            <div class="intg-pick-card" onclick="intgOpen('hubspot')">
+                                <div class="intg-logo intg-logo-hs" style="flex-shrink:0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">HubSpot CRM</div>
+                                    <div class="intg-pick-desc">Auto-create contacts and log call activities in your HubSpot portal after every call.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="hubspot-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- GoHighLevel card -->
+                            <div class="intg-pick-card" onclick="intgOpen('ghl')">
+                                <div class="intg-logo intg-logo-ghl" style="background:linear-gradient(135deg,#f59e0b,#ef4444);flex-shrink:0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">GoHighLevel</div>
+                                    <div class="intg-pick-desc">Auto-create contacts and log call notes in your GHL sub-account after every completed call.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="ghl-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- Pipedrive card -->
+                            <div class="intg-pick-card" onclick="intgOpen('pipedrive')">
+                                <div class="intg-logo intg-logo-pd" style="background:linear-gradient(135deg,#22c55e,#16a34a);flex-shrink:0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">Pipedrive</div>
+                                    <div class="intg-pick-desc">Find or create a person and log a call activity in Pipedrive for every completed outbound call.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="pipedrive-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- Google Sheets card -->
+                            <div class="intg-pick-card" onclick="intgOpen('gsheets')">
+                                <div class="intg-logo intg-logo-gs" style="flex-shrink:0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">Google Sheets</div>
+                                    <div class="intg-pick-desc">Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="gsheets-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div><!-- /intg-picker-view -->
+
+                    <!-- ═══ DETAIL PANELS ═══ -->
+                    <div id="intg-detail-area" style="display:none">
                     <div class="gads-card" id="integrations-page-card">
 
                         <!-- ── OUTBOUND WEBHOOKS ── -->
-                        <div class="intg-panel" id="intg-webhook-panel2">
+                        <div class="intg-detail-panel" id="intg-detail-webhook">
+                        <div class="intg-panel" id="intg-webhook-panel2" style="border-bottom:none;">
                             <div class="intg-panel-header">
                                 <div class="intg-logo">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
@@ -1614,7 +1710,6 @@
                                     <div class="intg-panel-title" style="color:#111;font-weight:700;">Outbound Webhooks</div>
                                     <div class="intg-panel-desc">Fire a POST to any URL on call completion — works with any workflow automation platform or custom endpoint.</div>
                                 </div>
-                                <span class="intg-badge" id="webhook-badge2">—</span>
                             </div>
                             <div class="intg-body">
                                 <div class="pvm-section" style="margin-top:0;">
@@ -1635,9 +1730,11 @@
                                 <div id="webhookMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
                             </div>
                         </div>
+                        </div><!-- /intg-detail-webhook -->
 
                         <!-- ── HUBSPOT ── -->
-                        <div class="intg-panel" id="intg-hubspot-panel2">
+                        <div class="intg-detail-panel" id="intg-detail-hubspot" style="display:none">
+                        <div class="intg-panel" id="intg-hubspot-panel2" style="border-bottom:none;">
                             <div class="intg-panel-header">
                                 <div class="intg-logo intg-logo-hs">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
@@ -1646,7 +1743,6 @@
                                     <div class="intg-panel-title" style="color:#111;font-weight:700;">HubSpot CRM</div>
                                     <div class="intg-panel-desc">Auto-create contacts and log call activities in your HubSpot portal after every call.</div>
                                 </div>
-                                <span class="intg-badge" id="hubspot-badge2">—</span>
                             </div>
                             <div class="intg-body">
                                 <div id="hubspot-connected-view2" style="display:none;">
@@ -1693,9 +1789,11 @@
                                 </div>
                             </div>
                         </div>
+                        </div><!-- /intg-detail-hubspot -->
 
                         <!-- ── GOHIGHLEVEL ── -->
-                        <div class="intg-panel" id="intg-ghl-panel2">
+                        <div class="intg-detail-panel" id="intg-detail-ghl" style="display:none">
+                        <div class="intg-panel" id="intg-ghl-panel2" style="border-bottom:none;">
                             <div class="intg-panel-header">
                                 <div class="intg-logo intg-logo-ghl" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -1704,7 +1802,6 @@
                                     <div class="intg-panel-title" style="color:#111;font-weight:700;">GoHighLevel (GHL)</div>
                                     <div class="intg-panel-desc">Auto-create contacts and log call notes in your GHL sub-account after every completed call.</div>
                                 </div>
-                                <span class="intg-badge" id="ghl-badge2">—</span>
                             </div>
                             <div class="intg-body">
                                 <div id="ghl-connected-view2" style="display:none;">
@@ -1751,9 +1848,11 @@
                                 </div>
                             </div>
                         </div>
+                        </div><!-- /intg-detail-ghl -->
 
                         <!-- ── PIPEDRIVE ── -->
-                        <div class="intg-panel" id="intg-pipedrive-panel2">
+                        <div class="intg-detail-panel" id="intg-detail-pipedrive" style="display:none">
+                        <div class="intg-panel" id="intg-pipedrive-panel2" style="border-bottom:none;">
                             <div class="intg-panel-header">
                                 <div class="intg-logo intg-logo-pd" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
@@ -1762,7 +1861,6 @@
                                     <div class="intg-panel-title" style="color:#111;font-weight:700;">Pipedrive</div>
                                     <div class="intg-panel-desc">Find or create a person and log a call activity in Pipedrive for every completed outbound call.</div>
                                 </div>
-                                <span class="intg-badge" id="pipedrive-badge2">—</span>
                             </div>
                             <div class="intg-body">
                                 <div id="pipedrive-connected-view2" style="display:none;">
@@ -1809,8 +1907,10 @@
                                 </div>
                             </div>
                         </div>
+                        </div><!-- /intg-detail-pipedrive -->
 
                         <!-- ── GOOGLE SHEETS ── -->
+                        <div class="intg-detail-panel" id="intg-detail-gsheets" style="display:none">
                         <div class="intg-panel" id="intg-gsheets-panel2" style="border-bottom:none;">
                             <div class="intg-panel-header">
                                 <div class="intg-logo intg-logo-gs">
@@ -1820,7 +1920,6 @@
                                     <div class="intg-panel-title" style="color:#111;font-weight:700;">Google Sheets</div>
                                     <div class="intg-panel-desc">Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.</div>
                                 </div>
-                                <span class="intg-badge" id="gsheets-badge2">—</span>
                             </div>
                             <div class="intg-body">
                                 <div id="gsheets-not-configured2" style="display:none;">
@@ -1860,7 +1959,10 @@
                             </div>
                         </div>
 
+                        </div><!-- /intg-detail-gsheets -->
+
                     </div><!-- /integrations-page-card -->
+                    </div><!-- /intg-detail-area -->
                 </div><!-- /page-integrations -->
 
                 <!-- ==================== PAGE: HUMANA VOICE ==================== -->
@@ -2037,6 +2139,7 @@
                 if (typeof loadFishAudioKeyStatus === 'function') loadFishAudioKeyStatus();
             }
             if (page === 'integrations') {
+                if (typeof intgShowPicker === 'function') intgShowPicker();
                 if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus();
             }
             if (page === 'humana-voice') {
@@ -5608,6 +5711,48 @@
 }
 .intg-badge.active   { background: rgba(74,222,128,0.12); color: #4ade80; border-color: rgba(74,222,128,0.3); }
 .intg-badge.inactive { background: rgba(148,163,184,0.08); color: #64748b; border-color: rgba(148,163,184,0.2); }
+
+/* ── Integration Picker Grid ── */
+.intg-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+}
+.intg-pick-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--gads-surface, #fff);
+    border: 1px solid var(--gads-border);
+    border-radius: 12px;
+    padding: 18px 16px;
+    cursor: pointer;
+    transition: box-shadow .15s, border-color .15s, transform .12s;
+}
+.intg-pick-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,.09);
+    border-color: var(--gads-primary, #6366f1);
+    transform: translateY(-1px);
+}
+.intg-pick-body { flex: 1; min-width: 0; }
+.intg-pick-name { font-size: 14px; font-weight: 600; color: var(--gads-text-primary); margin-bottom: 3px; }
+.intg-pick-desc { font-size: 12px; color: var(--gads-text-secondary); line-height: 1.45; }
+.intg-pick-end  { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.intg-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gads-text-secondary);
+    padding: 0;
+    transition: color .15s;
+}
+.intg-back-btn:hover { color: var(--gads-text-primary); }
+.intg-detail-panel { display: none; }
+
 .intg-body {
     padding-top: 14px;
 }
@@ -5800,6 +5945,32 @@
     function _setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
     function _setVal(id, val)  { var el = document.getElementById(id); if (el && !el.value) el.value = val; }
     function _setChk(id, val)  { var el = document.getElementById(id); if (el) el.checked = val; }
+
+    var _intgTitles = {
+        webhook:  'Outbound Webhooks',
+        hubspot:  'HubSpot CRM',
+        ghl:      'GoHighLevel (GHL)',
+        pipedrive:'Pipedrive',
+        gsheets:  'Google Sheets'
+    };
+    window.intgOpen = function(key) {
+        document.getElementById('intg-picker-view').style.display = 'none';
+        document.getElementById('intg-picker-header').style.display = 'none';
+        document.getElementById('intg-detail-area').style.display = '';
+        document.getElementById('intg-detail-header').style.display = '';
+        var title = document.getElementById('intg-detail-title');
+        if (title) title.textContent = _intgTitles[key] || key;
+        document.querySelectorAll('.intg-detail-panel').forEach(function(p){ p.style.display = 'none'; });
+        var panel = document.getElementById('intg-detail-' + key);
+        if (panel) panel.style.display = '';
+        window.scrollTo(0, 0);
+    };
+    window.intgShowPicker = function() {
+        document.getElementById('intg-picker-view').style.display = '';
+        document.getElementById('intg-picker-header').style.display = '';
+        document.getElementById('intg-detail-area').style.display = 'none';
+        document.getElementById('intg-detail-header').style.display = 'none';
+    };
 
     window.loadIntegrationStatus = function() {
         apiFetch('/api/integrations/status').then(function(r){ return r.json(); }).then(function(d) {
