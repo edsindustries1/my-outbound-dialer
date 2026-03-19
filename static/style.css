@@ -3783,3 +3783,12 @@ body, .gads-sidebar, .gads-topbar, .gads-card, .gads-kpi-card {
 
 /* Hidden compat elements */
 #viewDashboard, #viewWizard, #viewMonitor, #dashPanelWrap { display: none !important; }
+
+/* ── Analytics page tabs ── */
+.an-tabs { display:flex; gap:2px; border-bottom:2px solid var(--gads-border); margin-bottom:24px; }
+.an-tab { display:flex; align-items:center; padding:10px 18px; font-size:13px; font-weight:600; color:var(--gads-text-secondary); border:none; background:none; cursor:pointer; position:relative; transition:color .15s; border-radius:6px 6px 0 0; }
+.an-tab:hover { color:var(--gads-text-primary); }
+.an-tab.active { color:var(--gads-text-primary); }
+.an-tab.active::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:2px; background:var(--gads-text-primary); }
+.an-tab-panel { display:none; }
+.an-tab-panel.active { display:block; }
