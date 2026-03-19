@@ -60,28 +60,40 @@
     return html;
   }
 
+  var _avatarPalette = [
+    ['#6366f1','#eef2ff'], ['#8b5cf6','#f5f3ff'], ['#ec4899','#fdf2f8'],
+    ['#0ea5e9','#f0f9ff'], ['#10b981','#f0fdf4'], ['#f59e0b','#fffbeb'],
+    ['#ef4444','#fef2f2'], ['#14b8a6','#f0fdfa'], ['#f97316','#fff7ed'],
+    ['#06b6d4','#ecfeff'],
+  ];
+
+  function _voiceAvatar(title, coverUrl) {
+    var ch = (title || '?').replace(/\s+/g,'')[0] || '?';
+    var letter = ch.toUpperCase();
+    var idx = ch.charCodeAt(0) % _avatarPalette.length;
+    var fg = _avatarPalette[idx][0];
+    var imgTag = coverUrl
+      ? '<img src="' + escHtml(coverUrl) + '" alt="" class="hv-avatar-img" onerror="this.style.display=\'none\'">'
+      : '';
+    return '<div class="hv-card-avatar">' +
+      '<div class="hv-avatar-inner" style="background:' + fg + ';">' +
+        '<span class="hv-avatar-letter">' + escHtml(letter) + '</span>' +
+        imgTag +
+      '</div>' +
+    '</div>';
+  }
+
   function renderVoiceCard(v) {
     var div = document.createElement('div');
     div.className = 'hv-voice-card';
     div.dataset.voiceId = v.id;
     div.dataset.voiceName = v.title;
 
-    var avatarHtml;
-    if (v.cover_image) {
-      var safeImg = document.createElement('img');
-      safeImg.src = v.cover_image;
-      safeImg.alt = v.title;
-      safeImg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px;';
-      avatarHtml = safeImg.outerHTML;
-    } else {
-      avatarHtml = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary)"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
-    }
-
     var langs = (v.languages || []).slice(0, 3).map(function (l) {
       return '<span class="hv-lang-tag">' + escHtml(l) + '</span>';
     }).join('');
 
-    div.innerHTML = '<div class="hv-card-avatar">' + avatarHtml + '</div>' +
+    div.innerHTML = _voiceAvatar(v.title, v.cover_image) +
       '<div class="hv-card-info">' +
         '<div class="hv-card-title" title="' + escHtml(v.title) + '">' + escHtml(v.title) + '</div>' +
         (v.description ? '<div class="hv-card-desc">' + escHtml(v.description) + '</div>' : '') +

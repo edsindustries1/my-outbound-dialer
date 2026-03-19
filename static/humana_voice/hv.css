@@ -45,8 +45,10 @@
 .hv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
 .hv-voice-card{background:var(--gads-surface,#fff);border:1px solid var(--gads-border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;transition:box-shadow .15s,border-color .15s;}
 .hv-voice-card:hover{box-shadow:var(--gads-shadow-lg);border-color:rgba(26,26,46,0.15);}
-.hv-card-avatar{width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--gads-border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
-.hv-card-avatar img{width:100%;height:100%;object-fit:cover;}
+.hv-card-avatar{width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;}
+.hv-avatar-inner{position:relative;width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.hv-avatar-letter{font-size:22px;font-weight:700;color:#fff;line-height:1;z-index:1;pointer-events:none;user-select:none;}
+.hv-avatar-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px;z-index:2;}
 .hv-card-avatar-placeholder{width:56px;height:56px;border-radius:12px;background:var(--gads-primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .hv-card-info{flex:1;}
 .hv-card-title{font-size:14px;font-weight:600;color:var(--gads-text-primary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
