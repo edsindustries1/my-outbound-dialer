@@ -3184,7 +3184,7 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
     if is_personalized:
         logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
-    play_audio(call_control_id, audio_url)
+    play_audio(call_control_id, audio_url, client_state="voicemail_drop")
     vm_script_text = None
     if is_personalized and customer_number:
         audio_map = pvm_get_audio_map()
@@ -3644,7 +3644,21 @@ def _handle_webhook():
 
         state = get_call_state(call_control_id)
 
-        if client_state_str == "silence_keepalive":
+        if client_state_str == "voicemail_drop":
+            # Voicemail audio finished playing — hang up immediately
+            vm_duration = None
+            vm_start = state.get("vm_playback_start") if state else None
+            if vm_start:
+                from datetime import datetime as dt
+                vm_duration = round(dt.utcnow().timestamp() - vm_start)
+            desc = f"Voicemail dropped successfully — {vm_duration}s" if vm_duration is not None else "Voicemail dropped successfully"
+            update_call_state(call_control_id, status="voicemail_complete",
+                              status_description=desc, status_color="green",
+                              vm_duration=vm_duration)
+            logger.info(f"[VM COMPLETE] {call_control_id} | Voicemail playback finished ({vm_duration}s), hanging up")
+            hangup_call(call_control_id)
+
+        elif client_state_str == "silence_keepalive":
             if state and not state.get("voicemail_dropped") and not state.get("transferred"):
                 import time as _time_mod2
                 silence_start = state.get("silence_start_time", 0)
@@ -3663,21 +3677,20 @@ def _handle_webhook():
                     hangup_call(call_control_id)
             else:
                 update_call_state(call_control_id, silence_playing=False)
-                logger.info(f"[SILENCE END] {call_control_id} | Silence playback ended (already handled: vm={state.get('voicemail_dropped')}, xfer={state.get('transferred')})")
+                logger.info(f"[SILENCE END] {call_control_id} | Silence playback ended (already handled: vm={state.get('voicemail_dropped') if state else '?'}, xfer={state.get('transferred') if state else '?'})")
 
         elif state and state.get("voicemail_dropped"):
+            # Fallback: voicemail ended but client_state wasn't tagged — still hang up
             vm_duration = None
             vm_start = state.get("vm_playback_start")
             if vm_start:
                 from datetime import datetime as dt
                 vm_duration = round(dt.utcnow().timestamp() - vm_start)
-            desc = "Voicemail dropped successfully"
-            if vm_duration is not None:
-                desc = f"Voicemail dropped successfully — {vm_duration}s"
+            desc = f"Voicemail dropped successfully — {vm_duration}s" if vm_duration is not None else "Voicemail dropped successfully"
             update_call_state(call_control_id, status="voicemail_complete",
                               status_description=desc, status_color="green",
                               vm_duration=vm_duration)
-            logger.info(f"Voicemail playback complete on {call_control_id} ({vm_duration}s), hanging up")
+            logger.info(f"[VM COMPLETE fallback] {call_control_id} | Voicemail playback finished ({vm_duration}s), hanging up")
             hangup_call(call_control_id)
 
     # ---- call.transcription ----
