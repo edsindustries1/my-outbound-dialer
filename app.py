@@ -8,6 +8,7 @@ import csv
 import io
 import re
 import json
+import time
 import logging
 import threading
 import functools
@@ -224,6 +225,30 @@ PLAN_MATRIX = {
 CALL_COST = Decimal("0.10")
 MIN_REFILL = Decimal("10.00")
 DEFAULT_REFILL = Decimal("25.00")
+
+_login_attempts = {}
+_LOGIN_MAX_ATTEMPTS = 10
+_LOGIN_WINDOW_SECS = 300
+
+
+def _login_rate_limit_check(ip):
+    now = time.time()
+    entry = _login_attempts.get(ip)
+    if entry:
+        count, first_time = entry
+        if now - first_time > _LOGIN_WINDOW_SECS:
+            _login_attempts[ip] = (1, now)
+            return True
+        if count >= _LOGIN_MAX_ATTEMPTS:
+            return False
+        _login_attempts[ip] = (count + 1, first_time)
+    else:
+        _login_attempts[ip] = (1, now)
+    return True
+
+
+def _login_rate_limit_reset(ip):
+    _login_attempts.pop(ip, None)
 
 
 def login_required(f):
@@ -1073,6 +1098,12 @@ def login():
     error = None
     if request.method == "POST":
         wants_json = "application/json" in request.headers.get("Accept", "")
+        client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+        if not _login_rate_limit_check(client_ip):
+            if wants_json:
+                return jsonify({"success": False, "error": "Too many login attempts. Please wait 5 minutes."}), 429
+            error = "Too many login attempts. Please wait 5 minutes before trying again."
+            return render_template("login.html", error=error, show_admin=show_admin), 429
         try:
             login_mode = request.form.get("login_mode", "user")
             if login_mode in ("admin", "super_admin"):
@@ -1091,6 +1122,7 @@ def login():
                     elif admin.role != 'admin':
                         admin.role = 'admin'
                         db.session.commit()
+                    _login_rate_limit_reset(client_ip)
                     login_user(admin, remember=True)
                     session.permanent = True
                     redirect_target = url_for("super_admin") if login_mode == "super_admin" else url_for("dashboard")
@@ -1132,6 +1164,7 @@ def login():
                         if not authenticated and user.check_password(password):
                             authenticated = True
                         if authenticated:
+                            _login_rate_limit_reset(client_ip)
                             login_user(user)
                             session.permanent = True
                             if wants_json:
