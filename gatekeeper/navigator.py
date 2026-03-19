@@ -13,7 +13,7 @@ import requests
 logger = logging.getLogger("voicemail_app")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama3-70b-8192"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 VALID_CATEGORIES = {"human_prospect", "human_receptionist", "ai_screener", "ivr_menu"}
 
