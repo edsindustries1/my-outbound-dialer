@@ -286,6 +286,20 @@
                         </div>
                     </div>
 
+                    <div id="interruptedBanner" class="gads-card" style="margin-bottom:20px;display:none;border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.06);">
+                        <div style="padding:16px 20px;display:flex;align-items:center;gap:14px;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div style="flex:1;">
+                                <div style="font-weight:600;color:#fbbf24;margin-bottom:4px;">Campaign Interrupted</div>
+                                <div id="interruptedInfo" style="font-size:13px;color:rgba(255,255,255,0.7);">A campaign was running when the server restarted.</div>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="gads-btn gads-btn-primary" id="resumeCampaignBtn" onclick="resumeInterruptedCampaign()" style="font-size:13px;padding:6px 16px;">Resume</button>
+                                <button class="gads-btn gads-btn-outline" id="dismissCampaignBtn" onclick="dismissInterruptedCampaign()" style="font-size:13px;padding:6px 12px;">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="gads-card" id="channelUsageCard" style="margin-bottom:20px;">
                         <div class="gads-card-header" style="align-items:center;">
                             <h3 style="margin:0;">Lines in Use</h3>
@@ -4245,6 +4259,60 @@
             }
             updateChannelUsage();
             setInterval(updateChannelUsage, 10000);
+
+            var _interruptedCampaignId = null;
+            function checkInterruptedCampaigns() {
+                apiFetch("/api/campaign/interrupted").then(function(r){return r.json();}).then(function(data) {
+                    var banner = document.getElementById("interruptedBanner");
+                    if (!banner) return;
+                    if (data.has_interrupted && data.campaign) {
+                        _interruptedCampaignId = data.campaign.id;
+                        var info = document.getElementById("interruptedInfo");
+                        if (info) {
+                            var remaining = data.remaining || 0;
+                            var total = data.campaign.total_count || 0;
+                            var dialed = data.campaign.dialed_count || 0;
+                            info.textContent = dialed + " of " + total + " numbers dialed before interruption. " + remaining + " remaining.";
+                        }
+                        banner.style.display = "block";
+                    } else {
+                        banner.style.display = "none";
+                        _interruptedCampaignId = null;
+                    }
+                }).catch(function(){});
+            }
+            checkInterruptedCampaigns();
+
+            function resumeInterruptedCampaign() {
+                if (!_interruptedCampaignId) return;
+                var btn = document.getElementById("resumeCampaignBtn");
+                if (btn) { btn.disabled = true; btn.textContent = "Resuming..."; }
+                apiFetch("/api/campaign/resume/" + _interruptedCampaignId, {method:"POST"}).then(function(r){return r.json();}).then(function(data) {
+                    if (data.success) {
+                        document.getElementById("interruptedBanner").style.display = "none";
+                        _interruptedCampaignId = null;
+                        showToast("Campaign resumed — " + data.remaining_numbers + " numbers remaining", "success");
+                        pollStatus();
+                    } else {
+                        showToast(data.error || "Failed to resume campaign", "error");
+                        if (btn) { btn.disabled = false; btn.textContent = "Resume"; }
+                    }
+                }).catch(function(e) {
+                    showToast("Error resuming campaign", "error");
+                    if (btn) { btn.disabled = false; btn.textContent = "Resume"; }
+                });
+            }
+
+            function dismissInterruptedCampaign() {
+                if (!_interruptedCampaignId) return;
+                apiFetch("/api/campaign/dismiss/" + _interruptedCampaignId, {method:"POST"}).then(function(r){return r.json();}).then(function(data) {
+                    document.getElementById("interruptedBanner").style.display = "none";
+                    _interruptedCampaignId = null;
+                }).catch(function(){
+                    document.getElementById("interruptedBanner").style.display = "none";
+                    _interruptedCampaignId = null;
+                });
+            }
 
             // Wire up number count tracking
             document.getElementById("csvFile").addEventListener("change", function() { wizUpdateNumberCount(); });

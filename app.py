@@ -4039,6 +4039,102 @@ def api_active_lines():
     return jsonify({"active": active, "max": max_lines})
 
 
+@app.route("/api/campaign/interrupted", methods=["GET"])
+@login_required
+def api_campaign_interrupted():
+    from models import Campaign
+    user_id = current_user.id
+    interrupted = Campaign.query.filter_by(user_id=user_id, status='interrupted').order_by(Campaign.updated_at.desc()).first()
+    if not interrupted:
+        return jsonify({"has_interrupted": False})
+    return jsonify({
+        "has_interrupted": True,
+        "campaign": interrupted.to_dict(),
+        "remaining": interrupted.total_count - interrupted.dialed_count,
+    })
+
+
+@app.route("/api/campaign/resume/<int:campaign_id>", methods=["POST"])
+@login_required
+def api_campaign_resume(campaign_id):
+    from models import Campaign
+    from storage import _campaign_db_ids, _campaign_key
+    user_id = current_user.id
+    camp = Campaign.query.filter_by(id=campaign_id, user_id=user_id, status='interrupted').first()
+    if not camp:
+        return jsonify({"error": "No interrupted campaign found"}), 404
+
+    try:
+        all_numbers = json.loads(camp.numbers)
+    except Exception:
+        return jsonify({"error": "Could not read campaign numbers"}), 500
+
+    remaining_numbers = all_numbers[camp.dialed_count:]
+    if not remaining_numbers:
+        camp.status = 'completed'
+        camp.updated_at = datetime.utcnow()
+        db.session.commit()
+        return jsonify({"error": "No remaining numbers to dial", "completed": True}), 400
+
+    camp.status = 'active'
+    camp.updated_at = datetime.utcnow()
+    db.session.commit()
+
+    key = _campaign_key(user_id)
+    _campaign_db_ids[key] = camp.id
+
+    set_campaign(
+        camp.audio_url,
+        camp.transfer_number,
+        remaining_numbers,
+        dial_mode=camp.dial_mode,
+        batch_size=camp.batch_size,
+        dial_delay=camp.dial_delay,
+        from_number=camp.from_number,
+        user_id=user_id,
+        is_test=camp.is_test,
+        gatekeeper_navigator_enabled=camp.gatekeeper_navigator_enabled,
+        prospect_name=camp.prospect_name,
+        prospect_company=camp.prospect_company,
+        navigator_voice_id=camp.navigator_voice_id,
+        navigator_knowledge_base=camp.navigator_knowledge_base,
+    )
+
+    start_dialer(user_id=user_id)
+
+    logger.info(f"Resumed campaign {campaign_id} for user {user_id} with {len(remaining_numbers)} remaining numbers")
+    return jsonify({
+        "success": True,
+        "campaign_id": campaign_id,
+        "remaining_numbers": len(remaining_numbers),
+        "total_numbers": camp.total_count,
+        "already_dialed": camp.dialed_count,
+    })
+
+
+@app.route("/api/campaign/dismiss/<int:campaign_id>", methods=["POST"])
+@login_required
+def api_campaign_dismiss(campaign_id):
+    from models import Campaign
+    user_id = current_user.id
+    camp = Campaign.query.filter_by(id=campaign_id, user_id=user_id, status='interrupted').first()
+    if not camp:
+        return jsonify({"error": "No interrupted campaign found"}), 404
+    camp.status = 'dismissed'
+    camp.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@app.route("/api/campaign/history", methods=["GET"])
+@login_required
+def api_campaign_list():
+    from models import Campaign
+    user_id = current_user.id
+    campaigns = Campaign.query.filter_by(user_id=user_id).order_by(Campaign.created_at.desc()).limit(20).all()
+    return jsonify({"campaigns": [c.to_dict() for c in campaigns]})
+
+
 @app.route("/api/request-additional-line", methods=["POST"])
 @login_required
 def api_request_additional_line():

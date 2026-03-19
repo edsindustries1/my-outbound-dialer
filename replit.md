@@ -47,6 +47,7 @@ The application is built on a Python Flask framework with PostgreSQL for data pe
 - **Alex Telegram Bot (Admin)**: Alex runs 24/7 on Telegram as a background polling thread inside the Flask app (`telegram_bot.py`). Only responds to the admin (`TELEGRAM_CHAT_ID`). Has full access to real-time platform stats — queries the database for user counts, credit balances, call volumes, voicemail/transfer rates, active lines, and per-user breakdowns. Uses Groq (llama-3.3-70b-versatile) with conversation history (20 messages). Admin can ask anything about the platform and get real data. Single-instance guard prevents duplicate pollers in multi-worker deployments.
 - **Welcome Email**: Styled as a formal job application/resume from Alex. Sent automatically when users request Alex's resume via the lead capture form. Template in `welcome_email.py`.
 - **Lead Confirmation Email**: Professional thank-you email sent to leads who submit the demo request form. Template in `invite_email.py`.
+- **Campaign Persistence**: Campaigns and call records are persisted to PostgreSQL via a write-through layer in `storage.py`. In-memory dicts serve as hot cache; DB writes happen synchronously for campaigns and selectively for call records (terminal statuses, key field changes, every 10th update). On server restart, active/paused campaigns are automatically marked as "interrupted" and users see a resume banner on the dashboard. API endpoints: `/api/campaign/interrupted` (GET), `/api/campaign/resume/<id>` (POST), `/api/campaign/dismiss/<id>` (POST), `/api/campaign/history` (GET). Call history reads from the `call_records` table with JSON file fallback.
 - **Railway Deployment**: Configured via `railway.json` and `Procfile` for zero-touch GitHub-to-Railway deployment. Health check at `/api/health`. Global 500 error handler shows friendly "System Configuration in Progress" page.
 
 ## External Dependencies
@@ -63,7 +64,9 @@ The application is built on a Python Flask framework with PostgreSQL for data pe
 
 ## Key Files
 - `app.py` — Main Flask application with all routes
-- `models.py` — SQLAlchemy models (User, Invitation, UserAppData, UserInstance, ProvisionedNumber) + schema migration
+- `models.py` — SQLAlchemy models (User, Invitation, UserAppData, UserInstance, ProvisionedNumber, Campaign, CallRecord) + schema migration
+- `storage.py` — Campaign/call state management with PostgreSQL write-through layer (in-memory cache + async DB persistence)
+- `call_manager.py` — Queue-based dialer with per-user channel limits (Solo=5, Business=15) and LRU caller ID rotation
 - `gmail_client.py` — Resend API email sending
 - `invite_email.py` — Email templates for invites, lead confirmations, password resets
 - `telegram_bot.py` — Telegram bot polling thread (admin-only, real-time platform stats via Groq AI)

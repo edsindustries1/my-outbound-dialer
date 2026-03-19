@@ -1,7 +1,7 @@
 """
 storage.py - In-memory storage for call states and campaign data.
 Manages call tracking, campaign configuration, and status reporting.
-Persists completed call logs to JSON file for historical reporting.
+Persists to PostgreSQL via write-through and to JSON file as backup.
 Supports per-user data isolation via user_id parameter.
 """
 
@@ -9,11 +9,30 @@ import os
 import re
 import json
 import threading
+import logging
 from datetime import datetime, timedelta
 
 lock = threading.Lock()
 
 call_states = {}
+
+_db_logger = logging.getLogger("voicemail_app.db_sync")
+
+_campaign_db_ids = {}
+
+
+def _db_write(fn):
+    try:
+        from app import app as _flask_app
+        with _flask_app.app_context():
+            fn()
+    except Exception as e:
+        _db_logger.warning(f"DB write-through failed: {e}")
+
+
+def _db_write_async(fn):
+    t = threading.Thread(target=_db_write, args=(fn,), daemon=True)
+    t.start()
 
 LOGS_DIR = "logs"
 
@@ -205,6 +224,7 @@ def persist_call_log(call_control_id):
             end = state.get("ring_end") or now.timestamp()
             ring_duration = round(end - state["ring_start"])
         ts = state.get("created_at", now.strftime("%Y-%m-%dT%H:%M:%S"))
+        snapshot = dict(state)
         entry = {
             "call_id": call_control_id,
             "timestamp": ts,
@@ -234,6 +254,31 @@ def persist_call_log(call_control_id):
                 cleaned.append(h)
         _save_call_history(cleaned, user_id)
 
+    _cid = call_control_id
+    _ring_dur = ring_duration
+    def _persist():
+        from models import CallRecord, db
+        rec = CallRecord.query.filter_by(call_control_id=_cid).first()
+        if not rec:
+            return
+        rec.status = snapshot.get("status", rec.status)
+        rec.amd_result = snapshot.get("amd_result")
+        rec.machine_detected = snapshot.get("machine_detected")
+        rec.transferred = snapshot.get("transferred", False)
+        rec.voicemail_dropped = snapshot.get("voicemail_dropped", False)
+        rec.hangup_cause = snapshot.get("hangup_cause")
+        rec.status_description = snapshot.get("status_description", "") or ""
+        rec.status_color = snapshot.get("status_color", "blue") or "blue"
+        rec.recording_url = snapshot.get("recording_url")
+        rec.vm_duration = snapshot.get("vm_duration")
+        rec.from_number = snapshot.get("from_number", "") or ""
+        rec.ring_duration = _ring_dur
+        transcript = snapshot.get("transcript", [])
+        rec.transcript = json.dumps(transcript) if transcript else "[]"
+        rec.updated_at = datetime.utcnow()
+        db.session.commit()
+    _db_write_async(_persist)
+
 
 def clear_call_history(user_id=None):
     with _file_lock:
@@ -249,7 +294,55 @@ def _parse_ts(ts_str):
     return None
 
 
+def _call_record_to_entry(rec):
+    transcript = []
+    if rec.transcript:
+        try:
+            transcript = json.loads(rec.transcript)
+        except Exception:
+            pass
+    return {
+        "call_id": rec.call_control_id,
+        "timestamp": rec.created_at.strftime("%Y-%m-%dT%H:%M:%S") if rec.created_at else "",
+        "number": rec.phone_number,
+        "from_number": rec.from_number or "",
+        "status": rec.status,
+        "machine_detected": rec.machine_detected,
+        "transferred": rec.transferred,
+        "voicemail_dropped": rec.voicemail_dropped,
+        "ring_duration": rec.ring_duration,
+        "status_description": rec.status_description or "",
+        "status_color": rec.status_color or "",
+        "amd_result": rec.amd_result,
+        "hangup_cause": rec.hangup_cause,
+        "transcript": transcript,
+        "recording_url": rec.recording_url,
+        "vm_duration": rec.vm_duration,
+    }
+
+
 def get_call_history(start_date=None, end_date=None, user_id=None):
+    try:
+        from app import app as _flask_app
+        from models import CallRecord, db
+        with _flask_app.app_context():
+            query = CallRecord.query
+            if user_id is not None:
+                query = query.filter_by(user_id=user_id)
+            if start_date:
+                start_dt = _parse_ts(start_date)
+                if start_dt:
+                    query = query.filter(CallRecord.created_at >= start_dt)
+            if end_date:
+                end_dt = _parse_ts(end_date)
+                if end_dt:
+                    query = query.filter(CallRecord.created_at <= end_dt)
+            query = query.order_by(CallRecord.created_at.desc()).limit(500)
+            records = query.all()
+            return [_call_record_to_entry(r) for r in records]
+    except Exception as e:
+        _db_logger.debug(f"DB call history read failed, falling back to JSON: {e}")
+
     with _file_lock:
         history = _load_call_history(user_id)
     if not start_date and not end_date:
@@ -290,19 +383,22 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
                  gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None, navigator_knowledge_base=""):
     key = _campaign_key(user_id)
     _get_pause_event(user_id).set()
+    nums_list = list(numbers)
+    actual_batch = max(1, min(int(batch_size), 50))
+    actual_delay = max(1, min(10, int(dial_delay)))
     with lock:
         camp = _default_campaign()
         camp["active"] = True
         camp["is_test"] = is_test
         camp["audio_url"] = audio_url
         camp["transfer_number"] = transfer_number
-        camp["numbers"] = list(numbers)
+        camp["numbers"] = nums_list
         camp["dialed_count"] = 0
         camp["stop_requested"] = False
         camp["paused"] = False
         camp["dial_mode"] = dial_mode
-        camp["batch_size"] = max(1, min(int(batch_size), 50))
-        camp["dial_delay"] = max(1, min(10, int(dial_delay)))
+        camp["batch_size"] = actual_batch
+        camp["dial_delay"] = actual_delay
         camp["from_number"] = from_number
         camp["gatekeeper_navigator_enabled"] = bool(gatekeeper_navigator_enabled)
         camp["prospect_name"] = prospect_name or ""
@@ -319,6 +415,42 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
                 del call_states[cid]
                 _cid_to_user.pop(cid, None)
 
+    if user_id is not None:
+        existing_db_id = _campaign_db_ids.get(key)
+        def _persist():
+            from models import Campaign, db
+            if existing_db_id:
+                existing = Campaign.query.get(existing_db_id)
+                if existing and existing.status == 'active':
+                    existing.updated_at = datetime.utcnow()
+                    db.session.commit()
+                    _db_logger.info(f"Campaign {existing_db_id} resumed ({existing.dialed_count}/{existing.total_count} dialed, {len(nums_list)} remaining)")
+                    return
+            c = Campaign(
+                user_id=user_id,
+                status='active',
+                numbers=json.dumps(nums_list),
+                dialed_count=0,
+                total_count=len(nums_list),
+                dial_mode=dial_mode,
+                batch_size=actual_batch,
+                dial_delay=actual_delay,
+                audio_url=audio_url,
+                transfer_number=transfer_number,
+                from_number=from_number,
+                is_test=is_test,
+                gatekeeper_navigator_enabled=bool(gatekeeper_navigator_enabled),
+                prospect_name=prospect_name or "",
+                prospect_company=prospect_company or "",
+                navigator_voice_id=navigator_voice_id,
+                navigator_knowledge_base=navigator_knowledge_base or "",
+            )
+            db.session.add(c)
+            db.session.commit()
+            _campaign_db_ids[key] = c.id
+            _db_logger.info(f"Campaign {c.id} persisted for user {user_id} ({len(nums_list)} numbers)")
+        _db_write(_persist)
+
 
 def stop_campaign(user_id=None):
     key = _campaign_key(user_id)
@@ -330,6 +462,16 @@ def stop_campaign(user_id=None):
             camp["paused"] = False
     _get_pause_event(user_id).set()
     _get_transfer_event(user_id).set()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'stopped'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
 
 
 def pause_campaign(user_id=None):
@@ -339,6 +481,16 @@ def pause_campaign(user_id=None):
         if camp and camp["active"] and not camp["stop_requested"]:
             camp["paused"] = True
     _get_pause_event(user_id).clear()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'paused'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
 
 
 def resume_campaign(user_id=None):
@@ -348,6 +500,16 @@ def resume_campaign(user_id=None):
         if camp and camp["active"]:
             camp["paused"] = False
     _get_pause_event(user_id).set()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'active'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
 
 
 def is_campaign_paused(user_id=None):
@@ -376,18 +538,44 @@ def wait_if_campaign_paused(user_id=None):
 
 def mark_campaign_complete(user_id=None):
     key = _campaign_key(user_id)
+    dialed = 0
     with lock:
         camp = _campaigns.get(key)
         if camp:
             camp["active"] = False
+            dialed = camp.get("dialed_count", 0)
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'completed'
+                c.dialed_count = dialed
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
 
 
 def increment_dialed(user_id=None):
     key = _campaign_key(user_id)
+    new_count = 0
     with lock:
         camp = _campaigns.get(key)
         if camp:
             camp["dialed_count"] += 1
+            new_count = camp["dialed_count"]
+    db_id = _campaign_db_ids.get(key)
+    if db_id and new_count > 0:
+        _count = new_count
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.dialed_count = _count
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write(_persist)
 
 
 def is_campaign_active(user_id=None):
@@ -440,6 +628,34 @@ def create_call_state(call_control_id, number, user_id=None):
         }
         if user_id is not None:
             _cid_to_user[call_control_id] = user_id
+    _cid = call_control_id
+    _num = number
+    _uid = user_id
+    _from = from_number
+    key = _campaign_key(user_id)
+    _camp_db_id = _campaign_db_ids.get(key)
+    def _persist():
+        from models import CallRecord, db
+        from sqlalchemy.exc import IntegrityError
+        existing = CallRecord.query.filter_by(call_control_id=_cid).first()
+        if existing:
+            return
+        rec = CallRecord(
+            call_control_id=_cid,
+            campaign_id=_camp_db_id,
+            user_id=_uid,
+            phone_number=_num,
+            from_number=_from,
+            status='initiated',
+            status_description='Call initiated',
+            status_color='blue',
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+    _db_write_async(_persist)
 
 
 def get_call_state(call_control_id):
@@ -450,12 +666,57 @@ def get_call_state(call_control_id):
         return None
 
 
+_call_update_counters = {}
+
 def update_call_state(call_control_id, **kwargs):
     with lock:
         if call_control_id in call_states:
             call_states[call_control_id].update(kwargs)
-            return True
-        return False
+            _call_update_counters[call_control_id] = _call_update_counters.get(call_control_id, 0) + 1
+            should_sync = False
+            status = kwargs.get("status")
+            if status and status.lower() in TERMINAL_STATUSES:
+                should_sync = True
+            elif any(k in kwargs for k in ("transferred", "voicemail_dropped", "amd_result", "hangup_cause", "recording_url")):
+                should_sync = True
+            elif _call_update_counters[call_control_id] % 10 == 0:
+                should_sync = True
+            if should_sync:
+                snapshot = dict(call_states[call_control_id])
+            else:
+                snapshot = None
+        else:
+            return False
+
+    if snapshot:
+        _cid = call_control_id
+        def _persist():
+            from models import CallRecord, db
+            rec = CallRecord.query.filter_by(call_control_id=_cid).first()
+            if not rec:
+                return
+            rec.status = snapshot.get("status", rec.status)
+            rec.amd_result = snapshot.get("amd_result", rec.amd_result)
+            rec.machine_detected = snapshot.get("machine_detected", rec.machine_detected)
+            rec.transferred = snapshot.get("transferred", rec.transferred)
+            rec.voicemail_dropped = snapshot.get("voicemail_dropped", rec.voicemail_dropped)
+            rec.hangup_cause = snapshot.get("hangup_cause", rec.hangup_cause)
+            rec.status_description = snapshot.get("status_description", rec.status_description) or ""
+            rec.status_color = snapshot.get("status_color", rec.status_color) or "blue"
+            rec.recording_url = snapshot.get("recording_url", rec.recording_url)
+            rec.vm_duration = snapshot.get("vm_duration", rec.vm_duration)
+            rec.from_number = snapshot.get("from_number", rec.from_number) or ""
+            transcript = snapshot.get("transcript", [])
+            if transcript:
+                rec.transcript = json.dumps(transcript)
+            ring_start = snapshot.get("ring_start")
+            ring_end = snapshot.get("ring_end")
+            if ring_start and ring_end:
+                rec.ring_duration = round(ring_end - ring_start)
+            rec.updated_at = datetime.utcnow()
+            db.session.commit()
+        _db_write_async(_persist)
+    return True
 
 
 def mark_transferred(call_control_id):

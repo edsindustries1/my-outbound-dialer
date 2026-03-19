@@ -1,6 +1,6 @@
 """
 models.py - Database models for Flask application with Flask-SQLAlchemy and Flask-Login.
-Defines User, UserAppData, UserInstance, ProvisionedNumber, and Invitation models for PostgreSQL database.
+Defines User, UserAppData, UserInstance, ProvisionedNumber, Invitation, Campaign, and CallRecord models for PostgreSQL database.
 """
 
 from flask_sqlalchemy import SQLAlchemy
@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 import uuid
 
-from sqlalchemy import Numeric
+from sqlalchemy import Numeric, Text
 
 db = SQLAlchemy()
 logger = logging.getLogger("voicemail_app")
@@ -171,6 +171,81 @@ class AppConfig(db.Model):
             raise e
 
 
+class Campaign(db.Model):
+    __tablename__ = 'campaigns'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    status = db.Column(db.String(30), default='active', nullable=False, index=True)
+    numbers = db.Column(Text, default='[]', nullable=False)
+    dialed_count = db.Column(db.Integer, default=0, nullable=False)
+    total_count = db.Column(db.Integer, default=0, nullable=False)
+    dial_mode = db.Column(db.String(30), default='sequential', nullable=False)
+    batch_size = db.Column(db.Integer, default=5, nullable=False)
+    dial_delay = db.Column(db.Integer, default=2, nullable=False)
+    audio_url = db.Column(Text, nullable=True)
+    transfer_number = db.Column(db.String(50), nullable=True)
+    from_number = db.Column(db.String(50), nullable=True)
+    is_test = db.Column(db.Boolean, default=False, nullable=False)
+    gatekeeper_navigator_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    prospect_name = db.Column(db.String(255), default='', nullable=False)
+    prospect_company = db.Column(db.String(255), default='', nullable=False)
+    navigator_voice_id = db.Column(db.String(255), nullable=True)
+    navigator_knowledge_base = db.Column(Text, default='', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    call_records = db.relationship('CallRecord', backref='campaign', lazy=True)
+
+    def to_dict(self):
+        import json as _json
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'status': self.status,
+            'dialed_count': self.dialed_count,
+            'total_count': self.total_count,
+            'dial_mode': self.dial_mode,
+            'batch_size': self.batch_size,
+            'dial_delay': self.dial_delay,
+            'audio_url': self.audio_url,
+            'transfer_number': self.transfer_number,
+            'from_number': self.from_number,
+            'is_test': self.is_test,
+            'gatekeeper_navigator_enabled': self.gatekeeper_navigator_enabled,
+            'prospect_name': self.prospect_name,
+            'prospect_company': self.prospect_company,
+            'navigator_voice_id': self.navigator_voice_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class CallRecord(db.Model):
+    __tablename__ = 'call_records'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    call_control_id = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=True, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    phone_number = db.Column(db.String(50), nullable=False)
+    from_number = db.Column(db.String(50), default='', nullable=False)
+    status = db.Column(db.String(50), default='initiated', nullable=False)
+    amd_result = db.Column(db.String(100), nullable=True)
+    machine_detected = db.Column(db.Boolean, nullable=True)
+    transferred = db.Column(db.Boolean, default=False, nullable=False)
+    voicemail_dropped = db.Column(db.Boolean, default=False, nullable=False)
+    hangup_cause = db.Column(db.String(100), nullable=True)
+    transcript = db.Column(Text, default='[]', nullable=False)
+    recording_url = db.Column(Text, nullable=True)
+    ring_duration = db.Column(db.Integer, nullable=True)
+    status_description = db.Column(db.String(255), default='', nullable=False)
+    status_color = db.Column(db.String(20), default='blue', nullable=False)
+    vm_duration = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 def init_db(app):
     db.init_app(app)
     with app.app_context():
@@ -253,8 +328,7 @@ def _ensure_schema():
             db.session.commit()
 
         _seed_max_concurrent_lines()
-
-        pass
+        _recover_interrupted_campaigns()
 
     except Exception as e:
         logger.exception(f"Schema ensure failed: {e}")
@@ -294,3 +368,25 @@ def _seed_max_concurrent_lines():
     except Exception as e:
         db.session.rollback()
         logger.warning(f"Could not seed max_concurrent_lines: {e}")
+
+
+def _recover_interrupted_campaigns():
+    try:
+        active_campaigns = Campaign.query.filter(
+            Campaign.status.in_(['active', 'paused'])
+        ).all()
+        if not active_campaigns:
+            return
+        for camp in active_campaigns:
+            old_status = camp.status
+            camp.status = 'interrupted'
+            camp.updated_at = datetime.utcnow()
+            logger.warning(
+                f"Campaign {camp.id} for user {camp.user_id} was '{old_status}' at shutdown — "
+                f"marked as 'interrupted' (dialed {camp.dialed_count}/{camp.total_count})"
+            )
+        db.session.commit()
+        logger.info(f"Recovered {len(active_campaigns)} interrupted campaign(s) on startup")
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Could not recover interrupted campaigns: {e}")
