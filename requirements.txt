@@ -16,3 +16,4 @@ supabase>=2.0.0
 telnyx>=2.0.0
 Werkzeug>=3.0.0
 elevenlabs>=1.0.0
+flask-sock>=0.7.0

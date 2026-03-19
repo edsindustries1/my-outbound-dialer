@@ -18,7 +18,9 @@ from decimal import Decimal, ROUND_HALF_UP
 from dotenv import load_dotenv
 load_dotenv(override=False)
 
+import queue as _queue_mod
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for, flash
+from flask_sock import Sock
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required as flask_login_required
 import html as html_module
@@ -107,6 +109,7 @@ from telnyx_client import (
     list_call_control_apps, get_number_order_status,
     lookup_number, lookup_numbers_batch,
     auto_configure_outbound,
+    fork_start, fork_stop,
 )
 from call_manager import start_dialer
 from personalized_vm import (
@@ -154,6 +157,65 @@ if not _secret:
 app.secret_key = _secret
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# ---- WebSocket support (flask-sock) ----
+sock = Sock(app)
+
+# ---- Real-time call audio relay ----
+_audio_subs_lock = threading.Lock()
+_audio_subscribers = {}  # call_id -> list of queue.Queue
+
+
+def _audio_register(call_id):
+    """Subscribe a browser listener to a call's audio stream."""
+    q = _queue_mod.Queue(maxsize=1000)
+    with _audio_subs_lock:
+        _audio_subscribers.setdefault(call_id, []).append(q)
+    return q
+
+
+def _audio_unregister(call_id, q):
+    """Unsubscribe a browser listener."""
+    with _audio_subs_lock:
+        subs = _audio_subscribers.get(call_id, [])
+        try:
+            subs.remove(q)
+        except ValueError:
+            pass
+        if not subs:
+            _audio_subscribers.pop(call_id, None)
+
+
+def _audio_broadcast(call_id, data):
+    """Broadcast raw PCM bytes to all browser subscribers for a call."""
+    with _audio_subs_lock:
+        subs = list(_audio_subscribers.get(call_id, []))
+    for q in subs:
+        try:
+            q.put_nowait(data)
+        except _queue_mod.Full:
+            pass
+
+
+def _ulaw2lin(data):
+    """Convert G.711 µ-law (PCMU) bytes to 16-bit signed linear PCM bytes (little-endian)."""
+    import struct
+    result = bytearray(len(data) * 2)
+    idx = 0
+    for byte in data:
+        byte = (~byte) & 0xFF
+        sign = byte & 0x80
+        exponent = (byte >> 4) & 0x07
+        mantissa = byte & 0x0F
+        sample = ((mantissa << 3) | 0x84) << exponent
+        sample -= 132
+        if sign:
+            sample = -sample
+        sample = max(-32768, min(32767, sample))
+        struct.pack_into('<h', result, idx, sample)
+        idx += 2
+    return bytes(result)
+
 
 _is_dev = os.environ.get("FLASK_ENV") == "development" or os.environ.get("INSECURE_COOKIES") == "1"
 app.config["PERMANENT_SESSION_LIFETIME"] = _td(days=7)
@@ -1824,6 +1886,84 @@ def set_fish_audio_key():
     AppConfig.set("fish_audio_api_key", key)
     logger.info(f"Fish Audio API key saved to database (length={len(key)})")
     return jsonify({"message": "Fish Audio API key saved successfully", "length": len(key)})
+
+
+# ── Real-time Call Audio Monitoring ────────────────────────────────────────────
+
+@sock.route("/ws/fork")
+def ws_fork(ws):
+    """Telnyx connects here and streams forked raw PCMU audio."""
+    call_id = request.args.get("call_id", "").strip()
+    if not call_id:
+        return
+    logger.info(f"[fork] Telnyx audio fork connected for call {call_id}")
+    try:
+        while True:
+            data = ws.receive()
+            if data is None:
+                break
+            if isinstance(data, bytes) and data:
+                pcm = _ulaw2lin(data)
+                _audio_broadcast(call_id, pcm)
+    except Exception as e:
+        logger.debug(f"[fork] WebSocket closed for call {call_id}: {e}")
+    finally:
+        logger.info(f"[fork] Telnyx audio fork disconnected for call {call_id}")
+
+
+@sock.route("/ws/listen/<call_id>")
+def ws_listen(ws, call_id):
+    """Browser connects here to receive 16-bit PCM audio for a call."""
+    if not current_user.is_authenticated:
+        return
+    call_id = call_id.strip()
+    q = _audio_register(call_id)
+    logger.info(f"[listen] Browser connected to monitor call {call_id}")
+    try:
+        while True:
+            try:
+                chunk = q.get(timeout=20)
+                ws.send(chunk)
+            except _queue_mod.Empty:
+                ws.send(b"")
+    except Exception as e:
+        logger.debug(f"[listen] Browser WebSocket closed for call {call_id}: {e}")
+    finally:
+        _audio_unregister(call_id, q)
+        logger.info(f"[listen] Browser disconnected from call {call_id}")
+
+
+@app.route("/api/monitor/start", methods=["POST"])
+@login_required
+def api_monitor_start():
+    """Start Telnyx audio fork so admin can listen to the active call."""
+    data = request.get_json() or {}
+    call_id = (data.get("call_id") or "").strip()
+    if not call_id:
+        return jsonify({"error": "call_id required"}), 400
+    base = _detected_base_url or ""
+    if not base:
+        return jsonify({"error": "Public base URL not configured — app is not yet reachable from the internet"}), 503
+    ws_url = base.replace("https://", "wss://", 1).replace("http://", "ws://", 1)
+    ws_url = f"{ws_url}/ws/fork?call_id={call_id}"
+    ok = fork_start(call_id, ws_url)
+    if ok:
+        return jsonify({"message": "Audio monitoring started", "ws_url": ws_url})
+    return jsonify({"error": "Failed to start audio fork — call may have already ended"}), 500
+
+
+@app.route("/api/monitor/stop", methods=["POST"])
+@login_required
+def api_monitor_stop():
+    """Stop Telnyx audio fork."""
+    data = request.get_json() or {}
+    call_id = (data.get("call_id") or "").strip()
+    if not call_id:
+        return jsonify({"error": "call_id required"}), 400
+    fork_stop(call_id)
+    with _audio_subs_lock:
+        _audio_subscribers.pop(call_id, None)
+    return jsonify({"message": "Audio monitoring stopped"})
 
 
 @app.route("/api/custom-variables", methods=["GET"])

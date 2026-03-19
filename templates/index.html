@@ -3948,6 +3948,9 @@
 
                         if (typeof iphoneUpdateDialer === "function" && !_testCallActive) {
                             iphoneUpdateDialer(data.calls || [], data.active);
+                            if (_listenActive && (!data.active || !data.calls || data.calls.length === 0)) {
+                                _stopListening(true);
+                            }
                         }
 
                         adjustPollSpeed(data.active || hasLiveCalls);
@@ -4037,9 +4040,15 @@
                                 <div class="iphone-transcript-content" id="iphoneTranscriptContent"></div>
                             </div>
                             <div class="iphone-call-actions">
-                                <div class="iphone-action-btn"><div class="iphone-action-icon">&#128264;</div><span>mute</span></div>
+                                <div class="iphone-action-btn" id="iphoneMuteBtn" onclick="iphoneToggleMute()" style="cursor:pointer;">
+                                    <div class="iphone-action-icon" id="iphoneMuteIcon">&#128264;</div>
+                                    <span id="iphoneMuteLabel">mute</span>
+                                </div>
+                                <div class="iphone-action-btn" id="iphoneListenBtn" onclick="iphoneToggleListen()" style="cursor:pointer;" title="Listen to live call audio">
+                                    <div class="iphone-action-icon" id="iphoneListenIcon">&#128266;</div>
+                                    <span id="iphoneListenLabel">listen</span>
+                                </div>
                                 <div class="iphone-action-btn"><div class="iphone-action-icon">&#9881;</div><span>keypad</span></div>
-                                <div class="iphone-action-btn"><div class="iphone-action-icon">&#128266;</div><span>speaker</span></div>
                             </div>
                         </div>
                         <div class="iphone-hotlead-screen" id="iphoneHotLeadScreen" style="display:none;">
@@ -4599,6 +4608,130 @@
             function iphoneToggleMinimize(){var dialer=document.getElementById("iphoneDialer");var iFab=document.getElementById("iphoneFab");iphoneMinimized=!iphoneMinimized;if(iphoneMinimized){dialer.classList.remove("hotlead-expand","hotlead-collapse");dialer.style.display="none";iFab.classList.add("visible");if(typeof ballsStartIphone==="function")ballsStartIphone();}else{dialer.classList.remove("hotlead-expand","hotlead-collapse");dialer.style.display="";dialer.style.transform="scale(1)";dialer.style.opacity="1";iFab.classList.remove("visible","floating");if(typeof ballsStopIphone==="function")ballsStopIphone();}}
             function hotleadDismiss(){var dialer=document.getElementById("iphoneDialer");var hlScreen=document.getElementById("iphoneHotLeadScreen");hlScreen.style.display="none";dialer.classList.remove("hotlead-expand");dialer.classList.add("hotlead-collapse");hotleadAnimating=false;if(hotleadAutoMinTimer){clearTimeout(hotleadAutoMinTimer);hotleadAutoMinTimer=null;}setTimeout(function(){dialer.classList.remove("hotlead-collapse","hotlead-expand");dialer.style.display="none";dialer.style.transform="";dialer.style.opacity="";iphoneMinimized=true;var iFab=document.getElementById("iphoneFab");iFab.classList.add("visible");if(typeof ballsStartIphone==="function")ballsStartIphone();},400);}
             function iphoneUpdateDialer(calls,campaignActive){var dialer=document.getElementById("iphoneDialer");var idleScreen=document.getElementById("iphoneIdleScreen");var callScreen=document.getElementById("iphoneCallScreen");var hlScreen=document.getElementById("iphoneHotLeadScreen");if(!campaignActive){callScreen.style.display="none";hlScreen.style.display="none";idleScreen.style.display="";return;}if(!calls||calls.length===0)return;var liveStatuses=["initiated","ringing","test_call_ringing","answered","human_detected","machine_detected","voicemail_playing","transferred","connected"];var liveCall=null;for(var i=0;i<calls.length;i++){if(liveStatuses.indexOf(calls[i].status)!==-1){liveCall=calls[i];break;}}if(liveCall&&liveCall.transferred&&!hotleadShownIds[liveCall.call_id||liveCall.number]){hotleadShownIds[liveCall.call_id||liveCall.number]=true;callScreen.style.display="none";idleScreen.style.display="none";hlScreen.style.display="";document.getElementById("hotleadNumber").textContent=liveCall.number||"Unknown";if(iphoneMinimized){iphoneMinimized=false;dialer.style.display="";dialer.style.opacity="1";var iFab=document.getElementById("iphoneFab");iFab.classList.remove("visible","floating");if(typeof ballsStopIphone==="function")ballsStopIphone();}dialer.classList.remove("hotlead-collapse");dialer.classList.add("hotlead-expand");hotleadAnimating=true;playHotLeadSound();if(hotleadAutoMinTimer)clearTimeout(hotleadAutoMinTimer);hotleadAutoMinTimer=setTimeout(function(){hotleadDismiss();},8000);}else if(liveCall){idleScreen.style.display="none";callScreen.style.display="";hlScreen.style.display="none";document.getElementById("iphoneCallNumber").textContent=liveCall.number||"";var statusText=liveCall.status_description||formatStatus(liveCall.status);document.getElementById("iphoneCallStatusText").textContent=statusText;document.getElementById("iphoneCallLabel").textContent=liveCall.status==="initiated"?"calling...":"on call";var badge=document.getElementById("iphoneCallBadge");var colorMap={green:"#30D158",red:"#FF453A",yellow:"#FFD60A",blue:"#0A84FF"};badge.style.background=colorMap[liveCall.status_color]||"#0A84FF";var amdDiv=document.getElementById("iphoneCallAmd");if(liveCall.machine_detected!==null){amdDiv.style.display="";document.getElementById("iphoneAmdIcon").textContent=liveCall.machine_detected?"&#129302;":"&#128100;";document.getElementById("iphoneAmdText").textContent=liveCall.machine_detected?"Machine Detected":"Human Detected";}else{amdDiv.style.display="none";}var trDiv=document.getElementById("iphoneCallTranscript");if(liveCall.transcript&&liveCall.transcript.length>0){trDiv.style.display="";var trHtml="";liveCall.transcript.slice(-3).forEach(function(t){var speaker=t.track==="outbound"?"Agent":"Caller";trHtml+='<div class="iphone-tr-line"><strong>'+speaker+':</strong> '+((t.text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;"))+'</div>';});document.getElementById("iphoneTranscriptContent").innerHTML=trHtml;}else{trDiv.style.display="none";}if(liveCall.call_id!==iphonePrevCallId){iphonePrevCallId=liveCall.call_id;iphoneCallStart=Date.now();if(iphoneCallTimerInterval)clearInterval(iphoneCallTimerInterval);iphoneCallTimerInterval=setInterval(function(){var elapsed=Math.floor((Date.now()-iphoneCallStart)/1000);var mm=String(Math.floor(elapsed/60)).padStart(2,"0");var ss=String(elapsed%60).padStart(2,"0");document.getElementById("iphoneCallTimer").textContent=mm+":"+ss;},1000);}}else{callScreen.style.display="none";hlScreen.style.display="none";idleScreen.style.display="";if(iphoneCallTimerInterval){clearInterval(iphoneCallTimerInterval);iphoneCallTimerInterval=null;}}var logEntries=document.getElementById("iphoneLogEntries");var recent=calls.slice(0,5);var logHtml="";recent.forEach(function(c){var ts="-";if(c.timestamp){try{var d=new Date(c.timestamp);ts=d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});}catch(e){}}var icon=c.transferred?"&#128293;":c.voicemail_dropped?"&#128232;":"&#128222;";logHtml+='<div class="iphone-log-entry"><span class="iphone-log-icon">'+icon+'</span><span class="iphone-log-number">'+(c.number||"-")+'</span><span class="iphone-log-time">'+ts+'</span></div>';});logEntries.innerHTML=logHtml;}
+            // ---- Real-time Call Audio Monitoring ----
+            var _listenWs = null;
+            var _listenAudioCtx = null;
+            var _listenMuted = false;
+            var _listenActive = false;
+            var _listenCallId = null;
+            var _listenNextPlayTime = 0;
+
+            function iphoneToggleListen() {
+                if (_listenActive) {
+                    _stopListening(false);
+                } else {
+                    var callId = iphonePrevCallId;
+                    if (!callId) { showToast('No active call to listen to', 'error'); return; }
+                    _startListening(callId);
+                }
+            }
+
+            function iphoneToggleMute() {
+                if (!_listenActive) return;
+                _listenMuted = !_listenMuted;
+                var icon = document.getElementById('iphoneMuteIcon');
+                var label = document.getElementById('iphoneMuteLabel');
+                var btn = document.getElementById('iphoneMuteBtn');
+                if (_listenMuted) {
+                    icon.innerHTML = '&#128263;';
+                    label.textContent = 'unmute';
+                    btn.style.background = 'rgba(255,69,58,0.35)';
+                    btn.style.borderRadius = '14px';
+                } else {
+                    icon.innerHTML = '&#128264;';
+                    label.textContent = 'mute';
+                    btn.style.background = '';
+                    btn.style.borderRadius = '';
+                }
+            }
+
+            function _startListening(callId) {
+                _listenCallId = callId;
+                apiFetch('/api/monitor/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({call_id: callId})
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    if (d.error) { showToast(d.error, 'error'); _listenCallId = null; return; }
+                    var wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    var wsUrl = wsProto + '//' + location.host + '/ws/listen/' + callId;
+                    try {
+                        _listenAudioCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 8000});
+                    } catch(e) {
+                        showToast('Browser does not support Web Audio', 'error');
+                        _listenCallId = null;
+                        return;
+                    }
+                    _listenNextPlayTime = 0;
+                    _listenWs = new WebSocket(wsUrl);
+                    _listenWs.binaryType = 'arraybuffer';
+                    _listenWs.onopen = function() {
+                        _listenActive = true;
+                        _listenMuted = false;
+                        var listenBtn = document.getElementById('iphoneListenBtn');
+                        var listenIcon = document.getElementById('iphoneListenIcon');
+                        var listenLabel = document.getElementById('iphoneListenLabel');
+                        if (listenBtn) { listenBtn.style.background = 'rgba(48,209,88,0.35)'; listenBtn.style.borderRadius = '14px'; }
+                        if (listenIcon) listenIcon.innerHTML = '&#128266;';
+                        if (listenLabel) listenLabel.textContent = 'listening';
+                        showToast('Listening to live call audio...', 'success');
+                    };
+                    _listenWs.onmessage = function(e) {
+                        if (_listenMuted || !e.data || e.data.byteLength === 0) return;
+                        if (!_listenAudioCtx) return;
+                        try {
+                            var int16 = new Int16Array(e.data);
+                            if (int16.length === 0) return;
+                            var float32 = new Float32Array(int16.length);
+                            for (var i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768.0;
+                            var buf = _listenAudioCtx.createBuffer(1, float32.length, 8000);
+                            buf.copyToChannel(float32, 0);
+                            var src = _listenAudioCtx.createBufferSource();
+                            src.buffer = buf;
+                            src.connect(_listenAudioCtx.destination);
+                            var now = _listenAudioCtx.currentTime;
+                            if (_listenNextPlayTime < now + 0.1) _listenNextPlayTime = now + 0.1;
+                            src.start(_listenNextPlayTime);
+                            _listenNextPlayTime += buf.duration;
+                        } catch(ex) {}
+                    };
+                    _listenWs.onclose = function() { _stopListening(true); };
+                    _listenWs.onerror = function() { showToast('Audio connection lost', 'error'); _stopListening(true); };
+                }).catch(function(e) {
+                    if (e && e.message === 'auth') return;
+                    showToast('Could not start audio monitoring', 'error');
+                    _listenCallId = null;
+                });
+            }
+
+            function _stopListening(silent) {
+                if (_listenWs) { try { _listenWs.close(); } catch(e2) {} _listenWs = null; }
+                if (_listenAudioCtx) { try { _listenAudioCtx.close(); } catch(e2) {} _listenAudioCtx = null; }
+                if (_listenCallId) {
+                    apiFetch('/api/monitor/stop', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({call_id: _listenCallId})
+                    }).catch(function() {});
+                    _listenCallId = null;
+                }
+                _listenActive = false;
+                _listenMuted = false;
+                var listenBtn = document.getElementById('iphoneListenBtn');
+                var listenIcon = document.getElementById('iphoneListenIcon');
+                var listenLabel = document.getElementById('iphoneListenLabel');
+                var muteBtn = document.getElementById('iphoneMuteBtn');
+                var muteIcon = document.getElementById('iphoneMuteIcon');
+                var muteLabel = document.getElementById('iphoneMuteLabel');
+                if (listenBtn) { listenBtn.style.background = ''; listenBtn.style.borderRadius = ''; }
+                if (listenIcon) listenIcon.innerHTML = '&#128266;';
+                if (listenLabel) listenLabel.textContent = 'listen';
+                if (muteBtn) { muteBtn.style.background = ''; muteBtn.style.borderRadius = ''; }
+                if (muteIcon) muteIcon.innerHTML = '&#128264;';
+                if (muteLabel) muteLabel.textContent = 'mute';
+                if (!silent) showToast('Stopped listening', 'info');
+            }
+
             // ---- Browser Push Notifications ----
             var _notifPermission = Notification ? Notification.permission : "denied";
             function requestNotifPermission() {
