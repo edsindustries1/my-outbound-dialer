@@ -168,41 +168,30 @@ def google_login_callback():
             (User.google_id == google_id) | (User.email == email)
         ).first()
         
-        is_new_user = user is None
-        
-        if is_new_user:
-            # Create new user
-            user = User(
-                email=email,
-                google_id=google_id,
-                profile_name=profile_name,
-                profile_image_url=profile_image_url
-            )
-            db.session.add(user)
-            db.session.commit()
-            logger.info(f"Created new user via Google OAuth: {email}")
-            
-            from welcome_email import send_welcome_email_async
-            send_welcome_email_async(email, profile_name)
-        else:
-            # Update existing user with latest info from Google (in case they changed their profile)
-            user.google_id = google_id
-            user.profile_name = profile_name or user.profile_name
-            user.profile_image_url = profile_image_url or user.profile_image_url
-            db.session.commit()
-            logger.info(f"Updated existing user via Google OAuth: {email}")
-        
-        # Log the user in
+        if not user:
+            logger.warning(f"Google OAuth login rejected — no existing account for {email}")
+            flash("No account found. Access is by invitation only.", "error")
+            session.pop("oauth_state", None)
+            return redirect(url_for("login"))
+
+        if not getattr(user, 'is_active_account', True):
+            logger.warning(f"Google OAuth login rejected — account deactivated for {email}")
+            flash("Your account has been deactivated. Please contact the administrator.", "error")
+            session.pop("oauth_state", None)
+            return redirect(url_for("login"))
+
+        user.google_id = google_id
+        user.profile_name = profile_name or user.profile_name
+        user.profile_image_url = profile_image_url or user.profile_image_url
+        db.session.commit()
+        logger.info(f"User logged in via Google OAuth: {email}")
+
         login_user(user)
-        session.pop("oauth_state", None)  # Clean up state from session
-        
-        # Redirect to appropriate page
-        if is_new_user:
-            flash("Welcome! Please complete your profile setup.", "info")
-            return redirect(url_for("profile_setup"))
-        else:
-            flash(f"Welcome back, {user.profile_name or user.email}!", "success")
-            return redirect(url_for("dashboard"))
+        session.permanent = True
+        session.pop("oauth_state", None)
+
+        flash(f"Welcome back, {user.profile_name or user.email}!", "success")
+        return redirect(url_for("dashboard"))
     
     except Exception as e:
         logger.error(f"Error in google_login_callback: {e}")

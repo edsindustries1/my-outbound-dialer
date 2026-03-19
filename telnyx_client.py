@@ -126,18 +126,13 @@ def make_call(number, from_number_override=None):
         "connection_id": connection_id,
         "to": number,
         "from": from_number,
-        "answering_machine_detection": "detect_words",
+        "answering_machine_detection": "premium",
         "answering_machine_detection_config": {
-            "after_greeting_silence_millis": 800,
-            "between_words_silence_millis": 50,
-            "greeting_duration_millis": 3500,
-            "greeting_silence_duration_millis": 2000,
-            "greeting_total_analysis_time_millis": 50000,
-            "initial_silence_millis": 3500,
-            "maximum_number_of_words": 5,
-            "maximum_word_length_millis": 3500,
-            "silence_threshold": 256,
-            "total_analysis_time_millis": 5000,
+            "total_analysis_time_millis": 60000,
+            "after_greeting_silence_millis": 3000,
+            "between_words_silence_millis": 1000,
+            "silence_threshold": 500,
+            "maximum_number_of_words": 8,
         },
         "timeout_secs": 60,
         "time_limit_secs": 180,
@@ -263,9 +258,12 @@ def transfer_call(call_control_id, to_number, customer_number=None):
         return False
 
 
-def play_audio(call_control_id, audio_url):
+def play_audio(call_control_id, audio_url, client_state=None):
     """Play an audio file on an active call."""
     payload = {"audio_url": audio_url}
+    if client_state:
+        import base64
+        payload["client_state"] = base64.b64encode(client_state.encode()).decode()
     try:
         resp = requests.post(
             f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/playback_start",
@@ -278,6 +276,48 @@ def play_audio(call_control_id, audio_url):
         return True
     except Exception as e:
         logger.error(f"Failed to play audio on call {call_control_id}: {e}")
+        return False
+
+
+def stop_playback(call_control_id):
+    """Stop any currently playing audio on the call."""
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/playback_stop",
+            json={},
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Playback stopped on call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to stop playback on call {call_control_id}: {e}")
+        return False
+
+
+def start_gather(call_control_id, timeout_millis=60000):
+    """Start a gather to keep the RTP audio path alive after AMD no-beep detection.
+    This prevents the far end from thinking the caller disconnected."""
+    payload = {
+        "minimum_digits": 1,
+        "maximum_digits": 1,
+        "timeout_millis": timeout_millis,
+        "inter_digit_timeout_millis": timeout_millis,
+        "valid_digits": "0123456789*#",
+    }
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/gather",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Gather started on call {call_control_id} (keeping line alive for {timeout_millis}ms)")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to start gather on call {call_control_id}: {e}")
         return False
 
 
@@ -321,6 +361,44 @@ def start_recording(call_control_id):
         return True
     except Exception as e:
         logger.error(f"Failed to start recording on call {call_control_id}: {e}")
+        return False
+
+
+def fork_start(call_control_id, target_ws_url):
+    """Start forking call audio to a WebSocket URL for real-time monitoring."""
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/fork_start",
+            json={"target": target_ws_url, "rx": "caller", "tx": "callee"},
+            headers=_headers(),
+            timeout=15,
+        )
+        if not resp.ok:
+            logger.error(f"fork_start error {resp.status_code}: {resp.text}")
+            return False
+        logger.info(f"Audio fork started for call {call_control_id} → {target_ws_url}")
+        return True
+    except Exception as e:
+        logger.error(f"fork_start exception: {e}")
+        return False
+
+
+def fork_stop(call_control_id):
+    """Stop forking call audio."""
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/fork_stop",
+            json={},
+            headers=_headers(),
+            timeout=15,
+        )
+        if not resp.ok:
+            logger.warning(f"fork_stop error {resp.status_code}: {resp.text}")
+            return False
+        logger.info(f"Audio fork stopped for call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.warning(f"fork_stop exception: {e}")
         return False
 
 
@@ -378,11 +456,19 @@ def search_available_numbers(country_code="US", area_code=None, state=None, city
                 "number_type": n.get("phone_number_type", "local"),
                 "features": n.get("features", []),
             })
+        if not results:
+            return {"success": False, "error": "No phone numbers available for this area code. Please try a different area code."}
         logger.info(f"Found {len(results)} available numbers")
         return {"success": True, "numbers": results}
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Number search HTTP error: {e}")
+        return {"success": False, "error": "No phone numbers available for this area code. Please try a different area code."}
+    except requests.exceptions.Timeout:
+        logger.error("Number search timed out")
+        return {"success": False, "error": "Search timed out. Please try again."}
     except Exception as e:
         logger.error(f"Number search failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to search for phone numbers right now. Please try again later."}
 
 
 def purchase_number(phone_number, connection_id=None):
@@ -409,16 +495,11 @@ def purchase_number(phone_number, connection_id=None):
             "phone_numbers": [pn.get("phone_number", "") for pn in order.get("phone_numbers", [])],
         }
     except requests.exceptions.HTTPError as e:
-        error_body = ""
-        try:
-            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
-        except Exception:
-            error_body = str(e)
-        logger.error(f"Number purchase failed: {error_body}")
-        return {"success": False, "error": error_body}
+        logger.error(f"Number purchase failed: {e}")
+        return {"success": False, "error": "Unable to purchase this phone number. It may no longer be available. Please try a different number."}
     except Exception as e:
         logger.error(f"Number purchase failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to purchase this phone number. Please try again later."}
 
 
 def create_call_control_app(app_name, webhook_url):
@@ -461,17 +542,9 @@ def create_call_control_app(app_name, webhook_url):
             "app_id": app_data.get("id"),
             "app_name": app_data.get("application_name"),
         }
-    except requests.exceptions.HTTPError as e:
-        error_body = ""
-        try:
-            error_body = e.response.json().get("errors", [{}])[0].get("detail", str(e))
-        except Exception:
-            error_body = str(e)
-        logger.error(f"App creation failed: {error_body}")
-        return {"success": False, "error": error_body}
     except Exception as e:
         logger.error(f"App creation failed: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to set up your phone line. Please try again later."}
 
 
 def assign_number_to_app(phone_number_id, connection_id):
@@ -489,7 +562,7 @@ def assign_number_to_app(phone_number_id, connection_id):
         return {"success": True, "phone_number": data.get("phone_number"), "connection_id": data.get("connection_id")}
     except Exception as e:
         logger.error(f"Failed to assign number: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to configure your phone number. Please try again later."}
 
 
 def list_owned_numbers():
@@ -527,7 +600,7 @@ def list_owned_numbers():
         return {"success": True, "numbers": all_numbers}
     except Exception as e:
         logger.error(f"Failed to list owned numbers: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve your phone numbers. Please try again later."}
 
 
 def release_number(phone_number_id):
@@ -542,7 +615,7 @@ def release_number(phone_number_id):
         return {"success": True}
     except Exception as e:
         logger.error(f"Failed to release number: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to release this phone number. Please try again later."}
 
 
 def list_call_control_apps():
@@ -566,7 +639,7 @@ def list_call_control_apps():
         return {"success": True, "apps": results}
     except Exception as e:
         logger.error(f"Failed to list apps: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve phone line configurations. Please try again later."}
 
 
 def lookup_number(phone_number):
@@ -711,7 +784,7 @@ def list_outbound_voice_profiles():
         return {"success": True, "profiles": results}
     except Exception as e:
         logger.error(f"Failed to list outbound voice profiles: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to retrieve voice profiles. Please try again later."}
 
 
 def create_outbound_voice_profile(name="Open Humana Outbound"):
@@ -734,7 +807,7 @@ def create_outbound_voice_profile(name="Open Humana Outbound"):
         return {"success": True, "profile_id": profile.get("id"), "name": profile.get("name")}
     except Exception as e:
         logger.error(f"Failed to create outbound voice profile: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to create voice profile. Please try again later."}
 
 
 def assign_outbound_profile_to_app(app_id, profile_id):
@@ -757,7 +830,7 @@ def assign_outbound_profile_to_app(app_id, profile_id):
         return {"success": True, "app_id": data.get("id")}
     except Exception as e:
         logger.error(f"Failed to assign outbound profile to app: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to configure voice profile. Please try again later."}
 
 
 def auto_configure_outbound():
@@ -1003,4 +1076,4 @@ def get_number_order_status(order_id):
         }
     except Exception as e:
         logger.error(f"Failed to check order status: {e}")
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": "Unable to check order status. Please try again later."}

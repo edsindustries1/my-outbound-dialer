@@ -1,4 +1,4 @@
-modules = ["python-3.11", "postgresql-16"]
+modules = ["nodejs-20", "postgresql-16", "python-3.11"]
 
 [agent]
 expertMode = true
@@ -29,12 +29,32 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python app.py"
+args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload --threads 8 main:app"
 waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5904
+externalPort = 3000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 23636
+externalPort = 3002
+
+[[ports]]
+localPort = 23637
+externalPort = 3001
+
+[[ports]]
+localPort = 23638
+externalPort = 3003
 
 [userenv]
 
@@ -45,11 +65,23 @@ GMAIL_ADDRESS = "openhumana@gmail.com"
 PAYPAL_MODE = "live"
 PAYPAL_CLIENT_ID = "ATAgVyxvNmu0H_4h5eU_w4US00eIYsWq5noNuQA2Mgff-YbcazUughA5AcP5rLNdF8AOAEtaNqvRucIS"
 PAYPAL_CLIENT_SECRET = "EC7aJePLaAamJkCwoa2ebI2Uub0Sq3JsP5NIm-FzCrGxVrK9O08gslnKYLWQ9JcQOi3nEH05e6mJin2G"
+RESEND_FROM_EMAIL = "Alex <alex@openhumana.com>"
+RESEND_REPLY_TO = "alex@openhumana.com"
+TELEGRAM_BOT_TOKEN = "8514140054:AAGZbrmrYOK58Zi2j8_ao31lS4NbnDZfbLA"
+TELEGRAM_CHAT_ID = "1956123394"
+APP_PASSWORD = "Light@3691"
+TELNYX_API_KEY = "KEY019C77BC88ECB34D07E85C5D5AF77EAC_mAleTeu5rtLB0EGnsgEXiG"
+TELNYX_CONNECTION_ID = "2899026230265251151"
+TELNYX_FROM_NUMBER = "+12137688605"
 
 [userenv.production]
 PUBLIC_BASE_URL = "https://voice-blast.replit.app"
 
 [deployment]
-deploymentTarget = "autoscale"
-run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+deploymentTarget = "vm"
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--reload", "main:app"]
 build = ["bash", "-c", "pip install -r requirements.txt"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000

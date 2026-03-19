@@ -4,18 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pricing — Open Humana</title>
-  <meta name="description" content="Simple, transparent pricing for your digital sales team. Hire one employee, a full team, or build a custom agency.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/pricing.css">
+  <meta name="description" content="Start at $99/mo. Fixed salary + $0.015 per dial. No contracts, no surprises.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pricing — Open Humana">
+  <meta property="og:description" content="Start at $99/mo. Fixed salary + $0.015 per dial. No contracts, no surprises.">
+  <meta property="og:image" content="https://openhumana.com/static/images/dashboard-preview.png">
+  <meta property="og:url" content="https://openhumana.com/pricing">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Pricing — Open Humana">
+  <meta name="twitter:description" content="Start at $99/mo. Fixed salary + $0.015 per dial. No contracts, no surprises.">
+  <meta name="twitter:image" content="https://openhumana.com/static/images/dashboard-preview.png">
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="apple-touch-icon" href="/static/images/logo.png">
 </head>
 <body>
   <nav class="pricing-nav">
     <div class="pricing-nav-inner">
       <a href="/" class="pricing-nav-brand">
-        <img src="/static/images/logo.png" alt="Open Humana" style="height:40px;width:auto;">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:146px;width:auto;">
       </a>
       <div class="pricing-nav-links">
         <a href="/#features">Features</a>
@@ -32,19 +42,47 @@
   <main class="pricing-main">
     <div class="pricing-header">
       <p class="pricing-eyebrow">Pricing</p>
-      <h1 class="pricing-title">Simple, transparent pricing</h1>
-      <p class="pricing-subtitle">No hidden fees. No contracts. Cancel anytime.</p>
+      <h1 class="pricing-title">You are not buying software. You are hiring staff.</h1>
+      <p class="pricing-subtitle">The only difference is this staff member works 24 hours a day, never calls in sick, and costs less than your team's monthly coffee budget.</p>
+    </div>
+
+    <div class="pricing-model-banner">
+      <div class="pmb-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span>Fixed monthly salary</span>
+      </div>
+      <span class="pmb-plus">+</span>
+      <div class="pmb-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Pay-as-you-go per dial</span>
+      </div>
+      <span class="pmb-eq">=</span>
+      <div class="pmb-pill pmb-pill-accent">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Total transparent bill — no surprises</span>
+      </div>
     </div>
 
     <div class="pricing-grid">
       <div class="pricing-card">
         <div class="pricing-card-top">
-          <h2 class="plan-name">Hire One Employee</h2>
-          <p class="plan-description">Perfect for solo operators and small teams getting started with AI-powered outbound.</p>
+          <h2 class="plan-name">Your First Digital Employee</h2>
+          <p class="plan-description">Perfect for solo operators and small teams getting started with automated outbound.</p>
           <div class="plan-price">
             <span class="plan-currency">$</span>
             <span class="plan-amount">99</span>
-            <span class="plan-period">/month</span>
+            <span class="plan-period">/mo</span>
+          </div>
+          <div class="plan-billing-model">
+            <span class="pbm-fixed">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Monthly salary
+            </span>
+            <span class="pbm-sep">+</span>
+            <span class="pbm-usage">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              ~$0.015/dial usage
+            </span>
           </div>
         </div>
         <ul class="plan-features">
@@ -54,77 +92,92 @@
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            500+ dials per day
+            300 outbound dials per day
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            AI personalized voicemails
+            Personalized voicemails
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Live call transfer
+            Instant live call transfer
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Real-time transcription
+            Real-time call transcription
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Email onboarding support
+            1 active campaign at a time
           </li>
         </ul>
+        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Usage billed separately at $0.015 per dial. Average customer doing 100 dials/day pays approx. $99 + $33 in usage per month.</p>
         <div class="plan-cta-area">
           <button class="plan-btn plan-btn-outline" data-plan="starter" data-amount="99">
             <span class="btn-label">Get Started</span>
           </button>
+          <a href="#calculator" class="calc-anchor-link">+ usage costs — see calculator ↓</a>
         </div>
       </div>
 
       <div class="pricing-card pricing-card-featured">
         <div class="pricing-badge">Most Popular</div>
         <div class="pricing-card-top">
-          <h2 class="plan-name">Hire a Team</h2>
+          <h2 class="plan-name">Your Full Digital Sales Floor</h2>
           <p class="plan-description">Scale your outbound with a squad of digital employees working around the clock.</p>
           <div class="plan-price">
             <span class="plan-currency">$</span>
             <span class="plan-amount">399</span>
-            <span class="plan-period">/month</span>
+            <span class="plan-period">/mo</span>
+          </div>
+          <div class="plan-billing-model">
+            <span class="pbm-fixed">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Monthly salary
+            </span>
+            <span class="pbm-sep">+</span>
+            <span class="pbm-usage">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              ~$0.015/dial usage
+            </span>
           </div>
         </div>
         <ul class="plan-features">
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            5 Digital Employees
+            5 Digital Employees working in parallel
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            2,500+ dials per day
+            2,000 outbound dials per day
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Priority voice processing
+            Personalized voicemails
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            AI personalized voicemails
+            Instant live call transfer
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Advanced CRM integration
+            Multiple simultaneous campaigns
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            24/7 dedicated instances
+            Real-time transcription &amp; dashboard
           </li>
           <li>
             <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
             Priority support
           </li>
         </ul>
+        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Usage billed separately at $0.015 per dial.</p>
         <div class="plan-cta-area">
           <button class="plan-btn plan-btn-fill" data-plan="business" data-amount="399">
             <span class="btn-label">Get Started</span>
           </button>
+          <a href="#calculator" class="calc-anchor-link" style="color:rgba(255,255,255,0.6);">+ usage costs — see calculator ↓</a>
         </div>
       </div>
 
@@ -172,9 +225,127 @@
       </div>
     </div>
 
+    <!-- ══ PRICING CALCULATOR ══ -->
+    <section class="calc-section" id="calculator">
+      <div class="calc-header">
+        <p class="calc-eyebrow">Pricing Calculator</p>
+        <h2 class="calc-title">See exactly what you'll pay</h2>
+        <p class="calc-subtitle">No surprises. Enter your daily dial volume and get a transparent breakdown — platform fee plus real usage costs — before you sign up.</p>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-inputs">
+
+          <div class="calc-field">
+            <div class="calc-field-header">
+              <label class="calc-field-label" for="dialSlider">Dials per day</label>
+              <span class="calc-field-value" id="dialDisplay">200</span>
+            </div>
+            <input type="range" class="calc-slider" id="dialSlider" min="10" max="2000" step="10" value="200">
+            <div class="calc-slider-ticks">
+              <span>10</span>
+              <span>500</span>
+              <span>1,000</span>
+              <span>1,500</span>
+              <span>2,000</span>
+            </div>
+          </div>
+
+          <div class="calc-field">
+            <div class="calc-field-header">
+              <label class="calc-field-label" for="daysSlider">Working days / month</label>
+              <span class="calc-field-value" id="daysDisplay">22</span>
+            </div>
+            <input type="range" class="calc-slider" id="daysSlider" min="10" max="31" step="1" value="22">
+            <div class="calc-slider-ticks">
+              <span>10</span>
+              <span>20</span>
+              <span>31</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="calc-divider"></div>
+
+        <div class="calc-results">
+          <div class="calc-breakdown">
+            <div class="calc-line">
+              <div class="calc-line-left">
+                <span id="planBadge" class="calc-plan-badge">Starter Plan</span>
+                <span class="calc-line-label">Platform fee</span>
+              </div>
+              <span class="calc-line-amount" id="platformFeeDisplay">$99</span>
+            </div>
+            <div class="calc-line">
+              <div class="calc-line-left">
+                <span class="calc-line-label">Usage estimate</span>
+                <span class="calc-line-note" id="usageNote">200 dials × 22 days × $0.015/dial</span>
+              </div>
+              <span class="calc-line-amount" id="usageDisplay">$66</span>
+            </div>
+            <div class="calc-line calc-total-line">
+              <span class="calc-line-label">Estimated monthly total</span>
+              <span class="calc-total-amount" id="totalDisplay">$165 / mo</span>
+            </div>
+          </div>
+
+          <div class="calc-vs-block">
+            <div class="calc-vs-row">
+              <div class="calc-vs-col calc-vs-us">
+                <div class="calc-vs-logo">
+                  <img src="/static/images/logo.png" alt="Open Humana" style="height:28px;width:auto;filter:brightness(0);">
+                </div>
+                <div class="calc-vs-amount-large" id="vsUsDisplay">$165</div>
+                <div class="calc-vs-sublabel">/ month</div>
+              </div>
+              <div class="calc-vs-center">
+                <div class="calc-vs-badge">vs</div>
+                <div class="calc-savings-pill" id="savingsPill">Save ~$4,835/mo</div>
+              </div>
+              <div class="calc-vs-col calc-vs-sdr">
+                <div class="calc-vs-sdr-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                </div>
+                <div class="calc-vs-amount-large calc-vs-sdr-amount">$5,000</div>
+                <div class="calc-vs-sublabel">/ month (human SDR)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-footer">
+          <button class="plan-btn plan-btn-fill calc-cta-btn" id="calcCtaBtn">Get Started</button>
+          <p class="calc-disclaimer">Usage estimate based on ~$0.015 per dial (carrier fees + AI voicemail synthesis). Actual costs vary by call duration and answer rate. No contract — cancel anytime.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="pricing-why">
+      <h2 class="why-title">Why hire Alex?</h2>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-plan-label">$99/mo</div>
+          <p class="why-text">300 calls a day. Every single day. Before your team finishes their morning coffee, Alex has already worked through your entire lead list, dropped personalized voicemails, and transferred every live answer straight to your phone.</p>
+          <p class="why-comparison">The average human SDR makes 40&ndash;60 calls a day. Alex makes 300.</p>
+          <p class="why-best-for">Best for solo founders and small teams testing outbound for the first time. This is a $99 bet that pays for itself the moment one deal closes.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-plan-label">$399/mo</div>
+          <p class="why-text">2,000 calls a day. Five Alex employees working in parallel, hitting your list from every angle across multiple campaigns &mdash; while your human closers only ever pick up calls that matter.</p>
+          <p class="why-comparison">One human SDR costs $4,000&ndash;$6,000 a month before benefits. This is five of them for $399.</p>
+          <p class="why-best-for">Best for growing sales teams who are done leaving pipeline on the table. If you have a list, Alex will work it &mdash; completely, every day, without fail.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="pricing-faq">
       <h2 class="faq-title">Frequently asked questions</h2>
       <div class="faq-grid">
+        <div class="faq-item">
+          <h3>What will my total monthly bill actually be?</h3>
+          <p>Your bill has two parts: the flat platform fee ($99 or $399/mo) plus pay-as-you-go usage. Usage is charged at $0.015 per dial. A customer on the $99 plan doing 100 dials per day across 22 working days will use approximately 2,200 dials, adding around $33 in usage. A heavier user doing 300 dials per day would add approximately $99 in usage on top of the platform fee. You can see your real-time usage and projected bill at any time inside your dashboard. No surprise charges — ever.</p>
+        </div>
         <div class="faq-item">
           <h3>Can I switch plans later?</h3>
           <p>Yes. Upgrade or downgrade at any time. Changes take effect on your next billing cycle.</p>

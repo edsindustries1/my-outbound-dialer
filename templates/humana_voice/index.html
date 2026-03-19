@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Humana Voice — Open Humana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/humana_voice/hv.css">
+</head>
+<body>
+<div class="hv-shell">
+
+  <!-- Sidebar -->
+  <aside class="hv-sidebar">
+    <div class="hv-sidebar-logo" onclick="window.location='/'">
+      <img src="/static/images/logo.png" alt="Open Humana">
+    </div>
+    <nav class="hv-sidebar-nav">
+      <a class="hv-nav-item" href="/dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Dashboard
+      </a>
+      <a class="hv-nav-item active" href="/humana-voice">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        Humana Voice
+      </a>
+      <a class="hv-nav-item" href="/#campaigns">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Campaigns
+      </a>
+      <a class="hv-nav-item" href="/#settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="hv-main">
+
+    <!-- Top bar -->
+    <div class="hv-topbar">
+      <h1>Humana Voice</h1>
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
+        {% if active_voice %}
+          <div class="hv-active-badge" id="hvActiveDot">
+            <div class="hv-active-badge-dot"></div>
+            Active: <span id="hvActiveName">{{ active_voice.voice_name }}</span>
+          </div>
+        {% else %}
+          <span class="hv-active-none" id="hvNoActive">No active voice set</span>
+          <div class="hv-active-badge" id="hvActiveDot" style="display:none;">
+            <div class="hv-active-badge-dot"></div>
+            Active: <span id="hvActiveName"></span>
+          </div>
+        {% endif %}
+        <a href="/logout" style="font-size:12px;color:var(--gads-text-tertiary);text-decoration:none;">Sign out</a>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="hv-body">
+
+      {% if not api_key_set %}
+      <div class="hv-api-warn">
+        ⚠️ <strong>FISH_AUDIO_API_KEY</strong> is not set. Add it to your environment secrets to enable voice library browsing, cloning, and previews.
+      </div>
+      {% endif %}
+
+      <!-- Tabs -->
+      <div class="hv-tabs">
+        <button class="hv-tab active" data-tab="library">Voice Library</button>
+        <button class="hv-tab" data-tab="clone">Clone Your Voice</button>
+        <button class="hv-tab" data-tab="my-voices">My Voices
+          {% if voices %}<span style="margin-left:5px;background:var(--gads-primary-light);border-radius:100px;padding:1px 7px;font-size:11px;">{{ voices|length }}</span>{% endif %}
+        </button>
+      </div>
+
+      <!-- Panel 1: Voice Library -->
+      <div class="hv-tab-panel active" id="panel-library">
+        <div class="hv-search-bar">
+          <input class="hv-search-input" id="hvSearchInput" type="text" placeholder="Search voices by name…">
+          <button class="hv-search-btn" id="hvSearchBtn">Search</button>
+        </div>
+        <div class="hv-grid" id="hvLibraryGrid"></div>
+        <div class="hv-load-more">
+          <button class="hv-btn" id="hvLoadMore" style="display:none;padding:10px 28px;font-size:13px;">Load More</button>
+        </div>
+      </div>
+
+      <!-- Panel 2: Clone Your Voice -->
+      <div class="hv-tab-panel" id="panel-clone">
+        <div class="hv-clone-grid">
+
+          <!-- Upload -->
+          <div class="hv-clone-card">
+            <h3>Upload Audio</h3>
+            <p>Upload a pre-recorded audio file to create your custom voice.</p>
+            <div class="hv-dropzone" id="hvDropzone">
+              <div class="hv-dropzone-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gads-text-tertiary)"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <p>Drag & drop or click to upload</p>
+              <small>MP3, WAV, M4A — max 50 MB</small>
+              <input type="file" id="hvFileInput" accept=".mp3,.wav,.m4a,audio/*" style="display:none;">
+            </div>
+            <div class="hv-file-chosen" id="hvFileChosen"></div>
+            <p class="hv-tip">💡 Use a clear 30–120 second recording with minimal background noise for best results.</p>
+            <label class="hv-label">Voice Name</label>
+            <input class="hv-input" id="hvUploadName" type="text" placeholder="e.g. My Sales Voice">
+            <div class="hv-progress" id="hvUploadProgress" style="display:none;">
+              <div class="hv-progress-bar" id="hvUploadProgressBar"></div>
+            </div>
+            <button class="hv-btn hv-btn-primary" id="hvUploadBtn" style="width:100%;justify-content:center;padding:10px;">Upload &amp; Create</button>
+          </div>
+
+          <!-- Record -->
+          <div class="hv-clone-card">
+            <h3>Record Live</h3>
+            <p>Record your voice directly in the browser to create a custom voice.</p>
+            <div class="hv-recorder">
+              <div class="hv-timer" id="hvTimer">00:00</div>
+              <button class="hv-record-btn" id="hvRecordBtn" title="Start / Stop recording">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><circle cx="12" cy="12" r="8"/></svg>
+              </button>
+              <div class="hv-waveform" id="hvWaveform"></div>
+            </div>
+            <audio id="hvRecordPlayback" controls style="display:none;width:100%;margin-bottom:12px;" class="hv-audio-preview"></audio>
+            <label class="hv-label">Voice Name</label>
+            <input class="hv-input" id="hvRecordName" type="text" placeholder="e.g. My Recorded Voice">
+            <button class="hv-btn hv-btn-primary" id="hvCreateRecordBtn" style="display:none;width:100%;justify-content:center;padding:10px;">Create Voice</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Panel 3: My Voices -->
+      <div class="hv-tab-panel" id="panel-my-voices">
+        <div class="hv-voices-list" id="hvMyVoicesList">
+          {% if voices %}
+            {% for v in voices %}
+            <div class="hv-voice-row" data-row-id="{{ v.voice_id }}">
+              <div class="hv-voice-row-main">
+                <div class="hv-voice-row-info">
+                  <div class="hv-voice-row-name">{{ v.voice_name }}</div>
+                  <div class="hv-voice-row-meta">
+                    <span class="hv-badge {{ 'hv-badge-cloned' if v.voice_type == 'cloned' else 'hv-badge-library' }}">{{ 'Cloned' if v.voice_type == 'cloned' else 'Library' }}</span>
+                    {% if v.is_active %}<span class="hv-badge hv-badge-active">Active</span>{% endif %}
+                  </div>
+                </div>
+                <div class="hv-voice-row-actions">
+                  {% if not v.is_active %}
+                  <button class="hv-btn hv-btn-sm hv-btn-success" onclick="hvSetActive('{{ v.voice_id }}',this)">Set Active</button>
+                  {% endif %}
+                  <button class="hv-btn hv-btn-sm" onclick="hvPreviewVoice('{{ v.voice_id }}',this)">▶ Preview</button>
+                  <button class="hv-btn hv-btn-sm" onclick="hvToggleExpand(this)">Style ▾</button>
+                  <button class="hv-btn hv-btn-sm hv-btn-danger" onclick="hvDeleteVoice('{{ v.voice_id }}','{{ v.voice_name|replace("'","\\&#39;") }}',this)">✕</button>
+                </div>
+              </div>
+              <div class="hv-voice-expand">
+                <div class="hv-style-row">
+                  <div class="hv-slider-wrap">
+                    <div class="hv-slider-label">
+                      <span>Speed</span>
+                      <span id="speedVal-{{ v.voice_id }}">{{ '%.1f'|format(v.style_speed or 1.0) }}x</span>
+                    </div>
+                    <input class="hv-slider" type="range" min="0.5" max="2.0" step="0.1" value="{{ v.style_speed or 1.0 }}"
+                      oninput="document.getElementById('speedVal-{{ v.voice_id }}').textContent=parseFloat(this.value).toFixed(1)+'x'"
+                      onchange="hvSaveStyle('{{ v.voice_id }}',this.value,null)">
+                  </div>
+                  <div>
+                    <div class="hv-label">Emotion</div>
+                    <select class="hv-select" onchange="hvSaveStyle('{{ v.voice_id }}',null,this.value)">
+                      {% for emo in ['neutral','excited','calm','serious','friendly'] %}
+                      <option value="{{ emo }}" {% if v.style_emotion == emo %}selected{% endif %}>{{ emo|capitalize }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="hv-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <div>No voices yet. Browse the library or clone your voice.</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div><!-- /.hv-body -->
+  </div><!-- /.hv-main -->
+
+</div><!-- /.hv-shell -->
+
+<!-- Toast -->
+<div class="hv-toast" id="hvToast"></div>
+
+<script src="/static/humana_voice/hv.js"></script>
+</body>
+</html>

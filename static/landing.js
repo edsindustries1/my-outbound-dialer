@@ -11,14 +11,22 @@
   var nav = document.querySelector('.nav');
   var navProgress = document.getElementById('navProgress');
 
+  var scrollTicking = false;
   function onScroll() {
-    var scrollY = window.scrollY;
-    if (nav) nav.classList.toggle('scrolled', scrollY > 60);
-    if (navProgress) {
-      var docH = document.documentElement.scrollHeight - window.innerHeight;
-      var progress = docH > 0 ? Math.min(scrollY / docH, 1) : 0;
-      navProgress.style.transform = 'scaleX(' + progress + ')';
-    }
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(function () {
+      var scrollY = window.scrollY;
+      if (nav) nav.classList.toggle('scrolled', scrollY > 60);
+      if (navProgress) {
+        var docH = document.documentElement.scrollHeight - window.innerHeight;
+        var progress = docH > 0 ? Math.min(scrollY / docH, 1) : 0;
+        navProgress.style.transform = 'scaleX(' + progress + ')';
+      }
+      var floatingCta = document.getElementById('floatingCta');
+      if (floatingCta) floatingCta.classList.toggle('visible', scrollY > 500);
+      scrollTicking = false;
+    });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
@@ -108,14 +116,21 @@
   if (canvas) {
     var ctx = canvas.getContext('2d');
     var particles = [];
-    var particleCount = 50;
+    var particleCount = 35;
+    var heroCanvasPaused = false;
+    var heroCanvasId = null;
+    var heroFrame = 0;
 
     function resizeCanvas() {
       canvas.width = canvas.parentElement.offsetWidth;
       canvas.height = canvas.parentElement.offsetHeight;
     }
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeCanvas, 150);
+    });
 
     for (var i = 0; i < particleCount; i++) {
       particles.push({
@@ -128,7 +143,11 @@
       });
     }
 
+    var connDistSq = 120 * 120;
     function drawParticles() {
+      if (heroCanvasPaused) { heroCanvasId = null; return; }
+      heroFrame++;
+      if (heroFrame % 2 !== 0) { heroCanvasId = requestAnimationFrame(drawParticles); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (var j = 0; j < particles.length; j++) {
         var p = particles[j];
@@ -142,23 +161,36 @@
         ctx.fillStyle = 'rgba(255,255,255,' + p.a + ')';
         ctx.fill();
       }
+      ctx.lineWidth = 0.5;
       for (var a = 0; a < particles.length; a++) {
         for (var b = a + 1; b < particles.length; b++) {
           var dx = particles[a].x - particles[b].x;
           var dy = particles[a].y - particles[b].y;
-          var dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
+          var dSq = dx * dx + dy * dy;
+          if (dSq < connDistSq) {
+            var alpha = 0.06 * (1 - Math.sqrt(dSq) / 120);
             ctx.beginPath();
             ctx.moveTo(particles[a].x, particles[a].y);
             ctx.lineTo(particles[b].x, particles[b].y);
-            ctx.strokeStyle = 'rgba(255,255,255,' + (0.06 * (1 - dist / 120)) + ')';
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = 'rgba(255,255,255,' + alpha + ')';
             ctx.stroke();
           }
         }
       }
-      requestAnimationFrame(drawParticles);
+      heroCanvasId = requestAnimationFrame(drawParticles);
     }
+
+    if ('IntersectionObserver' in window) {
+      var heroCanvasObs = new IntersectionObserver(function (entries) {
+        heroCanvasPaused = !entries[0].isIntersecting;
+        if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+      }, { threshold: 0 });
+      heroCanvasObs.observe(canvas.parentElement);
+    }
+    document.addEventListener('visibilitychange', function () {
+      heroCanvasPaused = document.hidden;
+      if (!heroCanvasPaused && !heroCanvasId) drawParticles();
+    });
     drawParticles();
   }
 
@@ -221,7 +253,8 @@
             '<div class="lead-success" id="leadSuccess">' +
               '<div class="lead-success-icon" style="font-size:3rem;color:#22c55e;">&#10003;</div>' +
               '<h3>You\'re In!</h3>' +
-              '<p>Check your email for Alex\'s resume. Our team will reach out within 15 minutes.</p>' +
+              '<p>Check your email for Alex\'s full resume. It\'s so detailed it might land in your <strong>Promotions</strong> tab — be sure to check there too!</p>' +
+              '<p style="margin-top:6px;font-size:0.85rem;opacity:0.7;">Our team will reach out within 15 minutes.</p>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -299,6 +332,128 @@
   });
 
   /* ==========================================================
+     DEMO REQUEST MODAL
+     ========================================================== */
+  var demoModalHTML =
+    '<div class="lead-overlay" id="demoOverlay">' +
+      '<div class="lead-backdrop" id="demoBackdrop"></div>' +
+      '<div class="lead-modal" id="demoModal">' +
+        '<button class="lead-close" id="demoClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+        '<div class="lead-modal-inner">' +
+          '<div class="lead-left">' +
+            '<div class="lead-left-content">' +
+              '<div class="lead-logo-wrap"><img src="/static/images/logo.png" alt="Open Humana" class="lead-logo-img"></div>' +
+              '<h2>Book a Free Demo</h2>' +
+              '<p>See Alex in action. We\'ll walk you through a live call demo tailored to your industry — no commitment, no credit card.</p>' +
+              '<div class="lead-features">' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Live outbound calling demo</div>' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> AI voicemail drop preview</div>' +
+                '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Live transfer to your phone — live</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="lead-right">' +
+            '<h3>Request Your Demo</h3>' +
+            '<p class="lead-right-sub">Fill in your details and one of our digital employees will reach out shortly.</p>' +
+            '<form class="lead-form" id="demoForm">' +
+              '<div class="lead-field">' +
+                '<label>Full Name *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" name="name" required placeholder="John Smith"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Phone Number *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><input type="tel" name="phone" required placeholder="+1 (555) 000-0000"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Email Address *</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><input type="email" name="email" required placeholder="john@company.com"></div>' +
+              '</div>' +
+              '<div class="lead-field">' +
+                '<label>Company / Industry</label>' +
+                '<div class="lead-input-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><input type="text" name="company" placeholder="Acme Corp / Real Estate"></div>' +
+              '</div>' +
+              '<button type="submit" class="lead-submit" id="demoSubmit"><span>Request Free Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
+            '</form>' +
+            '<div class="lead-success" id="demoSuccess">' +
+              '<div class="lead-success-icon" style="font-size:3rem;color:#22c55e;">&#10003;</div>' +
+              '<h3>Demo Requested!</h3>' +
+              '<p>Thank you for your interest! One of our digital employees will reach out to you shortly. Keep an eye on your inbox.</p>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  var demoContainer = document.createElement('div');
+  demoContainer.innerHTML = demoModalHTML;
+  document.body.appendChild(demoContainer);
+
+  var demoOverlay = document.getElementById('demoOverlay');
+  var demoBackdrop = document.getElementById('demoBackdrop');
+  var demoModal = document.getElementById('demoModal');
+  var demoCloseBtn = document.getElementById('demoClose');
+  var demoForm = document.getElementById('demoForm');
+  var demoSuccess = document.getElementById('demoSuccess');
+
+  function openDemoModal() {
+    demoOverlay.classList.add('active');
+    setTimeout(function () { demoModal.classList.add('show'); }, 50);
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDemoModal() {
+    demoModal.classList.remove('show');
+    setTimeout(function () { demoOverlay.classList.remove('active'); }, 400);
+    document.body.style.overflow = '';
+  }
+
+  demoCloseBtn.addEventListener('click', closeDemoModal);
+  demoBackdrop.addEventListener('click', closeDemoModal);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDemoModal(); });
+
+  document.querySelectorAll('[data-open-demo]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openDemoModal();
+    });
+  });
+
+  demoForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var submitBtn = document.getElementById('demoSubmit');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="lead-spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Sending...';
+
+    var formData = {
+      name: demoForm.querySelector('[name="name"]').value.trim(),
+      phone: demoForm.querySelector('[name="phone"]').value.trim(),
+      email: demoForm.querySelector('[name="email"]').value.trim(),
+      company: demoForm.querySelector('[name="company"]').value.trim()
+    };
+
+    try {
+      await fetch('/api/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+    } catch (err) { /* still show success */ }
+
+    demoForm.style.display = 'none';
+    demoSuccess.style.display = 'flex';
+    setTimeout(function () { demoSuccess.classList.add('show'); }, 50);
+
+    setTimeout(closeDemoModal, 4000);
+    setTimeout(function () {
+      demoForm.style.display = '';
+      demoSuccess.style.display = '';
+      demoSuccess.classList.remove('show');
+      demoForm.reset();
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Request Free Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    }, 5000);
+  });
+
+  /* ==========================================================
      ALEX CHAT WIDGET
      ========================================================== */
   var chatHTML =
@@ -310,13 +465,13 @@
       '<div class="alex-chat-header">' +
         '<div class="alex-chat-avatar">A</div>' +
         '<div class="alex-chat-header-info">' +
-          '<div class="alex-chat-header-name">Alex — Digital BDR</div>' +
+          '<div class="alex-chat-header-name">Alex</div>' +
           '<div class="alex-chat-header-status">Online now</div>' +
         '</div>' +
         '<button class="alex-chat-close" id="alexClose"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
       '</div>' +
       '<div class="alex-chat-messages" id="alexMessages">' +
-        '<div class="alex-msg bot">Hi! I\'m Alex, your Digital BDR at Open Humana. How can I help you scale your outbound today?</div>' +
+        '<div class="alex-msg bot">Hi! I\'m Alex at Open Humana. How can I help you scale your outbound today?</div>' +
       '</div>' +
       '<div class="alex-chat-input-area">' +
         '<input class="alex-chat-input" id="alexInput" type="text" placeholder="Type your message..." autocomplete="off">' +
@@ -334,6 +489,7 @@
   var messagesEl = document.getElementById('alexMessages');
   var inputEl = document.getElementById('alexInput');
   var sendBtn = document.getElementById('alexSend');
+  var chatHistory = [];
 
   function toggleChat() {
     chatWindow.classList.toggle('open');
@@ -361,6 +517,88 @@
     return msg;
   }
 
+  var _chatMsgCount = 0;
+
+  function _randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function _sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+  var _adjacentKeys = {
+    'a':'s','b':'v','c':'x','d':'s','e':'w','f':'g','g':'h','h':'j','i':'o','j':'k',
+    'k':'l','l':'k','m':'n','n':'b','o':'p','p':'o','q':'w','r':'t','s':'d','t':'r',
+    'u':'y','v':'c','w':'e','x':'z','y':'u','z':'x'
+  };
+
+  function _stripLeadTag(text) {
+    return text.replace(/\[LEAD_CAPTURED:.*?\]/g, '').trim();
+  }
+
+  async function _simulateTyping(botMsg, text) {
+    _chatMsgCount++;
+    var cleanText = _stripLeadTag(text);
+    if (!cleanText) return;
+
+    var thinkDelay;
+    if (cleanText.length < 60) thinkDelay = _randInt(800, 1200);
+    else if (cleanText.length <= 150) thinkDelay = _randInt(1400, 2200);
+    else thinkDelay = _randInt(2200, 3500);
+    await _sleep(thinkDelay);
+
+    var doTypo = (_chatMsgCount % 6 === 0);
+    var typoWordIdx = -1;
+    var typoCharPos = -1;
+    if (doTypo) {
+      var words = cleanText.split(' ');
+      var candidates = [];
+      for (var w = 1; w < words.length - 1; w++) {
+        if (words[w].length >= 5 && !/[@.\/\d]/.test(words[w])) candidates.push(w);
+      }
+      if (candidates.length > 0) {
+        typoWordIdx = candidates[_randInt(0, candidates.length - 1)];
+        var charStart = 0;
+        for (var wi = 0; wi < typoWordIdx; wi++) charStart += words[wi].length + 1;
+        typoCharPos = charStart + _randInt(2, 3);
+      } else {
+        doTypo = false;
+      }
+    }
+
+    var rendered = '';
+    var typoInserted = false;
+    var i = 0;
+    while (i < cleanText.length) {
+      var ch = cleanText[i];
+
+      if (doTypo && !typoInserted && i === typoCharPos) {
+        var wrongChar = _adjacentKeys[ch.toLowerCase()] || 'e';
+        rendered += wrongChar;
+        botMsg.textContent = rendered;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        await _sleep(_randInt(400, 700));
+        var removeCount = _randInt(1, 2);
+        for (var r = 0; r < removeCount && rendered.length > 0; r++) {
+          rendered = rendered.slice(0, -1);
+          botMsg.textContent = rendered;
+          await _sleep(60);
+        }
+        typoInserted = true;
+        i = i - removeCount + 1;
+        if (i < 0) i = 0;
+        continue;
+      }
+
+      rendered += ch;
+      botMsg.textContent = rendered;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      i++;
+
+      var delay = _randInt(35, 65);
+      if (ch === ' ') delay += 20;
+      else if (ch === ',') delay = _randInt(180, 280);
+      else if (ch === '.' || ch === '?' || ch === '!') delay = _randInt(350, 550);
+      await _sleep(delay);
+    }
+  }
+
   async function sendMessage() {
     var text = inputEl.value.trim();
     if (!text) return;
@@ -373,11 +611,59 @@
       var resp = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text, history: chatHistory })
       });
-      var data = await resp.json();
+
+      if (!resp.ok) {
+        typingEl.remove();
+        addMessage('Sorry, something went wrong. Please try again.', 'bot');
+        sendBtn.disabled = false;
+        inputEl.focus();
+        return;
+      }
+
+      var fullText = '';
+      var reader = resp.body.getReader();
+      var decoder = new TextDecoder();
+      var sseBuffer = '';
+
+      while (true) {
+        var result = await reader.read();
+        if (result.done) break;
+        sseBuffer += decoder.decode(result.value, { stream: true });
+        var eventLines = sseBuffer.split('\n');
+        sseBuffer = eventLines.pop();
+        for (var li = 0; li < eventLines.length; li++) {
+          var line = eventLines[li].trim();
+          if (!line.startsWith('data: ')) continue;
+          var dataStr = line.substring(6);
+          if (dataStr === '[DONE]') continue;
+          try {
+            var parsed = JSON.parse(dataStr);
+            if (parsed.text) fullText += parsed.text;
+          } catch (e) {}
+        }
+      }
+      if (sseBuffer.trim().startsWith('data: ') && sseBuffer.trim().substring(6) !== '[DONE]') {
+        try {
+          var lastParsed = JSON.parse(sseBuffer.trim().substring(6));
+          if (lastParsed.text) fullText += lastParsed.text;
+        } catch (e) {}
+      }
+
       typingEl.remove();
-      addMessage(data.reply || data.error || 'Sorry, something went wrong.', 'bot');
+
+      if (!fullText) {
+        addMessage('Sorry, I didn\'t catch that. Could you try again?', 'bot');
+      } else {
+        var botMsg = addMessage('', 'bot');
+        await _simulateTyping(botMsg, fullText);
+      }
+
+      var cleanForHistory = _stripLeadTag(fullText);
+      chatHistory.push({ role: 'user', text: text });
+      chatHistory.push({ role: 'model', text: cleanForHistory });
+      if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
     } catch (err) {
       typingEl.remove();
       addMessage('Connection error. Please try again.', 'bot');
@@ -487,11 +773,33 @@
     }, 400);
   }
 
+  var testimonialTimer = null;
+  var testimonialVisible = false;
+  function startTestimonialTimer() {
+    if (testimonialTimer) return;
+    testimonialTimer = setInterval(showTestimonials, 5000);
+  }
+  function stopTestimonialTimer() {
+    if (testimonialTimer) { clearInterval(testimonialTimer); testimonialTimer = null; }
+  }
   if (redditFeed) {
     redditFeed.style.transition = 'opacity .4s ease';
     shuffleArray(testimonials);
     showTestimonials();
-    setInterval(showTestimonials, 5000);
+    if ('IntersectionObserver' in window) {
+      var feedObs = new IntersectionObserver(function (entries) {
+        testimonialVisible = entries[0].isIntersecting;
+        if (testimonialVisible) startTestimonialTimer();
+        else stopTestimonialTimer();
+      }, { threshold: 0 });
+      feedObs.observe(redditFeed);
+    } else {
+      startTestimonialTimer();
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopTestimonialTimer();
+      else if (testimonialVisible) startTestimonialTimer();
+    });
   }
 
   /* ========== REDDIT VOTE BUTTONS ========== */
@@ -526,5 +834,6 @@
       });
     });
   }
+
 
 })();

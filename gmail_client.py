@@ -50,13 +50,16 @@ def send_email(to_email, subject, html_body, text_body=None, csv_attachment=None
                 }
             )
 
-        # Prepare Resend payload
+        reply_to = os.getenv("RESEND_REPLY_TO", "").strip()
+
         payload = {
             "from": msg["From"],
             "to": [msg["To"]],
             "subject": msg["Subject"],
             "html": html_body,
         }
+        if reply_to:
+            payload["reply_to"] = reply_to
         if text_body:
             payload["text"] = text_body
         if attachments:

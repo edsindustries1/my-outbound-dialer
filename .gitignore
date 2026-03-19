@@ -18,3 +18,13 @@ venv/
 .venv/
 node_modules/
 users.json
+repomix-output.*
+repo.txt
+attached_assets/
+token_response.json
+*.log
+.breakpoints
+generated-icon.png
+server.js
+package.json
+package-lock.json

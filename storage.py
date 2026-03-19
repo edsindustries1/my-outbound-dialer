@@ -1,7 +1,7 @@
 """
 storage.py - In-memory storage for call states and campaign data.
 Manages call tracking, campaign configuration, and status reporting.
-Persists completed call logs to JSON file for historical reporting.
+Persists to PostgreSQL via write-through and to JSON file as backup.
 Supports per-user data isolation via user_id parameter.
 """
 
@@ -9,11 +9,30 @@ import os
 import re
 import json
 import threading
+import logging
 from datetime import datetime, timedelta
 
 lock = threading.Lock()
 
 call_states = {}
+
+_db_logger = logging.getLogger("voicemail_app.db_sync")
+
+_campaign_db_ids = {}
+
+
+def _db_write(fn):
+    try:
+        from app import app as _flask_app
+        with _flask_app.app_context():
+            fn()
+    except Exception as e:
+        _db_logger.warning(f"DB write-through failed: {e}")
+
+
+def _db_write_async(fn):
+    t = threading.Thread(target=_db_write, args=(fn,), daemon=True)
+    t.start()
 
 LOGS_DIR = "logs"
 
@@ -42,13 +61,20 @@ def get_user_for_call(call_control_id):
 def _default_campaign():
     return {
         "active": False,
+        "is_test": False,
         "audio_url": None,
         "transfer_number": None,
         "numbers": [],
         "dialed_count": 0,
         "stop_requested": False,
+        "paused": False,
         "dial_mode": "sequential",
         "batch_size": 5,
+        "gatekeeper_navigator_enabled": False,
+        "prospect_name": "",
+        "prospect_company": "",
+        "navigator_voice_id": None,
+        "navigator_knowledge_base": "",
     }
 
 
@@ -71,7 +97,19 @@ def get_voicemail_url(user_id=None):
     return DEFAULT_VOICEMAIL_URL
 
 
-def save_voicemail_url(url, user_id=None):
+def get_voicemail_script(user_id=None):
+    settings_file = _user_file(user_id, "app_settings.json")
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+                return settings.get("voicemail_script", "")
+    except Exception:
+        pass
+    return ""
+
+
+def save_voicemail_url(url, user_id=None, script=None):
     d = _user_logs_dir(user_id)
     os.makedirs(d, exist_ok=True)
     settings_file = _user_file(user_id, "app_settings.json")
@@ -83,6 +121,8 @@ def save_voicemail_url(url, user_id=None):
     except Exception:
         pass
     settings["voicemail_url"] = url
+    if script is not None:
+        settings["voicemail_script"] = script
     settings["updated_at"] = datetime.utcnow().isoformat()
     with open(settings_file, "w") as f:
         json.dump(settings, f, indent=2)
@@ -116,6 +156,35 @@ def save_voice_preset(preset, user_id=None):
     with open(settings_file, "w") as f:
         json.dump(settings, f, indent=2)
     return preset
+
+
+def get_custom_variables(user_id=None):
+    settings_file = _user_file(user_id, "app_settings.json")
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+                return settings.get("custom_variables", [])
+    except Exception:
+        pass
+    return []
+
+def save_custom_variables(variables, user_id=None):
+    d = _user_logs_dir(user_id)
+    os.makedirs(d, exist_ok=True)
+    settings_file = _user_file(user_id, "app_settings.json")
+    settings = {}
+    try:
+        if os.path.exists(settings_file):
+            with open(settings_file, "r") as f:
+                settings = json.load(f)
+    except Exception:
+        pass
+    settings["custom_variables"] = variables
+    settings["updated_at"] = datetime.utcnow().isoformat()
+    with open(settings_file, "w") as f:
+        json.dump(settings, f, indent=2)
+    return variables
 
 
 def _load_call_history(user_id=None):
@@ -155,6 +224,7 @@ def persist_call_log(call_control_id):
             end = state.get("ring_end") or now.timestamp()
             ring_duration = round(end - state["ring_start"])
         ts = state.get("created_at", now.strftime("%Y-%m-%dT%H:%M:%S"))
+        snapshot = dict(state)
         entry = {
             "call_id": call_control_id,
             "timestamp": ts,
@@ -171,6 +241,7 @@ def persist_call_log(call_control_id):
             "hangup_cause": state.get("hangup_cause"),
             "transcript": state.get("transcript", []),
             "recording_url": state.get("recording_url"),
+            "vm_duration": state.get("vm_duration"),
         }
     cutoff_dt = datetime.utcnow() - timedelta(days=7)
     with _file_lock:
@@ -182,6 +253,31 @@ def persist_call_log(call_control_id):
             if h_dt and h_dt >= cutoff_dt:
                 cleaned.append(h)
         _save_call_history(cleaned, user_id)
+
+    _cid = call_control_id
+    _ring_dur = ring_duration
+    def _persist():
+        from models import CallRecord, db
+        rec = CallRecord.query.filter_by(call_control_id=_cid).first()
+        if not rec:
+            return
+        rec.status = snapshot.get("status", rec.status)
+        rec.amd_result = snapshot.get("amd_result")
+        rec.machine_detected = snapshot.get("machine_detected")
+        rec.transferred = snapshot.get("transferred", False)
+        rec.voicemail_dropped = snapshot.get("voicemail_dropped", False)
+        rec.hangup_cause = snapshot.get("hangup_cause")
+        rec.status_description = snapshot.get("status_description", "") or ""
+        rec.status_color = snapshot.get("status_color", "blue") or "blue"
+        rec.recording_url = snapshot.get("recording_url")
+        rec.vm_duration = snapshot.get("vm_duration")
+        rec.from_number = snapshot.get("from_number", "") or ""
+        rec.ring_duration = _ring_dur
+        transcript = snapshot.get("transcript", [])
+        rec.transcript = json.dumps(transcript) if transcript else "[]"
+        rec.updated_at = datetime.utcnow()
+        db.session.commit()
+    _db_write_async(_persist)
 
 
 def clear_call_history(user_id=None):
@@ -198,7 +294,55 @@ def _parse_ts(ts_str):
     return None
 
 
+def _call_record_to_entry(rec):
+    transcript = []
+    if rec.transcript:
+        try:
+            transcript = json.loads(rec.transcript)
+        except Exception:
+            pass
+    return {
+        "call_id": rec.call_control_id,
+        "timestamp": rec.created_at.strftime("%Y-%m-%dT%H:%M:%S") if rec.created_at else "",
+        "number": rec.phone_number,
+        "from_number": rec.from_number or "",
+        "status": rec.status,
+        "machine_detected": rec.machine_detected,
+        "transferred": rec.transferred,
+        "voicemail_dropped": rec.voicemail_dropped,
+        "ring_duration": rec.ring_duration,
+        "status_description": rec.status_description or "",
+        "status_color": rec.status_color or "",
+        "amd_result": rec.amd_result,
+        "hangup_cause": rec.hangup_cause,
+        "transcript": transcript,
+        "recording_url": rec.recording_url,
+        "vm_duration": rec.vm_duration,
+    }
+
+
 def get_call_history(start_date=None, end_date=None, user_id=None):
+    try:
+        from app import app as _flask_app
+        from models import CallRecord, db
+        with _flask_app.app_context():
+            query = CallRecord.query
+            if user_id is not None:
+                query = query.filter_by(user_id=user_id)
+            if start_date:
+                start_dt = _parse_ts(start_date)
+                if start_dt:
+                    query = query.filter(CallRecord.created_at >= start_dt)
+            if end_date:
+                end_dt = _parse_ts(end_date)
+                if end_dt:
+                    query = query.filter(CallRecord.created_at <= end_dt)
+            query = query.order_by(CallRecord.created_at.desc()).limit(500)
+            records = query.all()
+            return [_call_record_to_entry(r) for r in records]
+    except Exception as e:
+        _db_logger.debug(f"DB call history read failed, falling back to JSON: {e}")
+
     with _file_lock:
         history = _load_call_history(user_id)
     if not start_date and not end_date:
@@ -235,20 +379,32 @@ def reset_campaign(user_id=None):
                 _cid_to_user.pop(cid, None)
 
 
-def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None):
+def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None, is_test=False,
+                 gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None, navigator_knowledge_base=""):
     key = _campaign_key(user_id)
+    _get_pause_event(user_id).set()
+    nums_list = list(numbers)
+    actual_batch = max(1, min(int(batch_size), 50))
+    actual_delay = max(1, min(10, int(dial_delay)))
     with lock:
         camp = _default_campaign()
         camp["active"] = True
+        camp["is_test"] = is_test
         camp["audio_url"] = audio_url
         camp["transfer_number"] = transfer_number
-        camp["numbers"] = list(numbers)
+        camp["numbers"] = nums_list
         camp["dialed_count"] = 0
         camp["stop_requested"] = False
+        camp["paused"] = False
         camp["dial_mode"] = dial_mode
-        camp["batch_size"] = max(1, min(int(batch_size), 50))
-        camp["dial_delay"] = max(1, min(10, int(dial_delay)))
+        camp["batch_size"] = actual_batch
+        camp["dial_delay"] = actual_delay
         camp["from_number"] = from_number
+        camp["gatekeeper_navigator_enabled"] = bool(gatekeeper_navigator_enabled)
+        camp["prospect_name"] = prospect_name or ""
+        camp["prospect_company"] = prospect_company or ""
+        camp["navigator_voice_id"] = navigator_voice_id or None
+        camp["navigator_knowledge_base"] = navigator_knowledge_base or ""
         _campaigns[key] = camp
         if user_id is None:
             call_states.clear()
@@ -259,6 +415,42 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
                 del call_states[cid]
                 _cid_to_user.pop(cid, None)
 
+    if user_id is not None:
+        existing_db_id = _campaign_db_ids.get(key)
+        def _persist():
+            from models import Campaign, db
+            if existing_db_id:
+                existing = Campaign.query.get(existing_db_id)
+                if existing and existing.status == 'active':
+                    existing.updated_at = datetime.utcnow()
+                    db.session.commit()
+                    _db_logger.info(f"Campaign {existing_db_id} resumed ({existing.dialed_count}/{existing.total_count} dialed, {len(nums_list)} remaining)")
+                    return
+            c = Campaign(
+                user_id=user_id,
+                status='active',
+                numbers=json.dumps(nums_list),
+                dialed_count=0,
+                total_count=len(nums_list),
+                dial_mode=dial_mode,
+                batch_size=actual_batch,
+                dial_delay=actual_delay,
+                audio_url=audio_url,
+                transfer_number=transfer_number,
+                from_number=from_number,
+                is_test=is_test,
+                gatekeeper_navigator_enabled=bool(gatekeeper_navigator_enabled),
+                prospect_name=prospect_name or "",
+                prospect_company=prospect_company or "",
+                navigator_voice_id=navigator_voice_id,
+                navigator_knowledge_base=navigator_knowledge_base or "",
+            )
+            db.session.add(c)
+            db.session.commit()
+            _campaign_db_ids[key] = c.id
+            _db_logger.info(f"Campaign {c.id} persisted for user {user_id} ({len(nums_list)} numbers)")
+        _db_write(_persist)
+
 
 def stop_campaign(user_id=None):
     key = _campaign_key(user_id)
@@ -267,22 +459,123 @@ def stop_campaign(user_id=None):
         if camp:
             camp["stop_requested"] = True
             camp["active"] = False
+            camp["paused"] = False
+    _get_pause_event(user_id).set()
+    _get_transfer_event(user_id).set()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'stopped'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
+
+
+def pause_campaign(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp and camp["active"] and not camp["stop_requested"]:
+            camp["paused"] = True
+    _get_pause_event(user_id).clear()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'paused'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
+
+
+def resume_campaign(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp and camp["active"]:
+            camp["paused"] = False
+    _get_pause_event(user_id).set()
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'active'
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
+
+
+def is_campaign_paused(user_id=None):
+    key = _campaign_key(user_id)
+    with lock:
+        camp = _campaigns.get(key)
+        if camp:
+            return camp.get("paused", False)
+        return False
+
+
+_pause_events = {}
+
+def _get_pause_event(user_id=None):
+    key = _campaign_key(user_id)
+    if key not in _pause_events:
+        evt = threading.Event()
+        evt.set()
+        _pause_events[key] = evt
+    return _pause_events[key]
+
+
+def wait_if_campaign_paused(user_id=None):
+    _get_pause_event(user_id).wait()
 
 
 def mark_campaign_complete(user_id=None):
     key = _campaign_key(user_id)
+    dialed = 0
     with lock:
         camp = _campaigns.get(key)
         if camp:
             camp["active"] = False
+            dialed = camp.get("dialed_count", 0)
+    db_id = _campaign_db_ids.get(key)
+    if db_id:
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.status = 'completed'
+                c.dialed_count = dialed
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write_async(_persist)
 
 
 def increment_dialed(user_id=None):
     key = _campaign_key(user_id)
+    new_count = 0
     with lock:
         camp = _campaigns.get(key)
         if camp:
             camp["dialed_count"] += 1
+            new_count = camp["dialed_count"]
+    db_id = _campaign_db_ids.get(key)
+    if db_id and new_count > 0:
+        _count = new_count
+        def _persist():
+            from models import Campaign, db
+            c = Campaign.query.get(db_id)
+            if c:
+                c.dialed_count = _count
+                c.updated_at = datetime.utcnow()
+                db.session.commit()
+        _db_write(_persist)
 
 
 def is_campaign_active(user_id=None):
@@ -323,9 +616,46 @@ def create_call_state(call_control_id, number, user_id=None):
             "hangup_cause": None,
             "transcript": [],
             "user_id": user_id,
+            "ai_gatekeeper": False,
+            "gatekeeper_handled": False,
+            "voicemail_confirmed": False,
+            "beep_detected": False,
+            "gatekeeper_mode_active": False,
+            "gatekeeper_type": None,
+            "gatekeeper_turn_count": 0,
+            "gatekeeper_resolved": False,
+            "navigator_voice_id": None,
         }
         if user_id is not None:
             _cid_to_user[call_control_id] = user_id
+    _cid = call_control_id
+    _num = number
+    _uid = user_id
+    _from = from_number
+    key = _campaign_key(user_id)
+    _camp_db_id = _campaign_db_ids.get(key)
+    def _persist():
+        from models import CallRecord, db
+        from sqlalchemy.exc import IntegrityError
+        existing = CallRecord.query.filter_by(call_control_id=_cid).first()
+        if existing:
+            return
+        rec = CallRecord(
+            call_control_id=_cid,
+            campaign_id=_camp_db_id,
+            user_id=_uid,
+            phone_number=_num,
+            from_number=_from,
+            status='initiated',
+            status_description='Call initiated',
+            status_color='blue',
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+    _db_write_async(_persist)
 
 
 def get_call_state(call_control_id):
@@ -336,12 +666,57 @@ def get_call_state(call_control_id):
         return None
 
 
+_call_update_counters = {}
+
 def update_call_state(call_control_id, **kwargs):
     with lock:
         if call_control_id in call_states:
             call_states[call_control_id].update(kwargs)
-            return True
-        return False
+            _call_update_counters[call_control_id] = _call_update_counters.get(call_control_id, 0) + 1
+            should_sync = False
+            status = kwargs.get("status")
+            if status and status.lower() in TERMINAL_STATUSES:
+                should_sync = True
+            elif any(k in kwargs for k in ("transferred", "voicemail_dropped", "amd_result", "hangup_cause", "recording_url")):
+                should_sync = True
+            elif _call_update_counters[call_control_id] % 10 == 0:
+                should_sync = True
+            if should_sync:
+                snapshot = dict(call_states[call_control_id])
+            else:
+                snapshot = None
+        else:
+            return False
+
+    if snapshot:
+        _cid = call_control_id
+        def _persist():
+            from models import CallRecord, db
+            rec = CallRecord.query.filter_by(call_control_id=_cid).first()
+            if not rec:
+                return
+            rec.status = snapshot.get("status", rec.status)
+            rec.amd_result = snapshot.get("amd_result", rec.amd_result)
+            rec.machine_detected = snapshot.get("machine_detected", rec.machine_detected)
+            rec.transferred = snapshot.get("transferred", rec.transferred)
+            rec.voicemail_dropped = snapshot.get("voicemail_dropped", rec.voicemail_dropped)
+            rec.hangup_cause = snapshot.get("hangup_cause", rec.hangup_cause)
+            rec.status_description = snapshot.get("status_description", rec.status_description) or ""
+            rec.status_color = snapshot.get("status_color", rec.status_color) or "blue"
+            rec.recording_url = snapshot.get("recording_url", rec.recording_url)
+            rec.vm_duration = snapshot.get("vm_duration", rec.vm_duration)
+            rec.from_number = snapshot.get("from_number", rec.from_number) or ""
+            transcript = snapshot.get("transcript", [])
+            if transcript:
+                rec.transcript = json.dumps(transcript)
+            ring_start = snapshot.get("ring_start")
+            ring_end = snapshot.get("ring_end")
+            if ring_start and ring_end:
+                rec.ring_duration = round(ring_end - ring_start)
+            rec.updated_at = datetime.utcnow()
+            db.session.commit()
+        _db_write_async(_persist)
+    return True
 
 
 def mark_transferred(call_control_id):
@@ -368,12 +743,26 @@ def append_transcript(call_control_id, text, track="inbound", is_final=True):
 def mark_voicemail_dropped(call_control_id):
     with lock:
         state = call_states.get(call_control_id)
-        if state and not state["voicemail_dropped"]:
+        if state and not state["voicemail_dropped"] and not state.get("transferred") and not state.get("gatekeeper_handled"):
             state["voicemail_dropped"] = True
             state["playback_started"] = True
             state["status"] = "voicemail_playing"
             return True
         return False
+
+
+def claim_call_action(call_control_id, action):
+    """Atomically claim an action on a call. Returns True only if no conflicting action has been taken.
+    Actions: 'voicemail', 'transfer', 'gatekeeper_transfer', 'hangup'"""
+    with lock:
+        state = call_states.get(call_control_id)
+        if not state:
+            return False
+        if state.get("voicemail_dropped") or state.get("transferred") or state.get("gatekeeper_handled"):
+            return False
+        if action in ("transfer", "gatekeeper_transfer"):
+            state["gatekeeper_handled"] = True
+        return True
 
 
 def call_states_snapshot():
@@ -384,6 +773,21 @@ def clear_call_states():
     with lock:
         call_states.clear()
         _cid_to_user.clear()
+
+
+TERMINAL_STATUSES = {"completed", "hangup", "hungup", "failed", "busy", "no_answer", "error"}
+
+
+def count_active_calls(user_id=None):
+    """Count in-progress calls for a user (excludes terminal statuses)."""
+    with lock:
+        count = 0
+        for state in call_states.values():
+            if user_id is not None and state.get("user_id") != user_id:
+                continue
+            if state.get("status", "").lower() not in TERMINAL_STATUSES:
+                count += 1
+        return count
 
 
 _transfer_pause_events = {}
@@ -483,6 +887,7 @@ def get_all_statuses(user_id=None):
                 "hangup_cause": state.get("hangup_cause"),
                 "transcript": state.get("transcript", []),
                 "recording_url": state.get("recording_url"),
+                "vm_duration": state.get("vm_duration"),
             })
             live_cids.add(cid)
 
@@ -510,6 +915,7 @@ def get_all_statuses(user_id=None):
             "hangup_cause": entry.get("hangup_cause"),
             "transcript": entry.get("transcript", []),
             "recording_url": entry.get("recording_url"),
+            "vm_duration": entry.get("vm_duration"),
         })
 
     combined = live_results + history_results
@@ -1332,6 +1738,79 @@ def record_contact_called(phone, result, user_id=None):
 def clear_contacts(user_id=None):
     with _file_lock:
         _save_contacts([], user_id)
+
+
+# ── Quick Call Status ──────────────────────────────────────────────────────────
+
+QUICK_CALL_STATUSES_FILE = "quick_call_statuses.json"
+
+
+def _load_quick_call_statuses(user_id):
+    f = _user_file(user_id, QUICK_CALL_STATUSES_FILE)
+    try:
+        if os.path.exists(f):
+            with open(f, "r") as fh:
+                return json.load(fh)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_quick_call_statuses(statuses, user_id):
+    d = _user_logs_dir(user_id)
+    os.makedirs(d, exist_ok=True)
+    f = _user_file(user_id, QUICK_CALL_STATUSES_FILE)
+    try:
+        with open(f, "w") as fh:
+            json.dump(statuses, fh, indent=2)
+    except Exception:
+        pass
+
+
+def _qc_key(crm_source, crm_contact_id):
+    """Return a composite key scoped to the CRM source to avoid ID collisions across CRMs."""
+    src = (crm_source or "unknown").strip()
+    return f"{src}:{crm_contact_id}"
+
+
+def set_quick_call_status(user_id, crm_contact_id, status, call_control_id=None, extra=None, crm_source=None):
+    """Set the quick call status for a contact scoped by (crm_source, crm_contact_id)."""
+    _extra = extra or {}
+    _src = crm_source or _extra.get("crm_source", "") or "unknown"
+    key = _qc_key(_src, str(crm_contact_id))
+    with _file_lock:
+        statuses = _load_quick_call_statuses(user_id)
+        statuses[key] = {
+            "status": status,
+            "crm_source": _src,
+            "crm_contact_id": str(crm_contact_id),
+            "call_control_id": call_control_id,
+            "updated_at": datetime.utcnow().isoformat(),
+            **{k: v for k, v in _extra.items() if k != "crm_source"},
+        }
+        _save_quick_call_statuses(statuses, user_id)
+
+
+def get_quick_call_statuses(user_id):
+    """Return dict of composite_key -> status record for a user."""
+    with _file_lock:
+        return _load_quick_call_statuses(user_id)
+
+
+def get_quick_call_status(user_id, crm_contact_id, crm_source=None):
+    """Return the status record for a specific contact, or None.
+    Always requires crm_source to correctly resolve composite keys.
+    Falls back to scanning all statuses by crm_contact_id if crm_source is omitted.
+    """
+    with _file_lock:
+        statuses = _load_quick_call_statuses(user_id)
+        if crm_source:
+            return statuses.get(_qc_key(crm_source, str(crm_contact_id)))
+        cid = str(crm_contact_id)
+        for rec in statuses.values():
+            if isinstance(rec, dict) and rec.get("crm_contact_id") == cid:
+                return rec
+        return None
 
 
 # ── Call Recording URLs ──────────────────────────────────────────────────

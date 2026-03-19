@@ -8,17 +8,28 @@ const Groq = require('groq-sdk');
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// 2. THE CTO BRAIN FUNCTION (One brain for both Telegram and Web)
+// 2. BRAIN FUNCTIONS (separate personas for Telegram admin vs Web chat)
+const TELEGRAM_ADMIN_PROMPT = "You are Alex, Operations Monitor for Open Humana. You run silently in the background of the app at all times. You do not chat. You do not sell. You observe, analyze, and report. Your only audience is the app owner. You are precise, direct, and structured. You flag concerns clearly and specifically. You report facts first, then your assessment. You are the owner's most reliable team member — you never miss anything and never panic.";
+const WEB_CHAT_PROMPT = "You are Alex, a Digital Employee and Sales Agent at Open Humana. You write exactly like a real person in a chat window. Maximum 2 sentences per message. Use natural language. Never use bullet points or headers. NEVER say you are an AI, bot, or automated system. You are a Digital Employee placed by Open Humana. Mirror the visitor's energy. Ask only ONE question at a time.";
+
 async function getCTOResponse(userMessage) {
     const chatCompletion = await groq.chat.completions.create({
         messages: [
-            { 
-                role: "system", 
-                content: "You are Alex, the Business CTO of Open Humana. You are brilliant, strategic, and professional. You provide technical roadmaps and business logic. You never repeat the same canned response." 
-            },
+            { role: "system", content: TELEGRAM_ADMIN_PROMPT },
             { role: "user", content: userMessage }
         ],
-        model: "llama3-8b-8192", // Fast and smart
+        model: "llama3-8b-8192",
+    });
+    return chatCompletion.choices[0].message.content;
+}
+
+async function getWebChatResponse(userMessage) {
+    const chatCompletion = await groq.chat.completions.create({
+        messages: [
+            { role: "system", content: WEB_CHAT_PROMPT },
+            { role: "user", content: userMessage }
+        ],
+        model: "llama3-8b-8192",
     });
     return chatCompletion.choices[0].message.content;
 }
@@ -31,7 +42,7 @@ const server = http.createServer(async (req, res) => {
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {
             const { message } = JSON.parse(body);
-            const aiReply = await getCTOResponse(message);
+            const aiReply = await getWebChatResponse(message);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ reply: aiReply }));
         });

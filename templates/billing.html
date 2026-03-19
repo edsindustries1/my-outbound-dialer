@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout — Open Humana</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='50' font-weight='bold' font-family='Arial'>OH</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -87,6 +86,8 @@
             .payment-inner{max-width:none}
         }
     </style>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="apple-touch-icon" href="/static/images/logo.png">
 </head>
 <body>
 
@@ -101,7 +102,7 @@
 
             <div class="plan-label" id="planLabel">Subscribe to</div>
             <div class="plan-title" id="planTitle">Hire One Employee</div>
-            <div class="plan-price-line">$<span id="planAmount">99</span><span class="period">/mo</span></div>
+            <div class="plan-price-line">$<span id="planAmount">99</span><span class="period">/monthly salary</span></div>
 
             <div class="value-section">
                 <div class="value-title">What you get</div>
@@ -168,33 +169,33 @@
 <script>
     const PLANS = {
         starter: {
-            title: 'Hire One Employee',
+            title: 'Your First Digital Employee',
             amount: 99,
             features: [
                 '1 Digital Employee (Alex)',
-                '500+ automated dials per day',
-                'AI personalized voicemails',
-                'Live call transfer to your team',
+                '300 outbound dials per day',
+                'AI personalized voicemail with prospect\'s name',
+                'Instant live call transfer when a human picks up',
                 'Real-time call transcription',
-                'Email onboarding support'
+                '1 active campaign at a time'
             ],
             savingsHours: '4+ hours',
-            savingsText: 'saved every day on outbound dialing. Alex handles 500+ calls while you focus on closing deals.'
+            savingsText: 'saved every day on outbound dialing. Alex handles 300 calls while you focus on closing deals.'
         },
         business: {
-            title: 'Hire a Team',
+            title: 'Your Full Digital Sales Floor',
             amount: 399,
             features: [
-                '5 Digital Employees',
-                '2,500+ automated dials per day',
-                'Priority voice processing',
-                'AI personalized voicemails',
-                'Advanced CRM integration',
-                '24/7 dedicated instances',
+                '5 Digital Employees working in parallel',
+                '2,000 outbound dials per day',
+                'AI personalized voicemails across all campaigns',
+                'Instant live call transfer to any team member',
+                'Multiple simultaneous campaigns',
+                'Real-time transcription and reporting dashboard',
                 'Priority support'
             ],
             savingsHours: '20+ hours',
-            savingsText: 'saved every day across your outbound team. 5 AI employees handle 2,500+ calls simultaneously.'
+            savingsText: 'saved every day across your outbound team. 5 AI employees handle 2,000 calls simultaneously.'
         }
     };
 
