@@ -140,6 +140,36 @@ def ensure_user_instance(user_id):
     return instance
 
 
+class AppConfig(db.Model):
+    __tablename__ = 'app_config'
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def get(cls, key, default=None):
+        try:
+            row = cls.query.filter_by(key=key).first()
+            return row.value if row and row.value else default
+        except Exception:
+            return default
+
+    @classmethod
+    def set(cls, key, value):
+        try:
+            row = cls.query.filter_by(key=key).first()
+            if row:
+                row.value = value
+                row.updated_at = datetime.utcnow()
+            else:
+                row = cls(key=key, value=value)
+                db.session.add(row)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+
 def init_db(app):
     db.init_app(app)
     with app.app_context():
@@ -203,6 +233,16 @@ def _ensure_schema():
             if "expires_at" not in inv_cols:
                 db.session.execute(text("ALTER TABLE invitations ADD COLUMN expires_at TIMESTAMP"))
                 db.session.commit()
+
+        if "app_config" not in inspector.get_table_names():
+            db.session.execute(text("""
+                CREATE TABLE IF NOT EXISTS app_config (
+                    key VARCHAR(100) PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.session.commit()
 
         pass
 

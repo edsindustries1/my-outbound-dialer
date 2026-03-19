@@ -174,7 +174,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 
-from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, ensure_user_instance, init_db
+from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, AppConfig, ensure_user_instance, init_db
 import base64
 import requests
 init_db(app)
@@ -1793,6 +1793,37 @@ def save_vm_settings():
     save_voicemail_url(url, user_id=current_user.id, script=script)
     logger.info(f"Voicemail URL updated: {url}, script: {script[:50] if script else '(none)'}...")
     return jsonify({"message": "Voicemail URL saved", "voicemail_url": url, "voicemail_script": script})
+
+
+@app.route("/api/fish-audio-key", methods=["GET"])
+@login_required
+def get_fish_audio_key():
+    from humana_voice import fish_client as _fc
+    db_key = AppConfig.get("fish_audio_api_key", "")
+    env_source = _fc.get_key_source()
+    is_db = env_source == "database_config"
+    return jsonify({
+        "configured": _fc.is_configured(),
+        "source": env_source,
+        "has_db_key": bool(db_key),
+        "masked_key": ("*" * (len(db_key) - 4) + db_key[-4:]) if len(db_key) > 4 else ("*" * len(db_key)),
+    })
+
+
+@app.route("/api/fish-audio-key", methods=["POST"])
+@login_required
+def set_fish_audio_key():
+    if getattr(current_user, "role", "user") != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+    data = request.get_json() or {}
+    key = (data.get("api_key") or "").strip().strip('"').strip("'").strip()
+    if not key:
+        AppConfig.set("fish_audio_api_key", "")
+        logger.info("Fish Audio API key cleared from database")
+        return jsonify({"message": "Fish Audio API key cleared"})
+    AppConfig.set("fish_audio_api_key", key)
+    logger.info(f"Fish Audio API key saved to database (length={len(key)})")
+    return jsonify({"message": "Fish Audio API key saved successfully", "length": len(key)})
 
 
 @app.route("/api/custom-variables", methods=["GET"])
@@ -4457,12 +4488,18 @@ def _init_app():
     print("=" * 60)
     start_scheduler()
     from humana_voice import fish_client as _fc
+    def _fetch_fish_key_from_db():
+        try:
+            return AppConfig.get("fish_audio_api_key", "")
+        except Exception:
+            return ""
+    _fc.register_db_key_fetcher(_fetch_fish_key_from_db)
     _fc.log_startup_status()
     _fish_key_name = _fc.get_key_source()
     if _fish_key_name:
-        print(f"  Fish Audio: CONFIGURED (env var: {_fish_key_name})")
+        print(f"  Fish Audio: CONFIGURED (source: {_fish_key_name})")
     else:
-        print("  Fish Audio: NOT CONFIGURED — set FISH_AUDIO_API_KEY in Railway Variables")
+        print("  Fish Audio: NOT CONFIGURED — enter key in dashboard Settings or set FISH_AUDIO_API_KEY env var")
     print("=" * 60)
 
 _init_app()

@@ -20,10 +20,29 @@ _KEY_CANDIDATES = [
     "fishaudio_key",
 ]
 
+_db_key_fetcher = None
+
+
+def register_db_key_fetcher(fn):
+    """Register a callable that returns the Fish Audio API key from the database.
+    Called at app startup so fish_client can retrieve keys stored via the Settings UI."""
+    global _db_key_fetcher
+    _db_key_fetcher = fn
+
 
 def _read_api_key():
-    """Read Fish Audio API key from env, trying several common name variants.
+    """Read Fish Audio API key. Priority: DB config → environment variables.
     Strips surrounding whitespace and accidental quote characters."""
+    if _db_key_fetcher:
+        try:
+            db_key = _db_key_fetcher()
+            if db_key:
+                db_key = db_key.strip().strip('"').strip("'").strip()
+                if db_key:
+                    return db_key, "database_config"
+        except Exception:
+            pass
+
     for name in _KEY_CANDIDATES:
         val = os.environ.get(name, "")
         if val:
@@ -39,7 +58,7 @@ def get_api_key():
 
 
 def get_key_source():
-    """Return the env var name that provided the key, or None if not configured."""
+    """Return the source that provided the key ('database_config', env var name, or None)."""
     _, name = _read_api_key()
     return name
 
@@ -53,12 +72,12 @@ def log_startup_status():
     """Log Fish Audio key detection result at startup — useful for Railway debugging."""
     key, name = _read_api_key()
     if key:
-        logger.info(f"[Fish Audio] API key loaded from env var: {name} (length={len(key)})")
+        logger.info(f"[Fish Audio] API key loaded from: {name} (length={len(key)})")
     else:
         checked = ", ".join(_KEY_CANDIDATES[:5]) + " …"
         logger.warning(
-            f"[Fish Audio] API key NOT found. Checked: {checked}. "
-            f"On Railway, set FISH_AUDIO_API_KEY in your service Variables tab."
+            f"[Fish Audio] API key NOT found in environment. Checked: {checked}. "
+            f"Set it via the Settings page in the dashboard, or add FISH_AUDIO_API_KEY to Railway Variables."
         )
 
 
