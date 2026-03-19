@@ -8,5 +8,6 @@ export const modules: ModuleMap = {
   "./components/mockups/dashboard-variants/DailyBriefing.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefing.tsx"),
   "./components/mockups/dashboard-variants/DailyBriefingEditorial.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingEditorial.tsx"),
   "./components/mockups/dashboard-variants/DailyBriefingPolished.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingPolished.tsx"),
-  "./components/mockups/dashboard-variants/PipelineFunnel.tsx": () => import("../components/mockups/dashboard-variants/PipelineFunnel.tsx")
+  "./components/mockups/dashboard-variants/PipelineFunnel.tsx": () => import("../components/mockups/dashboard-variants/PipelineFunnel.tsx"),
+  "./components/mockups/dashboard-variants/SaaSMainDashboard.tsx": () => import("../components/mockups/dashboard-variants/SaaSMainDashboard.tsx")
 };
