@@ -1,5 +1,8 @@
 import os
+import logging
 import requests
+
+logger = logging.getLogger("voicemail_app")
 
 FISH_AUDIO_BASE_URL = "https://api.fish.audio"
 FISH_AUDIO_CDN = "https://api.fish.audio"
@@ -7,9 +10,14 @@ FISH_AUDIO_CDN = "https://api.fish.audio"
 _KEY_CANDIDATES = [
     "FISH_AUDIO_API_KEY",
     "FISH_AUDIO_KEY",
+    "FISHAUDIO_API_KEY",
+    "FISHAUDIO_KEY",
+    "FISH_API_KEY",
+    "FISH_KEY",
     "fish_audio_api_key",
     "fish_audio_key",
-    "FISHAUDIO_API_KEY",
+    "fishaudio_api_key",
+    "fishaudio_key",
 ]
 
 
@@ -21,20 +29,41 @@ def _read_api_key():
         if val:
             val = val.strip().strip('"').strip("'").strip()
             if val:
-                return val
-    return ""
+                return val, name
+    return "", None
 
 
 def get_api_key():
-    return _read_api_key()
+    key, _ = _read_api_key()
+    return key
+
+
+def get_key_source():
+    """Return the env var name that provided the key, or None if not configured."""
+    _, name = _read_api_key()
+    return name
 
 
 def is_configured():
-    return bool(_read_api_key())
+    key, _ = _read_api_key()
+    return bool(key)
+
+
+def log_startup_status():
+    """Log Fish Audio key detection result at startup — useful for Railway debugging."""
+    key, name = _read_api_key()
+    if key:
+        logger.info(f"[Fish Audio] API key loaded from env var: {name} (length={len(key)})")
+    else:
+        checked = ", ".join(_KEY_CANDIDATES[:5]) + " …"
+        logger.warning(
+            f"[Fish Audio] API key NOT found. Checked: {checked}. "
+            f"On Railway, set FISH_AUDIO_API_KEY in your service Variables tab."
+        )
 
 
 def _get_headers(extra=None):
-    key = _read_api_key()
+    key, _ = _read_api_key()
     h = {"Authorization": f"Bearer {key}"}
     if extra:
         h.update(extra)

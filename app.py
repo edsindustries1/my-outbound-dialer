@@ -652,7 +652,15 @@ def landing():
 
 @app.route("/api/health")
 def api_health():
-    return jsonify({"status": "ok", "service": "Open Humana"}), 200
+    from humana_voice import fish_client as _fc
+    fish_ok = _fc.is_configured()
+    fish_source = _fc.get_key_source()
+    return jsonify({
+        "status": "ok",
+        "service": "Open Humana",
+        "fish_audio_configured": fish_ok,
+        "fish_audio_key_source": fish_source,
+    }), 200
 
 
 
@@ -4448,6 +4456,8 @@ def _init_app():
         print("  Outbound voice profile: Not configured (outbound calls may fail)")
     print("=" * 60)
     start_scheduler()
+    from humana_voice import fish_client as _fc
+    _fc.log_startup_status()
 
 _init_app()
 
