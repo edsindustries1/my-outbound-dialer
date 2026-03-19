@@ -131,6 +131,16 @@
 .hv-slider{width:100%;accent-color:var(--gads-text-primary);}
 .hv-select{padding:7px 10px;border:1px solid var(--gads-border);border-radius:7px;font-size:13px;font-family:var(--gads-font);background:var(--gads-surface,#fff);color:var(--gads-text-primary);outline:none;cursor:pointer;}
 
+/* Custom emotion dropdown — fully themed, works in dark mode */
+.hv-emotion-dd{position:relative;display:inline-block;}
+.hv-emotion-dd-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--gads-border);border-radius:7px;font-size:13px;font-family:var(--gads-font);background:var(--gads-surface,#fff);color:var(--gads-text-primary);cursor:pointer;transition:border-color .15s;white-space:nowrap;}
+.hv-emotion-dd-btn:hover{border-color:var(--gads-text-primary);}
+.hv-emotion-dd-menu{position:absolute;top:calc(100% + 4px);left:0;min-width:130px;background:var(--gads-surface,#fff);border:1px solid var(--gads-border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:300;display:none;overflow:hidden;}
+.hv-emotion-dd-menu.open{display:block;}
+.hv-emotion-option{display:block;width:100%;padding:9px 14px;font-size:13px;font-family:var(--gads-font);background:none;border:none;text-align:left;color:var(--gads-text-primary);cursor:pointer;transition:background .12s;}
+.hv-emotion-option:hover{background:var(--gads-primary-light,#f3f4f6);}
+.hv-emotion-option.selected{font-weight:600;color:var(--gads-primary,#111827);background:var(--gads-primary-light,#f3f4f6);}
+
 /* Toast */
 .hv-toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:9px;font-size:13px;font-weight:600;background:#1a1a2e;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none;}
 .hv-toast.show{opacity:1;transform:translateY(0);}

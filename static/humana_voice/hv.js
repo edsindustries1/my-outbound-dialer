@@ -436,9 +436,17 @@
             '</div>' +
             '<div>' +
               '<div class="hv-label">Emotion</div>' +
-              '<select class="hv-select" onchange="hvSaveStyle(\'' + v.voice_id + '\',null,this.value)">' +
-                ['neutral','excited','calm','serious','friendly'].map(function(e){return '<option value="'+e+'"'+(v.style_emotion===e?' selected':'')+'>'+e.charAt(0).toUpperCase()+e.slice(1)+'</option>';}).join('') +
-              '</select>' +
+              '<div class="hv-emotion-dd" data-voice-id="' + v.voice_id + '" data-value="' + (v.style_emotion || 'neutral') + '">' +
+                '<button class="hv-emotion-dd-btn" onclick="hvEmotionToggle(this)">' +
+                  (function(em){ return em.charAt(0).toUpperCase()+em.slice(1); })(v.style_emotion || 'neutral') +
+                  ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>' +
+                '</button>' +
+                '<div class="hv-emotion-dd-menu">' +
+                  ['neutral','excited','calm','serious','friendly'].map(function(e){
+                    return '<button class="hv-emotion-option' + (v.style_emotion===e?' selected':'') + '" data-val="'+e+'" onclick="hvEmotionSelect(this,\''+v.voice_id+'\',\''+e+'\')">' + e.charAt(0).toUpperCase()+e.slice(1) + '</button>';
+                  }).join('') +
+                '</div>' +
+              '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -486,13 +494,41 @@
     btn.textContent = exp.classList.contains('open') ? 'Style ▴' : 'Style ▾';
   };
 
+  window.hvEmotionToggle = function (btn) {
+    var menu = btn.nextElementSibling;
+    var isOpen = menu.classList.contains('open');
+    document.querySelectorAll('.hv-emotion-dd-menu.open').forEach(function (m) { m.classList.remove('open'); });
+    if (!isOpen) { menu.classList.add('open'); }
+  };
+
+  window.hvEmotionSelect = function (optBtn, voiceId, emotion) {
+    var dd = optBtn.closest('.hv-emotion-dd');
+    var trigBtn = dd.querySelector('.hv-emotion-dd-btn');
+    var chevron = trigBtn.querySelector('svg');
+    var label = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+    trigBtn.textContent = label + ' ';
+    if (chevron) trigBtn.appendChild(chevron);
+    dd.dataset.value = emotion;
+    dd.querySelectorAll('.hv-emotion-option').forEach(function (o) {
+      o.classList.toggle('selected', o.dataset.val === emotion);
+    });
+    dd.querySelector('.hv-emotion-dd-menu').classList.remove('open');
+    hvSaveStyle(voiceId, null, emotion);
+  };
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.hv-emotion-dd')) {
+      document.querySelectorAll('.hv-emotion-dd-menu.open').forEach(function (m) { m.classList.remove('open'); });
+    }
+  });
+
   var styleTimers = {};
   window.hvSaveStyle = function (voiceId, speed, emotion) {
     clearTimeout(styleTimers[voiceId]);
     styleTimers[voiceId] = setTimeout(function () {
       var row = document.querySelector('[data-row-id="' + voiceId + '"]');
       var s = speed !== null ? parseFloat(speed) : parseFloat(row && row.querySelector('input[type=range]') ? row.querySelector('input[type=range]').value : 1.0);
-      var e = emotion !== null ? emotion : (row && row.querySelector('select') ? row.querySelector('select').value : 'neutral');
+      var e = emotion !== null ? emotion : (row && row.querySelector('.hv-emotion-dd') ? (row.querySelector('.hv-emotion-dd').dataset.value || 'neutral') : 'neutral');
       apiPost('/humana-voice/api/style', { voice_id: voiceId, speed: s, emotion: e })
         .then(function (r) { return r.json(); })
         .then(function (d) { if (!d.error) toast('Style saved', 'success'); })
