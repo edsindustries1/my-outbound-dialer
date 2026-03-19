@@ -1605,12 +1605,18 @@
                         <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 20px;">Connect your CRM or spreadsheet — every completed call is logged automatically.</p>
                     </div>
                     <!-- DETAIL header -->
-                    <div id="intg-detail-header" style="display:none;margin-bottom:20px;">
+                    <div id="intg-detail-header" style="display:none;margin-bottom:22px;">
                         <button type="button" class="intg-back-btn" onclick="intgShowPicker()">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                             All Integrations
                         </button>
-                        <h2 id="intg-detail-title" style="margin:12px 0 0;font-size:18px;font-weight:700;color:var(--gads-text-primary);"></h2>
+                        <div style="display:flex;align-items:center;gap:14px;margin-top:14px;padding-bottom:16px;border-bottom:1px solid var(--gads-border);">
+                            <div id="intg-detail-logo" style="width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+                            <div>
+                                <h2 id="intg-detail-title" style="margin:0;font-size:18px;font-weight:700;color:var(--gads-text-primary);"></h2>
+                                <p id="intg-detail-desc" style="margin:3px 0 0;font-size:13px;color:var(--gads-text-secondary);"></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- ═══ PICKER GRID ═══ -->
@@ -1700,59 +1706,52 @@
                     <div class="gads-card" id="integrations-page-card">
 
                         <!-- ── OUTBOUND WEBHOOKS ── -->
-                        <div class="intg-detail-panel" id="intg-detail-webhook">
-                        <div class="intg-panel" id="intg-webhook-panel2" style="border-bottom:none;">
-                            <div class="intg-panel-header">
-                                <div class="intg-logo">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                        <div class="intg-detail-panel" id="intg-detail-webhook" style="display:none">
+                            <div class="intg-detail-body">
+                                <div class="intg-guide">
+                                    <div class="intg-guide-title">How it works</div>
+                                    <ol class="intg-guide-steps">
+                                        <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Paste your webhook URL below — any platform that accepts HTTP POST works (Zapier, Make, n8n, or your own server).</span></li>
+                                        <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Optionally add a <strong>Signing Secret</strong> to verify payloads using the <code>X-Signature-256</code> header.</span></li>
+                                        <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Click <strong>Save</strong>, then use <strong>Send Test Payload</strong> to confirm delivery before going live.</span></li>
+                                    </ol>
                                 </div>
-                                <div class="intg-panel-meta">
-                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">Outbound Webhooks</div>
-                                    <div class="intg-panel-desc">Fire a POST to any URL on call completion — works with any workflow automation platform or custom endpoint.</div>
+                                <div class="intg-connect-card">
+                                    <div class="intg-connect-field">
+                                        <label class="intg-field-label">Webhook URL</label>
+                                        <input type="url" id="webhookUrl2" class="gads-input" placeholder="https://hooks.zapier.com/hooks/catch/…">
+                                    </div>
+                                    <div class="intg-connect-field">
+                                        <label class="intg-field-label">Signing Secret <span style="font-weight:400;color:var(--gads-text-secondary);">(optional)</span></label>
+                                        <input type="password" id="webhookSecret2" class="gads-input" placeholder="Leave blank to skip signing" autocomplete="new-password">
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px;">
+                                        <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveWebhookConfig2()">Save Webhook</button>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testWebhook2()">Send Test Payload</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-left:auto;">
+                                            <input type="checkbox" id="webhookEnabled2" onchange="saveWebhookEnabled2(this)"> Enable
+                                        </label>
+                                    </div>
+                                    <div id="webhookMsg2" style="font-size:12px;margin-top:6px;min-height:16px;color:var(--gads-text-secondary);"></div>
                                 </div>
                             </div>
-                            <div class="intg-body">
-                                <div class="pvm-section" style="margin-top:0;">
-                                    <label>Webhook URL</label>
-                                    <input type="url" id="webhookUrl2" class="gads-input" placeholder="https://hooks.zapier.com/hooks/catch/…">
-                                </div>
-                                <div class="pvm-section">
-                                    <label>Signing Secret <span style="font-weight:400;color:var(--gads-text-secondary);">(optional — enables HMAC-SHA256 header)</span></label>
-                                    <input type="password" id="webhookSecret2" class="gads-input" placeholder="Leave blank to skip signing" autocomplete="new-password">
-                                </div>
-                                <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
-                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveWebhookConfig2()">Save Webhook</button>
-                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testWebhook2()">Send Test Payload</button>
-                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-left:auto;">
-                                        <input type="checkbox" id="webhookEnabled2" onchange="saveWebhookEnabled2(this)"> Enable
-                                    </label>
-                                </div>
-                                <div id="webhookMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
-                            </div>
-                        </div>
                         </div><!-- /intg-detail-webhook -->
 
                         <!-- ── HUBSPOT ── -->
                         <div class="intg-detail-panel" id="intg-detail-hubspot" style="display:none">
-                        <div class="intg-panel" id="intg-hubspot-panel2" style="border-bottom:none;">
-                            <div class="intg-panel-header">
-                                <div class="intg-logo intg-logo-hs">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>
-                                </div>
-                                <div class="intg-panel-meta">
-                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">HubSpot CRM</div>
-                                    <div class="intg-panel-desc">Auto-create contacts and log call activities in your HubSpot portal after every call.</div>
-                                </div>
-                            </div>
-                            <div class="intg-body">
-                                <div id="hubspot-connected-view2" style="display:none;">
-                                    <div class="intg-connected-row" style="margin-bottom:12px;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Connected to portal <strong id="hubspot-portal-id2"></strong>
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectHubSpot()">Disconnect</button>
-                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-                                            <input type="checkbox" id="hubspotEnabled2" onchange="toggleHubspot(this)"> Enable
-                                        </label>
+                            <div class="intg-detail-body">
+                                <!-- Connected -->
+                                <div id="hubspot-connected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--connected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="intg-status-bar-info">
+                                            <div class="intg-status-bar-title">Connected</div>
+                                            <div class="intg-status-bar-sub">Portal ID: <strong id="hubspot-portal-id2"></strong></div>
+                                        </div>
+                                        <div class="intg-status-bar-actions">
+                                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="hubspotEnabled2" onchange="toggleHubspot(this)"> Enable</label>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="disconnectHubSpot()">Disconnect</button>
+                                        </div>
                                     </div>
                                     <div id="crm-contacts-panel-hubspot2" class="crm-contacts-panel">
                                         <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('hubspot2')">
@@ -1761,12 +1760,8 @@
                                             <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                                         </div>
                                         <div class="crm-contacts-body" id="crm-contacts-body-hubspot2" style="display:none;">
-                                            <div class="crm-contacts-search-wrap">
-                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-hubspot2" placeholder="Search by name or phone…" oninput="crmContactSearch('hubspot2', this.value)">
-                                            </div>
-                                            <div class="crm-contacts-table-wrap" id="crm-table-hubspot2">
-                                                <div class="crm-contacts-spinner" id="crm-spinner-hubspot2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
-                                            </div>
+                                            <div class="crm-contacts-search-wrap"><input type="text" class="crm-contacts-search gads-input" id="crm-search-hubspot2" placeholder="Search by name or phone…" oninput="crmContactSearch('hubspot2', this.value)"></div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-hubspot2"><div class="crm-contacts-spinner" id="crm-spinner-hubspot2"><div class="gads-spinner-sm"></div> Loading contacts…</div></div>
                                             <div class="crm-contacts-pagination" id="crm-pagination-hubspot2" style="display:none;">
                                                 <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-hubspot2" onclick="crmContactPage('hubspot2', -1)" disabled>← Prev</button>
                                                 <span id="crm-page-label-hubspot2">Page 1</span>
@@ -1775,43 +1770,48 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="hubspot-disconnected-view2" style="display:none;">
-                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        <span>In HubSpot go to <strong>Settings → Integrations → Private Apps</strong>, create a new app with scopes <code>crm.objects.contacts.write/read</code> + <code>crm.objects.engagements.write</code>, then copy the token below.</span>
+                                <!-- Disconnected -->
+                                <div id="hubspot-disconnected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--disconnected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                                        <div class="intg-status-bar-info"><div class="intg-status-bar-title">Not connected</div><div class="intg-status-bar-sub">Connect your HubSpot portal to start logging calls automatically.</div></div>
                                     </div>
-                                    <div class="pvm-section" style="margin-top:0;">
-                                        <label>Private App Access Token</label>
-                                        <input type="password" id="hubspotToken2" class="gads-input" placeholder="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="new-password">
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">How to connect HubSpot</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>In HubSpot, go to <strong>Settings → Integrations → Private Apps</strong> and click <strong>Create a private app</strong>.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Under <strong>Scopes</strong>, enable: <code>crm.objects.contacts.write</code>, <code>crm.objects.contacts.read</code>, and <code>crm.objects.engagements.write</code>.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Click <strong>Create app</strong> and copy the generated <strong>Access Token</strong> — it starts with <code>pat-na1-…</code></span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">4</span><span>Paste the token below and click <strong>Verify &amp; Connect</strong>.</span></li>
+                                        </ol>
                                     </div>
-                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectHubSpot2()">Verify &amp; Connect</button>
-                                    <div id="hubspotMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                    <div class="intg-connect-card">
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">Private App Access Token</label>
+                                            <input type="password" id="hubspotToken2" class="gads-input" placeholder="pat-na1-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="new-password">
+                                        </div>
+                                        <div><button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="connectHubSpot2()">Verify &amp; Connect</button></div>
+                                        <div id="hubspotMsg2" style="font-size:12px;min-height:16px;color:var(--gads-text-secondary);"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         </div><!-- /intg-detail-hubspot -->
 
                         <!-- ── GOHIGHLEVEL ── -->
                         <div class="intg-detail-panel" id="intg-detail-ghl" style="display:none">
-                        <div class="intg-panel" id="intg-ghl-panel2" style="border-bottom:none;">
-                            <div class="intg-panel-header">
-                                <div class="intg-logo intg-logo-ghl" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                </div>
-                                <div class="intg-panel-meta">
-                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">GoHighLevel (GHL)</div>
-                                    <div class="intg-panel-desc">Auto-create contacts and log call notes in your GHL sub-account after every completed call.</div>
-                                </div>
-                            </div>
-                            <div class="intg-body">
-                                <div id="ghl-connected-view2" style="display:none;">
-                                    <div class="intg-connected-row" style="margin-bottom:12px;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Connected<span id="ghl-location-label2"></span>
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGHL()">Disconnect</button>
-                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-                                            <input type="checkbox" id="ghlEnabled2" onchange="toggleGHL(this)"> Enable
-                                        </label>
+                            <div class="intg-detail-body">
+                                <!-- Connected -->
+                                <div id="ghl-connected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--connected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="intg-status-bar-info">
+                                            <div class="intg-status-bar-title">Connected</div>
+                                            <div class="intg-status-bar-sub" id="ghl-location-label2">GoHighLevel sub-account</div>
+                                        </div>
+                                        <div class="intg-status-bar-actions">
+                                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="ghlEnabled2" onchange="toggleGHL(this)"> Enable</label>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="disconnectGHL()">Disconnect</button>
+                                        </div>
                                     </div>
                                     <div id="crm-contacts-panel-gohighlevel2" class="crm-contacts-panel">
                                         <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('gohighlevel2')">
@@ -1820,12 +1820,8 @@
                                             <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                                         </div>
                                         <div class="crm-contacts-body" id="crm-contacts-body-gohighlevel2" style="display:none;">
-                                            <div class="crm-contacts-search-wrap">
-                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-gohighlevel2" placeholder="Search by name or phone…" oninput="crmContactSearch('gohighlevel2', this.value)">
-                                            </div>
-                                            <div class="crm-contacts-table-wrap" id="crm-table-gohighlevel2">
-                                                <div class="crm-contacts-spinner" id="crm-spinner-gohighlevel2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
-                                            </div>
+                                            <div class="crm-contacts-search-wrap"><input type="text" class="crm-contacts-search gads-input" id="crm-search-gohighlevel2" placeholder="Search by name or phone…" oninput="crmContactSearch('gohighlevel2', this.value)"></div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-gohighlevel2"><div class="crm-contacts-spinner" id="crm-spinner-gohighlevel2"><div class="gads-spinner-sm"></div> Loading contacts…</div></div>
                                             <div class="crm-contacts-pagination" id="crm-pagination-gohighlevel2" style="display:none;">
                                                 <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-gohighlevel2" onclick="crmContactPage('gohighlevel2', -1)" disabled>← Prev</button>
                                                 <span id="crm-page-label-gohighlevel2">Page 1</span>
@@ -1834,43 +1830,48 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="ghl-disconnected-view2" style="display:none;">
-                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        <span>In GHL go to <strong>Settings → Business Info → API Keys</strong>, copy your <strong>Location API Key</strong>, and paste it below.</span>
+                                <!-- Disconnected -->
+                                <div id="ghl-disconnected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--disconnected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                                        <div class="intg-status-bar-info"><div class="intg-status-bar-title">Not connected</div><div class="intg-status-bar-sub">Connect your GHL sub-account to log call notes and contacts automatically.</div></div>
                                     </div>
-                                    <div class="pvm-section" style="margin-top:0;">
-                                        <label>Location API Key</label>
-                                        <input type="password" id="ghlApiKey2" class="gads-input" placeholder="eyJhbGci…" autocomplete="new-password">
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">How to connect GoHighLevel</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Log in to your GoHighLevel account and open the sub-account you want to connect.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Go to <strong>Settings → Business Info → API Keys</strong> (at the bottom of the page).</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Copy your <strong>Location API Key</strong> — it's a long JWT token starting with <code>eyJ…</code></span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">4</span><span>Paste it below and click <strong>Verify &amp; Connect</strong>. Each completed call will create/update a contact and add a call note.</span></li>
+                                        </ol>
                                     </div>
-                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectGHL2()">Verify &amp; Connect</button>
-                                    <div id="ghlMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                    <div class="intg-connect-card">
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">Location API Key</label>
+                                            <input type="password" id="ghlApiKey2" class="gads-input" placeholder="eyJhbGci…" autocomplete="new-password">
+                                        </div>
+                                        <div><button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="connectGHL2()">Verify &amp; Connect</button></div>
+                                        <div id="ghlMsg2" style="font-size:12px;min-height:16px;color:var(--gads-text-secondary);"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         </div><!-- /intg-detail-ghl -->
 
                         <!-- ── PIPEDRIVE ── -->
                         <div class="intg-detail-panel" id="intg-detail-pipedrive" style="display:none">
-                        <div class="intg-panel" id="intg-pipedrive-panel2" style="border-bottom:none;">
-                            <div class="intg-panel-header">
-                                <div class="intg-logo intg-logo-pd" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                                </div>
-                                <div class="intg-panel-meta">
-                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">Pipedrive</div>
-                                    <div class="intg-panel-desc">Find or create a person and log a call activity in Pipedrive for every completed outbound call.</div>
-                                </div>
-                            </div>
-                            <div class="intg-body">
-                                <div id="pipedrive-connected-view2" style="display:none;">
-                                    <div class="intg-connected-row" style="margin-bottom:12px;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Connected<span id="pipedrive-company-label2"></span>
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectPipedrive()">Disconnect</button>
-                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
-                                            <input type="checkbox" id="pipedriveEnabled2" onchange="togglePipedrive(this)"> Enable
-                                        </label>
+                            <div class="intg-detail-body">
+                                <!-- Connected -->
+                                <div id="pipedrive-connected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--connected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="intg-status-bar-info">
+                                            <div class="intg-status-bar-title">Connected</div>
+                                            <div class="intg-status-bar-sub" id="pipedrive-company-label2">Pipedrive account</div>
+                                        </div>
+                                        <div class="intg-status-bar-actions">
+                                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="pipedriveEnabled2" onchange="togglePipedrive(this)"> Enable</label>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="disconnectPipedrive()">Disconnect</button>
+                                        </div>
                                     </div>
                                     <div id="crm-contacts-panel-pipedrive2" class="crm-contacts-panel">
                                         <div class="crm-contacts-panel-header" onclick="toggleCrmContactsPanel('pipedrive2')">
@@ -1879,12 +1880,8 @@
                                             <svg class="crm-contacts-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                                         </div>
                                         <div class="crm-contacts-body" id="crm-contacts-body-pipedrive2" style="display:none;">
-                                            <div class="crm-contacts-search-wrap">
-                                                <input type="text" class="crm-contacts-search gads-input" id="crm-search-pipedrive2" placeholder="Search by name or phone…" oninput="crmContactSearch('pipedrive2', this.value)">
-                                            </div>
-                                            <div class="crm-contacts-table-wrap" id="crm-table-pipedrive2">
-                                                <div class="crm-contacts-spinner" id="crm-spinner-pipedrive2"><div class="gads-spinner-sm"></div> Loading contacts…</div>
-                                            </div>
+                                            <div class="crm-contacts-search-wrap"><input type="text" class="crm-contacts-search gads-input" id="crm-search-pipedrive2" placeholder="Search by name or phone…" oninput="crmContactSearch('pipedrive2', this.value)"></div>
+                                            <div class="crm-contacts-table-wrap" id="crm-table-pipedrive2"><div class="crm-contacts-spinner" id="crm-spinner-pipedrive2"><div class="gads-spinner-sm"></div> Loading contacts…</div></div>
                                             <div class="crm-contacts-pagination" id="crm-pagination-pipedrive2" style="display:none;">
                                                 <button class="gads-btn gads-btn-outline gads-btn-sm" id="crm-prev-pipedrive2" onclick="crmContactPage('pipedrive2', -1)" disabled>← Prev</button>
                                                 <span id="crm-page-label-pipedrive2">Page 1</span>
@@ -1893,72 +1890,94 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="pipedrive-disconnected-view2" style="display:none;">
-                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        <span>In Pipedrive go to <strong>Settings → Personal Preferences → API</strong>, copy your <strong>API Token</strong>, and paste it below.</span>
+                                <!-- Disconnected -->
+                                <div id="pipedrive-disconnected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--disconnected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                                        <div class="intg-status-bar-info"><div class="intg-status-bar-title">Not connected</div><div class="intg-status-bar-sub">Connect Pipedrive to auto-log call activities and create persons for every call.</div></div>
                                     </div>
-                                    <div class="pvm-section" style="margin-top:0;">
-                                        <label>API Token</label>
-                                        <input type="password" id="pipedriveToken2" class="gads-input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">How to connect Pipedrive</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Log in to Pipedrive and click your avatar in the top-right, then go to <strong>Personal Preferences</strong>.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Open the <strong>API</strong> tab. You'll see your <strong>API Token</strong> — a 40-character hex string.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Copy the token, paste it below, and click <strong>Verify &amp; Connect</strong>.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">4</span><span>Once connected, every completed call will find or create a Person and log a call activity in your pipeline.</span></li>
+                                        </ol>
                                     </div>
-                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectPipedrive2()">Verify &amp; Connect</button>
-                                    <div id="pipedriveMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                    <div class="intg-connect-card">
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">API Token</label>
+                                            <input type="password" id="pipedriveToken2" class="gads-input" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
+                                        </div>
+                                        <div><button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="connectPipedrive2()">Verify &amp; Connect</button></div>
+                                        <div id="pipedriveMsg2" style="font-size:12px;min-height:16px;color:var(--gads-text-secondary);"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
                         </div><!-- /intg-detail-pipedrive -->
 
                         <!-- ── GOOGLE SHEETS ── -->
                         <div class="intg-detail-panel" id="intg-detail-gsheets" style="display:none">
-                        <div class="intg-panel" id="intg-gsheets-panel2" style="border-bottom:none;">
-                            <div class="intg-panel-header">
-                                <div class="intg-logo intg-logo-gs">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+                            <div class="intg-detail-body">
+                                <!-- Not configured (env var missing) -->
+                                <div id="gsheets-not-configured2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--disconnected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                                        <div class="intg-status-bar-info"><div class="intg-status-bar-title">Service account not configured</div><div class="intg-status-bar-sub">A Google Cloud service account is required — follow the steps below.</div></div>
+                                    </div>
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">How to set up Google Sheets</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Open <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:var(--gads-primary);">Google Cloud → IAM → Service Accounts</a> and create a new service account.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Click the service account → <strong>Keys → Add Key → JSON</strong>. A JSON file will download.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Enable the <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank" rel="noopener" style="color:var(--gads-primary);">Google Sheets API</a> in the same project.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">4</span><span>In your Railway / Replit environment, create a secret named <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> and paste the entire contents of the JSON file.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">5</span><span>Restart the app and return here — this panel will update automatically.</span></li>
+                                        </ol>
+                                    </div>
                                 </div>
-                                <div class="intg-panel-meta">
-                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">Google Sheets</div>
-                                    <div class="intg-panel-desc">Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.</div>
+                                <!-- Configured -->
+                                <div id="gsheets-configured-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--connected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="intg-status-bar-info">
+                                            <div class="intg-status-bar-title">Service account ready</div>
+                                            <div class="intg-status-bar-sub">Account: <code id="gsheets-sa-email2" style="font-size:11px;"></code></div>
+                                        </div>
+                                        <div class="intg-status-bar-actions">
+                                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="gsheetsEnabled2" onchange="saveGSheetsEnabled(this)"> Enable</label>
+                                        </div>
+                                    </div>
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">Connect your spreadsheet</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Create or open a Google Sheet. Share it with <strong><span id="gsheets-share-email2" style="font-family:monospace;font-size:12px;"></span></strong> and give it <strong>Editor</strong> access.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Paste the Sheet URL or Spreadsheet ID below, along with the tab name to write to.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Click <strong>Save</strong> then <strong>Test Connection</strong> — a test row will appear in your sheet.</span></li>
+                                        </ol>
+                                        <div style="margin-top:10px;padding:10px 12px;background:rgba(52,168,83,0.06);border:1px solid rgba(52,168,83,0.2);border-radius:7px;font-size:11px;color:#166534;">
+                                            Columns written: <strong>Timestamp · Phone · From · Status · Transferred · VM Dropped · AMD · Duration · Hangup Cause</strong>
+                                        </div>
+                                    </div>
+                                    <div class="intg-connect-card">
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">Google Sheet URL or ID</label>
+                                            <input type="text" id="gsheetsSheetId2" class="gads-input" placeholder="https://docs.google.com/spreadsheets/d/… or paste the Sheet ID">
+                                        </div>
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">Sheet / Tab Name</label>
+                                            <input type="text" id="gsheetsSheetName2" class="gads-input" placeholder="Call Log">
+                                        </div>
+                                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveGSheetsConfig2()">Save</button>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testGSheetsConfig()">Test Connection</button>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGSheets()">Clear</button>
+                                        </div>
+                                        <div id="gsheetsMsg2" style="font-size:12px;min-height:16px;color:var(--gads-text-secondary);"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="intg-body">
-                                <div id="gsheets-not-configured2" style="display:none;">
-                                    <div class="intg-setup-notice">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        <span>To enable: (1) Go to <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener" style="color:var(--gads-primary);">Google Cloud → Service Accounts</a>, create a service account, download the JSON key. (2) Enable the <a href="https://console.cloud.google.com/apis/library/sheets.googleapis.com" target="_blank" rel="noopener" style="color:var(--gads-primary);">Sheets API</a>. (3) Set <code>GOOGLE_SERVICE_ACCOUNT_JSON</code> in Replit Secrets.</span>
-                                    </div>
-                                </div>
-                                <div id="gsheets-configured-view2" style="display:none;">
-                                    <div class="intg-connected-row" style="margin-bottom:14px;flex-wrap:wrap;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        <span>Service account: <code id="gsheets-sa-email2" style="font-size:11px;"></code></span>
-                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;margin-left:auto;">
-                                            <input type="checkbox" id="gsheetsEnabled2" onchange="saveGSheetsEnabled(this)"> Enable
-                                        </label>
-                                    </div>
-                                    <div class="intg-setup-notice" style="margin-bottom:12px;background:rgba(52,168,83,0.06);border-color:rgba(52,168,83,0.2);">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                        <span>Share your Google Sheet with <strong><span id="gsheets-share-email2"></span></strong> (Editor access), then paste the Sheet URL below.</span>
-                                    </div>
-                                    <div class="pvm-section" style="margin-top:0;">
-                                        <label>Google Sheet URL or ID</label>
-                                        <input type="text" id="gsheetsSheetId2" class="gads-input" placeholder="https://docs.google.com/spreadsheets/d/… or paste the Sheet ID">
-                                    </div>
-                                    <div class="pvm-section">
-                                        <label>Sheet / Tab Name</label>
-                                        <input type="text" id="gsheetsSheetName2" class="gads-input" placeholder="Call Log">
-                                    </div>
-                                    <p style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">Columns: Timestamp · Phone · From · Status · Transferred · VM Dropped · AMD · Duration · Hangup Cause</p>
-                                    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
-                                        <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveGSheetsConfig2()">Save</button>
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testGSheetsConfig()">Test Connection</button>
-                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectGSheets()">Clear</button>
-                                    </div>
-                                    <div id="gsheetsMsg2" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
-                                </div>
-                            </div>
-                        </div>
-
                         </div><!-- /intg-detail-gsheets -->
 
                     </div><!-- /integrations-page-card -->
@@ -5752,6 +5771,94 @@
 }
 .intg-back-btn:hover { color: var(--gads-text-primary); }
 .intg-detail-panel { display: none; }
+.intg-detail-body { padding: 4px 0; }
+
+/* Status banner */
+.intg-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid;
+    flex-wrap: wrap;
+}
+.intg-status-bar--connected {
+    background: rgba(74,222,128,0.06);
+    border-color: rgba(74,222,128,0.22);
+}
+.intg-status-bar--disconnected {
+    background: rgba(148,163,184,0.05);
+    border-color: var(--gads-border, #e2e8f0);
+}
+.intg-status-bar-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.intg-status-bar--connected .intg-status-bar-icon {
+    background: rgba(74,222,128,0.14);
+    color: #16a34a;
+}
+.intg-status-bar--disconnected .intg-status-bar-icon {
+    background: rgba(148,163,184,0.12);
+    color: #64748b;
+}
+.intg-status-bar-info { flex: 1; min-width: 0; }
+.intg-status-bar-title { font-size: 14px; font-weight: 600; color: var(--gads-text-primary, #0f172a); }
+.intg-status-bar-sub { font-size: 12px; color: var(--gads-text-secondary, #64748b); margin-top: 2px; }
+.intg-status-bar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+
+/* Setup guide */
+.intg-guide {
+    background: var(--gads-surface2, #f8fafc);
+    border: 1px solid var(--gads-border, #e2e8f0);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+}
+.intg-guide-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--gads-text-secondary, #64748b);
+    margin-bottom: 13px;
+}
+.intg-guide-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 11px; }
+.intg-guide-step { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--gads-text-primary, #0f172a); line-height: 1.55; }
+.intg-guide-step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--gads-primary, #6366f1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Connection form card */
+.intg-connect-card {
+    border: 1px solid var(--gads-border, #e2e8f0);
+    border-radius: 10px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #fff;
+}
+.intg-connect-field { display: flex; flex-direction: column; gap: 5px; }
+.intg-field-label { font-size: 13px; font-weight: 500; color: var(--gads-text-primary, #0f172a); }
 
 .intg-body {
     padding-top: 14px;
@@ -5946,23 +6053,58 @@
     function _setVal(id, val)  { var el = document.getElementById(id); if (el && !el.value) el.value = val; }
     function _setChk(id, val)  { var el = document.getElementById(id); if (el) el.checked = val; }
 
-    var _intgTitles = {
-        webhook:  'Outbound Webhooks',
-        hubspot:  'HubSpot CRM',
-        ghl:      'GoHighLevel (GHL)',
-        pipedrive:'Pipedrive',
-        gsheets:  'Google Sheets'
+    var _intgMeta = {
+        webhook:  {
+            title: 'Outbound Webhooks',
+            desc:  'Fire a POST to any URL on call completion — works with Zapier, Make, n8n, or any custom server.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+            logoBg: 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+        },
+        hubspot:  {
+            title: 'HubSpot CRM',
+            desc:  'Auto-create contacts and log call activities in your HubSpot portal after every call.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M18.164 7.93V5.874a1.922 1.922 0 001.11-1.733v-.057A1.922 1.922 0 0017.352 2.16h-.057a1.922 1.922 0 00-1.921 1.921v.058a1.922 1.922 0 001.11 1.732V7.93a5.45 5.45 0 00-2.59 1.142l-5.65-4.393a2.162 2.162 0 10-1.163 1.491l5.523 4.297a5.47 5.47 0 00-.809 2.868 5.467 5.467 0 00.83 2.905l-1.678 1.679a1.8 1.8 0 00-.523-.082 1.824 1.824 0 101.824 1.824 1.8 1.8 0 00-.082-.524l1.657-1.657a5.48 5.48 0 003.366 1.147 5.488 5.488 0 000-10.697zm-.812 7.662a2.748 2.748 0 110-5.496 2.748 2.748 0 010 5.496z"/></svg>',
+            logoBg: '#ff7a59'
+        },
+        ghl:      {
+            title: 'GoHighLevel (GHL)',
+            desc:  'Auto-create contacts and log call notes in your GHL sub-account after every completed call.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+            logoBg: 'linear-gradient(135deg,#f59e0b,#ef4444)'
+        },
+        pipedrive: {
+            title: 'Pipedrive',
+            desc:  'Find or create a person and log a call activity in Pipedrive for every completed outbound call.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
+            logoBg: 'linear-gradient(135deg,#22c55e,#16a34a)'
+        },
+        gsheets:  {
+            title: 'Google Sheets',
+            desc:  'Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>',
+            logoBg: '#34a853'
+        }
     };
     window.intgOpen = function(key) {
         document.getElementById('intg-picker-view').style.display = 'none';
         document.getElementById('intg-picker-header').style.display = 'none';
         document.getElementById('intg-detail-area').style.display = '';
         document.getElementById('intg-detail-header').style.display = '';
-        var title = document.getElementById('intg-detail-title');
-        if (title) title.textContent = _intgTitles[key] || key;
+        var meta = _intgMeta[key] || {};
+        var titleEl = document.getElementById('intg-detail-title');
+        if (titleEl) titleEl.textContent = meta.title || key;
+        var descEl = document.getElementById('intg-detail-desc');
+        if (descEl) descEl.textContent = meta.desc || '';
+        var logoEl = document.getElementById('intg-detail-logo');
+        if (logoEl) {
+            logoEl.innerHTML = meta.logoHtml || '';
+            logoEl.style.background = meta.logoBg || 'var(--gads-primary)';
+            logoEl.style.color = '#fff';
+        }
         document.querySelectorAll('.intg-detail-panel').forEach(function(p){ p.style.display = 'none'; });
         var panel = document.getElementById('intg-detail-' + key);
-        if (panel) panel.style.display = '';
+        if (panel) panel.style.display = 'block';
+        loadIntegrationStatus();
         window.scrollTo(0, 0);
     };
     window.intgShowPicker = function() {
