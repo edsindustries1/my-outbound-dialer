@@ -16,7 +16,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=False)
 
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for, flash
 from werkzeug.utils import secure_filename
@@ -4458,6 +4458,12 @@ def _init_app():
     start_scheduler()
     from humana_voice import fish_client as _fc
     _fc.log_startup_status()
+    _fish_key_name = _fc.get_key_source()
+    if _fish_key_name:
+        print(f"  Fish Audio: CONFIGURED (env var: {_fish_key_name})")
+    else:
+        print("  Fish Audio: NOT CONFIGURED — set FISH_AUDIO_API_KEY in Railway Variables")
+    print("=" * 60)
 
 _init_app()
 
