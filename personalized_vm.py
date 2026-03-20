@@ -1,6 +1,7 @@
 """
-personalized_vm.py - Personalized voicemail generation using ElevenLabs TTS.
+personalized_vm.py - Personalized voicemail generation.
 Handles CSV parsing, template rendering, and audio generation for per-contact voicemails.
+Supports Fish Audio (default, cheap) and ElevenLabs (legacy/premium) as TTS providers.
 """
 
 import os
@@ -511,16 +512,25 @@ def _prepare_tts_payload(script, model_id, vs):
     return payload
 
 
-def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="eleven_multilingual_v2", voice_settings=None, humanize=True):
-    script = render_template(template, contact, humanize=humanize)
-    phone = contact.get("phone", "unknown")
-    safe_phone = re.sub(r'[^\d]', '', phone)
-    filename = f"pvm_{safe_phone}_{int(time.time())}.mp3"
-    filepath = os.path.join(PVM_DIR, filename)
+def _prepare_fish_text(script):
+    """Convert a humanized script to plain text suitable for Fish Audio.
+    Fish Audio does not support SSML — we use punctuation for natural pacing."""
+    text = script
+    # em-dash breath pauses → comma (creates natural pause)
+    text = text.replace(' — ', ', ')
+    text = text.replace('—', ', ')
+    # ellipsis hesitations → comma-space
+    text = re.sub(r'\.\.\.', ', ', text)
+    # clean up double commas or leading commas
+    text = re.sub(r',\s*,', ',', text)
+    text = re.sub(r'\s{2,}', ' ', text)
+    return text.strip()
 
+
+def _generate_audio_elevenlabs(api_key, script, voice_id, model_id, voice_settings, filepath):
+    """Call ElevenLabs TTS and save MP3 to filepath. Returns (success, error_str)."""
     vs = _build_voice_settings(voice_settings)
     payload = _prepare_tts_payload(script, model_id, vs)
-
     try:
         resp = requests.post(
             f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}",
@@ -533,28 +543,62 @@ def generate_audio_for_contact(api_key, contact, template, voice_id, model_id="e
             timeout=60,
         )
         resp.raise_for_status()
-
         with open(filepath, "wb") as f:
             f.write(resp.content)
-
-        return {
-            "phone": phone,
-            "filename": filename,
-            "script": script,
-            "success": True,
-        }
+        return True, None
     except Exception as e:
-        logger.error(f"TTS failed for {phone}: {e}")
-        return {
-            "phone": phone,
-            "filename": None,
-            "script": script,
-            "success": False,
-            "error": str(e),
-        }
+        return False, str(e)
 
 
-def start_generation(contacts, template, voice_id, base_url, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
+def _generate_audio_fish(script, voice_id, fish_speed=1.0, fish_emotion="neutral", filepath=None):
+    """Call Fish Audio TTS and save MP3 to filepath. Returns (success, error_str)."""
+    try:
+        from humana_voice.fish_client import text_to_speech as fish_tts
+        fish_text = _prepare_fish_text(script)
+        resp = fish_tts(voice_id, fish_text, speed=fish_speed, emotion=fish_emotion)
+        audio_bytes = b"".join(resp.iter_content(chunk_size=8192))
+        if not audio_bytes:
+            return False, "Fish Audio returned empty response"
+        with open(filepath, "wb") as f:
+            f.write(audio_bytes)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
+def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_multilingual_v2",
+                                voice_settings=None, humanize=True, provider="fish_audio",
+                                fish_speed=1.0, fish_emotion="neutral", api_key=None):
+    """Generate a personalized voicemail MP3 for one contact.
+
+    provider: "fish_audio" (default, cheaper) or "elevenlabs" (legacy/premium).
+    """
+    script = render_template(template, contact, humanize=humanize)
+    phone = contact.get("phone", "unknown")
+    safe_phone = re.sub(r'[^\d]', '', phone)
+    filename = f"pvm_{safe_phone}_{int(time.time())}.mp3"
+    filepath = os.path.join(PVM_DIR, filename)
+
+    if provider == "fish_audio":
+        success, error = _generate_audio_fish(script, voice_id, fish_speed=fish_speed,
+                                               fish_emotion=fish_emotion, filepath=filepath)
+    else:
+        if not api_key:
+            return {"phone": phone, "filename": None, "script": script, "success": False,
+                    "error": "ElevenLabs API key not provided"}
+        success, error = _generate_audio_elevenlabs(api_key, script, voice_id, model_id,
+                                                     voice_settings, filepath)
+
+    if success:
+        return {"phone": phone, "filename": filename, "script": script, "success": True}
+    else:
+        logger.error(f"TTS ({provider}) failed for {phone}: {error}")
+        return {"phone": phone, "filename": None, "script": script, "success": False, "error": error}
+
+
+def start_generation(contacts, template, voice_id, base_url, voice_settings=None, humanize=True,
+                     model_id="eleven_multilingual_v2", provider="fish_audio",
+                     fish_speed=1.0, fish_emotion="neutral"):
     with _state_lock:
         if _generation_state["status"] == "generating":
             return False, "Generation already in progress"
@@ -571,26 +615,41 @@ def start_generation(contacts, template, voice_id, base_url, voice_settings=None
 
     t = threading.Thread(
         target=_generation_worker,
-        args=(contacts, template, voice_id, base_url, voice_settings, humanize, model_id),
+        args=(contacts, template, voice_id, base_url, voice_settings, humanize, model_id,
+              provider, fish_speed, fish_emotion),
         daemon=True,
     )
     t.start()
+    logger.info(f"PVM generation started: {len(contacts)} contacts, provider={provider}")
     return True, "Generation started"
 
 
-def _generation_worker(contacts, template, voice_id, base_url, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
-    try:
-        api_key = _get_elevenlabs_api_key()
-    except Exception as e:
-        with _state_lock:
-            _generation_state["status"] = "error"
-            _generation_state["errors"].append(f"Auth failed: {e}")
-        return
+def _generation_worker(contacts, template, voice_id, base_url, voice_settings=None, humanize=True,
+                       model_id="eleven_multilingual_v2", provider="fish_audio",
+                       fish_speed=1.0, fish_emotion="neutral"):
+    api_key = None
+    if provider == "elevenlabs":
+        try:
+            api_key = _get_elevenlabs_api_key()
+        except Exception as e:
+            with _state_lock:
+                _generation_state["status"] = "error"
+                _generation_state["errors"].append(f"Auth failed: {e}")
+            return
 
     audio_map = {}
 
     for i, contact in enumerate(contacts):
-        result = generate_audio_for_contact(api_key, contact, template, voice_id, model_id=model_id, voice_settings=voice_settings, humanize=humanize)
+        result = generate_audio_for_contact(
+            contact, template, voice_id,
+            model_id=model_id,
+            voice_settings=voice_settings,
+            humanize=humanize,
+            provider=provider,
+            fish_speed=fish_speed,
+            fish_emotion=fish_emotion,
+            api_key=api_key,
+        )
 
         with _state_lock:
             _generation_state["completed"] = i + 1
@@ -656,38 +715,32 @@ def get_generation_status():
         return dict(_generation_state)
 
 
-def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True, model_id="eleven_multilingual_v2"):
-    try:
-        api_key = _get_elevenlabs_api_key()
-    except Exception as e:
-        return None, str(e)
-
+def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True,
+                           model_id="eleven_multilingual_v2", provider="fish_audio",
+                           fish_speed=1.0, fish_emotion="neutral"):
     script = render_template(template, contact, humanize=humanize)
     filename = f"pvm_preview_{int(time.time())}.mp3"
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
 
-    vs = _build_voice_settings(voice_settings)
-    payload = _prepare_tts_payload(script, model_id, vs)
-
-    try:
-        resp = requests.post(
-            f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}",
-            headers={
-                "xi-api-key": api_key,
-                "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
-            },
-            json=payload,
-            timeout=60,
-        )
-        resp.raise_for_status()
-        with open(filepath, "wb") as f:
-            f.write(resp.content)
-        return filename, script
-    except Exception as e:
-        logger.error(f"Preview TTS failed: {e}")
-        return None, str(e)
+    if provider == "fish_audio":
+        success, error = _generate_audio_fish(script, voice_id, fish_speed=fish_speed,
+                                               fish_emotion=fish_emotion, filepath=filepath)
+        if success:
+            return filename, script
+        logger.error(f"Fish Audio preview failed: {error}")
+        return None, error
+    else:
+        try:
+            api_key = _get_elevenlabs_api_key()
+        except Exception as e:
+            return None, str(e)
+        success, error = _generate_audio_elevenlabs(api_key, script, voice_id, model_id,
+                                                     voice_settings, filepath)
+        if success:
+            return filename, script
+        logger.error(f"ElevenLabs preview failed: {error}")
+        return None, error
 
 
 def clear_personalized_audio():

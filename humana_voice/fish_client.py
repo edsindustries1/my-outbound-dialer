@@ -57,6 +57,11 @@ def get_api_key():
     return key
 
 
+def is_configured():
+    """Return True if a Fish Audio API key is available."""
+    return bool(get_api_key())
+
+
 def get_key_source():
     """Return the source that provided the key ('database_config', env var name, or None)."""
     _, name = _read_api_key()

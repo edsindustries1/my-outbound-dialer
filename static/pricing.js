@@ -9,7 +9,7 @@
   var SDR_MONTHLY_CAPACITY    = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS; // 12,100
 
   var ADDONS = [
-    { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.02, monthlyFlat: 0 },
+    { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.04, monthlyFlat: 0 },
     { id: 'liveTransfer',   label: 'Live Call Transfer',          costPerDial: 0.02, monthlyFlat: 0 },
     { id: 'gatekeeper',     label: 'Gatekeeper Navigator',        costPerDial: 0.05, monthlyFlat: 0 },
     { id: 'transcription',  label: 'Recording & Transcription',   costPerDial: 0.05, monthlyFlat: 0 },

@@ -303,6 +303,36 @@ _LOGIN_MAX_ATTEMPTS = 10
 _LOGIN_WINDOW_SECS = 300
 
 
+def _detect_pvm_provider(voice_id, user_id, pvm_model_id=""):
+    """Determine the TTS provider for a PVM generation request.
+
+    Returns (provider, fish_speed, fish_emotion).
+    - If the voice_id exists in the HumanaVoice table (Fish Audio) → 'fish_audio'
+    - If Fish Audio is configured and the user has an active voice → 'fish_audio'
+    - Otherwise falls back to 'elevenlabs'.
+    """
+    try:
+        from humana_voice.models import HumanaVoice as _HV
+        from humana_voice.fish_client import is_configured as _fish_ok
+
+        # Explicit Fish Audio voice match
+        if voice_id:
+            hv = _HV.query.filter_by(user_id=user_id, voice_id=voice_id).first()
+            if hv:
+                return "fish_audio", hv.style_speed or 1.0, hv.style_emotion or "neutral"
+
+        # Active Fish Audio voice (no explicit voice_id supplied)
+        if _fish_ok():
+            active_hv = _HV.query.filter_by(user_id=user_id, is_active=True).first()
+            if active_hv:
+                return "fish_audio", active_hv.style_speed or 1.0, active_hv.style_emotion or "neutral"
+    except Exception:
+        pass
+
+    # Fall back to ElevenLabs if model is explicitly an EL model or Fish Audio not available
+    return "elevenlabs", 1.0, "neutral"
+
+
 def _login_rate_limit_check(ip):
     now = time.time()
     entry = _login_attempts.get(ip)
@@ -1901,6 +1931,21 @@ def start():
         if not pvm_voice_id:
             preset = get_voice_preset(user_id=current_user.id)
             pvm_voice_id = preset.get("voice_id", "")
+
+        # Detect TTS provider — prefer Fish Audio when voice is from Humana Voice library
+        pvm_provider, fish_speed, fish_emotion = _detect_pvm_provider(
+            pvm_voice_id, current_user.id, pvm_model_id
+        )
+        # If Fish Audio selected, use the active HumanaVoice ID (may override pvm_voice_id)
+        if pvm_provider == "fish_audio" and not pvm_voice_id:
+            try:
+                from humana_voice.models import HumanaVoice as _HV2
+                active_hv2 = _HV2.query.filter_by(user_id=current_user.id, is_active=True).first()
+                if active_hv2:
+                    pvm_voice_id = active_hv2.voice_id
+            except Exception:
+                pass
+
         if not pvm_voice_id:
             return jsonify({"error": "No voice selected for personalized voicemail"}), 400
 
@@ -1929,10 +1974,16 @@ def start():
                 "speed": pvm_speed / 100.0,
                 "use_speaker_boost": True,
             }
-            ok, msg = pvm_start_generation(contacts, pvm_script, pvm_voice_id, base_url, voice_settings=voice_settings, humanize=pvm_humanize, model_id=pvm_model_id)
+            ok, msg = pvm_start_generation(
+                contacts, pvm_script, pvm_voice_id, base_url,
+                voice_settings=voice_settings, humanize=pvm_humanize,
+                model_id=pvm_model_id, provider=pvm_provider,
+                fish_speed=fish_speed, fish_emotion=fish_emotion,
+            )
             if not ok:
                 return jsonify({"error": f"Failed to start PVM generation: {msg}"}), 400
-            logger.info(f"PVM generation started for {len(contacts)} contacts during campaign launch")
+            logger.info(f"PVM generation started for {len(contacts)} contacts "
+                        f"via {pvm_provider} during campaign launch")
 
     start_dialer(user_id=current_user.id)
 
@@ -3284,10 +3335,16 @@ def pvm_preview_audio_endpoint():
     humanize = data.get("humanize", True)
 
     model_id = data.get("model_id", "eleven_multilingual_v2")
-    filename, result = pvm_preview_audio(contact, template, voice_id, voice_settings=voice_settings, humanize=humanize, model_id=model_id)
+    provider, fish_speed, fish_emotion = _detect_pvm_provider(voice_id, current_user.id, model_id)
+    filename, result = pvm_preview_audio(
+        contact, template, voice_id,
+        voice_settings=voice_settings, humanize=humanize,
+        model_id=model_id, provider=provider,
+        fish_speed=fish_speed, fish_emotion=fish_emotion,
+    )
     if filename:
         audio_url = f"{base_url}/audio/personalized/{filename}"
-        return jsonify({"audio_url": audio_url, "script": result})
+        return jsonify({"audio_url": audio_url, "script": result, "provider": provider})
     else:
         return jsonify({"error": f"Failed to generate preview: {result}"}), 500
 
@@ -3301,6 +3358,7 @@ def pvm_generate():
     voice_id = data.get("voice_id", "")
     voice_settings = data.get("voice_settings", None)
     humanize = data.get("humanize", True)
+    model_id = data.get("model_id", "eleven_multilingual_v2")
 
     if not contacts:
         return jsonify({"error": "No contacts provided"}), 400
@@ -3314,11 +3372,16 @@ def pvm_generate():
     if not base_url:
         return jsonify({"error": "Could not determine public URL for audio serving"}), 400
 
-    model_id = data.get("model_id", "eleven_multilingual_v2")
-    success, msg = pvm_start_generation(contacts, template, voice_id, base_url, voice_settings=voice_settings, humanize=humanize, model_id=model_id)
+    provider, fish_speed, fish_emotion = _detect_pvm_provider(voice_id, current_user.id, model_id)
+    success, msg = pvm_start_generation(
+        contacts, template, voice_id, base_url,
+        voice_settings=voice_settings, humanize=humanize,
+        model_id=model_id, provider=provider,
+        fish_speed=fish_speed, fish_emotion=fish_emotion,
+    )
     if not success:
         return jsonify({"error": msg}), 400
-    return jsonify({"message": msg, "total": len(contacts)})
+    return jsonify({"message": msg, "total": len(contacts), "provider": provider})
 
 
 @app.route("/api/pvm/status", methods=["GET"])
@@ -5262,8 +5325,12 @@ def api_admin_cost_usage():
     TRANSFER_BRIDGE_RATE = Decimal("0.004")
     TRANSFER_BRIDGE_MINS = Decimal("4.0")
     PHONE_NUMBER_MONTHLY = Decimal("1.00")
-    ELEVENLABS_CHARS_PER_VM = 350
-    ELEVENLABS_PER_1K_CHARS = Decimal("0.30")
+    TTS_CHARS_PER_VM = 350
+    # Fish Audio is the default TTS provider for PVM (~$0.015/1K chars vs ElevenLabs $0.30/1K)
+    # Using blended rate to account for legacy ElevenLabs users still on EL voice presets
+    TTS_PER_1K_CHARS = Decimal("0.02")  # blended Fish Audio + occasional ElevenLabs
+    ELEVENLABS_CHARS_PER_VM = TTS_CHARS_PER_VM  # kept for backward compat
+    ELEVENLABS_PER_1K_CHARS = TTS_PER_1K_CHARS  # kept for backward compat
     REPLIT_MONTHLY = Decimal("25.00")
     SUBSCRIPTION_MONTHLY = Decimal("99.00")
     CREDIT_PER_CALL = Decimal("0.10")
