@@ -350,6 +350,28 @@
       </div>
     </div>
 
+    <!-- ===== PVM AUDIO CACHE ===== -->
+    <div class="section-title">AI Voicemail Audio Cache</div>
+    <div class="panel" id="pvmCachePanel" style="margin-bottom:28px; display:flex; align-items:center; gap:28px; flex-wrap:wrap;">
+      <div>
+        <div class="metric-label" style="font-size:0.7rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Active Entries</div>
+        <div id="pvmCacheActive" style="font-size:1.4rem;font-weight:800;color:#10b981;">—</div>
+      </div>
+      <div>
+        <div class="metric-label" style="font-size:0.7rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Expired</div>
+        <div id="pvmCacheExpired" style="font-size:1.4rem;font-weight:800;color:#f59e0b;">—</div>
+      </div>
+      <div>
+        <div class="metric-label" style="font-size:0.7rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Cache Size</div>
+        <div id="pvmCacheSize" style="font-size:1.4rem;font-weight:800;color:#fff;">—</div>
+      </div>
+      <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+        <button onclick="loadPvmCache()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:7px;padding:7px 14px;font-size:0.78rem;cursor:pointer;">Refresh</button>
+        <button onclick="runPvmCacheCleanup()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:7px;padding:7px 14px;font-size:0.78rem;cursor:pointer;">Evict Expired</button>
+      </div>
+      <div id="pvmCacheMsg" style="width:100%;font-size:0.78rem;color:rgba(255,255,255,0.35);"></div>
+    </div>
+
     <!-- ===== USER DIRECTORY ===== -->
     <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
       <div class="section-title" style="margin-bottom:0;">User Directory</div>
@@ -1163,6 +1185,35 @@
     function escHtml(str) {
       return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+
+    // ---- PVM Audio Cache ----
+    function loadPvmCache() {
+      fetch('/api/admin/pvm-cache').then(r => r.json()).then(d => {
+        if (d.success) {
+          document.getElementById('pvmCacheActive').textContent = d.active_entries;
+          document.getElementById('pvmCacheExpired').textContent = d.expired_entries;
+          document.getElementById('pvmCacheSize').textContent = d.size_mb + ' MB';
+          document.getElementById('pvmCacheMsg').textContent = 'Cache entries are retained for 30 days and auto-evicted daily.';
+        }
+      }).catch(() => {
+        document.getElementById('pvmCacheMsg').textContent = 'Failed to load cache stats.';
+      });
+    }
+
+    function runPvmCacheCleanup() {
+      document.getElementById('pvmCacheMsg').textContent = 'Evicting expired entries…';
+      fetch('/api/admin/pvm-cache/cleanup', {method:'POST'}).then(r => r.json()).then(d => {
+        if (d.success) {
+          document.getElementById('pvmCacheMsg').textContent = d.message;
+          loadPvmCache();
+        }
+      }).catch(() => {
+        document.getElementById('pvmCacheMsg').textContent = 'Cleanup failed.';
+      });
+    }
+
+    // Load cache stats on page load
+    loadPvmCache();
   </script>
 </body>
 </html>

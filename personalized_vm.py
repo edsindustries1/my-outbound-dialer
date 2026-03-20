@@ -10,16 +10,21 @@ import io
 import re
 import time
 import json
+import shutil
+import hashlib
 import logging
 import threading
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 logger = logging.getLogger("voicemail_app")
 
 UPLOAD_DIR = "uploads"
 PVM_DIR = os.path.join(UPLOAD_DIR, "personalized")
 PVM_STATE_FILE = os.path.join("logs", "pvm_state.json")
+CACHE_DIR = os.path.join(PVM_DIR, "cache")
+CACHE_INDEX_FILE = os.path.join(CACHE_DIR, "cache_index.json")
+CACHE_TTL_DAYS = 30
 
 ALLOWED_PLACEHOLDERS = {
     "name", "first_name", "last_name", "phone", "email",
@@ -38,7 +43,119 @@ _generation_state = {
     "voice_id": "",
 }
 _state_lock = threading.Lock()
+_cache_lock = threading.Lock()
 
+
+# ---------------------------------------------------------------------------
+# Audio cache helpers — content-addressed, 30-day TTL
+# ---------------------------------------------------------------------------
+
+def _cache_key(script, voice_id, provider):
+    """SHA-256 hash of the rendered script + voice + provider. Used as cache key."""
+    raw = f"{script}|{voice_id}|{provider}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _load_cache_index():
+    if os.path.exists(CACHE_INDEX_FILE):
+        try:
+            with open(CACHE_INDEX_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def _save_cache_index(index):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(CACHE_INDEX_FILE, "w") as f:
+        json.dump(index, f, indent=2)
+
+
+def _cache_lookup(script, voice_id, provider):
+    """Return path to a cached audio file if it exists and is not expired, else None."""
+    key = _cache_key(script, voice_id, provider)
+    with _cache_lock:
+        index = _load_cache_index()
+        entry = index.get(key)
+        if not entry:
+            return None
+        cached_path = entry.get("filepath", "")
+        if not os.path.exists(cached_path):
+            return None
+        created_at = datetime.fromisoformat(entry.get("created_at", "2000-01-01"))
+        if datetime.utcnow() - created_at > timedelta(days=CACHE_TTL_DAYS):
+            return None
+        return cached_path
+
+
+def _cache_store(script, voice_id, provider, source_filepath):
+    """Copy a freshly-generated audio file into the cache. Returns cached filepath."""
+    key = _cache_key(script, voice_id, provider)
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    cached_filename = f"c_{key[:16]}.mp3"
+    cached_path = os.path.join(CACHE_DIR, cached_filename)
+    with _cache_lock:
+        if not os.path.exists(cached_path):
+            shutil.copy2(source_filepath, cached_path)
+        index = _load_cache_index()
+        index[key] = {
+            "filepath": cached_path,
+            "created_at": datetime.utcnow().isoformat(),
+            "script_preview": script[:80],
+            "voice_id": voice_id,
+            "provider": provider,
+        }
+        _save_cache_index(index)
+    return cached_path
+
+
+def cache_cleanup():
+    """Remove cache entries and files older than CACHE_TTL_DAYS. Returns (kept, removed) counts."""
+    with _cache_lock:
+        index = _load_cache_index()
+        cutoff = datetime.utcnow() - timedelta(days=CACHE_TTL_DAYS)
+        keep, remove = {}, []
+        for key, entry in index.items():
+            created_at = datetime.fromisoformat(entry.get("created_at", "2000-01-01"))
+            if created_at < cutoff:
+                remove.append(entry.get("filepath", ""))
+            else:
+                keep[key] = entry
+        for fp in remove:
+            try:
+                if fp and os.path.exists(fp):
+                    os.remove(fp)
+            except Exception:
+                pass
+        _save_cache_index(keep)
+        return len(keep), len(remove)
+
+
+def get_cache_stats():
+    """Return summary stats about the audio cache."""
+    with _cache_lock:
+        index = _load_cache_index()
+    total = len(index)
+    size_bytes = 0
+    expired = 0
+    cutoff = datetime.utcnow() - timedelta(days=CACHE_TTL_DAYS)
+    for entry in index.values():
+        fp = entry.get("filepath", "")
+        if os.path.exists(fp):
+            size_bytes += os.path.getsize(fp)
+        created_at = datetime.fromisoformat(entry.get("created_at", "2000-01-01"))
+        if created_at < cutoff:
+            expired += 1
+    return {
+        "total_entries": total,
+        "expired_entries": expired,
+        "active_entries": total - expired,
+        "size_mb": round(size_bytes / (1024 * 1024), 2),
+    }
+
+
+# ---------------------------------------------------------------------------
 
 def _get_elevenlabs_api_key():
     api_key = os.environ.get("ELEVENLABS_API_KEY", "")
@@ -568,17 +685,36 @@ def _generate_audio_fish(script, voice_id, fish_speed=1.0, fish_emotion="neutral
 
 def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_multilingual_v2",
                                 voice_settings=None, humanize=True, provider="fish_audio",
-                                fish_speed=1.0, fish_emotion="neutral", api_key=None):
+                                fish_speed=1.0, fish_emotion="neutral", api_key=None,
+                                _prerendered_script=None, _cached_source=None):
     """Generate a personalized voicemail MP3 for one contact.
 
     provider: "fish_audio" (default, cheaper) or "elevenlabs" (legacy/premium).
+
+    Optimisation params (internal):
+      _prerendered_script: skip render_template() — script already computed by the batch worker
+      _cached_source: filepath to an already-generated audio file to copy instead of calling TTS
     """
-    script = render_template(template, contact, humanize=humanize)
+    script = _prerendered_script if _prerendered_script is not None else render_template(template, contact, humanize=humanize)
     phone = contact.get("phone", "unknown")
     safe_phone = re.sub(r'[^\d]', '', phone)
     filename = f"pvm_{safe_phone}_{int(time.time())}.mp3"
     filepath = os.path.join(PVM_DIR, filename)
+    os.makedirs(PVM_DIR, exist_ok=True)
 
+    # --- Deduplication: worker found a previously-generated file for identical script ---
+    if _cached_source and os.path.exists(_cached_source):
+        shutil.copy2(_cached_source, filepath)
+        return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": True}
+
+    # --- Content-addressed cache lookup ---
+    cached_path = _cache_lookup(script, voice_id, provider)
+    if cached_path:
+        shutil.copy2(cached_path, filepath)
+        logger.debug(f"PVM cache hit for {phone} ({provider})")
+        return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": True}
+
+    # --- Generate fresh audio ---
     if provider == "fish_audio":
         success, error = _generate_audio_fish(script, voice_id, fish_speed=fish_speed,
                                                fish_emotion=fish_emotion, filepath=filepath)
@@ -590,7 +726,12 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
                                                      voice_settings, filepath)
 
     if success:
-        return {"phone": phone, "filename": filename, "script": script, "success": True}
+        # Store in content-addressed cache for future reuse
+        try:
+            _cache_store(script, voice_id, provider, filepath)
+        except Exception as ce:
+            logger.warning(f"PVM cache store failed: {ce}")
+        return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": False}
     else:
         logger.error(f"TTS ({provider}) failed for {phone}: {error}")
         return {"phone": phone, "filename": None, "script": script, "success": False, "error": error}
@@ -637,11 +778,42 @@ def _generation_worker(contacts, template, voice_id, base_url, voice_settings=No
                 _generation_state["errors"].append(f"Auth failed: {e}")
             return
 
-    audio_map = {}
+    # --- Phase 1: Pre-render all scripts and group contacts by identical script ---
+    # This deduplicates TTS calls: if 50 contacts share the same script (e.g., no {first_name}
+    # placeholder or duplicate names), we only call the TTS API once.
+    script_groups = {}  # rendered_script -> list of contacts
+    contact_scripts = {}  # phone -> rendered_script
+    for contact in contacts:
+        script = render_template(template, contact, humanize=humanize)
+        phone = contact.get("phone", "unknown")
+        contact_scripts[phone] = script
+        script_groups.setdefault(script, []).append(contact)
 
-    for i, contact in enumerate(contacts):
+    unique_scripts = list(script_groups.keys())
+    total_contacts = len(contacts)
+    unique_count = len(unique_scripts)
+    dup_count = total_contacts - unique_count
+    if dup_count > 0:
+        logger.info(f"PVM deduplication: {total_contacts} contacts → {unique_count} unique scripts "
+                    f"({dup_count} duplicates avoided)")
+
+    audio_map = {}
+    completed = 0
+
+    # --- Phase 2: Generate one audio file per unique script ---
+    # script → first generated filepath (used to copy for duplicates)
+    script_to_filepath = {}
+
+    for script, group in script_groups.items():
+        primary_contact = group[0]
+        phone = primary_contact.get("phone", "unknown")
+
+        # Check if we already have a source file for this script (from a previous iteration — shouldn't happen
+        # since scripts are keys, but guard anyway)
+        cached_source = script_to_filepath.get(script)
+
         result = generate_audio_for_contact(
-            contact, template, voice_id,
+            primary_contact, template, voice_id,
             model_id=model_id,
             voice_settings=voice_settings,
             humanize=humanize,
@@ -649,31 +821,80 @@ def _generation_worker(contacts, template, voice_id, base_url, voice_settings=No
             fish_speed=fish_speed,
             fish_emotion=fish_emotion,
             api_key=api_key,
+            _prerendered_script=script,
+            _cached_source=cached_source,
         )
 
+        completed += 1
         with _state_lock:
-            _generation_state["completed"] = i + 1
+            _generation_state["completed"] = completed
 
         if result["success"]:
+            source_file = os.path.join(PVM_DIR, result["filename"])
+            script_to_filepath[script] = source_file
             audio_url = f"{base_url}/audio/personalized/{result['filename']}"
             audio_map[result["phone"]] = {
                 "audio_url": audio_url,
                 "script": result["script"],
                 "filename": result["filename"],
+                "from_cache": result.get("from_cache", False),
             }
+
+            # --- Phase 3: Copy audio for duplicate contacts in this group ---
+            for dup_contact in group[1:]:
+                dup_result = generate_audio_for_contact(
+                    dup_contact, template, voice_id,
+                    model_id=model_id,
+                    voice_settings=voice_settings,
+                    humanize=humanize,
+                    provider=provider,
+                    fish_speed=fish_speed,
+                    fish_emotion=fish_emotion,
+                    api_key=api_key,
+                    _prerendered_script=script,
+                    _cached_source=source_file,
+                )
+                completed += 1
+                with _state_lock:
+                    _generation_state["completed"] = completed
+                if dup_result["success"]:
+                    dup_url = f"{base_url}/audio/personalized/{dup_result['filename']}"
+                    audio_map[dup_result["phone"]] = {
+                        "audio_url": dup_url,
+                        "script": dup_result["script"],
+                        "filename": dup_result["filename"],
+                        "from_cache": True,
+                    }
+                else:
+                    with _state_lock:
+                        _generation_state["errors"].append(
+                            f"{dup_result['phone']}: {dup_result.get('error', 'Unknown error')}"
+                        )
         else:
             with _state_lock:
-                _generation_state["errors"].append(f"{result['phone']}: {result.get('error', 'Unknown error')}")
+                _generation_state["errors"].append(f"{phone}: {result.get('error', 'Unknown error')}")
+            # Mark all duplicates in this group as failed too
+            for dup_contact in group[1:]:
+                completed += 1
+                dp = dup_contact.get("phone", "unknown")
+                with _state_lock:
+                    _generation_state["completed"] = completed
+                    _generation_state["errors"].append(f"{dp}: skipped (primary generation failed)")
 
-        if i < len(contacts) - 1:
-            time.sleep(0.5)
+        # Small rate-limit pause between unique scripts only
+        if completed < total_contacts:
+            time.sleep(0.3)
 
     _save_audio_map(audio_map)
 
+    cache_hits = sum(1 for v in audio_map.values() if v.get("from_cache"))
     with _state_lock:
         _generation_state["status"] = "complete"
 
-    logger.info(f"Personalized VM generation complete: {len(audio_map)}/{len(contacts)} successful")
+    logger.info(
+        f"Personalized VM generation complete: {len(audio_map)}/{total_contacts} successful "
+        f"({cache_hits} from cache, {unique_count} unique TTS calls)"
+    )
 
 
 def _save_audio_map(audio_map):

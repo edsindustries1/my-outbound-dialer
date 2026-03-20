@@ -123,6 +123,8 @@ from personalized_vm import (
     get_audio_map as pvm_get_audio_map,
     clear_personalized_audio as pvm_clear,
     generate_preview_audio as pvm_preview_audio,
+    cache_cleanup as pvm_cache_cleanup,
+    get_cache_stats as pvm_cache_stats,
 )
 
 _amd_timers = {}
@@ -3267,10 +3269,25 @@ def _report_scheduler_worker():
 
 _scheduler_thread = None
 _report_thread = None
+_pvm_cache_thread = None
+
+
+def _pvm_cache_worker():
+    """Daily background task: evict expired entries from the PVM audio cache."""
+    import time as _time
+    _time.sleep(60)  # brief startup delay
+    while True:
+        try:
+            kept, removed = pvm_cache_cleanup()
+            if removed:
+                logger.info(f"PVM cache cleanup: removed {removed} expired entries, {kept} retained")
+        except Exception as e:
+            logger.error(f"PVM cache cleanup error: {e}")
+        _time.sleep(86400)  # run once every 24 hours
 
 
 def start_scheduler():
-    global _scheduler_thread, _report_thread
+    global _scheduler_thread, _report_thread, _pvm_cache_thread
     if not _scheduler_thread or not _scheduler_thread.is_alive():
         _scheduler_thread = threading.Thread(target=_scheduler_worker, daemon=True)
         _scheduler_thread.start()
@@ -3278,6 +3295,9 @@ def start_scheduler():
     if not _report_thread or not _report_thread.is_alive():
         _report_thread = threading.Thread(target=_report_scheduler_worker, daemon=True)
         _report_thread.start()
+    if not _pvm_cache_thread or not _pvm_cache_thread.is_alive():
+        _pvm_cache_thread = threading.Thread(target=_pvm_cache_worker, daemon=True)
+        _pvm_cache_thread.start()
 
 
 # ---- Personalized Voicemail API ----
@@ -5642,6 +5662,23 @@ def api_admin_lookup_user():
         },
         "features": features,
     })
+
+
+@app.route("/api/admin/pvm-cache", methods=["GET"])
+@admin_required
+def api_admin_pvm_cache_stats():
+    """Return PVM audio cache stats for the super admin panel."""
+    stats = pvm_cache_stats()
+    return jsonify({"success": True, **stats})
+
+
+@app.route("/api/admin/pvm-cache/cleanup", methods=["POST"])
+@admin_required
+def api_admin_pvm_cache_cleanup():
+    """Manually trigger cache eviction of entries older than TTL."""
+    kept, removed = pvm_cache_cleanup()
+    return jsonify({"success": True, "kept": kept, "removed": removed,
+                    "message": f"Removed {removed} expired entries, {kept} active."})
 
 
 @app.route("/api/request-feature", methods=["POST"])
