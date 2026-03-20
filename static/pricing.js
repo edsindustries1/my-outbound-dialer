@@ -2,7 +2,7 @@
   'use strict';
 
   /* ══ PRICING CONSTANTS ══ */
-  var BASE_COST_PER_DIAL = 0.015;
+  var BASE_COST_PER_DIAL = 0.020;
   var HUMAN_SDR_COST     = 5000;
 
   var ADDONS = [
