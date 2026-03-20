@@ -81,7 +81,7 @@
             <span class="pbm-sep">+</span>
             <span class="pbm-usage">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              ~$0.015/dial usage
+              from $0.015/dial + add-ons
             </span>
           </div>
         </div>
@@ -111,7 +111,7 @@
             1 active campaign at a time
           </li>
         </ul>
-        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Usage billed separately at $0.015 per dial. Average customer doing 100 dials/day pays approx. $99 + $33 in usage per month.</p>
+        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Base usage from $0.015/dial. Enable optional add-ons in the calculator below to see your full estimated bill.</p>
         <div class="plan-cta-area">
           <button class="plan-btn plan-btn-outline" data-plan="starter" data-amount="99">
             <span class="btn-label">Get Started</span>
@@ -138,7 +138,7 @@
             <span class="pbm-sep">+</span>
             <span class="pbm-usage">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              ~$0.015/dial usage
+              from $0.015/dial + add-ons
             </span>
           </div>
         </div>
@@ -172,7 +172,7 @@
             Priority support
           </li>
         </ul>
-        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Usage billed separately at $0.015 per dial.</p>
+        <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Base usage from $0.015/dial. Enable optional add-ons in the calculator below to see your full estimated bill.</p>
         <div class="plan-cta-area">
           <button class="plan-btn plan-btn-fill" data-plan="business" data-amount="399">
             <span class="btn-label">Get Started</span>
@@ -229,11 +229,17 @@
     <section class="calc-section" id="calculator">
       <div class="calc-header">
         <p class="calc-eyebrow">Pricing Calculator</p>
-        <h2 class="calc-title">See exactly what you'll pay</h2>
-        <p class="calc-subtitle">No surprises. Enter your daily dial volume and get a transparent breakdown — platform fee plus real usage costs — before you sign up.</p>
+        <h2 class="calc-title">Build your plan. See your exact bill.</h2>
+        <p class="calc-subtitle">Toggle the features you need, set your dial volume, and get a line-by-line breakdown before you ever sign up. No estimates. No surprises.</p>
       </div>
 
       <div class="calc-card">
+
+        <!-- ── Step 1: Volume ── -->
+        <div class="calc-section-label">
+          <span class="calc-step-num">1</span>
+          Set your volume
+        </div>
         <div class="calc-inputs">
 
           <div class="calc-field">
@@ -268,8 +274,131 @@
 
         <div class="calc-divider"></div>
 
+        <!-- ── Step 2: Features ── -->
+        <div class="calc-section-label">
+          <span class="calc-step-num">2</span>
+          Choose your features
+        </div>
+        <div class="calc-features-list">
+
+          <!-- Always-on: Outbound Dialing + AMD -->
+          <div class="calc-feat calc-feat--locked">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.09-1.09a2 2 0 012.11-.45c.91.34 1.85.58 2.81.7A2 2 0 0122 16.92z"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Outbound Dialing + AMD</span>
+              <span class="calc-feat-desc">Premium answering machine detection — 97% accuracy, every call</span>
+            </div>
+            <span class="calc-feat-tag calc-feat-tag--included">Included</span>
+            <div class="calc-feat-switch calc-feat-switch--locked calc-feat-switch--on" aria-label="Always on"></div>
+          </div>
+
+          <!-- Always-on: Voicemail Drop -->
+          <div class="calc-feat calc-feat--locked">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Voicemail Drop</span>
+              <span class="calc-feat-desc">Drops your pre-recorded voicemail the instant a machine is detected</span>
+            </div>
+            <span class="calc-feat-tag calc-feat-tag--included">Included</span>
+            <div class="calc-feat-switch calc-feat-switch--locked calc-feat-switch--on" aria-label="Always on"></div>
+          </div>
+
+          <!-- Toggle: Personalized AI Voicemails -->
+          <label class="calc-feat calc-feat--toggle" for="feat-personalizedVm">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Personalized AI Voicemails</span>
+              <span class="calc-feat-desc">AI generates a unique voicemail per contact — name, company, context</span>
+            </div>
+            <span class="calc-feat-price">+$0.02<span class="calc-feat-price-unit">/dial</span></span>
+            <div class="calc-feat-sw-wrap">
+              <input type="checkbox" id="feat-personalizedVm" class="calc-addon-cb" data-addon="personalizedVm">
+              <span class="calc-feat-switch"></span>
+            </div>
+          </label>
+
+          <!-- Toggle: Live Call Transfer -->
+          <label class="calc-feat calc-feat--toggle" for="feat-liveTransfer">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Live Call Transfer</span>
+              <span class="calc-feat-desc">When a human answers, Alex bridges the call directly to your phone</span>
+            </div>
+            <span class="calc-feat-price">+$0.02<span class="calc-feat-price-unit">/dial</span></span>
+            <div class="calc-feat-sw-wrap">
+              <input type="checkbox" id="feat-liveTransfer" class="calc-addon-cb" data-addon="liveTransfer">
+              <span class="calc-feat-switch"></span>
+            </div>
+          </label>
+
+          <!-- Toggle: Gatekeeper Navigator -->
+          <label class="calc-feat calc-feat--toggle" for="feat-gatekeeper">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Gatekeeper Navigator</span>
+              <span class="calc-feat-desc">AI talks through receptionists &amp; IVR menus to reach the decision-maker</span>
+            </div>
+            <span class="calc-feat-price">+$0.02<span class="calc-feat-price-unit">/dial</span></span>
+            <div class="calc-feat-sw-wrap">
+              <input type="checkbox" id="feat-gatekeeper" class="calc-addon-cb" data-addon="gatekeeper">
+              <span class="calc-feat-switch"></span>
+            </div>
+          </label>
+
+          <!-- Toggle: Recording + Transcription -->
+          <label class="calc-feat calc-feat--toggle" for="feat-transcription">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Call Recording &amp; Transcription</span>
+              <span class="calc-feat-desc">Full call recordings with real-time searchable transcripts in your dashboard</span>
+            </div>
+            <span class="calc-feat-price">+$0.05<span class="calc-feat-price-unit">/dial</span></span>
+            <div class="calc-feat-sw-wrap">
+              <input type="checkbox" id="feat-transcription" class="calc-addon-cb" data-addon="transcription">
+              <span class="calc-feat-switch"></span>
+            </div>
+          </label>
+
+          <!-- Toggle: Voice Cloning -->
+          <label class="calc-feat calc-feat--toggle" for="feat-voiceCloning">
+            <div class="calc-feat-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>
+            </div>
+            <div class="calc-feat-body">
+              <span class="calc-feat-name">Voice Cloning</span>
+              <span class="calc-feat-desc">Clone your own voice — Alex sounds exactly like you on every call</span>
+            </div>
+            <span class="calc-feat-price">+$19<span class="calc-feat-price-unit">/mo</span></span>
+            <div class="calc-feat-sw-wrap">
+              <input type="checkbox" id="feat-voiceCloning" class="calc-addon-cb" data-addon="voiceCloning">
+              <span class="calc-feat-switch"></span>
+            </div>
+          </label>
+
+        </div>
+
+        <div class="calc-divider"></div>
+
+        <!-- ── Step 3: Results ── -->
+        <div class="calc-section-label">
+          <span class="calc-step-num">3</span>
+          Your estimated monthly bill
+        </div>
         <div class="calc-results">
           <div class="calc-breakdown">
+
             <div class="calc-line">
               <div class="calc-line-left">
                 <span id="planBadge" class="calc-plan-badge">Starter Plan</span>
@@ -277,17 +406,91 @@
               </div>
               <span class="calc-line-amount" id="platformFeeDisplay">$99</span>
             </div>
+
             <div class="calc-line">
               <div class="calc-line-left">
-                <span class="calc-line-label">Usage estimate</span>
-                <span class="calc-line-note" id="usageNote">200 dials × 22 days × $0.015/dial</span>
+                <div>
+                  <span class="calc-line-label">Base usage</span>
+                  <span class="calc-line-note" id="usageNote">200 dials × 22 days × $0.015/dial</span>
+                </div>
               </div>
               <span class="calc-line-amount" id="usageDisplay">$66</span>
             </div>
+
+            <!-- Add-on result lines (shown when toggled on) -->
+            <div class="calc-addon-wrap" id="addonWrap-personalizedVm">
+              <div class="calc-line calc-addon-line">
+                <div class="calc-line-left">
+                  <div class="calc-addon-dot"></div>
+                  <div>
+                    <span class="calc-line-label">Personalized AI Voicemails</span>
+                    <span class="calc-line-note" id="addonNote-personalizedVm"></span>
+                  </div>
+                </div>
+                <span class="calc-line-amount calc-addon-amount" id="addonAmt-personalizedVm"></span>
+              </div>
+            </div>
+
+            <div class="calc-addon-wrap" id="addonWrap-liveTransfer">
+              <div class="calc-line calc-addon-line">
+                <div class="calc-line-left">
+                  <div class="calc-addon-dot"></div>
+                  <div>
+                    <span class="calc-line-label">Live Call Transfer</span>
+                    <span class="calc-line-note" id="addonNote-liveTransfer"></span>
+                  </div>
+                </div>
+                <span class="calc-line-amount calc-addon-amount" id="addonAmt-liveTransfer"></span>
+              </div>
+            </div>
+
+            <div class="calc-addon-wrap" id="addonWrap-gatekeeper">
+              <div class="calc-line calc-addon-line">
+                <div class="calc-line-left">
+                  <div class="calc-addon-dot"></div>
+                  <div>
+                    <span class="calc-line-label">Gatekeeper Navigator</span>
+                    <span class="calc-line-note" id="addonNote-gatekeeper"></span>
+                  </div>
+                </div>
+                <span class="calc-line-amount calc-addon-amount" id="addonAmt-gatekeeper"></span>
+              </div>
+            </div>
+
+            <div class="calc-addon-wrap" id="addonWrap-transcription">
+              <div class="calc-line calc-addon-line">
+                <div class="calc-line-left">
+                  <div class="calc-addon-dot"></div>
+                  <div>
+                    <span class="calc-line-label">Recording &amp; Transcription</span>
+                    <span class="calc-line-note" id="addonNote-transcription"></span>
+                  </div>
+                </div>
+                <span class="calc-line-amount calc-addon-amount" id="addonAmt-transcription"></span>
+              </div>
+            </div>
+
+            <div class="calc-addon-wrap" id="addonWrap-voiceCloning">
+              <div class="calc-line calc-addon-line">
+                <div class="calc-line-left">
+                  <div class="calc-addon-dot"></div>
+                  <div>
+                    <span class="calc-line-label">Voice Cloning</span>
+                    <span class="calc-line-note">Flat monthly add-on</span>
+                  </div>
+                </div>
+                <span class="calc-line-amount calc-addon-amount" id="addonAmt-voiceCloning">$19</span>
+              </div>
+            </div>
+
             <div class="calc-line calc-total-line">
-              <span class="calc-line-label">Estimated monthly total</span>
+              <div>
+                <span class="calc-line-label">Estimated monthly total</span>
+                <span class="calc-effective-rate" id="effectiveRateNote">at $0.015/dial effective rate</span>
+              </div>
               <span class="calc-total-amount" id="totalDisplay">$165 / mo</span>
             </div>
+
           </div>
 
           <div class="calc-vs-block">
@@ -316,7 +519,7 @@
 
         <div class="calc-footer">
           <button class="plan-btn plan-btn-fill calc-cta-btn" id="calcCtaBtn">Get Started</button>
-          <p class="calc-disclaimer">Usage estimate based on ~$0.015 per dial (carrier fees + AI voicemail synthesis). Actual costs vary by call duration and answer rate. No contract — cancel anytime.</p>
+          <p class="calc-disclaimer">Base usage at $0.015/dial (carrier + AI voicemail synthesis). Add-on features billed per dial as selected above. Actual costs vary by call duration and answer rate. No contract — cancel anytime.</p>
         </div>
       </div>
     </section>
@@ -344,7 +547,7 @@
       <div class="faq-grid">
         <div class="faq-item">
           <h3>What will my total monthly bill actually be?</h3>
-          <p>Your bill has two parts: the flat platform fee ($99 or $399/mo) plus pay-as-you-go usage. Usage is charged at $0.015 per dial. A customer on the $99 plan doing 100 dials per day across 22 working days will use approximately 2,200 dials, adding around $33 in usage. A heavier user doing 300 dials per day would add approximately $99 in usage on top of the platform fee. You can see your real-time usage and projected bill at any time inside your dashboard. No surprise charges — ever.</p>
+          <p>Your bill has two parts: the flat platform fee ($99 or $399/mo) plus pay-as-you-go usage. Base usage starts at $0.015/dial (carrier fees + AI voicemail synthesis). Optional add-ons are billed per dial on top of the base — Personalized AI Voicemails (+$0.02/dial), Live Transfer (+$0.02/dial), Gatekeeper Navigator (+$0.02/dial), Recording &amp; Transcription (+$0.05/dial), and Voice Cloning (+$19/mo flat). Use the calculator above to see your exact line-by-line estimate based on the features you actually need. No surprise charges — ever.</p>
         </div>
         <div class="faq-item">
           <h3>Can I switch plans later?</h3>

@@ -570,3 +570,260 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
   .calc-line{padding:12px 16px}
   .calc-vs-block{padding:20px}
 }
+
+/* ══════════════ CALC STEP LABELS ══════════════ */
+.calc-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 44px 0;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+.calc-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+@media(max-width:600px) {
+  .calc-section-label { padding: 14px 24px 0; }
+}
+
+/* ══════════════ FEATURE TOGGLE LIST ══════════════ */
+.calc-features-list {
+  padding: 16px 44px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media(max-width:600px) {
+  .calc-features-list { padding: 14px 24px 24px; }
+}
+
+/* ── Base feature row ── */
+.calc-feat {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  position: relative;
+}
+
+/* ── Locked (always-on) rows ── */
+.calc-feat--locked {
+  background: var(--bg-subtle);
+  opacity: .75;
+  cursor: default;
+}
+
+/* ── Toggleable rows ── */
+.calc-feat--toggle {
+  cursor: pointer;
+  user-select: none;
+}
+.calc-feat--toggle:hover {
+  border-color: #c4c8d0;
+  background: #fafbfc;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.calc-feat--toggle:has(.calc-addon-cb:checked) {
+  border-color: var(--accent);
+  background: #f8f8fa;
+  box-shadow: 0 0 0 3px rgba(26,26,26,.06);
+}
+
+/* ── Feature icon ── */
+.calc-feat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: background .2s, color .2s;
+}
+.calc-feat--toggle:has(.calc-addon-cb:checked) .calc-feat-icon {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Feature text ── */
+.calc-feat-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.calc-feat-name {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.calc-feat-desc {
+  font-size: .78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ── "Included" tag (locked items) ── */
+.calc-feat-tag {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.calc-feat-tag--included {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── Per-dial / per-month price label ── */
+.calc-feat-price {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  transition: color .2s;
+}
+.calc-feat-price-unit {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.calc-feat--toggle:has(.calc-addon-cb:checked) .calc-feat-price {
+  color: var(--accent);
+}
+
+/* ── Toggle switch wrapper ── */
+.calc-feat-sw-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ── Hidden native checkbox ── */
+.calc-addon-cb {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ── Toggle switch track + thumb ── */
+.calc-feat-switch {
+  display: block;
+  width: 44px;
+  height: 24px;
+  border-radius: 99px;
+  background: #d1d5db;
+  position: relative;
+  transition: background .22s cubic-bezier(.4,0,.2,1);
+  flex-shrink: 0;
+}
+.calc-feat-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.22);
+  transition: transform .22s cubic-bezier(.4,0,.2,1);
+}
+.calc-addon-cb:checked + .calc-feat-switch {
+  background: var(--accent);
+}
+.calc-addon-cb:checked + .calc-feat-switch::after {
+  transform: translateX(20px);
+}
+.calc-feat-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Locked switch (always on, non-interactive) ── */
+.calc-feat-switch--locked {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.calc-feat-switch--on {
+  background: #6b7280;
+}
+.calc-feat-switch--on::after {
+  transform: translateX(20px);
+}
+
+/* ══════════════ ADD-ON RESULT LINES ══════════════ */
+.calc-addon-wrap {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .25s ease;
+}
+.calc-addon-wrap.active {
+  max-height: 72px;
+  opacity: 1;
+}
+.calc-addon-line {
+  background: #fafbfc;
+}
+.calc-addon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+.calc-addon-amount {
+  color: var(--accent);
+}
+
+/* ── Effective rate note under total ── */
+.calc-effective-rate {
+  display: block;
+  font-size: .73rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+  transition: opacity .2s;
+}
+
+/* ── Results section label spacing ── */
+.calc-results {
+  padding-top: 0;
+}
+.calc-section-label + .calc-results {
+  padding-top: 0;
+}
