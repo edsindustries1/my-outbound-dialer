@@ -5527,6 +5527,44 @@ def api_admin_swap_log():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/request-feature", methods=["POST"])
+@login_required
+def request_feature_access():
+    """User requests access to a locked feature — fires a Telegram notification to the owner."""
+    try:
+        data = request.get_json() or {}
+        feature_key = str(data.get("feature_key", ""))[:64]
+        feature_label = str(data.get("feature_label", feature_key))[:128]
+        user_plan = _get_user_plan(current_user.id) or "none"
+
+        def _notify():
+            try:
+                bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if not bot_token or not chat_id:
+                    return
+                msg = (
+                    f"\U0001f511 *Feature Access Request*\n\n"
+                    f"*User:* {current_user.email} (ID: {current_user.id})\n"
+                    f"*Feature:* {feature_label} (`{feature_key}`)\n"
+                    f"*Current Plan:* {user_plan}"
+                )
+                requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"},
+                    timeout=10,
+                )
+                logger.info(f"Feature request notification sent: {feature_key} by {current_user.email}")
+            except Exception as e:
+                logger.error(f"Feature request Telegram notify failed: {e}")
+
+        threading.Thread(target=_notify, daemon=True).start()
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Request feature error: {e}")
+        return jsonify({"success": False, "error": "Server error"}), 500
+
+
 # ---- Startup initialization (runs for both direct and gunicorn) ----
 def _init_app():
     print("=" * 60)

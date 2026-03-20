@@ -12,6 +12,98 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="icon" type="image/png" href="/static/images/logo.png">
   <link rel="apple-touch-icon" href="/static/images/logo.png">
+  <style>
+    /* ===== Feature Gating — Lock Overlays & Upgrade Modal ===== */
+    .feat-lock-overlay {
+      position: absolute; inset: 0;
+      background: rgba(8, 8, 18, 0.86);
+      backdrop-filter: blur(5px);
+      border-radius: inherit;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 50; text-align: center; padding: 36px 28px;
+    }
+    .feat-lock-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(139,92,246,0.14);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .feat-lock-plan-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      background: rgba(139,92,246,0.15); color: #a78bfa;
+      margin-bottom: 10px; display: inline-block; font-weight: 600;
+    }
+    .feat-lock-title {
+      font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px;
+    }
+    .feat-lock-desc {
+      font-size: 13px; color: rgba(255,255,255,0.45);
+      max-width: 300px; line-height: 1.55; margin-bottom: 20px;
+    }
+    .feat-lock-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; border: none; border-radius: 8px;
+      padding: 10px 22px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .feat-lock-btn:hover { opacity: .84; }
+    .wiz-type-card.feat-type-locked {
+      opacity: .52 !important; cursor: not-allowed !important; pointer-events: auto;
+    }
+    .an-tab .feat-tab-lock, .hv-tab .feat-tab-lock {
+      display: inline-block; vertical-align: middle; margin-left: 5px; opacity: .45;
+    }
+    /* ===== Upgrade Modal ===== */
+    #upgradeModal {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(7px);
+      opacity: 0; pointer-events: none; transition: opacity .22s;
+    }
+    #upgradeModal.active { opacity: 1; pointer-events: all; }
+    .upgrade-modal-box {
+      background: #12121e;
+      border: 1px solid rgba(99,102,241,.28);
+      border-radius: 18px; padding: 36px 30px;
+      max-width: 420px; width: 92%; text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.55);
+    }
+    .upgrade-modal-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(139,92,246,.13);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+    }
+    .upgrade-modal-plan-badge {
+      font-size: 11px; padding: 3px 11px; border-radius: 20px;
+      background: rgba(139,92,246,.15); color: #a78bfa;
+      margin-bottom: 12px; display: inline-block; font-weight: 600;
+    }
+    .upgrade-modal-title {
+      font-size: 21px; font-weight: 800; color: #fff; margin-bottom: 8px;
+    }
+    .upgrade-modal-desc {
+      font-size: 13px; color: rgba(255,255,255,.48);
+      line-height: 1.6; margin-bottom: 24px;
+    }
+    .upgrade-modal-actions { display: flex; flex-direction: column; gap: 9px; }
+    .upgrade-modal-primary {
+      background: linear-gradient(135deg,#6366f1,#8b5cf6);
+      color: #fff; border: none; border-radius: 9px;
+      padding: 13px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity .2s; width: 100%;
+    }
+    .upgrade-modal-primary:hover { opacity: .85; }
+    .upgrade-modal-primary:disabled { opacity: .6; cursor: default; }
+    .upgrade-modal-secondary {
+      background: transparent; color: rgba(255,255,255,.38);
+      border: 1px solid rgba(255,255,255,.1); border-radius: 9px;
+      padding: 11px; font-size: 13px; cursor: pointer;
+      transition: all .2s; width: 100%;
+    }
+    .upgrade-modal-secondary:hover { color: rgba(255,255,255,.65); }
+  </style>
 </head>
 <body>
 
@@ -2199,6 +2291,7 @@
 
     <!-- ===== NAVIGATION / VIEW SWITCHING SCRIPT ===== -->
     <script>
+        var USER_FEATURES = {{ user_features | tojson }};
         var _gadsCurrentPage = 'dashboard';
         var _gadsPageTitles = {
             dashboard:    'Dashboard',
@@ -7032,5 +7125,195 @@
 
 <div class="hv-toast" id="hvToast"></div>
 <script src="/static/humana_voice/hv.js"></script>
+
+<!-- ===== Feature Upgrade Modal ===== -->
+<div id="upgradeModal">
+  <div class="upgrade-modal-box">
+    <div class="upgrade-modal-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+    </div>
+    <div class="upgrade-modal-plan-badge" id="upgradeModalPlanBadge">Requires Business Plan</div>
+    <div class="upgrade-modal-title" id="upgradeModalTitle">Feature Locked</div>
+    <div class="upgrade-modal-desc" id="upgradeModalDesc">This feature is available on a higher plan.</div>
+    <div class="upgrade-modal-actions">
+      <button class="upgrade-modal-primary" id="upgradeModalRequestBtn" onclick="requestFeatureAccess()">
+        Request Access
+      </button>
+      <button class="upgrade-modal-secondary" onclick="closeUpgradeModal()">Maybe Later</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Feature Gating Logic ===== -->
+<script>
+(function() {
+  var FEATURE_META = {
+    pvm:                { label: 'Personalized Voicemails',      plan: 'Starter',  desc: 'AI generates a unique voicemail for each contact using their name and company details.' },
+    gatekeeper:         { label: 'Gatekeeper Navigator',         plan: 'Starter',  desc: 'Alex talks through AI screeners, IVRs, and receptionists to reach the real decision maker.' },
+    live_transfer:      { label: 'Live Call Transfer',           plan: 'Starter',  desc: 'Bridge live-answered calls directly to your team in real time.' },
+    recording:          { label: 'Call Recording',               plan: 'Business', desc: 'Record every call and generate searchable transcripts for review and coaching.' },
+    multi_campaign:     { label: 'Multiple Simultaneous Campaigns', plan: 'Business', desc: 'Run more than one outbound campaign at the same time across different lists.' },
+    analytics_advanced: { label: 'Advanced Analytics',           plan: 'Business', desc: 'Deep-dive reports, charts, and performance breakdowns across all campaigns and time periods.' },
+    voice_cloning:      { label: 'Voice Cloning',                plan: 'Business', desc: 'Clone your voice from a 30-second sample and use it across all campaigns.' },
+    api_access:         { label: 'API & Webhook Access',         plan: 'Agency',   desc: 'Programmatic access to launch campaigns, pull data, and integrate with any system.' },
+    white_label:        { label: 'White-Label Branding',         plan: 'Agency',   desc: 'Replace OpenHumana branding with your own logo and colors for a fully custom experience.' },
+  };
+
+  var _upgradeCurrentFeature = null;
+
+  window.openUpgradeModal = function(featureKey) {
+    _upgradeCurrentFeature = featureKey;
+    var meta = FEATURE_META[featureKey] || { label: featureKey, plan: 'Business', desc: 'This feature is available on a higher plan.' };
+    document.getElementById('upgradeModalTitle').textContent = meta.label;
+    document.getElementById('upgradeModalDesc').textContent = meta.desc;
+    document.getElementById('upgradeModalPlanBadge').textContent = 'Requires ' + meta.plan + ' Plan';
+    var btn = document.getElementById('upgradeModalRequestBtn');
+    btn.textContent = 'Request Access';
+    btn.disabled = false;
+    document.getElementById('upgradeModal').classList.add('active');
+  };
+
+  window.closeUpgradeModal = function() {
+    document.getElementById('upgradeModal').classList.remove('active');
+    _upgradeCurrentFeature = null;
+  };
+
+  window.requestFeatureAccess = function() {
+    if (!_upgradeCurrentFeature) return;
+    var meta = FEATURE_META[_upgradeCurrentFeature] || {};
+    var btn = document.getElementById('upgradeModalRequestBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    fetch('/api/request-feature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ feature_key: _upgradeCurrentFeature, feature_label: meta.label || _upgradeCurrentFeature }),
+      credentials: 'same-origin'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      btn.textContent = 'Request Sent ✓';
+      setTimeout(window.closeUpgradeModal, 2200);
+    })
+    .catch(function() {
+      btn.disabled = false;
+      btn.textContent = 'Request Access';
+    });
+  };
+
+  document.getElementById('upgradeModal').addEventListener('click', function(e) {
+    if (e.target === this) window.closeUpgradeModal();
+  });
+
+  function makeLockOverlay(featureKey) {
+    var meta = FEATURE_META[featureKey] || { label: featureKey, plan: 'Business', desc: 'This feature is available on a higher plan.' };
+    var el = document.createElement('div');
+    el.className = 'feat-lock-overlay';
+    el.innerHTML =
+      '<div class="feat-lock-icon">' +
+        '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">' +
+          '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>' +
+          '<path d="M7 11V7a5 5 0 0110 0v4"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="feat-lock-plan-badge">Requires ' + meta.plan + ' Plan</div>' +
+      '<div class="feat-lock-title">' + meta.label + '</div>' +
+      '<div class="feat-lock-desc">' + meta.desc + '</div>' +
+      '<button class="feat-lock-btn" onclick="openUpgradeModal(\'' + featureKey + '\')">Learn More &amp; Request Access</button>';
+    return el;
+  }
+
+  function addTabLock(tab) {
+    var lockIcon = document.createElement('span');
+    lockIcon.className = 'feat-tab-lock';
+    lockIcon.innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+        '<rect x="3" y="11" width="18" height="11" rx="2"/>' +
+        '<path d="M7 11V7a5 5 0 0110 0v4"/>' +
+      '</svg>';
+    tab.appendChild(lockIcon);
+  }
+
+  function applyFeatureGating() {
+    /* ─── 1. Campaign wizard type cards ─── */
+    if (!USER_FEATURES.pvm) {
+      var pvmCard = document.getElementById('wizTypePersonalized');
+      if (pvmCard) {
+        pvmCard.classList.add('feat-type-locked');
+        pvmCard.onclick = function(e) { e.stopPropagation(); openUpgradeModal('pvm'); };
+      }
+    }
+    if (!USER_FEATURES.gatekeeper) {
+      var gkCard = document.getElementById('wizTypeGatekeeper');
+      if (gkCard) {
+        gkCard.classList.add('feat-type-locked');
+        gkCard.onclick = function(e) { e.stopPropagation(); openUpgradeModal('gatekeeper'); };
+      }
+    }
+
+    /* ─── 2. Analytics > Reports tab ─── */
+    if (!USER_FEATURES.analytics_advanced) {
+      var reportsTab = document.querySelector('.an-tab[data-antab="reports"]');
+      if (reportsTab) {
+        addTabLock(reportsTab);
+        var origReportsClick = reportsTab.onclick;
+        reportsTab.addEventListener('click', function(e) {
+          e.stopImmediatePropagation();
+          openUpgradeModal('analytics_advanced');
+        }, true);
+      }
+      var reportsPanel = document.getElementById('anpanel-reports');
+      if (reportsPanel) {
+        reportsPanel.style.position = 'relative';
+        reportsPanel.style.minHeight = '220px';
+        reportsPanel.appendChild(makeLockOverlay('analytics_advanced'));
+      }
+    }
+
+    /* ─── 3. Voice Studio > Clone Your Voice tab ─── */
+    if (!USER_FEATURES.voice_cloning) {
+      var cloneTab = document.querySelector('.hv-tab[data-tab="clone"]');
+      if (cloneTab) {
+        addTabLock(cloneTab);
+        cloneTab.addEventListener('click', function(e) {
+          e.stopImmediatePropagation();
+          openUpgradeModal('voice_cloning');
+        }, true);
+      }
+      var clonePanel = document.getElementById('panel-clone');
+      if (clonePanel) {
+        clonePanel.style.position = 'relative';
+        clonePanel.style.minHeight = '220px';
+        clonePanel.appendChild(makeLockOverlay('voice_cloning'));
+      }
+    }
+
+    /* ─── 4. Multi-campaign guard — wrap openWizard ─── */
+    if (!USER_FEATURES.multi_campaign) {
+      var _realOpenWizard = window.openWizard;
+      window.openWizard = function() {
+        var statusEl = document.getElementById('campaignStatus');
+        var isActive = statusEl && !/No active/i.test(statusEl.textContent);
+        if (isActive) {
+          openUpgradeModal('multi_campaign');
+          return;
+        }
+        if (_realOpenWizard) _realOpenWizard.apply(this, arguments);
+      };
+    }
+  }
+
+  /* Run gating after DOM is fully ready and all scripts have loaded */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyFeatureGating);
+  } else {
+    applyFeatureGating();
+  }
+})();
+</script>
+
 </body>
 </html>
