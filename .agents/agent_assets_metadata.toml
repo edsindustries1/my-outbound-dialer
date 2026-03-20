@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "KMoWXG2DC86BY7o8EfMH4"
+uri = "file://knowledge_base_open_humana.md"
+type = "text"
+title = "Open Humana — Master Knowledge Base"
