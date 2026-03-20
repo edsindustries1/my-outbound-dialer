@@ -2,8 +2,11 @@
   'use strict';
 
   /* ══ PRICING CONSTANTS ══ */
-  var BASE_COST_PER_DIAL = 0.020;
-  var HUMAN_SDR_COST     = 5000;
+  var BASE_COST_PER_DIAL      = 0.020;
+  var SDR_COST_PER_UNIT       = 5000;   // fully-loaded monthly cost per human SDR
+  var SDR_CALLS_PER_DAY       = 550;    // realistic power-dialer capacity
+  var SDR_WORKING_DAYS        = 22;     // standard SDR working days / month
+  var SDR_MONTHLY_CAPACITY    = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS; // 12,100
 
   var ADDONS = [
     { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.02, monthlyFlat: 0 },
@@ -23,7 +26,10 @@
   var usageNoteEl       = document.getElementById('usageNote');
   var totalEl           = document.getElementById('totalDisplay');
   var vsUsEl            = document.getElementById('vsUsDisplay');
+  var vsSdrEl           = document.getElementById('vsSdrDisplay');
+  var sdrCountLabel     = document.getElementById('sdrCountLabel');
   var savingsPill       = document.getElementById('savingsPill');
+  var savingsPctLabel   = document.getElementById('savingsPctLabel');
   var planBadgeEl       = document.getElementById('planBadge');
   var calcCtaBtn        = document.getElementById('calcCtaBtn');
   var effectiveRateNote = document.getElementById('effectiveRateNote');
@@ -93,8 +99,16 @@
     });
     var addonDialTotal = dials * days * addonDialCost;
     var total          = platformFee + baseUsage + addonDialTotal + addonFlatCost;
-    var saving         = HUMAN_SDR_COST - total;
     var effectiveRate  = BASE_COST_PER_DIAL + addonDialCost;
+
+    /* ── Dynamic human SDR cost ──
+       A human SDR handles ~550 calls/day over 22 working days = 12,100 calls/month.
+       Scale the number of SDRs (and cost) proportionally to the user's selected volume. */
+    var totalMonthlyDials = dials * days;
+    var sdrsNeeded        = Math.max(1, Math.ceil(totalMonthlyDials / SDR_MONTHLY_CAPACITY));
+    var humanSdrCost      = sdrsNeeded * SDR_COST_PER_UNIT;
+    var saving            = humanSdrCost - total;
+    var savingPct         = Math.round((saving / humanSdrCost) * 100);
 
     /* ── Update sliders & vol display ── */
     dialDisplay.textContent = dials.toLocaleString('en-US');
@@ -115,7 +129,46 @@
     /* ── Totals & savings ── */
     totalEl.textContent     = fmt(total) + ' / mo';
     vsUsEl.textContent      = fmt(total);
-    savingsPill.textContent = 'Save ~' + fmt(Math.max(0, saving)) + '/mo';
+
+    /* ── Dynamic SDR cost display ── */
+    if (vsSdrEl)      vsSdrEl.textContent = fmt(humanSdrCost);
+    if (sdrCountLabel) {
+      var sdrWord = sdrsNeeded === 1 ? 'human SDR' : 'human SDRs';
+      sdrCountLabel.textContent = '/ month (' + sdrsNeeded + ' ' + sdrWord + ')';
+    }
+
+    /* ── SDR icon stack — show 1, 2, or 3 overlapping person icons ── */
+    var sdrIconWrap = document.getElementById('sdrIconWrap');
+    if (sdrIconWrap) {
+      var iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+      var visibleIcons = Math.min(sdrsNeeded, 3); // cap at 3 for layout
+      if (visibleIcons <= 1) {
+        sdrIconWrap.style.display = '';
+        sdrIconWrap.innerHTML = iconSvg;
+      } else {
+        /* stack icons with slight offsets */
+        var stackHtml = '<div style="display:flex;justify-content:center;align-items:center;">';
+        var smallSvg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+        for (var i = 0; i < visibleIcons; i++) {
+          var offset = i * -10;
+          var opacity = 1 - (i * 0.12);
+          stackHtml += '<div style="margin-left:' + (i === 0 ? 0 : offset) + 'px;opacity:' + opacity + ';">' + smallSvg + '</div>';
+        }
+        if (sdrsNeeded > 3) {
+          stackHtml += '<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-left:4px;">×' + sdrsNeeded + '</div>';
+        }
+        stackHtml += '</div>';
+        sdrIconWrap.innerHTML = stackHtml;
+      }
+    }
+
+    /* ── Savings pill + percentage ── */
+    var safeSaving = Math.max(0, saving);
+    savingsPill.textContent = 'Save ~' + fmt(safeSaving) + '/mo';
+    if (savingsPctLabel) {
+      var pctText = saving > 0 ? savingPct + '% cheaper' : 'comparable cost';
+      savingsPctLabel.textContent = pctText;
+    }
 
     /* ── Plan badge ── */
     planBadgeEl.textContent = planLabel;

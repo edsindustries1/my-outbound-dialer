@@ -505,13 +505,15 @@
               <div class="calc-vs-center">
                 <div class="calc-vs-badge">vs</div>
                 <div class="calc-savings-pill" id="savingsPill">Save ~$4,835/mo</div>
+                <div id="savingsPctLabel" style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:5px;text-align:center;letter-spacing:0.03em;">74% cheaper</div>
               </div>
               <div class="calc-vs-col calc-vs-sdr">
-                <div class="calc-vs-sdr-icon">
+                <div class="calc-vs-sdr-icon" id="sdrIconWrap">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                 </div>
-                <div class="calc-vs-amount-large calc-vs-sdr-amount">$5,000</div>
-                <div class="calc-vs-sublabel">/ month (human SDR)</div>
+                <div class="calc-vs-amount-large calc-vs-sdr-amount" id="vsSdrDisplay">$5,000</div>
+                <div class="calc-vs-sublabel" id="sdrCountLabel">/ month (1 human SDR)</div>
+                <div style="font-size:0.67rem;color:rgba(255,255,255,0.22);margin-top:5px;line-height:1.4;text-align:center;">$5,000/mo per SDR &middot; ~550 calls/day capacity</div>
               </div>
             </div>
           </div>
@@ -628,6 +630,6 @@
     </div>
   </footer>
 
-  <script src="/static/pricing.js?v=3"></script>
+  <script src="/static/pricing.js?v=4"></script>
 </body>
 </html>
