@@ -4972,15 +4972,27 @@ def super_admin():
     total_credit_balance = Decimal("0.00")
     active_users_count = 0
     revoked_users_count = 0
+    paused_users = []
 
     now = datetime.utcnow()
+    today = now.date()
     today_str = now.strftime("%Y-%m-%d")
-    week_ago = (now - _td(days=7)).strftime("%Y-%m-%dT")
+    week_ago_str = (now - _td(days=7)).strftime("%Y-%m-%dT")
+
+    # 7-day chart buckets (ascending order)
+    chart_dates = [(now - _td(days=i)).strftime("%Y-%m-%d") for i in range(6, -1, -1)]
+    chart_labels = [(now - _td(days=i)).strftime("%a") for i in range(6, -1, -1)]
+    chart_counts = {d: 0 for d in chart_dates}
+
+    # Platform health flags
+    any_flagged = False
+    any_at_risk = False
+    any_capped = False
 
     for u in users:
         calls = _load_call_history(user_id=u.id)
         leads_count = len(get_contacts(user_id=u.id))
-        active_number = ProvisionedNumber.query.filter_by(user_id=u.id, status='active').first()
+        numbers = ProvisionedNumber.query.filter_by(user_id=u.id, status='active').all()
         bal = Decimal(str(u.credit_balance or 0))
         total_credit_balance += bal
 
@@ -4994,21 +5006,71 @@ def super_admin():
         user_transfer_count = 0
         user_calls_week = 0
         last_call_time = None
+        calls_7d_by_number = {}
+        answered_7d_by_number = {}
 
         for c in calls:
             ts = c.get("timestamp", "")
+            ts_date = ts[:10]
             if ts.startswith(today_str):
                 user_calls_today += 1
-            if ts >= week_ago:
+            if ts >= week_ago_str:
                 user_calls_week += 1
+                fn = c.get("from_number", "")
+                if fn:
+                    calls_7d_by_number[fn] = calls_7d_by_number.get(fn, 0) + 1
+                    if (c.get("amd_result") == "human" or
+                            c.get("status") in ("transferred", "human_answered") or
+                            c.get("transferred")):
+                        answered_7d_by_number[fn] = answered_7d_by_number.get(fn, 0) + 1
             if c.get("voicemail_dropped"):
                 user_vm_count += 1
             if c.get("transferred"):
                 user_transfer_count += 1
             if ts and (last_call_time is None or ts > last_call_time):
                 last_call_time = ts
+            if ts_date in chart_counts:
+                chart_counts[ts_date] += 1
 
         all_calls.extend(calls)
+
+        # Number health summary
+        health_counts = {"healthy": 0, "at_risk": 0, "flagged": 0, "new": 0}
+        cooling_numbers = []
+        all_numbers_capped = len(numbers) > 0
+
+        for n in numbers:
+            if n.last_dial_date and n.last_dial_date < today:
+                daily = 0
+            else:
+                daily = n.daily_dial_count or 0
+            is_cooling = daily >= DAILY_DIAL_CAP
+            if not is_cooling:
+                all_numbers_capped = False
+            else:
+                cooling_numbers.append(n.phone_number)
+
+            calls_7d = calls_7d_by_number.get(n.phone_number, 0)
+            answered_7d = answered_7d_by_number.get(n.phone_number, 0)
+            ar = round(answered_7d / calls_7d * 100, 1) if calls_7d > 0 else None
+            health = _compute_number_health(ar, calls_7d)
+            health_counts[health] = health_counts.get(health, 0) + 1
+
+        if len(numbers) == 0:
+            all_numbers_capped = False
+
+        if health_counts.get("flagged", 0) > 0:
+            any_flagged = True
+        if health_counts.get("at_risk", 0) > 0:
+            any_at_risk = True
+        if all_numbers_capped:
+            any_capped = True
+            paused_users.append({
+                "name": u.profile_name or u.email.split("@")[0],
+                "email": u.email,
+                "cooling_count": len(cooling_numbers),
+                "total_numbers": len(numbers),
+            })
 
         user_data.append({
             "id": u.id,
@@ -5020,7 +5082,9 @@ def super_admin():
             "calls_week": user_calls_week,
             "voicemails": user_vm_count,
             "transfers": user_transfer_count,
-            "active_number": active_number.phone_number if active_number else "None",
+            "number_count": len(numbers),
+            "health_counts": health_counts,
+            "all_numbers_capped": all_numbers_capped,
             "credit_balance": float(bal),
             "role": u.role or "user",
             "active": getattr(u, 'is_active_account', True),
@@ -5029,11 +5093,25 @@ def super_admin():
         })
 
     platform_calls_today = sum(1 for c in all_calls if c.get("timestamp", "").startswith(today_str))
-    platform_calls_week = sum(1 for c in all_calls if c.get("timestamp", "") >= week_ago)
+    platform_calls_week = sum(1 for c in all_calls if c.get("timestamp", "") >= week_ago_str)
     platform_vm_total = sum(1 for c in all_calls if c.get("voicemail_dropped"))
     platform_transfers_total = sum(1 for c in all_calls if c.get("transferred"))
     platform_vm_rate = round((platform_vm_total / len(all_calls) * 100), 1) if all_calls else 0
     platform_transfer_rate = round((platform_transfers_total / len(all_calls) * 100), 1) if all_calls else 0
+
+    # Compute platform health
+    if any_flagged:
+        platform_health = "red"
+        platform_health_text = "Numbers flagged as spam — some users' calls not being answered"
+    elif any_capped:
+        platform_health = "yellow"
+        platform_health_text = "Some users paused — daily dial cap reached"
+    elif any_at_risk:
+        platform_health = "yellow"
+        platform_health_text = "Some numbers showing declining answer rates"
+    else:
+        platform_health = "green"
+        platform_health_text = "All systems running normally"
 
     total_numbers = ProvisionedNumber.query.filter_by(status='active').count()
     pending_invites = Invitation.query.filter_by(used=False).count()
@@ -5052,6 +5130,11 @@ def super_admin():
         "transfer_rate": platform_transfer_rate,
         "active_lines": total_numbers,
         "pending_invites": pending_invites,
+        "platform_health": platform_health,
+        "platform_health_text": platform_health_text,
+        "paused_users": paused_users,
+        "chart_labels": chart_labels,
+        "chart_values": [chart_counts[d] for d in chart_dates],
     }
 
     return render_template("super_admin.html", users=user_data, stats=stats)
@@ -5233,6 +5316,36 @@ def api_admin_user_activity(uid):
         "numbers": [{"phone": n.phone_number, "status": n.status} for n in numbers],
         "recent_calls": recent,
     })
+
+
+@app.route("/api/admin/swap-log")
+@admin_required
+def api_admin_swap_log():
+    """Return all Quick Swap records for super admin visibility."""
+    try:
+        swaps = NumberSwapLog.query.order_by(NumberSwapLog.swapped_at.desc()).limit(200).all()
+        user_map = {}
+        for s in swaps:
+            if s.user_id not in user_map:
+                u = db.session.get(User, s.user_id)
+                user_map[s.user_id] = (u.profile_name or u.email.split("@")[0]) if u else f"User {s.user_id}"
+        return jsonify({
+            "success": True,
+            "swaps": [{
+                "id": s.id,
+                "user_id": s.user_id,
+                "user_name": user_map.get(s.user_id, f"User {s.user_id}"),
+                "old_number": s.old_number,
+                "new_number": s.new_number,
+                "swap_cost": float(s.swap_cost),
+                "was_free": s.was_free,
+                "swap_reason": s.swap_reason or "manual",
+                "swapped_at": s.swapped_at.strftime("%b %d, %Y %H:%M UTC") if s.swapped_at else "",
+            } for s in swaps]
+        })
+    except Exception as e:
+        logger.error(f"Error loading swap log: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # ---- Startup initialization (runs for both direct and gunicorn) ----
