@@ -238,7 +238,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 
-from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, AppConfig, NumberSwapLog, ensure_user_instance, init_db
+from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, AppConfig, NumberSwapLog, UserFeature, ensure_user_instance, init_db
 import base64
 import requests
 init_db(app)
@@ -441,6 +441,77 @@ PLAN_MAX_CONCURRENT_LINES = {
     "business": 15,
 }
 
+# ---- Feature Flag System ----
+
+FEATURE_DEFINITIONS = {
+    "live_transfer":      {"label": "Live Call Transfer",           "desc": "Bridge answered calls directly to your phone in real time"},
+    "pvm":                {"label": "Personalized Voicemails",      "desc": "AI generates a unique voicemail using each prospect's name/company"},
+    "gatekeeper":         {"label": "Gatekeeper Navigator",         "desc": "AI navigates IVRs and receptionists to reach decision-makers"},
+    "recording":          {"label": "Call Recording & Transcription","desc": "Record every call and generate searchable transcripts"},
+    "multi_campaign":     {"label": "Multiple Campaigns",           "desc": "Run more than one calling campaign simultaneously"},
+    "analytics_advanced": {"label": "Advanced Analytics",           "desc": "Detailed call scoring, export, and trend reporting"},
+    "voice_cloning":      {"label": "Voice Cloning",                "desc": "Clone your own voice for the AI agent ($19/mo flat fee)"},
+    "api_access":         {"label": "API / Webhook Access",         "desc": "Programmatic access to campaigns and call data"},
+    "white_label":        {"label": "White-Label Branding",         "desc": "Remove Open Humana branding and use your own"},
+}
+
+PLAN_FEATURES = {
+    "starter":  ["live_transfer", "pvm", "gatekeeper"],
+    "business": ["live_transfer", "pvm", "gatekeeper", "recording", "multi_campaign", "analytics_advanced", "voice_cloning"],
+    "agency":   ["live_transfer", "pvm", "gatekeeper", "recording", "multi_campaign", "analytics_advanced", "voice_cloning", "api_access", "white_label"],
+}
+
+
+def _set_feature(user_id, feature_key, enabled, granted_by=None, note=None):
+    """Upsert a single feature flag for a user."""
+    try:
+        rec = UserFeature.query.filter_by(user_id=user_id, feature_key=feature_key).first()
+        if rec:
+            rec.enabled = enabled
+            rec.updated_at = datetime.utcnow()
+            if granted_by is not None:
+                rec.granted_by = granted_by
+            if note is not None:
+                rec.note = note
+        else:
+            rec = UserFeature(
+                user_id=user_id,
+                feature_key=feature_key,
+                enabled=enabled,
+                granted_by=granted_by,
+                note=note,
+            )
+            db.session.add(rec)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to set feature {feature_key} for user {user_id}: {e}")
+
+
+def _provision_plan_features(user_id, plan, granted_by=None):
+    """Set all features for a plan, leaving any admin-granted extras intact."""
+    plan = (plan or "").lower()
+    features_to_enable = set(PLAN_FEATURES.get(plan, []))
+    all_keys = set(FEATURE_DEFINITIONS.keys())
+    for key in all_keys:
+        _set_feature(user_id, key, key in features_to_enable, granted_by=granted_by, note=f"auto:{plan}")
+    logger.info(f"Provisioned {plan} features for user {user_id}: {features_to_enable}")
+
+
+def _get_user_features(user_id):
+    """Return a dict of {feature_key: bool} for a user. Missing keys default to False."""
+    rows = UserFeature.query.filter_by(user_id=user_id).all()
+    result = {key: False for key in FEATURE_DEFINITIONS}
+    for row in rows:
+        result[row.feature_key] = row.enabled
+    return result
+
+
+def _has_feature(user_id, feature_key):
+    """Return True if the user has access to the given feature."""
+    rec = UserFeature.query.filter_by(user_id=user_id, feature_key=feature_key).first()
+    return bool(rec and rec.enabled)
+
 
 def _get_user_plan(user_id):
     """Return the user's current plan key ('starter', 'business', or None)."""
@@ -532,6 +603,22 @@ def _set_max_concurrent_lines(user_id, limit):
     except Exception as e:
         logger.error(f"Failed to set max_concurrent_lines for user {user_id}: {e}")
         return None
+
+
+def _upsert_user_app_data(user_id, data_key, data_value):
+    """Generic upsert for UserAppData key-value pairs."""
+    try:
+        existing = UserAppData.query.filter_by(user_id=user_id, data_key=data_key).first()
+        if existing:
+            existing.data_value = data_value
+            existing.updated_at = datetime.utcnow()
+        else:
+            rec = UserAppData(user_id=user_id, data_key=data_key, data_value=data_value)
+            db.session.add(rec)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to upsert app data {data_key} for user {user_id}: {e}")
 
 
 def _set_employee_instances(user_id, count):
@@ -730,6 +817,13 @@ def paypal_capture_order():
                     max_lines = PLAN_MAX_CONCURRENT_LINES.get(plan, 5)
                     _set_max_concurrent_lines(target_user_id, max_lines)
                     credited = _credit_user(target_user_id, amount_val)
+                    # Auto-provision feature flags for the purchased plan
+                    try:
+                        _provision_plan_features(target_user_id, plan)
+                        # Record active_plan in UserAppData
+                        _upsert_user_app_data(target_user_id, "active_plan", json.dumps({"plan": plan}))
+                    except Exception as fe:
+                        logger.error(f"Feature provisioning failed for user {target_user_id}: {fe}")
                 else:
                     credited = _credit_user(target_user_id, amount_val)
             else:
@@ -1523,7 +1617,17 @@ def dashboard():
     secure_from = user_default_number or os.environ.get("TELNYX_FROM_NUMBER", "Not set")
     user_data = current_user.to_dict() if current_user.is_authenticated else {}
     is_admin = getattr(current_user, 'role', 'user') == 'admin'
-    return render_template("index.html", secure_from=secure_from, user=user_data, processor_id=PAYPAL_CLIENT_ID, is_admin=is_admin)
+    user_plan = _get_user_plan(current_user.id) or "none"
+    user_features = _get_user_features(current_user.id)
+    return render_template(
+        "index.html",
+        secure_from=secure_from,
+        user=user_data,
+        processor_id=PAYPAL_CLIENT_ID,
+        is_admin=is_admin,
+        user_plan=user_plan,
+        user_features=user_features,
+    )
 
 
 # ---- Audio File Serving ----
@@ -5316,6 +5420,81 @@ def api_admin_user_activity(uid):
         "numbers": [{"phone": n.phone_number, "status": n.status} for n in numbers],
         "recent_calls": recent,
     })
+
+
+@app.route("/api/admin/features/<int:uid>", methods=["GET"])
+@admin_required
+def api_admin_get_features(uid):
+    """Return all feature flags for a user, including plan info and feature definitions."""
+    target = db.session.get(User, uid)
+    if not target:
+        return jsonify({"success": False, "error": "User not found"}), 404
+    plan = _get_user_plan(uid) or "none"
+    features = _get_user_features(uid)
+    rows = {r.feature_key: r for r in UserFeature.query.filter_by(user_id=uid).all()}
+    result = []
+    for key, meta in FEATURE_DEFINITIONS.items():
+        row = rows.get(key)
+        result.append({
+            "key": key,
+            "label": meta["label"],
+            "desc": meta["desc"],
+            "enabled": features.get(key, False),
+            "plan_includes": key in PLAN_FEATURES.get(plan, []),
+            "note": row.note if row else None,
+            "updated_at": row.updated_at.strftime("%b %d, %Y %H:%M") if row and row.updated_at else None,
+        })
+    return jsonify({
+        "success": True,
+        "user_id": uid,
+        "user_name": target.profile_name or target.email.split("@")[0],
+        "plan": plan,
+        "features": result,
+        "plan_definitions": {k: list(v) for k, v in PLAN_FEATURES.items()},
+    })
+
+
+@app.route("/api/admin/features/<int:uid>", methods=["POST"])
+@admin_required
+def api_admin_set_features(uid):
+    """Bulk-update feature flags for a user. Body: {features: {key: bool}, note: str}"""
+    target = db.session.get(User, uid)
+    if not target:
+        return jsonify({"success": False, "error": "User not found"}), 404
+    data = request.get_json() or {}
+    updates = data.get("features", {})
+    note = (data.get("note") or "").strip() or "admin:manual"
+    if not isinstance(updates, dict):
+        return jsonify({"success": False, "error": "features must be an object"}), 400
+    admin_id = current_user.id if current_user.is_authenticated else None
+    changed = []
+    for key, enabled in updates.items():
+        if key in FEATURE_DEFINITIONS:
+            _set_feature(uid, key, bool(enabled), granted_by=admin_id, note=note)
+            changed.append(key)
+    logger.info(f"Admin {admin_id} updated features for user {uid}: {changed}")
+    return jsonify({"success": True, "updated": changed, "features": _get_user_features(uid)})
+
+
+@app.route("/api/admin/features/<int:uid>/provision", methods=["POST"])
+@admin_required
+def api_admin_provision_features(uid):
+    """Set all features for a given plan (resets to plan defaults)."""
+    target = db.session.get(User, uid)
+    if not target:
+        return jsonify({"success": False, "error": "User not found"}), 404
+    data = request.get_json() or {}
+    plan = (data.get("plan") or "").lower().strip()
+    if plan not in PLAN_FEATURES and plan != "none":
+        return jsonify({"success": False, "error": f"Unknown plan: {plan}"}), 400
+    admin_id = current_user.id if current_user.is_authenticated else None
+    if plan == "none":
+        for key in FEATURE_DEFINITIONS:
+            _set_feature(uid, key, False, granted_by=admin_id, note="admin:reset")
+    else:
+        _provision_plan_features(uid, plan, granted_by=admin_id)
+        _upsert_user_app_data(uid, "active_plan", json.dumps({"plan": plan}))
+    return jsonify({"success": True, "plan": plan, "features": _get_user_features(uid)})
 
 
 @app.route("/api/admin/swap-log")

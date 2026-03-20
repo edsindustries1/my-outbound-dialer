@@ -147,6 +147,29 @@ class NumberSwapLog(db.Model):
     swapped_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
+class UserFeature(db.Model):
+    """Per-user feature access flags.
+
+    Each row represents one feature for one user.
+    enabled=True means the user has access; enabled=False means explicitly revoked.
+    Rows are upserted by (user_id, feature_key).
+    """
+    __tablename__ = 'user_features'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    feature_key = db.Column(db.String(60), nullable=False)
+    enabled = db.Column(db.Boolean, default=True, nullable=False)
+    granted_by = db.Column(db.Integer, nullable=True)
+    note = db.Column(db.String(255), nullable=True)
+    granted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'feature_key', name='uq_user_feature_key'),
+    )
+
+
 def ensure_user_instance(user_id):
     instance = UserInstance.query.filter_by(user_id=user_id).first()
     if not instance:

@@ -147,6 +147,36 @@
 
     .loading { text-align: center; padding: 40px; color: rgba(255,255,255,0.3); font-size: 0.85rem; }
 
+    /* ---- Feature toggle switches ---- */
+    .feature-grid { display: flex; flex-direction: column; gap: 2px; }
+    .feature-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    .feature-row:hover { background: rgba(255,255,255,0.04); }
+    .feature-row .feature-text { flex: 1; min-width: 0; }
+    .feature-row .feature-label { font-size: 0.85rem; font-weight: 600; color: #fff; }
+    .feature-row .feature-desc { font-size: 0.73rem; color: rgba(255,255,255,0.35); margin-top:2px; }
+    .feature-row .plan-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .feature-row .plan-dot.included { background: #10b981; }
+    .feature-row .plan-dot.excluded { background: rgba(255,255,255,0.15); }
+
+    .toggle-wrap { position: relative; flex-shrink: 0; }
+    .toggle-wrap input[type=checkbox] { width: 40px; height: 22px; appearance: none; -webkit-appearance: none; background: rgba(255,255,255,0.1); border-radius: 11px; cursor: pointer; transition: background 0.2s; outline: none; }
+    .toggle-wrap input[type=checkbox]:checked { background: #10b981; }
+    .toggle-wrap input[type=checkbox]::after { content:''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); pointer-events: none; }
+    .toggle-wrap input[type=checkbox]:checked::after { left: 21px; }
+
+    .plan-selector-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .plan-pill { padding: 5px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); transition: all 0.15s; font-family: 'Inter', sans-serif; }
+    .plan-pill:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .plan-pill.starter { border-color: rgba(99,102,241,0.4); color: #818cf8; background: rgba(99,102,241,0.06); }
+    .plan-pill.business { border-color: rgba(16,185,129,0.4); color: #10b981; background: rgba(16,185,129,0.06); }
+    .plan-pill.agency { border-color: rgba(245,158,11,0.4); color: #f59e0b; background: rgba(245,158,11,0.06); }
+    .plan-pill.none { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.04); }
+
+    .btn-save { padding: 9px 22px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.2s; }
+    .btn-save:hover { opacity: 0.85; }
+    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+    .save-status { font-size: 0.78rem; color: rgba(255,255,255,0.35); margin-left: 8px; }
+
     @media (max-width: 1100px) {
       .stats-grid { grid-template-columns: repeat(3, 1fr); }
     }
@@ -364,7 +394,10 @@
                 {% endif %}
               </td>
               <td style="font-size:0.78rem;color:rgba(255,255,255,0.35);">{{ u.last_activity }}</td>
-              <td><button class="btn-view" onclick="viewActivity({{ u.id }})">Details</button></td>
+              <td style="display:flex;gap:6px;align-items:center;">
+                <button class="btn-view" onclick="viewActivity({{ u.id }})">Details</button>
+                <button class="btn-view" onclick="openFeatures({{ u.id }}, '{{ u.name | e }}')" style="border-color:rgba(139,92,246,0.3);color:#a78bfa;" title="Manage feature access">Features</button>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -398,6 +431,19 @@
     </div>
 
   </div><!-- /admin-body -->
+
+  <!-- ===== FEATURE MANAGEMENT MODAL ===== -->
+  <div class="modal-overlay" id="featureModal">
+    <div class="modal" style="max-width:580px;">
+      <div class="modal-header">
+        <h2 id="featureModalTitle">Feature Access</h2>
+        <button class="modal-close" onclick="closeFeatureModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="featureModalBody">
+        <div class="loading">Loading features...</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== ACTIVITY MODAL ===== -->
   <div class="modal-overlay" id="activityModal">
@@ -745,6 +791,193 @@
     }
     document.getElementById('costModal').addEventListener('click', function(e) {
       if (e.target === this) closeCostModal();
+    });
+
+    /* ===== Feature Management ===== */
+    var _featureUid = null;
+
+    function openFeatures(uid, userName) {
+      _featureUid = uid;
+      document.getElementById('featureModalTitle').textContent = 'Feature Access — ' + userName;
+      document.getElementById('featureModalBody').innerHTML = '<div class="loading">Loading features...</div>';
+      document.getElementById('featureModal').classList.add('active');
+
+      fetch('/api/admin/features/' + uid)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.success) {
+            document.getElementById('featureModalBody').innerHTML = '<div class="loading">Failed to load features.</div>';
+            return;
+          }
+          renderFeatureModal(data);
+        })
+        .catch(function() {
+          document.getElementById('featureModalBody').innerHTML = '<div class="loading">Failed to load features.</div>';
+        });
+    }
+
+    function renderFeatureModal(data) {
+      var body = document.getElementById('featureModalBody');
+      body.innerHTML = '';
+
+      /* ---- Plan selector ---- */
+      var planLabel = document.createElement('div');
+      planLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;';
+      planLabel.textContent = 'Set Plan (applies plan defaults to all features)';
+      body.appendChild(planLabel);
+
+      var planRow = document.createElement('div');
+      planRow.className = 'plan-selector-row';
+      var plans = [
+        {key:'starter', label:'Starter $99'},
+        {key:'business', label:'Business $399'},
+        {key:'agency', label:'Agency Custom'},
+        {key:'none', label:'No Plan'},
+      ];
+      var currentPlan = data.plan || 'none';
+      plans.forEach(function(p) {
+        var btn = document.createElement('button');
+        btn.className = 'plan-pill ' + p.key;
+        btn.textContent = p.label;
+        if (currentPlan === p.key) {
+          btn.style.outline = '2px solid currentColor';
+          btn.style.outlineOffset = '2px';
+        }
+        btn.onclick = function() {
+          var confirmed = confirm('Apply ' + p.label.split(' ')[0] + ' plan defaults to this user? This will reset all feature toggles to match the plan.');
+          if (!confirmed) return;
+          btn.disabled = true;
+          btn.textContent = 'Applying...';
+          fetch('/api/admin/features/' + _featureUid + '/provision', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({plan: p.key})
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.success) {
+              openFeatures(_featureUid, document.getElementById('featureModalTitle').textContent.replace('Feature Access — ', ''));
+            } else {
+              btn.disabled = false;
+              btn.textContent = p.label;
+              alert('Error: ' + (res.error || 'Unknown error'));
+            }
+          });
+        };
+        planRow.appendChild(btn);
+      });
+      body.appendChild(planRow);
+
+      var divider = document.createElement('div');
+      divider.style.cssText = 'height:1px;background:rgba(255,255,255,0.06);margin:8px 0 16px;';
+      body.appendChild(divider);
+
+      /* ---- Feature toggles ---- */
+      var featLabel = document.createElement('div');
+      featLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;';
+      featLabel.innerHTML = 'Features <span style="font-weight:400;color:rgba(255,255,255,0.2);font-size:0.7rem;margin-left:6px;">● Green dot = included in plan</span>';
+      body.appendChild(featLabel);
+
+      var grid = document.createElement('div');
+      grid.className = 'feature-grid';
+      var toggleMap = {};
+
+      data.features.forEach(function(f) {
+        var row = document.createElement('div');
+        row.className = 'feature-row';
+
+        var dot = document.createElement('span');
+        dot.className = 'plan-dot ' + (f.plan_includes ? 'included' : 'excluded');
+        dot.title = f.plan_includes ? 'Included in current plan' : 'Not in current plan';
+        row.appendChild(dot);
+
+        var text = document.createElement('div');
+        text.className = 'feature-text';
+        var lbl = document.createElement('div');
+        lbl.className = 'feature-label';
+        lbl.textContent = f.label;
+        var desc = document.createElement('div');
+        desc.className = 'feature-desc';
+        desc.textContent = f.desc;
+        if (f.note && !f.note.startsWith('auto:')) {
+          var noteEl = document.createElement('span');
+          noteEl.style.cssText = 'font-size:0.68rem;color:rgba(139,92,246,0.8);margin-left:6px;';
+          noteEl.textContent = '(' + f.note + ')';
+          lbl.appendChild(noteEl);
+        }
+        text.appendChild(lbl);
+        text.appendChild(desc);
+        row.appendChild(text);
+
+        var twrap = document.createElement('div');
+        twrap.className = 'toggle-wrap';
+        var toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.checked = f.enabled;
+        toggle.id = 'feat_' + f.key;
+        toggleMap[f.key] = toggle;
+        twrap.appendChild(toggle);
+        row.appendChild(twrap);
+
+        grid.appendChild(row);
+      });
+
+      body.appendChild(grid);
+
+      /* ---- Save button ---- */
+      var saveRow = document.createElement('div');
+      saveRow.style.cssText = 'display:flex;align-items:center;margin-top:18px;gap:10px;';
+      var saveBtn = document.createElement('button');
+      saveBtn.className = 'btn-save';
+      saveBtn.textContent = 'Save Changes';
+      var saveStatus = document.createElement('span');
+      saveStatus.className = 'save-status';
+
+      saveBtn.onclick = function() {
+        var updates = {};
+        for (var k in toggleMap) {
+          updates[k] = toggleMap[k].checked;
+        }
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        saveStatus.textContent = '';
+
+        fetch('/api/admin/features/' + _featureUid, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({features: updates, note: 'admin:manual'})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Changes';
+          if (res.success) {
+            saveStatus.textContent = 'Saved \u2713';
+            saveStatus.style.color = '#10b981';
+          } else {
+            saveStatus.textContent = 'Error saving';
+            saveStatus.style.color = '#ef4444';
+          }
+          setTimeout(function() { saveStatus.textContent = ''; }, 3000);
+        })
+        .catch(function() {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Changes';
+          saveStatus.textContent = 'Network error';
+          saveStatus.style.color = '#ef4444';
+        });
+      };
+
+      saveRow.appendChild(saveBtn);
+      saveRow.appendChild(saveStatus);
+      body.appendChild(saveRow);
+    }
+
+    function closeFeatureModal() {
+      document.getElementById('featureModal').classList.remove('active');
+    }
+    document.getElementById('featureModal').addEventListener('click', function(e) {
+      if (e.target === this) closeFeatureModal();
     });
   </script>
 </body>
