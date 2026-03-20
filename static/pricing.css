@@ -236,11 +236,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
   line-height: 1;
 }
 .plan-capacity-row--featured .plan-cap-pill {
-  color: rgba(255,255,255,0.85);
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(255,255,255,0.15);
+  color: #fff;
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
 }
-.plan-capacity-row--featured .plan-cap-dot { color: rgba(255,255,255,0.35); }
+.plan-capacity-row--featured .plan-cap-pill svg { opacity: 1; }
+.plan-capacity-row--featured .plan-cap-dot { color: rgba(255,255,255,0.5); }
 
 /* ══════════════ PRICING CALCULATOR ══════════════ */
 .calc-section {
