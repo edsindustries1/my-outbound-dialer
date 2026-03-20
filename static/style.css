@@ -124,7 +124,6 @@
 [data-theme="dark"] .dash-credit-bar-wrap { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .dash-lines-dot { background: rgba(255,255,255,0.08); }
 [data-theme="dark"] .dash-quick-label { color: var(--gads-text-tertiary); }
-[data-theme="dark"] .gads-sidebar-logo-icon { background: rgba(224,224,232,0.15); }
 [data-theme="dark"] .gads-collapse-btn { color: var(--gads-text-secondary); }
 [data-theme="dark"] .gads-collapse-btn:hover { background: var(--gads-surface-hover); }
 [data-theme="dark"] .gads-sidebar-footer { border-top-color: var(--gads-border); }
@@ -218,7 +217,6 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     contain: layout style;
 }
 .gads-sidebar-collapsed { width: 56px; }
-.gads-sidebar-collapsed .gads-logo-text,
 .gads-sidebar-collapsed .gads-nav-item span,
 .gads-sidebar-collapsed .gads-collapse-btn span { display: none; }
 .gads-sidebar-collapsed .gads-nav-item { justify-content: center; padding: 10px 0; border-radius: 8px; }
@@ -237,20 +235,6 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
     transition: background 0.15s ease;
 }
 .gads-sidebar-logo:hover { background: var(--gads-surface-hover); }
-.gads-sidebar-logo-icon {
-    width: 28px; height: 28px;
-    background: #111827;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.gads-logo-text {
-    white-space: nowrap;
-    color: var(--gads-primary);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: -0.01em;
-}
 
 .gads-sidebar-nav {
     flex: 1;
@@ -3453,7 +3437,6 @@ label {
    ============================================================ */
 @media (max-width: 1024px) {
     .gads-sidebar { width: 56px; }
-    .gads-sidebar .gads-logo-text,
     .gads-sidebar .gads-nav-item span,
     .gads-sidebar .gads-collapse-btn span { display: none; }
     .gads-sidebar .gads-nav-item { justify-content: center; padding: 10px 0; }
@@ -3831,11 +3814,6 @@ body, .gads-sidebar, .gads-topbar, .gads-card, .gads-kpi-card {
     color: var(--gads-text-primary);
 }
 
-/* Sidebar logo enhanced */
-.gads-logo-text {
-    font-size: 17px;
-    color: var(--gads-primary);
-}
 
 /* Filter row enhanced */
 .gads-filter-row {
