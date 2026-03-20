@@ -238,7 +238,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = _db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
 
-from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, AppConfig, ensure_user_instance, init_db
+from models import db, User, UserInstance, ProvisionedNumber, UserAppData, Invitation, AppConfig, NumberSwapLog, ensure_user_instance, init_db
 import base64
 import requests
 init_db(app)
@@ -292,6 +292,8 @@ PLAN_NUMBER_LIMITS = {
 }
 EXTRA_NUMBER_MONTHLY_COST = Decimal("3.00")
 DAILY_DIAL_CAP = 150
+QUICK_SWAP_COST = Decimal("2.00")
+FREE_SWAPS_PER_QUARTER = 1
 CALL_COST = Decimal("0.10")
 MIN_REFILL = Decimal("10.00")
 DEFAULT_REFILL = Decimal("25.00")
@@ -456,6 +458,61 @@ def _get_number_limits(user_id):
     """Return {included, max} number limits for a user based on plan."""
     plan = _get_user_plan(user_id)
     return PLAN_NUMBER_LIMITS.get(plan, {"included": 1, "max": 3})
+
+
+def _compute_number_health(answer_rate_7d, calls_7d):
+    """Return health status string: 'healthy', 'at_risk', 'flagged', or 'new'.
+
+    Logic:
+        new       — fewer than 5 calls in 7 days (not enough data)
+        flagged   — answer rate < 5% with ≥20 calls (likely spam-flagged)
+        at_risk   — answer rate < 15% with ≥10 calls (degrading)
+        healthy   — otherwise
+    """
+    if calls_7d is None or calls_7d < 5:
+        return "new"
+    if answer_rate_7d is None:
+        return "new"
+    if answer_rate_7d < 5 and calls_7d >= 20:
+        return "flagged"
+    if answer_rate_7d < 15 and calls_7d >= 10:
+        return "at_risk"
+    return "healthy"
+
+
+def _get_quarterly_swap_key():
+    """Return a UserAppData key string for the current quarter."""
+    now = datetime.utcnow()
+    quarter = (now.month - 1) // 3 + 1
+    return f"swap_count_{now.year}_Q{quarter}"
+
+
+def _get_quarterly_swap_count(user_id):
+    """Return the number of Quick Swaps used this quarter."""
+    try:
+        key = _get_quarterly_swap_key()
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key=key).first()
+        if rec:
+            return int(json.loads(rec.data_value) or 0)
+    except Exception:
+        pass
+    return 0
+
+
+def _increment_swap_count(user_id):
+    """Increment the quarterly swap counter for a user."""
+    try:
+        key = _get_quarterly_swap_key()
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key=key).first()
+        if rec:
+            current = int(json.loads(rec.data_value) or 0)
+            rec.data_value = json.dumps(current + 1)
+        else:
+            rec = UserAppData(user_id=user_id, data_key=key, data_value=json.dumps(1))
+            db.session.add(rec)
+        db.session.commit()
+    except Exception as e:
+        logger.warning(f"Could not increment swap count for user {user_id}: {e}")
 
 
 def _set_max_concurrent_lines(user_id, limit):
@@ -4222,7 +4279,15 @@ def api_numbers_owned():
             n["calls_7d"] = calls_7d_map.get(ph, 0)
             answered = answered_7d_map.get(ph, 0)
             total = calls_7d_map.get(ph, 0)
-            n["answer_rate_7d"] = round(answered / total * 100, 1) if total > 0 else None
+            ar = round(answered / total * 100, 1) if total > 0 else None
+            n["answer_rate_7d"] = ar
+            n["health"] = _compute_number_health(ar, n["calls_7d"])
+
+    # Swap status
+    swap_count = _get_quarterly_swap_count(user_id)
+    free_remaining = max(0, FREE_SWAPS_PER_QUARTER - swap_count)
+    result["swap_free_remaining"] = free_remaining
+    result["swap_cost"] = float(QUICK_SWAP_COST) if free_remaining == 0 else 0.0
 
     return jsonify(result)
 
@@ -4404,6 +4469,146 @@ def api_numbers_release():
             logger.warning(f"Could not update DB record on release: {e}")
         return jsonify({"success": True, "message": "Number released"})
     return jsonify(result), 400
+
+
+@app.route("/api/numbers/swap-status", methods=["GET"])
+@login_required
+def api_numbers_swap_status():
+    """Return quick-swap eligibility for the current user."""
+    user_id = current_user.id
+    swap_count = _get_quarterly_swap_count(user_id)
+    free_remaining = max(0, FREE_SWAPS_PER_QUARTER - swap_count)
+    balance = float(getattr(current_user, "credit_balance", 0) or 0)
+    can_afford = free_remaining > 0 or balance >= float(QUICK_SWAP_COST)
+    return jsonify({
+        "success": True,
+        "quarterly_swaps_used": swap_count,
+        "free_swaps_remaining": free_remaining,
+        "swap_cost": float(QUICK_SWAP_COST) if free_remaining == 0 else 0.0,
+        "balance": balance,
+        "can_afford": can_afford,
+    })
+
+
+@app.route("/api/numbers/quick-swap", methods=["POST"])
+@login_required
+def api_numbers_quick_swap():
+    """Swap a number for a fresh one in the same area code.
+    - 1st swap per quarter is free; subsequent swaps cost $2.00.
+    - Purchases a new number, copies configuration, releases the old one.
+    """
+    user_id = current_user.id
+    data = request.get_json() or {}
+    old_number = data.get("phone_number", "").strip()
+    if not old_number:
+        return jsonify({"error": "phone_number is required"}), 400
+
+    # Find the DB record for the old number
+    pn_old = ProvisionedNumber.query.filter_by(phone_number=old_number, user_id=user_id, status="active").first()
+    if not pn_old:
+        return jsonify({"error": "Number not found or not active"}), 404
+
+    # Determine cost
+    swap_count = _get_quarterly_swap_count(user_id)
+    is_free = swap_count < FREE_SWAPS_PER_QUARTER
+    cost = Decimal("0.00") if is_free else QUICK_SWAP_COST
+
+    # Check balance
+    if not is_free:
+        balance = Decimal(str(getattr(current_user, "credit_balance", 0) or 0))
+        if balance < cost:
+            return jsonify({
+                "error": f"Insufficient balance. Quick Swap costs ${float(cost):.2f}. "
+                         f"Your balance is ${float(balance):.2f}. Please add credits.",
+                "code": "payment_required"
+            }), 402
+
+    # Extract area code from old number (strip +1 country code for US numbers)
+    area_code = None
+    cleaned = old_number.lstrip("+")
+    if cleaned.startswith("1") and len(cleaned) == 11:
+        area_code = cleaned[1:4]
+    elif len(cleaned) == 10:
+        area_code = cleaned[:3]
+
+    if not area_code:
+        return jsonify({"error": "Could not determine area code from number"}), 400
+
+    # Search for a fresh number in the same area code
+    search_result = search_available_numbers(area_code=area_code, limit=5)
+    if not search_result.get("success") or not search_result.get("numbers"):
+        return jsonify({"error": f"No replacement numbers available in area code {area_code}. Try releasing the number and searching manually."}), 400
+
+    # Filter out the old number itself
+    candidates = [n for n in search_result["numbers"] if n["phone_number"] != old_number]
+    if not candidates:
+        return jsonify({"error": f"No replacement numbers available in area code {area_code}."}), 400
+    new_phone = candidates[0]["phone_number"]
+
+    # Purchase the new number with the same connection
+    connection_id = pn_old.telnyx_connection_id
+    order_result = purchase_number(new_phone, connection_id)
+    if not order_result.get("success"):
+        return jsonify({"error": f"Failed to purchase replacement: {order_result.get('error')}"}), 400
+
+    # Create DB record for new number, inherit is_included from old
+    pn_new = ProvisionedNumber(
+        user_id=user_id,
+        phone_number=new_phone,
+        status="active",
+        telnyx_order_id=order_result.get("order_id"),
+        telnyx_connection_id=connection_id,
+        is_included=pn_old.is_included,
+    )
+    db.session.add(pn_new)
+
+    # Release old number from Telnyx
+    old_telnyx_id = pn_old.telnyx_number_id or pn_old.phone_number
+    release_result = release_number(old_telnyx_id)
+    if not release_result.get("success"):
+        logger.warning(f"Quick swap: could not release {old_number} from Telnyx: {release_result.get('error')}")
+
+    # Mark old number released in DB
+    pn_old.status = "released"
+
+    # Charge if not free
+    if not is_free:
+        user = current_user._get_current_object()
+        user.credit_balance = (Decimal(str(user.credit_balance or 0)) - cost).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        if user.credit_balance < 0:
+            user.credit_balance = Decimal("0.00")
+
+    # Log the swap
+    swap_log = NumberSwapLog(
+        user_id=user_id,
+        old_number=old_number,
+        new_number=new_phone,
+        swap_cost=float(cost),
+        was_free=is_free,
+        swap_reason=data.get("reason", "manual"),
+    )
+    db.session.add(swap_log)
+    db.session.commit()
+
+    # Increment quarterly swap counter
+    _increment_swap_count(user_id)
+
+    logger.info(
+        f"Quick swap for user {user_id}: {old_number} → {new_phone} "
+        f"({'free' if is_free else f'${float(cost):.2f}'})"
+    )
+
+    return jsonify({
+        "success": True,
+        "old_number": old_number,
+        "new_number": new_phone,
+        "was_free": is_free,
+        "cost": float(cost),
+        "message": f"Successfully swapped {old_number} for {new_phone}."
+                   + (" This swap was free." if is_free else f" ${float(cost):.2f} charged to your account."),
+    })
 
 
 @app.route("/api/numbers/apps", methods=["GET"])

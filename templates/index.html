@@ -978,7 +978,7 @@
                         <p style="font-size:12px;color:var(--gads-text-secondary);margin:0 0 12px;padding:0 4px;">Caller ID is automatically rotated across all active numbers (least-recently-used). Buy multiple numbers to reduce spam flagging.</p>
                         <div class="gads-table-wrap" style="max-height:360px;overflow-y:auto;">
                             <table class="gads-table" id="ownedNumbersTable">
-                                <thead><tr><th>Phone Number</th><th>Status</th><th>Dials Today</th><th>7d Answer Rate</th><th>Type</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Phone Number</th><th>Status</th><th>Health</th><th>Dials Today</th><th>7d Answer Rate</th><th>Actions</th></tr></thead>
                                 <tbody id="ownedNumbersBody"><tr><td colspan="6" class="gads-empty">Loading...</td></tr></tbody>
                             </table>
                         </div>
@@ -5492,6 +5492,23 @@
                             statusBadge = '<span class="gads-badge gads-badge-warning">' + (n.status || "-") + '</span>';
                         }
 
+                        // Health badge
+                        var healthMap = {
+                            "healthy":  { label: "Healthy",  bg: "#D1FAE5", color: "#065F46", border: "#34D399" },
+                            "at_risk":  { label: "At Risk",  bg: "#FEF3C7", color: "#92400E", border: "#F59E0B" },
+                            "flagged":  { label: "Flagged",  bg: "#FEE2E2", color: "#991B1B", border: "#F87171" },
+                            "new":      { label: "New",      bg: "var(--gads-bg-secondary)", color: "var(--gads-text-secondary)", border: "var(--gads-border)" },
+                        };
+                        var h = healthMap[n.health] || healthMap["new"];
+                        var healthBadge = '<span style="font-size:11px;padding:2px 7px;border-radius:5px;font-weight:600;'
+                            + 'background:' + h.bg + ';color:' + h.color + ';border:1px solid ' + h.border + ';">'
+                            + h.label + '</span>';
+                        if (n.health === "flagged") {
+                            healthBadge += ' <span title="This number has a very low answer rate — it may be spam-flagged. Consider a Quick Swap." style="cursor:help;color:#F87171;">&#9888;</span>';
+                        } else if (n.health === "at_risk") {
+                            healthBadge += ' <span title="Answer rate is declining. Monitor this number and consider swapping if it continues." style="cursor:help;color:#F59E0B;">&#9888;</span>';
+                        }
+
                         var dailyDials = n.daily_dial_count != null ? n.daily_dial_count : 0;
                         var cap = n.daily_cap || 150;
                         var pct = Math.min(100, Math.round(dailyDials / cap * 100));
@@ -5513,15 +5530,16 @@
                         html += '<tr>';
                         html += '<td class="td-mono" style="font-weight:600;">' + n.phone_number + includedBadge + '</td>';
                         html += '<td>' + statusBadge + '</td>';
+                        html += '<td>' + healthBadge + '</td>';
                         html += '<td>' + dialsCell + '</td>';
                         html += '<td>' + answerRate + '</td>';
-                        html += '<td><span class="gads-badge">' + (n.number_type || "local") + '</span></td>';
-                        html += '<td>';
+                        html += '<td style="white-space:nowrap;">';
                         {% if is_admin %}
                         if (!n.connection_id) {
                             html += '<button class="gads-btn gads-btn-outline gads-btn-sm" onclick="autoAssignNumber(\'' + n.phone_number + '\')">Setup</button> ';
                         }
                         {% endif %}
+                        html += '<button class="gads-btn gads-btn-outline gads-btn-sm" style="font-size:11px;margin-right:4px;" onclick="openSwapModal(\'' + n.phone_number + '\',\'' + n.health + '\')">Swap</button>';
                         html += '<button class="gads-btn gads-btn-sm" style="color:var(--gads-error);border:1px solid var(--gads-error);background:transparent;font-size:11px;" onclick="releaseNumber(\'' + n.id + '\',\'' + n.phone_number + '\')">Release</button>';
                         html += '</td>';
                         html += '</tr>';
@@ -5541,6 +5559,78 @@
                     showToast("Number released", "success");
                     loadOwnedNumbers();
                 }).catch(function(e){if(e.message==="auth")return;});
+            }
+
+            var _swapModal = null;
+            function openSwapModal(phoneNumber, health) {
+                if (_swapModal) { _swapModal.remove(); _swapModal = null; }
+                // Fetch swap status then show modal
+                apiFetch("/api/numbers/swap-status").then(function(r){return r.json();}).then(function(st) {
+                    var isFree = st.free_swaps_remaining > 0;
+                    var cost = isFree ? "Free" : "$" + st.swap_cost.toFixed(2);
+                    var costColor = isFree ? "#065F46" : "#92400E";
+                    var costBg = isFree ? "#D1FAE5" : "#FEF3C7";
+                    var areaCode = phoneNumber.replace(/^\+1/, "").substring(0, 3);
+                    var warningNote = "";
+                    if (health === "flagged") {
+                        warningNote = '<div style="padding:10px 14px;border-radius:8px;background:#FEE2E2;border:1px solid #F87171;color:#991B1B;font-size:12px;margin-bottom:14px;">'
+                            + '<strong>Flagged number detected.</strong> This number has a very low answer rate, suggesting it may be marked as spam. A Quick Swap will replace it with a fresh number in the same area code.'
+                            + '</div>';
+                    } else if (health === "at_risk") {
+                        warningNote = '<div style="padding:10px 14px;border-radius:8px;background:#FEF3C7;border:1px solid #F59E0B;color:#92400E;font-size:12px;margin-bottom:14px;">'
+                            + '<strong>Number health declining.</strong> Answer rate has dropped. Swapping now can help before spam flagging occurs.'
+                            + '</div>';
+                    }
+                    var quarterNote = isFree
+                        ? '<span style="color:#065F46;font-size:12px;">You have 1 free swap this quarter.</span>'
+                        : '<span style="color:var(--gads-text-secondary);font-size:12px;">You have used your free swap for this quarter. Next swap: <strong>$' + st.swap_cost.toFixed(2) + '</strong>. Balance: $' + (st.balance || 0).toFixed(2) + '.</span>';
+
+                    _swapModal = document.createElement("div");
+                    _swapModal.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;";
+                    _swapModal.innerHTML = '<div style="background:var(--gads-card-bg,#1a1a2e);border-radius:14px;padding:28px;max-width:460px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,0.35);">'
+                        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">'
+                        + '<h3 style="margin:0;font-size:16px;">Quick Swap</h3>'
+                        + '<button onclick="if(window._swapModal){window._swapModal.remove();window._swapModal=null;}" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gads-text-secondary);">&times;</button>'
+                        + '</div>'
+                        + warningNote
+                        + '<div style="margin-bottom:14px;font-size:13px;color:var(--gads-text-secondary);">Replace <code style="background:var(--gads-bg);padding:2px 6px;border-radius:4px;">' + phoneNumber + '</code> with a fresh number in area code <strong>' + areaCode + '</strong>. The old number will be released immediately.</div>'
+                        + '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;background:var(--gads-bg);margin-bottom:14px;">'
+                        + '<div style="font-size:13px;color:var(--gads-text-secondary);">Swap cost:</div>'
+                        + '<div style="font-size:18px;font-weight:700;padding:3px 12px;border-radius:6px;background:' + costBg + ';color:' + costColor + ';">' + cost + '</div>'
+                        + '</div>'
+                        + '<div style="margin-bottom:18px;">' + quarterNote + '</div>'
+                        + '<div style="display:flex;gap:10px;">'
+                        + '<button id="swapConfirmBtn" class="gads-btn gads-btn-primary" style="flex:1;" onclick="quickSwap(\'' + phoneNumber + '\')">Swap Number</button>'
+                        + '<button class="gads-btn gads-btn-outline" style="flex:0 0 90px;" onclick="if(window._swapModal){window._swapModal.remove();window._swapModal=null;}">Cancel</button>'
+                        + '</div>'
+                        + '</div>';
+                    _swapModal.onclick = function(e) { if (e.target === _swapModal) { _swapModal.remove(); _swapModal = null; } };
+                    document.body.appendChild(_swapModal);
+                    window._swapModal = _swapModal;
+                }).catch(function(){
+                    showToast("Could not load swap info. Please try again.", "error");
+                });
+            }
+
+            function quickSwap(phoneNumber) {
+                var btn = document.getElementById("swapConfirmBtn");
+                if (btn) { btn.disabled = true; btn.textContent = "Swapping..."; }
+                apiFetch("/api/numbers/quick-swap", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({phone_number: phoneNumber})
+                }).then(function(r){return r.json();}).then(function(data) {
+                    if (_swapModal) { _swapModal.remove(); _swapModal = null; }
+                    if (data.error) {
+                        showToast("Swap failed: " + data.error, "error");
+                        return;
+                    }
+                    showToast(data.message || "Number swapped successfully", "success");
+                    loadOwnedNumbers();
+                }).catch(function(e){
+                    if (_swapModal) { _swapModal.remove(); _swapModal = null; }
+                    if (e.message !== "auth") showToast("Swap request failed. Please try again.", "error");
+                });
             }
 
             function autoAssignNumber(phoneNumber) {

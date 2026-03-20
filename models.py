@@ -135,6 +135,18 @@ class ProvisionedNumber(db.Model):
     )
 
 
+class NumberSwapLog(db.Model):
+    __tablename__ = 'number_swap_log'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    old_number = db.Column(db.String(30), nullable=False)
+    new_number = db.Column(db.String(30), nullable=False)
+    swap_cost = db.Column(db.Numeric(10, 4), default=0, nullable=False)
+    was_free = db.Column(db.Boolean, default=False, nullable=False)
+    swap_reason = db.Column(db.String(50), default='manual', nullable=True)
+    swapped_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
 def ensure_user_instance(user_id):
     instance = UserInstance.query.filter_by(user_id=user_id).first()
     if not instance:
