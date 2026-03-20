@@ -90,6 +90,11 @@
 [data-theme="dark"] .gads-btn:hover { background: var(--gads-surface-hover); }
 [data-theme="dark"] .gads-btn-primary { background: #e0e0e8; color: #0f0f17; border-color: #e0e0e8; }
 [data-theme="dark"] .gads-btn-primary:hover { background: #ffffff; border-color: #ffffff; }
+[data-theme="dark"] .gads-topbar-action-btn { background: #e0e0e8; color: #0f0f17; }
+[data-theme="dark"] .gads-topbar-action-btn:hover { background: #ffffff; color: #0f0f17; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+[data-theme="dark"] .wiz-step-active .wiz-step-num { background: #e0e0e8; color: #0f0f17; border-color: #e0e0e8; }
+[data-theme="dark"] .wiz-step-active .wiz-step-label { color: #e0e0e8; }
+[data-theme="dark"] .rec-error-box button { background: #e0e0e8; color: #0f0f17; }
 [data-theme="dark"] .gads-empty { color: var(--gads-text-secondary); }
 [data-theme="dark"] table th { background: var(--gads-surface); color: var(--gads-text-secondary); border-color: var(--gads-border); }
 [data-theme="dark"] table td { border-color: var(--gads-border); }
