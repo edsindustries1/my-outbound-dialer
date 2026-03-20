@@ -91,6 +91,9 @@
 [data-theme="dark"] .gads-btn-primary:hover { background: #ffffff; border-color: #ffffff; }
 [data-theme="dark"] .gads-topbar-action-btn { background: #e0e0e8; color: #0f0f17; }
 [data-theme="dark"] .gads-topbar-action-btn:hover { background: #ffffff; color: #0f0f17; box-shadow: 0 4px 12px rgba(0,0,0,0.35); }
+[data-theme="dark"] .gads-nav-item.active { background: #e0e0e8; color: #0f0f17; }
+[data-theme="dark"] .gads-nav-item.active svg { stroke: #0f0f17; color: #0f0f17; }
+[data-theme="dark"] .gads-nav-item:hover { background: rgba(224,224,232,0.1); color: var(--gads-text-primary); }
 [data-theme="dark"] .wiz-step-active .wiz-step-num { background: #e0e0e8; color: #0f0f17; border-color: #e0e0e8; }
 [data-theme="dark"] .wiz-step-active .wiz-step-label { color: #e0e0e8; }
 [data-theme="dark"] .rec-error-box button { background: #e0e0e8; color: #0f0f17; }
