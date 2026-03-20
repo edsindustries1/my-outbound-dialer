@@ -5527,6 +5527,41 @@ def api_admin_swap_log():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/admin/lookup-user")
+@admin_required
+def api_admin_lookup_user():
+    """Find a user by email and return their current features — used by the Quick Grant panel."""
+    email = request.args.get("email", "").strip().lower()
+    if not email:
+        return jsonify({"success": False, "error": "Email is required"}), 400
+    user = User.query.filter(db.func.lower(User.email) == email).first()
+    if not user:
+        return jsonify({"success": False, "error": f"No user found with email: {email}"})
+    plan = _get_user_plan(user.id) or "none"
+    feat_dict = _get_user_features(user.id)
+    plan_keys = set(PLAN_FEATURES.get(plan, []))
+    features = [
+        {
+            "key": key,
+            "label": FEATURE_DEFINITIONS[key]["label"],
+            "desc": FEATURE_DEFINITIONS[key]["desc"],
+            "enabled": feat_dict.get(key, False),
+            "plan_includes": key in plan_keys,
+        }
+        for key in FEATURE_DEFINITIONS
+    ]
+    return jsonify({
+        "success": True,
+        "user": {
+            "id": user.id,
+            "name": user.profile_name or user.email.split("@")[0],
+            "email": user.email,
+            "plan": plan,
+        },
+        "features": features,
+    })
+
+
 @app.route("/api/request-feature", methods=["POST"])
 @login_required
 def request_feature_access():

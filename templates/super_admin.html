@@ -177,6 +177,28 @@
     .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
     .save-status { font-size: 0.78rem; color: rgba(255,255,255,0.35); margin-left: 8px; }
 
+    /* ---- Quick Feature Grant panel ---- */
+    .quick-grant-panel { background: #141414; border: 1px solid rgba(139,92,246,0.18); border-radius: 10px; padding: 22px 24px; margin-bottom: 28px; }
+    .quick-email-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 0; }
+    .quick-email-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.88rem; font-family: 'Inter', sans-serif; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
+    .quick-email-input:focus { border-color: rgba(139,92,246,0.5); }
+    .quick-email-input::placeholder { color: rgba(255,255,255,0.22); }
+    .btn-lookup { padding: 10px 20px; background: linear-gradient(135deg,rgba(139,92,246,0.2),rgba(99,102,241,0.15)); color: #a78bfa; border: 1px solid rgba(139,92,246,0.35); border-radius: 8px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: 'Inter',sans-serif; transition: all 0.2s; white-space: nowrap; }
+    .btn-lookup:hover { background: rgba(139,92,246,0.25); border-color: rgba(139,92,246,0.5); }
+    .btn-lookup:disabled { opacity: 0.45; cursor: not-allowed; }
+    .quick-user-card { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.18); border-radius: 9px; margin: 16px 0 14px; }
+    .quick-user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; flex-shrink: 0; }
+    .quick-user-name { font-weight: 700; font-size: 0.95rem; color: #fff; }
+    .quick-user-email { font-size: 0.75rem; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .quick-plan-badge { font-size: 0.7rem; padding: 2px 9px; border-radius: 20px; font-weight: 700; margin-left: auto; flex-shrink: 0; }
+    .quick-plan-badge.starter { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.25); }
+    .quick-plan-badge.business { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+    .quick-plan-badge.agency { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+    .quick-plan-badge.none { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.08); }
+    .quick-error { color: #f87171; font-size: 0.84rem; margin-top: 12px; padding: 10px 14px; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; }
+    .quick-features-label { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .quick-save-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+
     @media (max-width: 1100px) {
       .stats-grid { grid-template-columns: repeat(3, 1fr); }
     }
@@ -312,6 +334,20 @@
           <span class="metric-value {% if stats.transfer_rate >= 5 %}green{% elif stats.transfer_rate >= 2 %}amber{% endif %}">{{ stats.transfer_rate }}%</span>
         </div>
       </div>
+    </div>
+
+    <!-- ===== QUICK FEATURE GRANT BY EMAIL ===== -->
+    <div class="section-title" style="margin-top:8px;">Quick Feature Grant</div>
+    <div class="quick-grant-panel">
+      <div style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;">Look up any user by email and toggle their feature access instantly — no plan change required.</div>
+      <div class="quick-email-row">
+        <input type="email" id="quickEmail" class="quick-email-input" placeholder="Enter user email address…" onkeydown="if(event.key==='Enter') quickLookup()">
+        <button class="btn-lookup" id="quickLookupBtn" onclick="quickLookup()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:middle;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Look Up User
+        </button>
+      </div>
+      <div id="quickFeatureResult"></div>
     </div>
 
     <!-- ===== USER DIRECTORY ===== -->
@@ -979,6 +1015,145 @@
     document.getElementById('featureModal').addEventListener('click', function(e) {
       if (e.target === this) closeFeatureModal();
     });
+
+    /* ===== Quick Feature Grant by Email ===== */
+    var _quickUid = null;
+    var _quickToggles = {};
+
+    function quickLookup() {
+      var email = (document.getElementById('quickEmail').value || '').trim();
+      if (!email) return;
+      var btn = document.getElementById('quickLookupBtn');
+      var result = document.getElementById('quickFeatureResult');
+      btn.disabled = true;
+      btn.textContent = 'Looking up…';
+      result.innerHTML = '';
+
+      fetch('/api/admin/lookup-user?email=' + encodeURIComponent(email))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:middle;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Look Up User';
+          if (!data.success) {
+            result.innerHTML = '<div class="quick-error">' + (data.error || 'User not found') + '</div>';
+            return;
+          }
+          _quickUid = data.user.id;
+          renderQuickFeatures(data);
+        })
+        .catch(function() {
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:middle;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Look Up User';
+          result.innerHTML = '<div class="quick-error">Network error — please try again.</div>';
+        });
+    }
+
+    function renderQuickFeatures(data) {
+      var u = data.user;
+      var result = document.getElementById('quickFeatureResult');
+      _quickToggles = {};
+
+      /* User card */
+      var initial = (u.name || u.email).charAt(0).toUpperCase();
+      var planLabel = { starter: 'Starter $99', business: 'Business $399', agency: 'Agency', none: 'No Plan' }[u.plan] || u.plan;
+
+      var html = '<div class="quick-user-card">';
+      html += '<div class="quick-user-avatar">' + initial + '</div>';
+      html += '<div><div class="quick-user-name">' + escHtml(u.name) + '</div><div class="quick-user-email">' + escHtml(u.email) + '</div></div>';
+      html += '<span class="quick-plan-badge ' + (u.plan || 'none') + '">' + escHtml(planLabel) + '</span>';
+      html += '</div>';
+
+      /* Feature toggles */
+      html += '<div class="quick-features-label">Feature Access</div>';
+      html += '<div class="feature-grid" id="quickFeatGrid"></div>';
+
+      /* Save row */
+      html += '<div class="quick-save-row">';
+      html += '<button class="btn-save" id="quickSaveBtn" onclick="quickSaveFeatures()">Apply Features</button>';
+      html += '<span class="save-status" id="quickSaveStatus"></span>';
+      html += '</div>';
+
+      result.innerHTML = html;
+      result.style.display = '';
+
+      /* Build toggle rows */
+      var grid = document.getElementById('quickFeatGrid');
+      data.features.forEach(function(f) {
+        var row = document.createElement('div');
+        row.className = 'feature-row';
+
+        var dot = document.createElement('span');
+        dot.className = 'plan-dot ' + (f.plan_includes ? 'included' : 'excluded');
+        dot.title = f.plan_includes ? 'Included in current plan' : 'Not in current plan';
+        row.appendChild(dot);
+
+        var text = document.createElement('div');
+        text.className = 'feature-text';
+        var lbl = document.createElement('div');
+        lbl.className = 'feature-label';
+        lbl.textContent = f.label;
+        var desc = document.createElement('div');
+        desc.className = 'feature-desc';
+        desc.textContent = f.desc;
+        text.appendChild(lbl);
+        text.appendChild(desc);
+        row.appendChild(text);
+
+        var twrap = document.createElement('div');
+        twrap.className = 'toggle-wrap';
+        var toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.checked = f.enabled;
+        toggle.id = 'qfeat_' + f.key;
+        _quickToggles[f.key] = toggle;
+        twrap.appendChild(toggle);
+        row.appendChild(twrap);
+
+        grid.appendChild(row);
+      });
+    }
+
+    function quickSaveFeatures() {
+      if (!_quickUid) return;
+      var updates = {};
+      for (var k in _quickToggles) {
+        updates[k] = _quickToggles[k].checked;
+      }
+      var btn = document.getElementById('quickSaveBtn');
+      var status = document.getElementById('quickSaveStatus');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      status.textContent = '';
+
+      fetch('/api/admin/features/' + _quickUid, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ features: updates, note: 'admin:quick-grant' })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        btn.disabled = false;
+        btn.textContent = 'Apply Features';
+        if (res.success) {
+          status.textContent = 'Saved \u2713';
+          status.style.color = '#10b981';
+        } else {
+          status.textContent = 'Error saving';
+          status.style.color = '#ef4444';
+        }
+        setTimeout(function() { status.textContent = ''; }, 3000);
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Apply Features';
+        status.textContent = 'Network error';
+        status.style.color = '#ef4444';
+      });
+    }
+
+    function escHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
   </script>
 </body>
 </html>
