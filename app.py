@@ -283,9 +283,15 @@ PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
-    "starter": {"amount": Decimal("99.00"), "instances": 1},
-    "business": {"amount": Decimal("399.00"), "instances": 5},
+    "starter": {"amount": Decimal("99.00"), "instances": 1, "included_numbers": 1, "max_numbers": 5},
+    "business": {"amount": Decimal("399.00"), "instances": 5, "included_numbers": 3, "max_numbers": 20},
 }
+PLAN_NUMBER_LIMITS = {
+    "starter":  {"included": 1, "max": 5},
+    "business": {"included": 3, "max": 20},
+}
+EXTRA_NUMBER_MONTHLY_COST = Decimal("3.00")
+DAILY_DIAL_CAP = 150
 CALL_COST = Decimal("0.10")
 MIN_REFILL = Decimal("10.00")
 DEFAULT_REFILL = Decimal("25.00")
@@ -432,6 +438,24 @@ PLAN_MAX_CONCURRENT_LINES = {
     "starter": 5,
     "business": 15,
 }
+
+
+def _get_user_plan(user_id):
+    """Return the user's current plan key ('starter', 'business', or None)."""
+    try:
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key="active_plan").first()
+        if rec:
+            val = json.loads(rec.data_value)
+            return (val.get("plan") or "").lower() or None
+    except Exception:
+        pass
+    return None
+
+
+def _get_number_limits(user_id):
+    """Return {included, max} number limits for a user based on plan."""
+    plan = _get_user_plan(user_id)
+    return PLAN_NUMBER_LIMITS.get(plan, {"included": 1, "max": 3})
 
 
 def _set_max_concurrent_lines(user_id, limit):
@@ -4039,13 +4063,21 @@ def api_numbers_search():
 @app.route("/api/numbers/buy", methods=["POST"])
 @login_required
 def api_numbers_buy():
-    """Purchase a phone number for the current user. Multiple numbers are allowed."""
+    """Purchase a phone number for the current user. Enforces plan-based limits."""
     user_id = current_user.id
 
     data = request.get_json() or {}
     phone_number = data.get("phone_number", "").strip()
     if not phone_number:
         return jsonify({"error": "Phone number is required"}), 400
+
+    limits = _get_number_limits(user_id)
+    current_count = ProvisionedNumber.query.filter_by(user_id=user_id, status='active').count()
+    if current_count >= limits["max"]:
+        plan = _get_user_plan(user_id) or "starter"
+        if plan == "starter":
+            return jsonify({"error": f"You've reached your Starter plan limit of {limits['max']} numbers. Upgrade to Business for up to 20 numbers."}), 400
+        return jsonify({"error": f"You've reached your plan limit of {limits['max']} numbers. Contact support to increase your limit."}), 400
 
     auto_setup = data.get("auto_setup", True)
     app_name = data.get("app_name", "Open Human Dialer")
@@ -4074,6 +4106,8 @@ def api_numbers_buy():
     pn = ProvisionedNumber(user_id=user_id, phone_number=phone_number, status='active')
     pn.telnyx_order_id = order_result.get("order_id")
     pn.telnyx_connection_id = connection_id
+    limits = _get_number_limits(user_id)
+    pn.is_included = (current_count < limits["included"])
     db.session.add(pn)
     db.session.commit()
 
@@ -4095,21 +4129,28 @@ def api_numbers_buy():
 @app.route("/api/numbers/owned", methods=["GET"])
 @login_required
 def api_numbers_owned():
-    """Return only numbers belonging to the current user (strict isolation)."""
+    """Return numbers belonging to the current user with plan limits and dial health data."""
     user_id = current_user.id
     user_numbers = ProvisionedNumber.query.filter_by(user_id=user_id).all()
     user_phone_set = {pn.phone_number for pn in user_numbers}
 
-    # Build a map of phone_number -> calls today from call history
-    calls_today_map = {}
+    # Build DB number map for fast lookup
+    db_number_map = {pn.phone_number: pn for pn in user_numbers}
+
+    # Pull 7-day call history for answer rate calculation
+    calls_7d_map = {}
+    answered_7d_map = {}
     try:
         from storage import get_call_history as _gch
-        today_str = datetime.utcnow().strftime("%Y-%m-%dT00:00:00")
-        today_history = _gch(start_date=today_str, user_id=user_id)
-        for entry in today_history:
+        from datetime import timedelta
+        week_ago = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT00:00:00")
+        week_history = _gch(start_date=week_ago, user_id=user_id)
+        for entry in week_history:
             fn = entry.get("from_number", "")
             if fn:
-                calls_today_map[fn] = calls_today_map.get(fn, 0) + 1
+                calls_7d_map[fn] = calls_7d_map.get(fn, 0) + 1
+                if entry.get("amd_result") == "human" or entry.get("status") in ("transferred", "human_answered"):
+                    answered_7d_map[fn] = answered_7d_map.get(fn, 0) + 1
     except Exception:
         pass
 
@@ -4117,8 +4158,6 @@ def api_numbers_owned():
     result = list_owned_numbers()
     if result.get("success") and user_phone_set:
         filtered = [n for n in result.get("numbers", []) if n.get("phone_number") in user_phone_set]
-        for n in filtered:
-            n["calls_today"] = calls_today_map.get(n.get("phone_number", ""), 0)
         result["numbers"] = filtered
         result["total"] = len(filtered)
     elif result.get("success") and not user_phone_set:
@@ -4126,10 +4165,28 @@ def api_numbers_owned():
         result["total"] = 0
 
     active_count = sum(1 for pn in user_numbers if pn.status == 'active')
-    result["active_count"] = active_count
-    result["can_purchase"] = True
 
-    # Also include DB-only numbers that may not appear in Telnyx list
+    # Limits and billing
+    limits = _get_number_limits(user_id)
+    plan = _get_user_plan(user_id)
+    extra_count = max(0, active_count - limits["included"])
+    monthly_extra_cost = float(EXTRA_NUMBER_MONTHLY_COST) * extra_count
+
+    # Recommended number count: based on 7-day average daily volume
+    total_7d = sum(calls_7d_map.values())
+    avg_daily = total_7d / 7.0
+    import math
+    recommended = max(1, math.ceil(avg_daily / DAILY_DIAL_CAP)) if avg_daily > 0 else 1
+
+    result["active_count"] = active_count
+    result["can_purchase"] = active_count < limits["max"]
+    result["plan"] = plan or "none"
+    result["plan_limits"] = limits
+    result["extra_count"] = extra_count
+    result["monthly_extra_cost"] = monthly_extra_cost
+    result["recommended"] = recommended
+
+    # Enrich numbers with DB health data
     if result.get("success"):
         existing_phones = {n.get("phone_number") for n in result.get("numbers", [])}
         for pn in user_numbers:
@@ -4141,8 +4198,31 @@ def api_numbers_owned():
                     "connection_id": pn.telnyx_connection_id,
                     "connection_name": None,
                     "number_type": "local",
-                    "calls_today": calls_today_map.get(pn.phone_number, 0),
                 })
+        from datetime import date as _date
+        today = datetime.utcnow().date()
+        for n in result["numbers"]:
+            ph = n.get("phone_number", "")
+            db_pn = db_number_map.get(ph)
+            if db_pn:
+                # Reset stale daily count
+                if db_pn.last_dial_date and db_pn.last_dial_date < today:
+                    daily = 0
+                else:
+                    daily = db_pn.daily_dial_count or 0
+                n["daily_dial_count"] = daily
+                n["daily_cap"] = DAILY_DIAL_CAP
+                n["is_cooling"] = (daily >= DAILY_DIAL_CAP)
+                n["is_included"] = db_pn.is_included
+            else:
+                n["daily_dial_count"] = 0
+                n["daily_cap"] = DAILY_DIAL_CAP
+                n["is_cooling"] = False
+                n["is_included"] = False
+            n["calls_7d"] = calls_7d_map.get(ph, 0)
+            answered = answered_7d_map.get(ph, 0)
+            total = calls_7d_map.get(ph, 0)
+            n["answer_rate_7d"] = round(answered / total * 100, 1) if total > 0 else None
 
     return jsonify(result)
 
@@ -4306,10 +4386,22 @@ def api_request_additional_line():
 def api_numbers_release():
     data = request.get_json() or {}
     phone_number_id = data.get("phone_number_id", "").strip()
+    phone_number = data.get("phone_number", "").strip()
     if not phone_number_id:
         return jsonify({"error": "Phone number ID is required"}), 400
     result = release_number(phone_number_id)
     if result.get("success"):
+        try:
+            pn = None
+            if phone_number:
+                pn = ProvisionedNumber.query.filter_by(phone_number=phone_number, user_id=current_user.id).first()
+            if not pn:
+                pn = ProvisionedNumber.query.filter_by(telnyx_number_id=phone_number_id, user_id=current_user.id).first()
+            if pn:
+                pn.status = 'released'
+                db.session.commit()
+        except Exception as e:
+            logger.warning(f"Could not update DB record on release: {e}")
         return jsonify({"success": True, "message": "Number released"})
     return jsonify(result), 400
 
@@ -4406,7 +4498,7 @@ def api_provision_line():
         chosen = search_result["numbers"][0]
         phone_number = chosen["phone_number"]
 
-        pn = ProvisionedNumber(user_id=user_id, phone_number=phone_number, status='provisioning')
+        pn = ProvisionedNumber(user_id=user_id, phone_number=phone_number, status='provisioning', is_included=True)
         db.session.add(pn)
         db.session.commit()
 

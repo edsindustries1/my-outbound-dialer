@@ -65,11 +65,14 @@ def _release_slot(user_id):
 
 
 DEFAULT_MAX_LINES = 5
+DAILY_DIAL_CAP = 150
 
 PLAN_MAX_LINES = {
     "starter": 5,
     "business": 15,
 }
+
+_ALL_CAPPED = "__ALL_NUMBERS_AT_DAILY_CAP__"
 
 
 def _get_user_max_lines(user_id):
@@ -90,21 +93,52 @@ def _get_user_max_lines(user_id):
 
 
 def _get_lru_from_number(user_id, fallback=None):
-    """Select the least-recently-used active number for a user. Returns phone number string or fallback."""
+    """Select the least-recently-used active number for a user that has not hit its daily dial cap.
+
+    Returns:
+        phone_number string — a number ready to use
+        fallback            — if no provisioned numbers exist for the user
+        _ALL_CAPPED         — if all provisioned numbers have hit the daily cap (150 dials)
+    """
     try:
         from app import app as _flask_app, db
         from models import ProvisionedNumber
         from datetime import datetime
+        today = datetime.utcnow().date()
         with _flask_app.app_context():
             numbers = ProvisionedNumber.query.filter_by(user_id=user_id, status="active").all()
             if not numbers:
                 logger.debug(f"No active provisioned numbers for user {user_id}, using fallback")
                 return fallback
-            numbers.sort(key=lambda n: (n.last_used_at is not None, n.last_used_at or None))
-            chosen = numbers[0]
+
+            # Reset stale daily counts (new day)
+            for n in numbers:
+                if n.last_dial_date is None or n.last_dial_date < today:
+                    n.daily_dial_count = 0
+                    n.last_dial_date = today
+
+            # Find numbers under the daily cap
+            available = [n for n in numbers if n.daily_dial_count < DAILY_DIAL_CAP]
+
+            if not available:
+                db.session.commit()
+                logger.warning(
+                    f"All {len(numbers)} number(s) for user {user_id} have hit the daily cap "
+                    f"({DAILY_DIAL_CAP} dials). Campaign will pause until tomorrow."
+                )
+                return _ALL_CAPPED
+
+            # Pick least-recently-used from available numbers
+            available.sort(key=lambda n: (n.last_used_at is not None, n.last_used_at or datetime.min))
+            chosen = available[0]
             chosen.last_used_at = datetime.utcnow()
+            chosen.daily_dial_count += 1
+            chosen.last_dial_date = today
             db.session.commit()
-            logger.debug(f"LRU caller ID for user {user_id}: {chosen.phone_number}")
+            logger.debug(
+                f"LRU caller ID for user {user_id}: {chosen.phone_number} "
+                f"({chosen.daily_dial_count}/{DAILY_DIAL_CAP} dials today)"
+            )
             return chosen.phone_number
     except Exception as e:
         logger.warning(f"LRU number selection failed for user {user_id}, using fallback: {e}")
@@ -232,6 +266,9 @@ def _dial_sequential(numbers, dial_delay=2, from_number=None, user_id=None):
             effective_from = from_number
             if user_id is not None:
                 effective_from = _get_lru_from_number(user_id, fallback=from_number)
+                if effective_from is _ALL_CAPPED:
+                    logger.warning(f"User {user_id}: all numbers at daily cap — stopping campaign for today.")
+                    break
             call_control_id, call_error = make_call(number, from_number_override=effective_from)
 
             if call_control_id:
@@ -350,6 +387,11 @@ def _place_single_call(number, from_number=None, user_id=None):
         effective_from = from_number
         if user_id is not None:
             effective_from = _get_lru_from_number(user_id, fallback=from_number)
+            if effective_from is _ALL_CAPPED:
+                logger.warning(f"User {user_id}: all numbers at daily cap in simultaneous mode, skipping {number}")
+                if reserved:
+                    _release_slot(user_id)
+                return False
 
         call_control_id, call_error = make_call(number, from_number_override=effective_from)
         if call_control_id:

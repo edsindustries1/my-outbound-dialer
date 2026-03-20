@@ -126,6 +126,9 @@ class ProvisionedNumber(db.Model):
     status = db.Column(db.String(50), default='provisioning', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     last_used_at = db.Column(db.DateTime, nullable=True)
+    daily_dial_count = db.Column(db.Integer, default=0, nullable=False)
+    last_dial_date = db.Column(db.Date, nullable=True)
+    is_included = db.Column(db.Boolean, default=False, nullable=False)
 
     __table_args__ = (
         db.UniqueConstraint('phone_number', name='uq_provisioned_phone'),
@@ -315,6 +318,18 @@ def _ensure_schema():
             if "last_used_at" not in pn_cols:
                 logger.warning("DB schema missing provisioned_numbers.last_used_at; applying ALTER TABLE")
                 db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN last_used_at TIMESTAMP"))
+                db.session.commit()
+            if "daily_dial_count" not in pn_cols:
+                logger.warning("DB schema missing provisioned_numbers.daily_dial_count; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN daily_dial_count INTEGER DEFAULT 0 NOT NULL"))
+                db.session.commit()
+            if "last_dial_date" not in pn_cols:
+                logger.warning("DB schema missing provisioned_numbers.last_dial_date; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN last_dial_date DATE"))
+                db.session.commit()
+            if "is_included" not in pn_cols:
+                logger.warning("DB schema missing provisioned_numbers.is_included; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN is_included BOOLEAN DEFAULT FALSE NOT NULL"))
                 db.session.commit()
 
         if "app_config" not in inspector.get_table_names():
