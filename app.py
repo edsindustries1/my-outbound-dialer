@@ -5534,9 +5534,24 @@ def api_admin_lookup_user():
     email = request.args.get("email", "").strip().lower()
     if not email:
         return jsonify({"success": False, "error": "Email is required"}), 400
+
     user = User.query.filter(db.func.lower(User.email) == email).first()
+
     if not user:
-        return jsonify({"success": False, "error": f"No user found with email: {email}"})
+        # Check if they have a pending invite — give a helpful explanation
+        pending = Invitation.query.filter(db.func.lower(Invitation.email) == email, Invitation.used == False).first()
+        if pending:
+            return jsonify({
+                "success": False,
+                "pending_invite": True,
+                "error": (
+                    f"{email} has been invited but hasn't signed up yet. "
+                    "Features can only be assigned after they accept the invite and create their account. "
+                    "Once they sign up, look them up here again."
+                )
+            })
+        return jsonify({"success": False, "error": f"No account found for: {email}"})
+
     plan = _get_user_plan(user.id) or "none"
     feat_dict = _get_user_features(user.id)
     plan_keys = set(PLAN_FEATURES.get(plan, []))
