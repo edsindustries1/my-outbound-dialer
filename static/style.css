@@ -223,7 +223,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .gads-sidebar-collapsed .gads-logo-text { display: none; }
 .gads-sidebar-collapsed .gads-nav-item { justify-content: center; padding: 10px 0; border-radius: 8px; }
 .gads-sidebar-collapsed .gads-sidebar-logo { justify-content: center; padding: 10px 0; }
-.gads-sidebar-collapsed .gads-logo-mark { height: 28px; }
+.gads-sidebar-collapsed .gads-logo-mark { height: 35px; }
 
 .gads-sidebar-logo {
     display: flex;
@@ -239,7 +239,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 }
 .gads-sidebar-logo:hover { background: var(--gads-surface-hover); }
 .gads-logo-mark {
-    height: 36px;
+    height: 45px;
     width: auto;
     display: block;
     flex-shrink: 0;
@@ -3460,7 +3460,7 @@ label {
     .gads-sidebar .gads-logo-text { display: none; }
     .gads-sidebar .gads-nav-item { justify-content: center; padding: 10px 0; }
     .gads-sidebar .gads-sidebar-logo { justify-content: center; padding: 10px 0; }
-    .gads-sidebar .gads-logo-mark { height: 28px; }
+    .gads-sidebar .gads-logo-mark { height: 35px; }
     .gads-main { margin-left: 56px; }
     .gads-kpi-row { grid-template-columns: repeat(3, 1fr); }
 }
