@@ -207,6 +207,41 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 }
 .plan-billing-model-light .pbm-sep { color: rgba(255,255,255,0.4); }
 
+/* ── Plan capacity row (below price) ── */
+.plan-capacity-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -16px;
+  margin-bottom: 20px;
+}
+.plan-cap-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.plan-cap-pill svg { flex-shrink: 0; opacity: .75; }
+.plan-cap-dot {
+  font-size: .75rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.plan-capacity-row--featured .plan-cap-pill {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.15);
+}
+.plan-capacity-row--featured .plan-cap-dot { color: rgba(255,255,255,0.35); }
+
 /* ══════════════ PRICING CALCULATOR ══════════════ */
 .calc-section {
   max-width: 860px;
