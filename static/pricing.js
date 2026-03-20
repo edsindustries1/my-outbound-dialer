@@ -8,7 +8,7 @@
   var ADDONS = [
     { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.02, monthlyFlat: 0 },
     { id: 'liveTransfer',   label: 'Live Call Transfer',          costPerDial: 0.02, monthlyFlat: 0 },
-    { id: 'gatekeeper',     label: 'Gatekeeper Navigator',        costPerDial: 0.02, monthlyFlat: 0 },
+    { id: 'gatekeeper',     label: 'Gatekeeper Navigator',        costPerDial: 0.05, monthlyFlat: 0 },
     { id: 'transcription',  label: 'Recording & Transcription',   costPerDial: 0.05, monthlyFlat: 0 },
     { id: 'voiceCloning',   label: 'Voice Cloning',               costPerDial: 0,    monthlyFlat: 19 }
   ];
