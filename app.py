@@ -149,6 +149,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import timedelta as _td
 
 app = Flask(__name__)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 _secret = os.environ.get("SESSION_SECRET")
 if not _secret:
