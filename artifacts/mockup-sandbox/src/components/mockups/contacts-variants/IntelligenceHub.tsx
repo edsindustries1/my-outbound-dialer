@@ -15,7 +15,9 @@ import {
   Play,
   FileCheck,
   Clock,
-  ChevronDown
+  ChevronDown,
+  XCircle,
+  X
 } from 'lucide-react';
 
 const contacts = [
