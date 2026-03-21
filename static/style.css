@@ -3969,3 +3969,81 @@ body, .gads-sidebar, .gads-topbar, .gads-card, .gads-kpi-card {
 .ih-import-field input[type=text] { width:100%; padding:9px 12px; border:1px solid var(--gads-border); border-radius:8px; font-size:13px; background:var(--gads-bg); color:var(--gads-text-primary); outline:none; box-sizing:border-box; }
 .ih-import-field input:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
 .ih-import-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+/* ── Intelligence Hub: Dark Mode Overrides ── */
+[data-theme="dark"] .ih-header h2 { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-btn-secondary { background: var(--gads-surface); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-btn-secondary:hover { background: var(--gads-surface-hover); }
+[data-theme="dark"] .ih-btn-primary { background: #e0e0e8; color: #0f0f17; box-shadow: none; }
+[data-theme="dark"] .ih-btn-primary:hover { background: #fff; }
+
+[data-theme="dark"] .ih-insight-card { background: var(--gads-surface); border-color: var(--gads-border); box-shadow: var(--gads-shadow); }
+[data-theme="dark"] .ih-insight-card.orange { border-color: rgba(251,146,60,0.25); box-shadow: none; }
+[data-theme="dark"] .ih-insight-card.green { border-color: rgba(52,211,153,0.2); box-shadow: none; }
+[data-theme="dark"] .ih-insight-card.red { border-color: rgba(248,113,113,0.2); box-shadow: none; }
+[data-theme="dark"] .ih-insight-number { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-insight-label { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-insight-icon.blue { background: rgba(37,99,235,0.15); }
+[data-theme="dark"] .ih-insight-icon.orange { background: rgba(249,115,22,0.15); }
+[data-theme="dark"] .ih-insight-icon.green { background: rgba(16,185,129,0.15); }
+[data-theme="dark"] .ih-insight-icon.red { background: rgba(239,68,68,0.15); }
+[data-theme="dark"] .ih-insight-trend { background: rgba(52,211,153,0.12); color: #34d399; }
+
+[data-theme="dark"] .ih-main-card { background: var(--gads-surface); border-color: var(--gads-border); box-shadow: var(--gads-shadow); }
+[data-theme="dark"] .ih-toolbar { background: var(--gads-surface); border-bottom-color: var(--gads-border); }
+[data-theme="dark"] .ih-toolbar select { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-search-wrap input { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-tabs { background: var(--gads-bg); }
+[data-theme="dark"] .ih-tab { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-tab.active { background: var(--gads-surface-hover); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-tab:hover:not(.active) { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-delete-btn { border-color: rgba(248,113,113,0.3); color: #f87171; }
+[data-theme="dark"] .ih-delete-btn:hover { background: rgba(248,113,113,0.1); }
+
+[data-theme="dark"] .ih-table thead tr { background: var(--gads-surface); }
+[data-theme="dark"] .ih-table th { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-table tbody tr { border-bottom-color: var(--gads-border); }
+[data-theme="dark"] .ih-table tbody tr:hover { background: var(--gads-surface-hover); }
+[data-theme="dark"] .ih-contact-name { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-contact-phone { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-tag { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-badge.hot { background: rgba(194,65,12,0.18); color: #fb923c; }
+[data-theme="dark"] .ih-badge.dnc { background: rgba(220,38,38,0.15); color: #f87171; }
+[data-theme="dark"] .ih-badge.due { background: rgba(180,83,9,0.15); color: #fbbf24; }
+[data-theme="dark"] .ih-result-badge { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-result-badge.connected { color: #34d399; }
+[data-theme="dark"] .ih-result-badge.voicemail { color: #fbbf24; }
+[data-theme="dark"] .ih-result-badge.noanswer { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-result-badge.failed { color: #f87171; }
+[data-theme="dark"] .ih-action-btn { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-table-footer { background: var(--gads-surface); border-top-color: var(--gads-border); color: var(--gads-text-secondary); }
+
+[data-theme="dark"] .ih-smart-card { background: linear-gradient(135deg, rgba(30,58,138,0.35), rgba(12,74,110,0.35)); border-color: rgba(59,130,246,0.2); }
+[data-theme="dark"] .ih-smart-card-title { color: #93c5fd; }
+[data-theme="dark"] .ih-smart-card-icon { background: rgba(37,99,235,0.2); color: #93c5fd; }
+[data-theme="dark"] .ih-smart-card p { color: #bfdbfe; }
+[data-theme="dark"] .ih-smart-launch-btn { background: #2563eb; color: #fff; }
+[data-theme="dark"] .ih-smart-launch-btn:hover { background: #1d4ed8; }
+
+[data-theme="dark"] .ih-sidebar-card { background: var(--gads-surface); border-color: var(--gads-border); box-shadow: var(--gads-shadow); }
+[data-theme="dark"] .ih-sidebar-card-title h4 { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-sidebar-card textarea { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-validate-btn { background: var(--gads-text-primary); color: var(--gads-bg); }
+[data-theme="dark"] .ih-validate-btn:hover { background: #fff; color: #0f0f17; }
+[data-theme="dark"] .ih-dnc-input-row input { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-dnc-add-btn { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-dnc-add-btn:hover { background: var(--gads-surface-hover); }
+[data-theme="dark"] .ih-dnc-row-item { background: var(--gads-bg); border-color: var(--gads-border); }
+[data-theme="dark"] .ih-dnc-phone { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-dnc-remove-btn:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+[data-theme="dark"] .ih-dnc-empty { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-val-item.valid { background: rgba(52,211,153,0.1); color: #34d399; }
+[data-theme="dark"] .ih-val-item.invalid { background: rgba(248,113,113,0.1); color: #f87171; }
+
+[data-theme="dark"] .ih-import-modal { background: var(--gads-surface); }
+[data-theme="dark"] .ih-import-modal h3 { color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-import-field label { color: var(--gads-text-secondary); }
+[data-theme="dark"] .ih-import-field input[type=file],
+[data-theme="dark"] .ih-import-field input[type=text] { background: var(--gads-bg); border-color: var(--gads-border); color: var(--gads-text-primary); }
+[data-theme="dark"] .ih-val-valid { color: #34d399; }
+[data-theme="dark"] .ih-val-invalid { color: #f87171; }
