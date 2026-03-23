@@ -998,6 +998,22 @@ def handle_500(e):
 def about_page():
     return render_template("about.html")
 
+@app.route("/compare")
+def compare_index():
+    from comparison_data import get_all_comparisons
+    comparisons = get_all_comparisons()
+    return render_template("compare_index.html", comparisons=comparisons)
+
+@app.route("/compare/<slug>")
+def compare_page(slug):
+    from comparison_data import get_all_comparisons, get_comparison_by_slug
+    comp = get_comparison_by_slug(slug)
+    if not comp:
+        return redirect(url_for("compare_index"))
+    all_comparisons = get_all_comparisons()
+    related = [c for c in all_comparisons if c["slug"] in comp.get("related_comparisons", [])]
+    return render_template("compare.html", comp=comp, related=related)
+
 @app.route("/blog-page")
 def blog_page_redirect():
     return redirect(url_for("blog_listing"))

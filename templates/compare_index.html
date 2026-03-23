@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Humana vs Competitors — Comparison Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/compare.css">
+  <meta name="description" content="See how Open Humana compares to Kixie, JustCall, Nooks, PhoneBurner, and Mojo Dialer. Side-by-side feature and pricing comparisons for outbound sales teams.">
+  <meta property="og:title" content="Open Humana vs Competitors — Comparison Hub">
+  <meta property="og:description" content="Side-by-side comparisons of Open Humana against the most popular outbound dialing platforms.">
+  <meta property="og:image" content="https://openhumana.com/static/images/dashboard-preview.png">
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="apple-touch-icon" href="/static/images/logo.png">
+</head>
+<body class="cmp-body">
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:146px;width:auto;">
+      </a>
+      <div class="nav-links">
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/compare">Compare</a>
+        <a href="/blog">Blog</a>
+      </div>
+      <div class="nav-right">
+        <a href="/login" class="nav-login">Log in</a>
+        <a href="/register" class="nav-cta">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <div style="height:64px;"></div>
+
+  <section class="cmp-index-hero">
+    <div class="cmp-index-hero-inner">
+      <div class="cmp-hero-badge">Compare</div>
+      <h1>Open Humana vs the Competition</h1>
+      <p>Detailed, honest comparisons of Open Humana against the most popular outbound dialing platforms. See how features, pricing, and use-case fit stack up so you can make the right decision for your team.</p>
+    </div>
+  </section>
+
+  <div class="cmp-index-grid">
+    {% for comp in comparisons %}
+    <a href="/compare/{{ comp.slug }}" class="cmp-index-card">
+      <div class="cmp-index-card-vs">Comparison</div>
+      <h2>Open Humana vs {{ comp.competitor }}</h2>
+      <p class="cmp-index-card-sub">{{ comp.competitor_tagline }}</p>
+      <div class="cmp-index-card-arrow">
+        Read comparison
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="/" class="footer-logo-link">
+          <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
+        </a>
+        <span class="footer-copy">&copy; 2026 Open Humana</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="/about">About</a>
+        <a href="/blog">Blog</a>
+        <a href="/compare">Compare</a>
+        <a href="/help">Help</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <div class="footer-right">
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/open-humana-b794643b3/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="https://x.com/openhumana" target="_blank" rel="noopener" aria-label="X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L2 2.25h6.016l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

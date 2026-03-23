@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ comp.meta_title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/compare.css">
+  <meta name="description" content="{{ comp.meta_description }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ comp.meta_title }}">
+  <meta property="og:description" content="{{ comp.meta_description }}">
+  <meta property="og:image" content="https://openhumana.com/static/images/dashboard-preview.png">
+  <meta property="og:url" content="https://openhumana.com/compare/{{ comp.slug }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ comp.meta_title }}">
+  <meta name="twitter:description" content="{{ comp.meta_description }}">
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="apple-touch-icon" href="/static/images/logo.png">
+</head>
+<body class="cmp-body">
+
+  <nav class="nav scrolled">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:146px;width:auto;">
+      </a>
+      <div class="nav-links">
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/compare">Compare</a>
+        <a href="/blog">Blog</a>
+      </div>
+      <div class="nav-right">
+        <a href="/login" class="nav-login">Log in</a>
+        <a href="/register" class="nav-cta">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <div style="height:64px;"></div>
+
+  <div class="cmp-back-bar">
+    <a href="/compare" class="cmp-back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      All Comparisons
+    </a>
+  </div>
+
+  <!-- HERO -->
+  <section class="cmp-hero">
+    <div class="cmp-hero-inner">
+      <div class="cmp-hero-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Side-by-Side Comparison
+      </div>
+      <h1>Open Humana <span class="vs-label">vs</span> {{ comp.competitor }}</h1>
+      <p class="cmp-hero-summary">{{ comp.hero_summary }}</p>
+      <div class="cmp-hero-actions">
+        <a href="/register" class="cmp-btn-primary">
+          Try Open Humana Free
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="/contact" class="cmp-btn-ghost">Book a Demo</a>
+      </div>
+      <p class="cmp-updated">Last updated: {{ comp.updated }}. All competitor data based on publicly available information.</p>
+    </div>
+  </section>
+
+  <!-- FEATURE TABLE -->
+  <section class="cmp-section">
+    <h2 class="cmp-section-title">Feature Comparison</h2>
+    <p class="cmp-section-sub">Open Humana vs {{ comp.competitor }} — head to head on the features that matter most for outbound sales teams.</p>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th style="width:38%;text-align:left;">Feature</th>
+            <th class="col-us" style="width:31%;text-align:left;">
+              Open Humana
+              <span class="cmp-th-badge">Alex</span>
+            </th>
+            <th style="width:31%;text-align:left;">{{ comp.competitor }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in comp.features %}
+          <tr>
+            <td>
+              <span class="cmp-feat-name">{{ row.feature }}</span>
+            </td>
+            <td class="cmp-cell-us">
+              {% if row.us is sameas true %}
+                <span class="cmp-yes">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Yes
+                </span>
+              {% elif row.us is sameas false %}
+                <span class="cmp-no">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  No
+                </span>
+              {% else %}
+                <span class="cmp-val">{{ row.us }}</span>
+              {% endif %}
+              {% if row.us_note %}
+              <span class="cmp-feat-note">{{ row.us_note }}</span>
+              {% endif %}
+            </td>
+            <td class="cmp-cell-them">
+              {% if row.them is sameas true %}
+                <span class="cmp-yes">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Yes
+                </span>
+              {% elif row.them is sameas false %}
+                <span class="cmp-no">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  No
+                </span>
+              {% else %}
+                <span class="cmp-val-them">{{ row.them }}</span>
+              {% endif %}
+              {% if row.them_note %}
+              <span class="cmp-feat-note">{{ row.them_note }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="cmp-divider">
+
+  <!-- PRICING -->
+  <section class="cmp-section">
+    <h2 class="cmp-section-title">Pricing Comparison</h2>
+    <p class="cmp-section-sub">Plans and pricing as of {{ comp.updated }}. Verify current pricing on each vendor's website.</p>
+    <div class="cmp-pricing-grid">
+      <div class="cmp-pricing-col">
+        <div class="cmp-pricing-col-head us-head">
+          <div class="cmp-pricing-col-name">Open Humana</div>
+        </div>
+        <div class="cmp-pricing-plan-list">
+          {% for plan in comp.pricing.us_plans %}
+          <div class="cmp-plan">
+            <div>
+              <div class="cmp-plan-name">{{ plan.name }}</div>
+              <div class="cmp-plan-note">{{ plan.note }}</div>
+            </div>
+            <div class="cmp-plan-price">{{ plan.price }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="cmp-pricing-col">
+        <div class="cmp-pricing-col-head">
+          <div class="cmp-pricing-col-name">{{ comp.competitor }}</div>
+        </div>
+        <div class="cmp-pricing-plan-list">
+          {% for plan in comp.pricing.them_plans %}
+          <div class="cmp-plan">
+            <div>
+              <div class="cmp-plan-name">{{ plan.name }}</div>
+              <div class="cmp-plan-note">{{ plan.note }}</div>
+            </div>
+            <div class="cmp-plan-price">{{ plan.price }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="cmp-pricing-summary">{{ comp.pricing.summary }}</div>
+  </section>
+
+  <hr class="cmp-divider">
+
+  <!-- BEST FOR -->
+  <section class="cmp-section">
+    <h2 class="cmp-section-title">Who Should Choose Which</h2>
+    <p class="cmp-section-sub">Both tools have legitimate use cases. Here is the honest breakdown.</p>
+    <div class="cmp-bestfor-grid">
+      <div class="cmp-bestfor-card us-card">
+        <div class="cmp-bestfor-label">Best for</div>
+        <div class="cmp-bestfor-product">Open Humana</div>
+        <p class="cmp-bestfor-text">{{ comp.best_for_us }}</p>
+      </div>
+      <div class="cmp-bestfor-card">
+        <div class="cmp-bestfor-label">Best for</div>
+        <div class="cmp-bestfor-product">{{ comp.competitor }}</div>
+        <p class="cmp-bestfor-text">{{ comp.best_for_them }}</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="cmp-divider">
+
+  <!-- VERDICT -->
+  <section class="cmp-section">
+    <h2 class="cmp-section-title">Our Verdict</h2>
+    <div class="cmp-verdict">
+      <div class="cmp-verdict-label">Bottom Line</div>
+      <p>{{ comp.verdict }}</p>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cmp-cta">
+    <div class="cmp-cta-inner">
+      <h2>See the Difference for Yourself</h2>
+      <p>Open Humana's AI employee Alex handles outbound dialing, personalized voicemail drops, and live call transfers — your reps only talk to humans who are ready to talk back. Starting at $99/month.</p>
+      <div class="cmp-cta-actions">
+        <a href="/register" class="cmp-cta-primary">
+          Start Free Trial
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="/contact" class="cmp-cta-ghost">Book a Demo</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MORE COMPARISONS -->
+  {% if related %}
+  <div class="cmp-more">
+    <h3>More comparisons</h3>
+    <div class="cmp-more-grid">
+      {% for rel in related %}
+      <a href="/compare/{{ rel.slug }}" class="cmp-more-link">
+        Open Humana vs {{ rel.competitor }}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- DISCLAIMER -->
+  <p class="cmp-disclaimer">All competitor information is based on publicly available data as of the publication date. Trademarks and product names belong to their respective owners. Open Humana is not affiliated with any competitor mentioned on this page.</p>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a href="/" class="footer-logo-link">
+          <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
+        </a>
+        <span class="footer-copy">&copy; 2026 Open Humana</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="/about">About</a>
+        <a href="/blog">Blog</a>
+        <a href="/compare">Compare</a>
+        <a href="/help">Help</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/contact">Contact</a>
+      </nav>
+      <div class="footer-right">
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/open-humana-b794643b3/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+          <a href="https://x.com/openhumana" target="_blank" rel="noopener" aria-label="X"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L2 2.25h6.016l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
