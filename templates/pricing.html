@@ -20,6 +20,18 @@
   <meta name="twitter:image" content="https://openhumana.com/static/images/dashboard-preview.png">
   <link rel="icon" type="image/png" href="/static/images/logo.png">
   <link rel="apple-touch-icon" href="/static/images/logo.png">
+  <style>
+    .billing-toggle-wrap{display:flex;justify-content:center;margin:24px 0 8px}
+    .billing-toggle{display:inline-flex;background:#f1f1f1;border-radius:50px;padding:4px;gap:4px}
+    .btog-btn{padding:9px 22px;border:none;background:transparent;border-radius:50px;font-size:.875rem;font-weight:500;color:#6b7280;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;font-family:inherit}
+    .btog-btn.btog-active{background:#fff;color:#111827;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+    .btog-badge{background:#16a34a;color:#fff;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:50px;letter-spacing:.2px;white-space:nowrap}
+    .plan-annual-info{display:none;align-items:center;gap:8px;margin-top:6px;margin-bottom:4px}
+    .plan-annual-info.show{display:flex}
+    .plan-billed-yearly{font-size:.8rem;color:#6b7280}
+    .plan-save-badge{background:#dcfce7;color:#15803d;font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:50px}
+    .plan-save-badge-featured{background:rgba(22,163,74,.15);color:#86efac}
+  </style>
 </head>
 <body>
   <nav class="pricing-nav">
@@ -63,6 +75,16 @@
       </div>
     </div>
 
+    <div class="billing-toggle-wrap">
+      <div class="billing-toggle" id="billingToggle">
+        <button class="btog-btn btog-active" id="btnMonthly" type="button">Monthly</button>
+        <button class="btog-btn" id="btnAnnual" type="button">
+          Annual
+          <span class="btog-badge">2 months free</span>
+        </button>
+      </div>
+    </div>
+
     <div class="pricing-grid">
       <div class="pricing-card">
         <div class="pricing-card-top">
@@ -70,11 +92,15 @@
           <p class="plan-description">Perfect for solo operators and small teams getting started with automated outbound.</p>
           <div class="plan-price">
             <span class="plan-currency">$</span>
-            <span class="plan-amount">99</span>
+            <span class="plan-amount" id="starterPriceDisplay">99</span>
             <span class="plan-period">/mo</span>
           </div>
+          <div class="plan-annual-info" id="starterAnnualInfo">
+            <span class="plan-billed-yearly">Billed $990/year</span>
+            <span class="plan-save-badge">Save $198</span>
+          </div>
           <div class="plan-billing-model">
-            <span class="pbm-fixed">
+            <span class="pbm-fixed" id="starterBillingLabel">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               Monthly salary
             </span>
@@ -133,7 +159,7 @@
         </ul>
         <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Base usage from $0.020/dial. Enable optional add-ons in the calculator below to see your full estimated bill.</p>
         <div class="plan-cta-area">
-          <button class="plan-btn plan-btn-outline" data-plan="starter" data-amount="99">
+          <button class="plan-btn plan-btn-outline" id="starterBtn" data-plan="starter" data-amount="99">
             <span class="btn-label">Get Started</span>
           </button>
           <a href="#calculator" class="calc-anchor-link">+ usage costs — see calculator ↓</a>
@@ -147,11 +173,15 @@
           <p class="plan-description">Scale your outbound with a squad of digital employees working around the clock.</p>
           <div class="plan-price">
             <span class="plan-currency">$</span>
-            <span class="plan-amount">399</span>
+            <span class="plan-amount" id="businessPriceDisplay">399</span>
             <span class="plan-period">/mo</span>
           </div>
+          <div class="plan-annual-info" id="businessAnnualInfo">
+            <span class="plan-billed-yearly" style="color:rgba(255,255,255,.6);">Billed $3,990/year</span>
+            <span class="plan-save-badge plan-save-badge-featured">Save $798</span>
+          </div>
           <div class="plan-billing-model">
-            <span class="pbm-fixed">
+            <span class="pbm-fixed" id="businessBillingLabel">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               Monthly salary
             </span>
@@ -214,7 +244,7 @@
         </ul>
         <p style="font-size:0.78rem;color:#888;line-height:1.45;margin:0 0 12px;">Platform fee only. Base usage from $0.020/dial. Enable optional add-ons in the calculator below to see your full estimated bill.</p>
         <div class="plan-cta-area">
-          <button class="plan-btn plan-btn-fill" data-plan="business" data-amount="399">
+          <button class="plan-btn plan-btn-fill" id="businessBtn" data-plan="business" data-amount="399">
             <span class="btn-label">Get Started</span>
           </button>
           <a href="#calculator" class="calc-anchor-link" style="color:rgba(255,255,255,0.6);">+ usage costs — see calculator ↓</a>
@@ -617,7 +647,11 @@
         </div>
         <div class="faq-item">
           <h3>Is there a contract or commitment?</h3>
-          <p>No contracts. All plans are month-to-month. Cancel anytime with no penalties.</p>
+          <p>No contracts on monthly plans. Cancel anytime with no penalties. Annual plans are billed upfront for the year and are non-refundable after the 7-day money-back window.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How does annual billing work?</h3>
+          <p>Annual plans are billed as a single upfront payment — $990/year for Starter or $3,990/year for Business. That's equivalent to paying for 10 months and getting 2 months free (≈17% savings). Your account stays active for the full 365 days from the date of payment.</p>
         </div>
         <div class="faq-item">
           <h3>What payment methods do you accept?</h3>
@@ -690,6 +724,6 @@
     </div>
   </footer>
 
-  <script src="/static/pricing.js?v=5"></script>
+  <script src="/static/pricing.js?v=6"></script>
 </body>
 </html>

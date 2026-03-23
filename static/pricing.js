@@ -3,10 +3,15 @@
 
   /* ══ PRICING CONSTANTS ══ */
   var BASE_COST_PER_DIAL      = 0.020;
-  var SDR_COST_PER_UNIT       = 5000;   // fully-loaded monthly cost per human SDR
-  var SDR_CALLS_PER_DAY       = 550;    // realistic power-dialer capacity
-  var SDR_WORKING_DAYS        = 22;     // standard SDR working days / month
-  var SDR_MONTHLY_CAPACITY    = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS; // 12,100
+  var SDR_COST_PER_UNIT       = 5000;
+  var SDR_CALLS_PER_DAY       = 550;
+  var SDR_WORKING_DAYS        = 22;
+  var SDR_MONTHLY_CAPACITY    = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS;
+
+  var ANNUAL_PRICES = {
+    starter:  { annual: 990,  monthly: 82.50,  save: 198  },
+    business: { annual: 3990, monthly: 332.50, save: 798  }
+  };
 
   var ADDONS = [
     { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.04, monthlyFlat: 0 },
@@ -15,6 +20,9 @@
     { id: 'transcription',  label: 'Recording & Transcription',   costPerDial: 0.05, monthlyFlat: 0 },
     { id: 'voiceCloning',   label: 'Voice Cloning',               costPerDial: 0,    monthlyFlat: 19 }
   ];
+
+  /* ── Billing cycle state ── */
+  var billingCycle = 'monthly'; // 'monthly' | 'annual'
 
   /* ── DOM refs ── */
   var dialSlider        = document.getElementById('dialSlider');
@@ -33,6 +41,8 @@
   var planBadgeEl       = document.getElementById('planBadge');
   var calcCtaBtn        = document.getElementById('calcCtaBtn');
   var effectiveRateNote = document.getElementById('effectiveRateNote');
+  var btnMonthly        = document.getElementById('btnMonthly');
+  var btnAnnual         = document.getElementById('btnAnnual');
 
   function fmt(n) {
     return '$' + Math.round(n).toLocaleString('en-US');
@@ -77,6 +87,31 @@
     });
   }
 
+  /* ── Update the plan cards' price display ── */
+  function updatePriceCards() {
+    var isAnnual = billingCycle === 'annual';
+
+    var starterEl   = document.getElementById('starterPriceDisplay');
+    var businessEl  = document.getElementById('businessPriceDisplay');
+    var starterInfo = document.getElementById('starterAnnualInfo');
+    var businessInfo= document.getElementById('businessAnnualInfo');
+    var starterLbl  = document.getElementById('starterBillingLabel');
+    var businessLbl = document.getElementById('businessBillingLabel');
+
+    if (starterEl) {
+      starterEl.textContent = isAnnual ? '82.50' : '99';
+    }
+    if (businessEl) {
+      businessEl.textContent = isAnnual ? '332.50' : '399';
+    }
+    if (starterInfo)  starterInfo.classList.toggle('show', isAnnual);
+    if (businessInfo) businessInfo.classList.toggle('show', isAnnual);
+
+    var salaryText = isAnnual ? 'Annual salary' : 'Monthly salary';
+    if (starterLbl)  starterLbl.lastChild.textContent = ' ' + salaryText;
+    if (businessLbl) businessLbl.lastChild.textContent = ' ' + salaryText;
+  }
+
   /* ── Main calculation ── */
   function updateCalc() {
     var dials = parseInt(dialSlider.value, 10);
@@ -89,7 +124,6 @@
 
     var baseUsage   = dials * days * BASE_COST_PER_DIAL;
 
-    /* sum add-on costs */
     var activeAddons     = getActiveAddons();
     var addonDialCost    = 0;
     var addonFlatCost    = 0;
@@ -101,52 +135,48 @@
     var total          = platformFee + baseUsage + addonDialTotal + addonFlatCost;
     var effectiveRate  = BASE_COST_PER_DIAL + addonDialCost;
 
-    /* ── Dynamic human SDR cost ──
-       A human SDR handles ~550 calls/day over 22 working days = 12,100 calls/month.
-       Scale the number of SDRs (and cost) proportionally to the user's selected volume. */
     var totalMonthlyDials = dials * days;
     var sdrsNeeded        = Math.max(1, Math.ceil(totalMonthlyDials / SDR_MONTHLY_CAPACITY));
     var humanSdrCost      = sdrsNeeded * SDR_COST_PER_UNIT;
     var saving            = humanSdrCost - total;
     var savingPct         = Math.round((saving / humanSdrCost) * 100);
 
-    /* ── Update sliders & vol display ── */
     dialDisplay.textContent = dials.toLocaleString('en-US');
     daysDisplay.textContent = days;
 
-    /* ── Update breakdown ── */
     platformFeeEl.textContent = fmt(platformFee);
     usageEl.textContent       = fmt(baseUsage);
     usageNoteEl.textContent   = dials.toLocaleString('en-US') + ' dials × ' + days + ' days × $' + BASE_COST_PER_DIAL.toFixed(3) + '/dial';
 
     updateAddonLines(dials, days, activeAddons);
 
-    /* ── Effective rate note ── */
     if (effectiveRateNote) {
       effectiveRateNote.textContent = 'at ' + fmtDecimal(effectiveRate) + '/dial effective rate';
     }
 
-    /* ── Totals & savings ── */
-    totalEl.textContent     = fmt(total) + ' / mo';
-    vsUsEl.textContent      = fmt(total);
+    var annualData = ANNUAL_PRICES[planSlug];
+    if (billingCycle === 'annual' && annualData) {
+      totalEl.textContent = '$' + annualData.monthly.toFixed(2) + ' / mo  ·  $' + annualData.annual.toLocaleString('en-US') + '/yr';
+      vsUsEl.textContent  = fmt(total);
+    } else {
+      totalEl.textContent = fmt(total) + ' / mo';
+      vsUsEl.textContent  = fmt(total);
+    }
 
-    /* ── Dynamic SDR cost display ── */
     if (vsSdrEl)      vsSdrEl.textContent = fmt(humanSdrCost);
     if (sdrCountLabel) {
       var sdrWord = sdrsNeeded === 1 ? 'human SDR' : 'human SDRs';
       sdrCountLabel.textContent = '/ month (' + sdrsNeeded + ' ' + sdrWord + ')';
     }
 
-    /* ── SDR icon stack — show 1, 2, or 3 overlapping person icons ── */
     var sdrIconWrap = document.getElementById('sdrIconWrap');
     if (sdrIconWrap) {
       var iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
-      var visibleIcons = Math.min(sdrsNeeded, 3); // cap at 3 for layout
+      var visibleIcons = Math.min(sdrsNeeded, 3);
       if (visibleIcons <= 1) {
         sdrIconWrap.style.display = '';
         sdrIconWrap.innerHTML = iconSvg;
       } else {
-        /* stack icons with slight offsets */
         var stackHtml = '<div style="display:flex;justify-content:center;align-items:center;">';
         var smallSvg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
         for (var i = 0; i < visibleIcons; i++) {
@@ -162,7 +192,6 @@
       }
     }
 
-    /* ── Savings pill + percentage ── */
     var safeSaving = Math.max(0, saving);
     savingsPill.textContent = 'Save ~' + fmt(safeSaving) + '/mo';
     if (savingsPctLabel) {
@@ -170,21 +199,34 @@
       savingsPctLabel.textContent = pctText;
     }
 
-    /* ── Plan badge ── */
     planBadgeEl.textContent = planLabel;
     planBadgeEl.classList.toggle('business', isBusiness);
 
-    /* ── CTA button ── */
     calcCtaBtn.setAttribute('data-plan', planSlug);
     calcCtaBtn.setAttribute('data-amount', platformFee);
-    calcCtaBtn.textContent = 'Get Started for ' + fmt(platformFee) + '/mo →';
+    if (billingCycle === 'annual' && annualData) {
+      calcCtaBtn.textContent = 'Get Started — $' + annualData.monthly.toFixed(2) + '/mo billed annually →';
+    } else {
+      calcCtaBtn.textContent = 'Get Started for ' + fmt(platformFee) + '/mo →';
+    }
 
-    /* ── Slider track fill ── */
     [dialSlider, daysSlider].forEach(function (sl) {
       var pct = ((sl.value - sl.min) / (sl.max - sl.min)) * 100;
       sl.style.background = 'linear-gradient(to right, #1a1a1a ' + pct + '%, #e5e7eb ' + pct + '%)';
     });
   }
+
+  /* ── Billing toggle ── */
+  function setBillingCycle(cycle) {
+    billingCycle = cycle;
+    if (btnMonthly) btnMonthly.classList.toggle('btog-active', cycle === 'monthly');
+    if (btnAnnual)  btnAnnual.classList.toggle('btog-active', cycle === 'annual');
+    updatePriceCards();
+    if (dialSlider && daysSlider) updateCalc();
+  }
+
+  if (btnMonthly) btnMonthly.addEventListener('click', function () { setBillingCycle('monthly'); });
+  if (btnAnnual)  btnAnnual.addEventListener('click',  function () { setBillingCycle('annual');  });
 
   /* ── Wire up sliders ── */
   if (dialSlider && daysSlider) {
@@ -198,14 +240,29 @@
   });
 
   /* ── Initial render ── */
+  updatePriceCards();
+
   if (dialSlider && daysSlider) {
     updateCalc();
 
     calcCtaBtn.addEventListener('click', function () {
       var plan = calcCtaBtn.getAttribute('data-plan') || 'starter';
-      window.location.href = '/billing?plan=' + encodeURIComponent(plan);
+      var url = '/billing?plan=' + encodeURIComponent(plan);
+      if (billingCycle === 'annual') url += '&cycle=annual';
+      window.location.href = url;
     });
   }
+
+  /* ── Plan card buttons (with billing cycle) ── */
+  document.querySelectorAll('[data-plan]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var plan = btn.getAttribute('data-plan');
+      if (!plan) return;
+      var url = '/billing?plan=' + encodeURIComponent(plan);
+      if (billingCycle === 'annual') url += '&cycle=annual';
+      window.location.href = url;
+    });
+  });
 
   /* ══ CONTACT MODAL ══ */
   var contactOverlay  = document.getElementById('contactOverlay');
@@ -213,13 +270,6 @@
   var contactClose    = document.getElementById('contactClose');
   var contactForm     = document.getElementById('contactForm');
   var contactSuccess  = document.getElementById('contactSuccess');
-
-  document.querySelectorAll('[data-plan]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var plan = btn.getAttribute('data-plan');
-      if (plan) window.location.href = '/billing?plan=' + encodeURIComponent(plan);
-    });
-  });
 
   function openContactModal() {
     contactForm.style.display = '';

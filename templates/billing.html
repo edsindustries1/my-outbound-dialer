@@ -102,7 +102,11 @@
 
             <div class="plan-label" id="planLabel">Subscribe to</div>
             <div class="plan-title" id="planTitle">Hire One Employee</div>
-            <div class="plan-price-line">$<span id="planAmount">99</span><span class="period">/monthly salary</span></div>
+            <div class="plan-price-line">$<span id="planAmount">99</span><span class="period" id="planPeriod">/monthly salary</span></div>
+            <div id="annualNote" style="display:none;margin-bottom:16px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#15803d;font-weight:500;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="annualSaveText">You save $198 by paying annually — 2 months free</span>
+            </div>
 
             <div class="value-section">
                 <div class="value-title">What you get</div>
@@ -170,7 +174,8 @@
     const PLANS = {
         starter: {
             title: 'Your First Digital Employee',
-            amount: 99,
+            amount: 99, annualAmount: 990, annualMonthly: '82.50', annualSave: '$198',
+            planKey: 'starter', annualPlanKey: 'starter_annual',
             features: [
                 '1 Digital Employee (Alex)',
                 '300 outbound dials per day',
@@ -184,7 +189,8 @@
         },
         business: {
             title: 'Your Full Digital Sales Floor',
-            amount: 399,
+            amount: 399, annualAmount: 3990, annualMonthly: '332.50', annualSave: '$798',
+            planKey: 'business', annualPlanKey: 'business_annual',
             features: [
                 '5 Digital Employees working in parallel',
                 '2,000 outbound dials per day',
@@ -200,12 +206,29 @@
     };
 
     const selectedPlan = ("{{ selected_plan or '' }}" || 'starter').toLowerCase();
+    const selectedCycle = ("{{ selected_cycle or 'monthly' }}" || 'monthly').toLowerCase();
     const plan = PLANS[selectedPlan] || PLANS.starter;
+    const isAnnual = selectedCycle === 'annual';
+    const activePlanKey = isAnnual ? plan.annualPlanKey : plan.planKey;
+    const activeAmount = isAnnual ? plan.annualAmount : plan.amount;
 
     document.getElementById('planTitle').textContent = plan.title;
-    document.getElementById('planAmount').textContent = plan.amount;
     document.getElementById('savingsHours').textContent = plan.savingsHours;
     document.getElementById('savingsText').textContent = plan.savingsText;
+
+    if (isAnnual) {
+        document.getElementById('planAmount').textContent = plan.annualAmount;
+        document.getElementById('planPeriod').textContent = '/year (2 months free)';
+        var annualNote = document.getElementById('annualNote');
+        if (annualNote) {
+            annualNote.style.display = 'block';
+            var saveText = document.getElementById('annualSaveText');
+            if (saveText) saveText.textContent = 'You save ' + plan.annualSave + ' by paying annually — 2 months free';
+        }
+    } else {
+        document.getElementById('planAmount').textContent = plan.amount;
+        document.getElementById('planPeriod').textContent = '/monthly salary';
+    }
 
     const checkSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
     document.getElementById('valueList').innerHTML = plan.features.map(function(f) { return '<li>' + checkSvg + '<span>' + f + '</span></li>'; }).join('');
@@ -244,7 +267,7 @@
             return fetch('/api/paypal/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: plan.amount, plan: selectedPlan, email: getEmail() })
+                body: JSON.stringify({ amount: activeAmount, plan: activePlanKey, email: getEmail() })
             }).then(function(r) { return r.json(); }).then(function(json) {
                 if (json.error) { showError(json.error); return actions.reject(); }
                 var oid = json.id || (json.result && json.result.id);
@@ -260,7 +283,7 @@
             return fetch('/api/paypal/capture-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ order_id: data.orderID, plan: selectedPlan, email: getEmail() })
+                body: JSON.stringify({ order_id: data.orderID, plan: activePlanKey, email: getEmail() })
             }).then(function(r) { return r.json(); }).then(function(json) {
                 if (json.status === 'COMPLETED') {
                     showSuccess();

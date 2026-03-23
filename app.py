@@ -285,8 +285,10 @@ PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
-    "starter": {"amount": Decimal("99.00"), "instances": 1, "included_numbers": 1, "max_numbers": 5},
-    "business": {"amount": Decimal("399.00"), "instances": 5, "included_numbers": 3, "max_numbers": 20},
+    "starter":          {"amount": Decimal("99.00"),   "instances": 1, "included_numbers": 1, "max_numbers": 5,  "billing_days": 30},
+    "business":         {"amount": Decimal("399.00"),  "instances": 5, "included_numbers": 3, "max_numbers": 20, "billing_days": 30},
+    "starter_annual":   {"amount": Decimal("990.00"),  "instances": 1, "included_numbers": 1, "max_numbers": 5,  "billing_days": 365},
+    "business_annual":  {"amount": Decimal("3990.00"), "instances": 5, "included_numbers": 3, "max_numbers": 20, "billing_days": 365},
 }
 PLAN_NUMBER_LIMITS = {
     "starter":  {"included": 1, "max": 5},
@@ -764,8 +766,14 @@ def _verify_webhook(transmission_id, timestamp, webhook_id, event_body, cert_url
 @app.route("/billing")
 def billing_page():
     plan = (request.args.get("plan") or "").lower().strip()
-    if plan not in PLAN_MATRIX:
+    cycle = (request.args.get("cycle") or "monthly").lower().strip()
+    if cycle not in ("monthly", "annual"):
+        cycle = "monthly"
+    plan_key = f"{plan}_{cycle}" if cycle == "annual" and plan else plan
+    if plan_key not in PLAN_MATRIX and plan not in PLAN_MATRIX:
         plan = ""
+        plan_key = ""
+        cycle = "monthly"
     return render_template(
         "billing.html",
         user=current_user if current_user.is_authenticated else None,
@@ -774,6 +782,7 @@ def billing_page():
         processor_id=PAYPAL_CLIENT_ID,
         processor_mode=PAYPAL_MODE,
         selected_plan=plan,
+        selected_cycle=cycle,
     )
 
 
@@ -846,14 +855,20 @@ def paypal_capture_order():
                     matrix = PLAN_MATRIX[plan]
                     amount_val = matrix["amount"]
                     _set_employee_instances(target_user_id, matrix["instances"])
-                    max_lines = PLAN_MAX_CONCURRENT_LINES.get(plan, 5)
+                    base_plan = plan.replace("_annual", "")
+                    billing_cycle = "annual" if plan.endswith("_annual") else "monthly"
+                    max_lines = PLAN_MAX_CONCURRENT_LINES.get(base_plan, 5)
                     _set_max_concurrent_lines(target_user_id, max_lines)
                     credited = _credit_user(target_user_id, amount_val)
                     # Auto-provision feature flags for the purchased plan
                     try:
-                        _provision_plan_features(target_user_id, plan)
+                        _provision_plan_features(target_user_id, base_plan)
                         # Record active_plan in UserAppData
-                        _upsert_user_app_data(target_user_id, "active_plan", json.dumps({"plan": plan}))
+                        _upsert_user_app_data(target_user_id, "active_plan", json.dumps({
+                            "plan": base_plan,
+                            "billing_cycle": billing_cycle,
+                            "billing_days": matrix.get("billing_days", 30)
+                        }))
                     except Exception as fe:
                         logger.error(f"Feature provisioning failed for user {target_user_id}: {fe}")
                 else:
