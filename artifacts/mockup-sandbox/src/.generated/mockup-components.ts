@@ -13,5 +13,7 @@ export const modules: ModuleMap = {
   "./components/mockups/dashboard-variants/DailyBriefingEditorial.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingEditorial.tsx"),
   "./components/mockups/dashboard-variants/DailyBriefingPolished.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingPolished.tsx"),
   "./components/mockups/dashboard-variants/PipelineFunnel.tsx": () => import("../components/mockups/dashboard-variants/PipelineFunnel.tsx"),
-  "./components/mockups/dashboard-variants/SaaSMainDashboard.tsx": () => import("../components/mockups/dashboard-variants/SaaSMainDashboard.tsx")
+  "./components/mockups/dashboard-variants/SaaSMainDashboard.tsx": () => import("../components/mockups/dashboard-variants/SaaSMainDashboard.tsx"),
+  "./components/mockups/landing-variants/Authority.tsx": () => import("../components/mockups/landing-variants/Authority.tsx"),
+  "./components/mockups/landing-variants/Signal.tsx": () => import("../components/mockups/landing-variants/Signal.tsx")
 };
