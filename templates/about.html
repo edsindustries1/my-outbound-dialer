@@ -26,9 +26,15 @@
     .about-section p { font-size: 15px; color: #444; line-height: 1.85; margin: 0 0 16px; }
     .about-section p:last-child { margin-bottom: 0; }
 
+    .about-stats { display: flex; gap: 40px; margin-top: 32px; flex-wrap: wrap; }
+    .about-stat { display: flex; flex-direction: column; gap: 4px; }
+    .about-stat-num { font-size: 28px; font-weight: 800; color: #0a0a0a; letter-spacing: -0.02em; }
+    .about-stat-label { font-size: 12px; color: #888; font-weight: 500; }
+
     .about-photo-block { text-align: center; margin-bottom: 64px; }
     .about-photo { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f0f0; background: #e8e8e8; display: inline-block; }
     .about-photo-caption { font-size: 13px; color: #888; margin-top: 14px; letter-spacing: 0.02em; }
+    .about-photo-role { font-size: 11px; color: #bbb; margin-top: 4px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
 
     .about-guarantee { border-left: 3px solid #000; padding: 28px 0 28px 32px; margin-bottom: 64px; }
     .about-guarantee-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #999; margin-bottom: 10px; }
@@ -42,6 +48,9 @@
     .about-cta-btn:hover { background: #f0f0f0; color: #000; transform: translateY(-1px); }
     .about-cta-btn svg { flex-shrink: 0; }
 
+    .about-company-link { color: #0a0a0a; font-weight: 600; text-decoration: none; border-bottom: 1px solid #ccc; transition: border-color 0.15s; }
+    .about-company-link:hover { border-color: #0a0a0a; }
+
     .divider { border: none; border-top: 1px solid #ebebeb; margin: 0 0 64px; }
 
     @media (max-width: 640px) {
@@ -49,17 +58,18 @@
       .about-guarantee { padding: 20px 0 20px 20px; }
       .about-cta-block { padding: 40px 20px; }
       .about-photo { width: 140px; height: 140px; }
+      .about-stats { gap: 24px; }
     }
   </style>
-  <meta name="description" content="Shushant Bangar built Open Humana — and Alex — because great sales teams deserve better than spending their day listening to rings and leaving voicemails.">
+  <meta name="description" content="Open Humana is built by Everyday Digital Solutions — an IT company with 7 years of digital services experience, founded by Shushant Bangar, dedicated to giving sales teams an unfair advantage through AI.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="About — Open Humana">
-  <meta property="og:description" content="Shushant Bangar built Open Humana — and Alex — because great sales teams deserve better than spending their day listening to rings and leaving voicemails.">
+  <meta property="og:description" content="Open Humana is built by Everyday Digital Solutions — an IT company with 7 years of digital services experience, founded by Shushant Bangar, dedicated to giving sales teams an unfair advantage through AI.">
   <meta property="og:image" content="https://openhumana.com/static/images/dashboard-preview.png">
   <meta property="og:url" content="https://openhumana.com/about">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="About — Open Humana">
-  <meta name="twitter:description" content="Shushant Bangar built Open Humana — and Alex — because great sales teams deserve better than spending their day listening to rings and leaving voicemails.">
+  <meta name="twitter:description" content="Open Humana is built by Everyday Digital Solutions — an IT company with 7 years of digital services experience, founded by Shushant Bangar, dedicated to giving sales teams an unfair advantage through AI.">
   <meta name="twitter:image" content="https://openhumana.com/static/images/dashboard-preview.png">
   <link rel="icon" type="image/png" href="/static/images/logo.png">
   <link rel="apple-touch-icon" href="/static/images/logo.png">
@@ -88,46 +98,63 @@
   <div class="about-hero">
     <div class="about-hero-inner">
       <div class="about-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        About Open Humana
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Everyday Digital Solutions
       </div>
-      <h1>The Person Behind<br>the Product.</h1>
-      <p>No corporate story. No "our team of 50 experts." Just one founder — Shushant Bangar — solving one problem, and being completely honest about it.</p>
+      <h1>The Team Behind<br>the Product.</h1>
+      <p>Open Humana is built by <a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.75);font-weight:600;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.3);">Everyday Digital Solutions</a> — an IT company with 7 years of experience empowering businesses with digital tools that drive real growth.</p>
     </div>
   </div>
 
   <div class="about-wrap">
 
     <div class="about-section">
-      <div class="about-section-label">Who Built This</div>
-      <h2>Hi, I'm Shushant.</h2>
-      <p>I built Open Humana — and Alex, the AI digital employee inside it — because I watched great sales teams waste half their day on calls that go nowhere. Listening to rings. Leaving voicemails to no one. Logging dead ends. The closers were talented. The process was the problem. I knew AI could handle all the mechanical, soul-crushing repetition so the humans could focus entirely on the human part — the actual conversation that closes the deal. So I built Alex to do exactly that. No VC money. No big team. Just me, working on this every single day because I genuinely believe it solves a real problem that costs real businesses real money.</p>
+      <div class="about-section-label">Who We Are</div>
+      <h2>Seven years building digital solutions. One product built to solve the hardest problem in sales.</h2>
+      <p><a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" class="about-company-link">Everyday Digital Solutions</a> is an IT company based in India, founded by Shushant Bangar. For over seven years, we have helped businesses grow through lead generation, social media management, product branding, and web development. We have worked with sales teams across industries, and we saw the same problem everywhere: talented closers wasting half their day on calls that go nowhere — listening to rings, leaving voicemails to no one, logging dead ends.</p>
+      <p>We knew AI could eliminate that mechanical grind entirely. So we built Open Humana and Alex — an AI digital employee who handles the entire outbound dialing process, drops personalized voicemails on every missed call, and transfers live answers directly to your team. The problem was not the salespeople. It was the process. We fixed the process.</p>
+      <div class="about-stats">
+        <div class="about-stat">
+          <span class="about-stat-num">7+</span>
+          <span class="about-stat-label">Years of experience</span>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-num">80K+</span>
+          <span class="about-stat-label">Leads generated for clients</span>
+        </div>
+        <div class="about-stat">
+          <span class="about-stat-num">80+</span>
+          <span class="about-stat-label">Happy clients served</span>
+        </div>
+      </div>
     </div>
 
     <hr class="divider">
 
     <div class="about-section">
-      <div class="about-section-label">Where We Are</div>
-      <h2>We're early. Here's what that means for you.</h2>
-      <p>Open Humana is not a 50-person company with a $10 million runway. It's a focused product built by one person — me, Shushant — for one purpose: giving small and mid-size sales teams the outbound firepower that used to cost $5,000 a month in human SDR labor. We're onboarding customers now and I'm obsessive about making sure every feature works exactly as described before we scale. That means you get something most software companies can't offer — direct access to the person who actually built it, not a support queue.</p>
+      <div class="about-section-label">Our Mission</div>
+      <h2>Give every sales team the outbound firepower that used to cost $5,000 a month.</h2>
+      <p>Open Humana exists for one reason: to make high-performance outbound dialing accessible to every business, not just the ones with large SDR budgets. We have built the infrastructure, the AI voice technology, and the automation layer that used to require an entire team to run. Now it runs on autopilot — for less than the cost of a single sales hire.</p>
+      <p>Every feature we build is guided by a simple question: does this save a salesperson time and put more live conversations in front of them? If the answer is yes, we build it. If it is just a checkbox feature, we do not. That focus is what makes Open Humana different from every other dialer on the market.</p>
     </div>
 
     <hr class="divider">
 
     <div class="about-guarantee">
-      <div class="about-guarantee-label">The Founder Promise</div>
-      <h2>My personal guarantee.</h2>
-      <p>If you sign up and something doesn't work the way it should, email me — Shushant — directly at support@openhumana.com. I read every message. I respond the same day. That is not a support ticket promise — that is a founder promise. At this stage, your honest feedback is worth more to me than your subscription fee. If the product doesn't deliver what I say it does, I will refund you personally and fix it.</p>
+      <div class="about-guarantee-label">The CEO Guarantee</div>
+      <h2>A personal commitment from our founder.</h2>
+      <p>If you sign up and something does not work the way it should, email us directly at support@openhumana.com. Shushant — our Founder &amp; CEO — reads every message and responds the same day. That is not a support ticket promise. It is a personal guarantee from the person who built this company. At this stage of growth, your honest feedback is worth more to us than your subscription fee. If the product does not deliver what we say it does, we will refund you and fix it.</p>
     </div>
 
     <div class="about-photo-block">
-      <img src="/static/images/founder.png" alt="Shushant Bangar — Founder of Open Humana" class="about-photo">
-      <div class="about-photo-caption">Shushant Bangar — Founder, Open Humana</div>
+      <img src="/static/images/founder.png" alt="Shushant Bangar — Founder &amp; CEO, Everyday Digital Solutions" class="about-photo">
+      <div class="about-photo-caption">Shushant Bangar</div>
+      <div class="about-photo-role">Founder &amp; CEO — Everyday Digital Solutions</div>
     </div>
 
     <div class="about-cta-block">
-      <h3>Want to try it before you commit?</h3>
-      <p>Sign up free. No credit card required to start. If it works, you'll know within your first campaign.</p>
+      <h3>Ready to hire your first digital employee?</h3>
+      <p>Start free. No credit card required. Within your first campaign, you will know exactly what your team has been missing.</p>
       <a href="/register" class="about-cta-btn">
         Start Free Trial
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -143,7 +170,7 @@
         <a href="/" class="footer-logo-link">
           <img src="/static/images/logo.png" alt="Open Humana" class="footer-big-logo">
         </a>
-        <span class="footer-copy">&copy; 2026 Open Humana</span>
+        <span class="footer-copy">&copy; 2026 <a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;opacity:0.7;">Everyday Digital Solutions</a></span>
       </div>
       <nav class="footer-nav">
         <a href="/about">About</a>
