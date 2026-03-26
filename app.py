@@ -3718,8 +3718,8 @@ def _handle_webhook():
                 except Exception as e:
                     logger.error(f"[LAYER2] {call_control_id} | Failed to start transcription on machine: {e}")
 
-                # ── LAYER 3: 5-second safety-net timer ──
-                # If neither beep event nor keyword detection fires within 5s,
+                # ── LAYER 3: 8-second safety-net timer ──
+                # If neither beep event nor keyword detection fires within 8s,
                 # the greeting has almost certainly ended — drop the voicemail anyway.
                 _vm_safe_url = audio_url
                 _vm_safe_pvm = is_personalized
@@ -3737,7 +3737,7 @@ def _handle_webhook():
                             and not st.get("transferred")
                             and st.get("machine_detected")
                             and st.get("status") not in _TERMINAL_STATUSES):
-                        logger.info(f"[LAYER3] {ccid} | 5s safety timer — no beep/keyword received, dropping voicemail now")
+                        logger.info(f"[LAYER3] {ccid} | 8s safety timer — no beep/keyword received, dropping voicemail now")
                         update_call_state(ccid, status_description="Dropping voicemail (safety timer)", status_color="blue")
                         _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
                     else:
@@ -3747,12 +3747,12 @@ def _handle_webhook():
                 _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
                 if _prev_safe:
                     _prev_safe.cancel()
-                vm_safety_t = threading.Timer(5.0, _vm_safety_fallback,
+                vm_safety_t = threading.Timer(8.0, _vm_safety_fallback,
                                               args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
                 vm_safety_t.daemon = True
                 _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
                 vm_safety_t.start()
-                logger.info(f"[LAYER3] {call_control_id} | 5s safety fallback timer started")
+                logger.info(f"[LAYER3] {call_control_id} | 8s safety fallback timer started")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -3816,28 +3816,41 @@ def _handle_webhook():
                 if not st:
                     return
                 if st.get("transferred") or st.get("voicemail_dropped") or st.get("machine_detected") or not st.get("amd_ambiguous"):
-                    logger.info(f"[AMBIG WINDOW] {ccid} | Already resolved before 5s fallback fired")
+                    logger.info(f"[AMBIG WINDOW] {ccid} | Already resolved before 15s fallback fired")
                     return
-                t_num = captured_camp.get("transfer_number") or ""
+                amd_r = st.get("amd_result", "")
+                vm_audio = st.get("vm_pending_audio_url", "")
                 cust = st.get("number", "")
-                logger.warning(f"[AMBIG WINDOW] {ccid} | 15s elapsed, no clear signal — transferring as human (safe fallback)")
                 update_call_state(ccid, amd_ambiguous=False)
-                if t_num and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
-                    try:
-                        suc = transfer_call(ccid, t_num, customer_number=cust)
-                    except Exception as e2:
-                        logger.error(f"[AMBIG FALLBACK] {ccid} | Transfer error: {e2}")
-                        suc = False
-                    if suc:
-                        pause_for_transfer(ccid, user_id=uid)
-                        update_call_state(ccid, status="transferred",
-                                          status_description="Ambiguous — transferred as human after 5s", status_color="green")
-                    else:
-                        update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                if vm_audio and amd_r in ("silence",):
+                    # "silence" AMD result almost always means a slow-loading VM system
+                    # (VM answered immediately but greeting hadn't started yet).
+                    # Telnyx often won't send greeting.ended for silence AMD results.
+                    # Best-effort: drop voicemail now rather than transfer a voicemail box.
+                    logger.warning(f"[AMBIG WINDOW] {ccid} | 15s elapsed, silence AMD result — dropping voicemail (VM most likely)")
+                    uid2 = st.get("vm_pending_user_id") or uid
+                    is_pvm2 = st.get("vm_pending_personalized", False)
+                    cust2 = st.get("vm_pending_customer_number", "")
+                    _drop_voicemail_now(ccid, vm_audio, is_pvm2, cust2, uid2)
+                else:
+                    t_num = captured_camp.get("transfer_number") or ""
+                    logger.warning(f"[AMBIG WINDOW] {ccid} | 15s elapsed, no clear signal (amd={amd_r}) — transferring as human (safe fallback)")
+                    if t_num and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
+                        try:
+                            suc = transfer_call(ccid, t_num, customer_number=cust)
+                        except Exception as e2:
+                            logger.error(f"[AMBIG FALLBACK] {ccid} | Transfer error: {e2}")
+                            suc = False
+                        if suc:
+                            pause_for_transfer(ccid, user_id=uid)
+                            update_call_state(ccid, status="transferred",
+                                              status_description="Ambiguous — transferred as human after 15s", status_color="green")
+                        else:
+                            update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                            hangup_call(ccid)
+                    elif not t_num:
+                        update_call_state(ccid, status_description="No transfer number configured", status_color="yellow")
                         hangup_call(ccid)
-                elif not t_num:
-                    update_call_state(ccid, status_description="No transfer number configured", status_color="yellow")
-                    hangup_call(ccid)
 
             _prev_ambig = _amd_timers.pop(f"ambig_{call_control_id}", None)
             if _prev_ambig:
