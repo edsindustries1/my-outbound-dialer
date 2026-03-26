@@ -3718,9 +3718,11 @@ def _handle_webhook():
                 except Exception as e:
                     logger.error(f"[LAYER2] {call_control_id} | Failed to start transcription on machine: {e}")
 
-                # ── LAYER 3: 8-second safety-net timer ──
-                # If neither beep event nor keyword detection fires within 8s,
-                # the greeting has almost certainly ended — drop the voicemail anyway.
+                # ── LAYER 3: 3-second safety-net timer (Kixie/PhoneBurner standard) ──
+                # AMD fires MID-GREETING. By T+3s the greeting is finishing and beep is
+                # imminent or has just fired. Drop now: any pre-beep audio is discarded
+                # by the VM system; it records cleanly from the beep point forward.
+                # This prevents the VM system from hanging up due to post-beep silence.
                 _vm_safe_url = audio_url
                 _vm_safe_pvm = is_personalized
                 _vm_safe_cust = customer_number
@@ -3737,7 +3739,7 @@ def _handle_webhook():
                             and not st.get("transferred")
                             and st.get("machine_detected")
                             and st.get("status") not in _TERMINAL_STATUSES):
-                        logger.info(f"[LAYER3] {ccid} | 8s safety timer — no beep/keyword received, dropping voicemail now")
+                        logger.info(f"[LAYER3] {ccid} | 3s safety timer fired — dropping voicemail now (Kixie/PhoneBurner method)")
                         update_call_state(ccid, status_description="Dropping voicemail (safety timer)", status_color="blue")
                         _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
                     else:
@@ -3747,12 +3749,12 @@ def _handle_webhook():
                 _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
                 if _prev_safe:
                     _prev_safe.cancel()
-                vm_safety_t = threading.Timer(8.0, _vm_safety_fallback,
+                vm_safety_t = threading.Timer(3.0, _vm_safety_fallback,
                                               args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
                 vm_safety_t.daemon = True
                 _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
                 vm_safety_t.start()
-                logger.info(f"[LAYER3] {call_control_id} | 8s safety fallback timer started")
+                logger.info(f"[LAYER3] {call_control_id} | 3s safety fallback timer started (Kixie/PhoneBurner standard)")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
