@@ -2137,6 +2137,33 @@ def save_vm_settings():
     return jsonify({"message": "Voicemail URL saved", "voicemail_url": url, "voicemail_script": script})
 
 
+@app.route("/api/upload_voicemail", methods=["POST"])
+@login_required
+def upload_voicemail_file():
+    """Upload a voicemail audio file (MP3/WAV), save to uploads/, return public URL.
+    Optionally saves as the user's default voicemail URL."""
+    import uuid
+    audio_file = request.files.get("audio_file")
+    if not audio_file or not audio_file.filename:
+        return jsonify({"error": "No file provided"}), 400
+    filename = secure_filename(audio_file.filename)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_AUDIO:
+        return jsonify({"error": "Only MP3 and WAV files are allowed"}), 400
+    unique_filename = f"vm_{current_user.id}_{uuid.uuid4().hex[:8]}_{filename}"
+    filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+    audio_file.save(filepath)
+    public_base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    audio_url = f"{public_base}/audio/{unique_filename}"
+    save_as_default = request.form.get("save_as_default", "true").lower() in ("true", "1", "yes")
+    if save_as_default:
+        save_voicemail_url(audio_url, user_id=current_user.id)
+        logger.info(f"Voicemail uploaded and saved as default for user {current_user.id}: {unique_filename}")
+    else:
+        logger.info(f"Voicemail uploaded (not set as default) for user {current_user.id}: {unique_filename}")
+    return jsonify({"url": audio_url, "filename": filename, "saved_as_default": save_as_default})
+
+
 @app.route("/api/fish-audio-key", methods=["GET"])
 @login_required
 def get_fish_audio_key():
