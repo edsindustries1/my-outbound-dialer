@@ -3785,7 +3785,7 @@ def _handle_webhook():
                               vm_pending_personalized=is_personalized_ambig,
                               vm_pending_customer_number=customer_num,
                               vm_pending_user_id=webhook_user_id,
-                              status_description=f"Ambiguous ({result}) — Alex is listening...",
+                              status_description=f"Ambiguous ({result}) — Alex is listening (15s)...",
                               status_color="blue")
 
             try:
@@ -3811,7 +3811,7 @@ def _handle_webhook():
                     return
                 t_num = captured_camp.get("transfer_number") or ""
                 cust = st.get("number", "")
-                logger.warning(f"[AMBIG WINDOW] {ccid} | 5s elapsed, no clear signal — transferring as human (safe fallback)")
+                logger.warning(f"[AMBIG WINDOW] {ccid} | 15s elapsed, no clear signal — transferring as human (safe fallback)")
                 update_call_state(ccid, amd_ambiguous=False)
                 if t_num and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
                     try:
@@ -3833,11 +3833,11 @@ def _handle_webhook():
             _prev_ambig = _amd_timers.pop(f"ambig_{call_control_id}", None)
             if _prev_ambig:
                 _prev_ambig.cancel()
-            ambig_t = threading.Timer(5.0, _ambiguous_fallback, args=[_amb_cid, _amb_uid, _amb_camp])
+            ambig_t = threading.Timer(15.0, _ambiguous_fallback, args=[_amb_cid, _amb_uid, _amb_camp])
             ambig_t.daemon = True
             _amd_timers[f"ambig_{call_control_id}"] = ambig_t
             ambig_t.start()
-            logger.info(f"[AMBIG WINDOW] {call_control_id} | 5s listening window started (amd_result={result})")
+            logger.info(f"[AMBIG WINDOW] {call_control_id} | 15s listening window started (amd_result={result})")
 
         else:
             update_call_state(call_control_id, status="no_answer",
@@ -4056,6 +4056,8 @@ def _handle_webhook():
                     "record your message", "record a message", "start recording",
                     "press pound when done", "hang up when done", "begin your message",
                     "begin recording",
+                    # Transcription services often render the audible beep tone as text
+                    "beep",
                 ]
                 vm_kw_ambig_medium = [
                     "can't come to the phone", "cannot come to the phone",
