@@ -3578,7 +3578,7 @@ def _handle_webhook():
                     hangup_call(ccid)
             _amd_timers.pop(ccid, None)
 
-        timer = threading.Timer(20.0, _amd_fallback, args=[call_control_id])
+        timer = threading.Timer(10.0, _amd_fallback, args=[call_control_id])
         timer.daemon = True
         _amd_timers[call_control_id] = timer
         timer.start()
@@ -3758,87 +3758,86 @@ def _handle_webhook():
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
                 hangup_call(call_control_id)
 
-        elif result == "not_sure":
+        elif result in ("not_sure", "silence"):
+            # ── INTELLIGENT AMBIGUOUS LISTENING WINDOW ──────────────────────────────
+            # Industry-best approach: "silence" and "not_sure" are AMBIGUOUS, not human.
+            # Common causes: voicemail system loading before greeting starts, human who
+            # picked up but hasn't spoken yet, IVR with an unusual audio pattern.
+            # We open a 5-second listening window. Transcription decides the outcome:
+            #   • VM keywords heard  → enter voicemail flow (beep wait + drop)
+            #   • Human phrase heard → transfer immediately
+            #   • Nothing after 5s  → transfer as human (safe fallback)
+            # This matches the "silence detection" mode used by Kixie/PhoneBurner,
+            # but ours is smarter: we differentiate VM greetings from human speech.
             camp = get_campaign(user_id=webhook_user_id)
-            transfer_num = camp.get("transfer_number") or ""
             customer_num = (get_call_state(call_control_id) or {}).get("number", "")
-            logger.info(f"[AMD RESULT] {call_control_id} | NOT_SURE, treating as human (transferring)")
-            update_call_state(call_control_id, amd_result="not_sure",
-                              status_description="Detection unclear - treating as human", status_color="blue")
-            try:
-                start_transcription(call_control_id)
-            except Exception as e:
-                logger.error(f"Failed to start transcription on not_sure detection: {e}")
-            try:
-                start_recording(call_control_id)
-            except Exception as e:
-                logger.error(f"Failed to start recording on not_sure detection: {e}")
-            if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
-                logger.info(f"[TRANSFER] {call_control_id} | not_sure -> transferring to {transfer_num}")
-                _ns_state = get_call_state(call_control_id) or {}
-                if _ns_state.get("quick_call") and webhook_user_id:
-                    _qc_cid2 = _ns_state.get("quick_call_crm_contact_id", "")
-                    if _qc_cid2:
-                        set_quick_call_status(webhook_user_id, _qc_cid2, "connected",
-                                              call_control_id=call_control_id,
-                                              crm_source=_ns_state.get("quick_call_crm_source", ""))
-                try:
-                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
-                except Exception as e:
-                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
-                    success = False
-                if success:
-                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
-                    update_call_state(call_control_id, status="transferred",
-                                      status_description="Detection unclear - transferred to human", status_color="green")
-                else:
-                    update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
-                    hangup_call(call_control_id)
-            elif not transfer_num:
-                logger.warning(f"[NO TRANSFER] {call_control_id} | not_sure, no transfer number, hanging up")
-                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
-                hangup_call(call_control_id)
 
-        elif result == "silence":
-            camp = get_campaign(user_id=webhook_user_id)
-            transfer_num = camp.get("transfer_number") or ""
-            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
-            logger.info(f"[AMD RESULT] {call_control_id} | SILENCE detected, treating as human (transferring)")
-            update_call_state(call_control_id, amd_result="silence",
-                              status_description="Silence detected - treating as human", status_color="blue")
+            # Pre-load voicemail audio so we're ready if VM keywords are detected
+            personalized_url = get_personalized_audio_url(customer_num) if customer_num else None
+            vm_audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
+            is_personalized_ambig = bool(personalized_url)
+
+            logger.info(f"[AMD RESULT] {call_control_id} | {result.upper()} — entering 5s intelligent listening window (not immediate transfer)")
+            update_call_state(call_control_id,
+                              amd_result=result,
+                              amd_ambiguous=True,
+                              vm_pending_audio_url=vm_audio_url,
+                              vm_pending_personalized=is_personalized_ambig,
+                              vm_pending_customer_number=customer_num,
+                              vm_pending_user_id=webhook_user_id,
+                              status_description=f"Ambiguous ({result}) — Alex is listening...",
+                              status_color="blue")
+
             try:
                 start_transcription(call_control_id)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start transcription: {e}")
             try:
                 start_recording(call_control_id)
-            except Exception:
-                pass
-            _sil_state = get_call_state(call_control_id) or {}
-            if transfer_num and not _sil_state.get("transferred") and not _sil_state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
-                logger.info(f"[TRANSFER] {call_control_id} | silence -> transferring to {transfer_num}")
-                if _sil_state.get("quick_call") and webhook_user_id:
-                    _qc_cid3 = _sil_state.get("quick_call_crm_contact_id", "")
-                    if _qc_cid3:
-                        set_quick_call_status(webhook_user_id, _qc_cid3, "connected",
-                                              call_control_id=call_control_id,
-                                              crm_source=_sil_state.get("quick_call_crm_source", ""))
-                try:
-                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
-                except Exception as e:
-                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
-                    success = False
-                if success:
-                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
-                    update_call_state(call_control_id, status="transferred",
-                                      status_description="Silence - transferred as human", status_color="green")
-                else:
-                    update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
-                    hangup_call(call_control_id)
-            elif not transfer_num:
-                logger.warning(f"[NO TRANSFER] {call_control_id} | silence, no transfer number, hanging up")
-                update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
-                hangup_call(call_control_id)
+            except Exception as e:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
+
+            _amb_cid = call_control_id
+            _amb_uid = webhook_user_id
+            _amb_camp = camp
+
+            def _ambiguous_fallback(ccid, uid, captured_camp):
+                _amd_timers.pop(f"ambig_{ccid}", None)
+                st = get_call_state(ccid)
+                if not st:
+                    return
+                if st.get("transferred") or st.get("voicemail_dropped") or st.get("machine_detected") or not st.get("amd_ambiguous"):
+                    logger.info(f"[AMBIG WINDOW] {ccid} | Already resolved before 5s fallback fired")
+                    return
+                t_num = captured_camp.get("transfer_number") or ""
+                cust = st.get("number", "")
+                logger.warning(f"[AMBIG WINDOW] {ccid} | 5s elapsed, no clear signal — transferring as human (safe fallback)")
+                update_call_state(ccid, amd_ambiguous=False)
+                if t_num and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
+                    try:
+                        suc = transfer_call(ccid, t_num, customer_number=cust)
+                    except Exception as e2:
+                        logger.error(f"[AMBIG FALLBACK] {ccid} | Transfer error: {e2}")
+                        suc = False
+                    if suc:
+                        pause_for_transfer(ccid, user_id=uid)
+                        update_call_state(ccid, status="transferred",
+                                          status_description="Ambiguous — transferred as human after 5s", status_color="green")
+                    else:
+                        update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                        hangup_call(ccid)
+                elif not t_num:
+                    update_call_state(ccid, status_description="No transfer number configured", status_color="yellow")
+                    hangup_call(ccid)
+
+            _prev_ambig = _amd_timers.pop(f"ambig_{call_control_id}", None)
+            if _prev_ambig:
+                _prev_ambig.cancel()
+            ambig_t = threading.Timer(5.0, _ambiguous_fallback, args=[_amb_cid, _amb_uid, _amb_camp])
+            ambig_t.daemon = True
+            _amd_timers[f"ambig_{call_control_id}"] = ambig_t
+            ambig_t.start()
+            logger.info(f"[AMBIG WINDOW] {call_control_id} | 5s listening window started (amd_result={result})")
 
         else:
             update_call_state(call_control_id, status="no_answer",
@@ -3998,7 +3997,7 @@ def _handle_webhook():
 
                 if (is_high_confidence or is_medium_confidence) and state.get("vm_pending_audio_url") and not state.get("voicemail_confirmed"):
                     confidence = "HIGH" if is_high_confidence else "MEDIUM"
-                    delay = 2.0 if is_high_confidence else 4.0
+                    delay = 0.5 if is_high_confidence else 1.5
                     logger.info(f"[LAYER2] {call_control_id} | VM keywords [{confidence}] heard: '{transcript_text[:100]}' — dropping in {delay}s if no beep fires")
                     update_call_state(call_control_id, voicemail_confirmed=True,
                                       status_description=f"Voicemail keywords heard [{confidence}] — dropping in {delay:.0f}s", status_color="blue")
@@ -4038,6 +4037,119 @@ def _handle_webhook():
                     vm_kw_t.daemon = True
                     _amd_timers[f"vm_kw_{call_control_id}"] = vm_kw_t
                     vm_kw_t.start()
+
+            # ── Ambiguous window intelligence (silence / not_sure AMD results) ──────
+            # When AMD returned silence or not_sure we opened a 5s listening window.
+            # Here we watch the live transcription to make the right decision before
+            # the fallback timer fires. This is smarter than Kixie/PhoneBurner:
+            # we distinguish VM greetings from human speech in real time.
+            if (state and state.get("amd_ambiguous")
+                    and not state.get("voicemail_dropped")
+                    and not state.get("transferred")
+                    and not state.get("machine_detected")):
+
+                aw_text_lower = transcript_text.lower()
+
+                vm_kw_ambig_high = [
+                    "leave your message", "leave a message", "leave me a message",
+                    "after the tone", "after the beep", "at the tone", "at the beep",
+                    "record your message", "record a message", "start recording",
+                    "press pound when done", "hang up when done", "begin your message",
+                    "begin recording",
+                ]
+                vm_kw_ambig_medium = [
+                    "can't come to the phone", "cannot come to the phone",
+                    "can't take your call", "cannot take your call",
+                    "not available", "currently unavailable",
+                    "you have reached", "you've reached",
+                    "please leave", "not in at the moment",
+                    "your call has been forwarded", "no one is available",
+                    "is not available",
+                ]
+                human_live_phrases = [
+                    "hello", "hi ", "hey ", "who is this", "who's this",
+                    "yes ", "yeah", "speaking", "this is ", "can i help",
+                    "how can i", "good morning", "good afternoon", "good evening",
+                    "how may i", "can i assist", "how can i help",
+                ]
+
+                aw_is_vm_high = any(kw in aw_text_lower for kw in vm_kw_ambig_high)
+                aw_is_vm_med = any(kw in aw_text_lower for kw in vm_kw_ambig_medium)
+                aw_is_human = any(ph in aw_text_lower for ph in human_live_phrases)
+
+                if aw_is_vm_high or aw_is_vm_med:
+                    aw_conf = "HIGH" if aw_is_vm_high else "MEDIUM"
+                    aw_delay = 0.5 if aw_is_vm_high else 1.5
+                    logger.info(f"[AMBIG WINDOW] {call_control_id} | VM keyword [{aw_conf}] in transcript — entering voicemail flow (drop in {aw_delay}s): '{transcript_text[:80]}'")
+                    # Cancel the 5s ambiguous fallback — we have a better signal
+                    _at = _amd_timers.pop(f"ambig_{call_control_id}", None)
+                    if _at:
+                        _at.cancel()
+                    update_call_state(call_control_id,
+                                      amd_ambiguous=False,
+                                      machine_detected=True,
+                                      voicemail_confirmed=True,
+                                      status_description=f"VM greeting detected [{aw_conf}] in listening window — dropping in {aw_delay:.1f}s",
+                                      status_color="blue")
+                    # Play silence to keep RTP alive while waiting for beep / drop
+                    _aw_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+                    try:
+                        import time as _t3
+                        play_audio(call_control_id, _aw_sil_url, client_state="silence_keepalive")
+                        update_call_state(call_control_id, silence_playing=True, silence_start_time=_t3.time())
+                    except Exception as _e3:
+                        logger.error(f"[AMBIG WINDOW] {call_control_id} | Silence play error: {_e3}")
+                    # Drop voicemail after short delay via a timer
+                    _aw_cid = call_control_id
+                    _AW_TERMINAL = {"transferred", "voicemail_complete", "hangup", "voicemail_playing"}
+
+                    def _aw_drop_timer(ccid):
+                        _amd_timers.pop(f"ambig_drop_{ccid}", None)
+                        st2 = get_call_state(ccid)
+                        if (st2 and not st2.get("voicemail_dropped") and not st2.get("transferred")
+                                and st2.get("status") not in _AW_TERMINAL):
+                            aurl2 = st2.get("vm_pending_audio_url", "")
+                            ispvm2 = st2.get("vm_pending_personalized", False)
+                            custnum2 = st2.get("vm_pending_customer_number", "")
+                            uid2 = st2.get("vm_pending_user_id")
+                            logger.info(f"[AMBIG WINDOW] {ccid} | Dropping voicemail now (VM keyword confirmed)")
+                            _drop_voicemail_now(ccid, aurl2, ispvm2, custnum2, uid2)
+                        else:
+                            logger.info(f"[AMBIG WINDOW] {ccid} | Drop timer fired but call already handled")
+
+                    _aw_drop_t = threading.Timer(aw_delay, _aw_drop_timer, args=[_aw_cid])
+                    _aw_drop_t.daemon = True
+                    _amd_timers[f"ambig_drop_{call_control_id}"] = _aw_drop_t
+                    _aw_drop_t.start()
+
+                elif aw_is_human:
+                    logger.info(f"[AMBIG WINDOW] {call_control_id} | Human speech detected — transferring immediately: '{transcript_text[:60]}'")
+                    _at2 = _amd_timers.pop(f"ambig_{call_control_id}", None)
+                    if _at2:
+                        _at2.cancel()
+                    update_call_state(call_control_id, amd_ambiguous=False, machine_detected=False)
+                    _aw_uid = get_user_for_call(call_control_id)
+                    _aw_camp = get_campaign(user_id=_aw_uid)
+                    _aw_tnum = _aw_camp.get("transfer_number") or ""
+                    _aw_cust = state.get("number", "")
+                    if _aw_tnum and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
+                        try:
+                            _aw_suc = transfer_call(call_control_id, _aw_tnum, customer_number=_aw_cust)
+                        except Exception as _aw_e:
+                            logger.error(f"[AMBIG WINDOW] {call_control_id} | Transfer error: {_aw_e}")
+                            _aw_suc = False
+                        if _aw_suc:
+                            pause_for_transfer(call_control_id, user_id=_aw_uid)
+                            update_call_state(call_control_id, status="transferred",
+                                              status_description="Human detected in listening window — transferred", status_color="green")
+                        else:
+                            update_call_state(call_control_id, status_description="Transfer failed", status_color="red")
+                            hangup_call(call_control_id)
+                    elif not _aw_tnum:
+                        update_call_state(call_control_id, status_description="No transfer number configured", status_color="yellow")
+                        hangup_call(call_control_id)
+                else:
+                    logger.info(f"[AMBIG WINDOW] {call_control_id} | No clear signal yet in transcript — fallback timer still running: '{transcript_text[:60]}'")
 
             # ---- Gatekeeper Navigator logic ----
             if (state and state.get("gatekeeper_mode_active")
@@ -4122,7 +4234,7 @@ def _handle_webhook():
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":
-        for prefix in ["", "beep_", "nobeep_", "safety_", "vm_safety_", "vm_kw_"]:
+        for prefix in ["", "beep_", "nobeep_", "safety_", "vm_safety_", "vm_kw_", "ambig_", "ambig_drop_"]:
             t = _amd_timers.pop(f"{prefix}{call_control_id}", None)
             if t:
                 t.cancel()
