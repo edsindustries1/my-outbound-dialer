@@ -655,57 +655,6 @@ def _upsert_user_app_data(user_id, data_key, data_value):
         logger.error(f"Failed to upsert app data {data_key} for user {user_id}: {e}")
 
 
-def _set_employee_instances(user_id, count):
-    try:
-        if not user_id:
-            return None
-        existing = UserAppData.query.filter_by(user_id=user_id, data_key="employee_instances").first()
-        payload = json.dumps({"unlocked": int(count)})
-        if existing:
-            existing.data_value = payload
-        else:
-            rec = UserAppData(user_id=user_id, data_key="employee_instances", data_value=payload)
-            db.session.add(rec)
-        db.session.commit()
-        ensure_user_instance(user_id)
-        return count
-    except Exception as e:
-        logger.error(f"Failed to set employee instances for user {user_id}: {e}")
-        return None
-
-
-def _send_masterpiece_email(to_email, user_name=None):
-    try:
-        from gmail_client import send_email
-    except Exception as e:
-        logger.error(f"Email module unavailable: {e}")
-        return False
-    if not to_email:
-        return False
-    subject = "Alex is joining your team! 🚀"
-    content = (
-        "Thank you for choosing Open Humana. Your payment was successful, and Alex is now being provisioned for your team. "
-        "You can find your credentials in the dashboard."
-    )
-    greeting = f"Hi {user_name}," if user_name else "Hi there,"
-    html_body = f"""
-    <html><body style='font-family:Inter,Arial,sans-serif;background:#0b1021;color:#e5e7eb;padding:32px;'>
-      <div style='max-width:520px;margin:0 auto;background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,0.35);'>
-        <h2 style='margin:0 0 12px;font-size:22px;color:#ffffff;'>Alex is joining your team! 🚀</h2>
-        <p style='margin:0 0 12px;color:rgba(229,231,235,0.8);line-height:1.6;'>{greeting}</p>
-        <p style='margin:0 0 16px;color:rgba(229,231,235,0.8);line-height:1.6;'>{content}</p>
-        <div style='margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(99,102,241,0.08);color:#c7d2fe;'>Payment Verified. Alex is on your way.</div>
-      </div>
-    </body></html>
-    """
-    text_body = f"{subject}\n\n{content}"
-    try:
-        return send_email(to_email=to_email, subject=subject, html_body=html_body, text_body=text_body)
-    except Exception as e:
-        logger.exception(f"Failed to send masterpiece email to {to_email}: {e}")
-        return False
-
-
 def _create_paypal_order(amount, user_id, meta=None):
     access_token = _paypal_access_token()
     url = f"{_paypal_base_url()}/v2/checkout/orders"
@@ -970,7 +919,7 @@ def api_health():
     fish_source = _fc.get_key_source()
     return jsonify({
         "status": "ok",
-        "service": "Open Humana",
+        "service": "Open Humana — Everyday Digital Solutions",
         "fish_audio_configured": fish_ok,
         "fish_audio_key_source": fish_source,
     }), 200
@@ -1006,7 +955,7 @@ def handle_500(e):
     <style>body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f0f3;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
     .card{background:#fff;border-radius:16px;padding:48px;text-align:center;max-width:480px;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
     h1{font-size:24px;color:#111;margin:0 0 12px;}p{font-size:15px;color:#666;line-height:1.7;margin:0;}</style></head>
-    <body><div class="card"><h1>System Configuration in Progress</h1><p>Open Humana is being set up. This usually takes just a moment. Please refresh the page shortly.</p></div></body></html>""", 500
+    <body><div class="card"><h1>System Configuration in Progress</h1><p>The system is being set up. This usually takes just a moment. Please refresh the page shortly.</p></div></body></html>""", 500
 
 
 @app.route("/about")
@@ -1179,7 +1128,7 @@ def api_lead():
 </td></tr>
 
 <tr><td style="background:#f8f9fa;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
-  <p style="margin:0;font-size:12px;color:#9ca3af;">This lead was captured from your Open Humana landing page.<br>&#169; 2026 Open Humana &mdash; Your Digital Employee Agency</p>
+  <p style="margin:0;font-size:12px;color:#9ca3af;">This lead was captured from your Open Humana landing page.<br>&#169; 2026 Everyday Digital Solutions &mdash; Your Digital Employee Agency</p>
 </td></tr>
 
 </table>
@@ -1345,7 +1294,7 @@ def api_demo():
 </td></tr>
 
 <tr><td style="background:#f8f9fa;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
-  <p style="margin:0;font-size:12px;color:#9ca3af;">This demo request was captured from your Open Humana landing page.<br>&#169; 2026 Open Humana &mdash; Your Digital Employee Agency</p>
+  <p style="margin:0;font-size:12px;color:#9ca3af;">This demo request was captured from your Open Humana landing page.<br>&#169; 2026 Everyday Digital Solutions &mdash; Your Digital Employee Agency</p>
 </td></tr>
 
 </table>
@@ -1526,6 +1475,7 @@ def signup():
     return redirect(url_for("login"))
 
 
+@app.route("/verify-otp", methods=["GET", "POST"])
 def verify_otp_page():
     email = session.get("pending_verify_email")
     if not email:
@@ -2400,7 +2350,7 @@ def download_report():
     output.close()
 
     now_str = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    filename = f"open_human_report_{now_str}.csv"
+    filename = f"humana_report_{now_str}.csv"
 
     from flask import Response
     return Response(
@@ -3237,24 +3187,31 @@ def _scheduler_worker():
     import time as _time
     while True:
         try:
-            due = get_due_schedules()
-            for schedule in due:
-                camp = get_campaign()
-                if camp.get("active"):
-                    logger.info(f"Scheduler: Campaign already active, skipping schedule {schedule['id']}")
-                    continue
+            with app.app_context():
+                all_users = User.query.with_entities(User.id).all()
+                user_ids = [u.id for u in all_users]
+            for uid in user_ids:
+                try:
+                    due = get_due_schedules(user_id=uid)
+                    for schedule in due:
+                        camp = get_campaign(user_id=uid)
+                        if camp.get("active"):
+                            logger.info(f"Scheduler: Campaign already active for user {uid}, skipping schedule {schedule['id']}")
+                            continue
 
-                logger.info(f"Scheduler: Executing scheduled campaign {schedule['id']}")
-                numbers = schedule.get("numbers", [])
-                transfer_number = schedule.get("transfer_number", "")
-                audio_url = schedule.get("audio_url", "") or get_voicemail_url()
-                dial_mode = schedule.get("dial_mode", "sequential")
-                batch_size = schedule.get("batch_size", 5)
+                        logger.info(f"Scheduler: Executing scheduled campaign {schedule['id']} for user {uid}")
+                        numbers = schedule.get("numbers", [])
+                        transfer_number = schedule.get("transfer_number", "")
+                        audio_url = schedule.get("audio_url", "") or get_voicemail_url(user_id=uid)
+                        dial_mode = schedule.get("dial_mode", "sequential")
+                        batch_size = schedule.get("batch_size", 5)
 
-                set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size)
-                start_dialer()
-                mark_schedule_executed(schedule["id"])
-                logger.info(f"Scheduler: Campaign {schedule['id']} started with {len(numbers)} numbers")
+                        set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, user_id=uid)
+                        start_dialer(user_id=uid)
+                        mark_schedule_executed(schedule["id"], user_id=uid)
+                        logger.info(f"Scheduler: Campaign {schedule['id']} started for user {uid} with {len(numbers)} numbers")
+                except Exception as ue:
+                    logger.error(f"Scheduler error for user {uid}: {ue}")
         except Exception as e:
             logger.error(f"Scheduler error: {e}")
         _time.sleep(30)
@@ -4355,7 +4312,7 @@ def api_numbers_buy():
         return jsonify({"error": f"You've reached your plan limit of {limits['max']} numbers. Contact support to increase your limit."}), 400
 
     auto_setup = data.get("auto_setup", True)
-    app_name = data.get("app_name", "Open Human Dialer")
+    app_name = data.get("app_name", "Humana Dialer")
 
     webhook_url = _get_current_webhook_url()
 
@@ -4870,7 +4827,7 @@ def api_numbers_create_app():
     if getattr(current_user, 'role', 'user') != 'admin':
         return jsonify({"error": "Line profiles are configured automatically when you purchase a number."}), 403
     data = request.get_json() or {}
-    app_name = data.get("app_name", "Open Human Dialer").strip()
+    app_name = data.get("app_name", "Humana Dialer").strip()
     webhook_url = data.get("webhook_url", "").strip() or _get_current_webhook_url()
     result = create_call_control_app(app_name, webhook_url)
     if result.get("success"):
