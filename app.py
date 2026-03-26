@@ -86,6 +86,7 @@ from storage import (
     get_report_settings,
     save_report_settings,
     mark_report_sent,
+    mark_campaign_complete,
     get_contacts,
     add_contacts,
     update_contact,
@@ -2026,7 +2027,7 @@ def test_call():
 
     if call_control_id:
         create_call_state(call_control_id, number, user_id=current_user.id)
-        update_call_state(call_control_id, status="test_call_ringing",
+        update_call_state(call_control_id, is_test=True, status="test_call_ringing",
                           status_description="Ringing", status_color="blue")
         logger.info(f"Test call placed successfully to {number}")
         return jsonify({"message": f"Test call placed to {number}", "call_control_id": call_control_id})
@@ -3618,9 +3619,9 @@ def _handle_webhook():
         if not state:
             return "", 200
 
-        if result == "human":
+        if result in ("human", "human_residence", "human_business"):
             update_call_state(call_control_id, machine_detected=False, status="human_detected",
-                              amd_result="human", status_description="Human detected", status_color="blue")
+                              amd_result=result, status_description="Human detected", status_color="blue")
             try:
                 start_transcription(call_control_id)
             except Exception as e:
@@ -3717,8 +3718,8 @@ def _handle_webhook():
                 except Exception as e:
                     logger.error(f"[LAYER2] {call_control_id} | Failed to start transcription on machine: {e}")
 
-                # ── LAYER 3: 22-second safety-net timer ──
-                # If neither beep event nor keyword detection fires within 22s,
+                # ── LAYER 3: 5-second safety-net timer ──
+                # If neither beep event nor keyword detection fires within 5s,
                 # the greeting has almost certainly ended — drop the voicemail anyway.
                 _vm_safe_url = audio_url
                 _vm_safe_pvm = is_personalized
@@ -3736,7 +3737,7 @@ def _handle_webhook():
                             and not st.get("transferred")
                             and st.get("machine_detected")
                             and st.get("status") not in _TERMINAL_STATUSES):
-                        logger.info(f"[LAYER3] {ccid} | 22s safety timer — no beep/keyword received, dropping voicemail now")
+                        logger.info(f"[LAYER3] {ccid} | 5s safety timer — no beep/keyword received, dropping voicemail now")
                         update_call_state(ccid, status_description="Dropping voicemail (safety timer)", status_color="blue")
                         _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
                     else:
@@ -3746,13 +3747,12 @@ def _handle_webhook():
                 _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
                 if _prev_safe:
                     _prev_safe.cancel()
-                vm_safety_t = threading.Timer(22.0, _vm_safety_fallback,
+                vm_safety_t = threading.Timer(5.0, _vm_safety_fallback,
                                               args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
                 vm_safety_t.daemon = True
-                # Store in dict BEFORE start() so hangup cleanup can always find and cancel it
                 _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
                 vm_safety_t.start()
-                logger.info(f"[LAYER3] {call_control_id} | 22s safety fallback timer started")
+                logger.info(f"[LAYER3] {call_control_id} | 5s safety fallback timer started")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -3797,6 +3797,15 @@ def _handle_webhook():
             except Exception as e:
                 logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
 
+            _amb_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+            try:
+                import time as _tamb
+                play_audio(call_control_id, _amb_sil_url, client_state="silence_keepalive")
+                update_call_state(call_control_id, silence_playing=True, silence_start_time=_tamb.time())
+                logger.info(f"[AMBIG WINDOW] {call_control_id} | Playing silence to keep RTP alive during listening window")
+            except Exception as _eamb:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Silence play error: {_eamb}")
+
             _amb_cid = call_control_id
             _amb_uid = webhook_user_id
             _amb_camp = camp
@@ -3840,10 +3849,75 @@ def _handle_webhook():
             logger.info(f"[AMBIG WINDOW] {call_control_id} | 15s listening window started (amd_result={result})")
 
         else:
-            update_call_state(call_control_id, status="no_answer",
-                              amd_result=result, status_description=f"Unknown AMD result: {result}", status_color="yellow")
-            logger.info(f"[AMD UNKNOWN] {call_control_id} | result='{result}', hanging up")
-            hangup_call(call_control_id)
+            logger.warning(f"[AMD RESULT] {call_control_id} | Unrecognized result '{result}' — entering ambiguous listening window (NOT hanging up)")
+            camp = get_campaign(user_id=webhook_user_id)
+            customer_num = (get_call_state(call_control_id) or {}).get("number", "")
+            personalized_url = get_personalized_audio_url(customer_num) if customer_num else None
+            vm_audio_url = personalized_url or camp.get("audio_url", "") or get_voicemail_url(user_id=webhook_user_id)
+            is_personalized_unk = bool(personalized_url)
+            update_call_state(call_control_id,
+                              amd_result=result,
+                              amd_ambiguous=True,
+                              vm_pending_audio_url=vm_audio_url,
+                              vm_pending_personalized=is_personalized_unk,
+                              vm_pending_customer_number=customer_num,
+                              vm_pending_user_id=webhook_user_id,
+                              status_description=f"Unknown ({result}) — Alex is listening (15s)...",
+                              status_color="blue")
+            try:
+                start_transcription(call_control_id)
+            except Exception as e:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start transcription: {e}")
+            try:
+                start_recording(call_control_id)
+            except Exception as e:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
+            _unk_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+            try:
+                import time as _tu
+                play_audio(call_control_id, _unk_sil_url, client_state="silence_keepalive")
+                update_call_state(call_control_id, silence_playing=True, silence_start_time=_tu.time())
+            except Exception as _eu:
+                logger.error(f"[AMBIG WINDOW] {call_control_id} | Silence play error: {_eu}")
+            _unk_cid = call_control_id
+            _unk_uid = webhook_user_id
+            _unk_camp = camp
+            def _unk_fallback(ccid, uid, captured_camp):
+                _amd_timers.pop(f"ambig_{ccid}", None)
+                st = get_call_state(ccid)
+                if not st:
+                    return
+                if st.get("transferred") or st.get("voicemail_dropped") or st.get("machine_detected") or not st.get("amd_ambiguous"):
+                    logger.info(f"[AMBIG WINDOW] {ccid} | Already resolved before fallback fired")
+                    return
+                t_num = captured_camp.get("transfer_number") or ""
+                cust = st.get("number", "")
+                logger.warning(f"[AMBIG WINDOW] {ccid} | 15s elapsed (unknown result), transferring as human")
+                update_call_state(ccid, amd_ambiguous=False)
+                if t_num and claim_call_action(ccid, "transfer") and mark_transferred(ccid):
+                    try:
+                        suc = transfer_call(ccid, t_num, customer_number=cust)
+                    except Exception as e2:
+                        logger.error(f"[AMBIG FALLBACK] {ccid} | Transfer error: {e2}")
+                        suc = False
+                    if suc:
+                        pause_for_transfer(ccid, user_id=uid)
+                        update_call_state(ccid, status="transferred",
+                                          status_description="Unknown result — transferred as human after 15s", status_color="green")
+                    else:
+                        update_call_state(ccid, status_description="Transfer failed", status_color="red")
+                        hangup_call(ccid)
+                elif not t_num:
+                    update_call_state(ccid, status_description="No transfer number configured", status_color="yellow")
+                    hangup_call(ccid)
+            _prev_unk = _amd_timers.pop(f"ambig_{call_control_id}", None)
+            if _prev_unk:
+                _prev_unk.cancel()
+            unk_t = threading.Timer(15.0, _unk_fallback, args=[_unk_cid, _unk_uid, _unk_camp])
+            unk_t.daemon = True
+            _amd_timers[f"ambig_{call_control_id}"] = unk_t
+            unk_t.start()
+            logger.info(f"[AMBIG WINDOW] {call_control_id} | 15s listening window started (unknown result={result})")
 
     # ---- call.machine.greeting.ended (beep/no-beep) ----
     elif event_type in ("call.machine.greeting.ended", "call.machine.premium.greeting.ended"):
@@ -4250,6 +4324,9 @@ def _handle_webhook():
             resume_after_transfer(call_control_id, user_id=webhook_user_id)
 
         state = get_call_state(call_control_id)
+        if state and state.get("is_test"):
+            logger.info(f"[TEST CALL] {call_control_id} | Test call ended — marking campaign complete (no retry)")
+            mark_campaign_complete(user_id=webhook_user_id or state.get("user_id"))
         if state:
             current_status = state.get("status", "")
             updates = {"hangup_cause": hangup_cause}
