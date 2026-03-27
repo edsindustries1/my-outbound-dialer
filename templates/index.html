@@ -159,7 +159,7 @@
                 </a>
                 <a class="gads-nav-item" data-page="humana-voice" onclick="navigateTo('humana-voice')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                    <span>Voice Studio</span>
+                    <span>Humana Voice</span>
                 </a>
             </nav>
             <div class="gads-sidebar-footer">
@@ -888,7 +888,7 @@
                     </div>
                 </div>
 
-                <!-- page-voicemails: content moved to Voice Studio → Voicemail Templates tab -->
+                <!-- page-voicemails: content moved to Humana Voice → Voicemail Templates tab -->
                 <div class="gads-page" id="page-voicemails" style="display:none"></div>
 
                 <!-- ==================== PAGE: CONTACTS (Intelligence Hub) ==================== -->
@@ -1410,7 +1410,7 @@
                 <div class="gads-page" id="page-settings" style="display:none">
                     <div class="gads-page-header"><h2>Settings</h2></div>
 
-                    <!-- Voice preset and API key moved to Voice Studio → Voice Settings tab -->
+                    <!-- Voice preset and API key moved to Humana Voice → Voice Settings tab -->
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
@@ -2156,7 +2156,7 @@
 
                     <!-- Page header -->
                     <div class="gads-page-header">
-                        <h2>Voice Studio</h2>
+                        <h2>Humana Voice</h2>
                         <div style="display:flex;align-items:center;gap:12px;">
                             <span class="hv-active-none" id="hvNoActive">No active voice set</span>
                             <div class="hv-active-badge" id="hvActiveDot" style="display:none;">
@@ -2418,7 +2418,7 @@
 
                     </div><!-- /panel-voice-settings -->
 
-                </div><!-- /page-humana-voice / Voice Studio -->
+                </div><!-- /page-humana-voice / Humana Voice -->
 
             </div><!-- end gads-content -->
         </div><!-- end gads-main -->
@@ -2457,7 +2457,7 @@
             testdialer:   'Test Dialer',
             settings:        'Settings',
             integrations:    'Integrations',
-            'humana-voice':  'Voice Studio'
+            'humana-voice':  'Humana Voice'
         };
 
         function anSwitchTab(tabKey) {
@@ -2475,7 +2475,7 @@
         });
 
         function navigateTo(page) {
-            // backward compat: 'voicemails' now lives inside Voice Studio
+            // backward compat: 'voicemails' now lives inside Humana Voice
             if (page === 'voicemails') page = 'humana-voice';
             // 'livecalls' and 'reports' now live inside Analytics
             if (page === 'livecalls') { navigateTo('analytics'); anSwitchTab('live-calls'); return; }
@@ -3514,7 +3514,7 @@
                 });
             });
 
-            // ---- Voicemail File Upload (Voice Studio & Test Dialer) ----
+            // ---- Voicemail File Upload (Humana Voice & Test Dialer) ----
             function setupVmUpload(opts) {
                 // opts: { dropZoneId, fileInputId, fileNameId, progressId, resultId, onSuccess }
                 var dropZone = document.getElementById(opts.dropZoneId);
@@ -7462,7 +7462,7 @@
       }
     }
 
-    /* ─── 3. Voice Studio > Clone Your Voice tab ─── */
+    /* ─── 3. Humana Voice > Clone Your Voice tab ─── */
     if (!USER_FEATURES.voice_cloning) {
       var cloneTab = document.querySelector('.hv-tab[data-tab="clone"]');
       if (cloneTab) {
