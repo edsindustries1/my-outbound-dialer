@@ -879,10 +879,17 @@
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: 'email=' + encodeURIComponent(email)
-      }).then(function(){ }).catch(function(){ });
-      form.style.display = 'none';
-      var thanks = document.getElementById('newsletterThanks');
-      if (thanks) thanks.style.display = '';
+      }).then(function(res){
+        if (res.ok) {
+          form.style.display = 'none';
+          var thanks = document.getElementById('newsletterThanks');
+          if (thanks) thanks.style.display = '';
+        } else {
+          btn.disabled = false;
+        }
+      }).catch(function(){
+        btn.disabled = false;
+      });
     });
   })();
   </script>
