@@ -117,7 +117,7 @@
     var dials = parseInt(dialSlider.value, 10);
     var days  = parseInt(daysSlider.value, 10);
 
-    var isBusiness  = dials > 300;
+    var isBusiness  = dials > 150;
     var platformFee = isBusiness ? 399 : 99;
     var planLabel   = isBusiness ? 'Business Plan' : 'Starter Plan';
     var planSlug    = isBusiness ? 'business' : 'starter';
