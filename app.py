@@ -319,19 +319,27 @@ def _proxy_download_audio(url, user_id):
     safe, safe_err = _is_safe_url_target(url)
     if not safe:
         return None, safe_err
+
+    MAX_REDIRECTS = 5
+    current_url = url
+    resp = None
     try:
-        resp = requests.get(url, timeout=15, stream=True, allow_redirects=False, headers={
-            "User-Agent": "OpenHumana/1.0 AudioFetch"
-        })
-        if resp.is_redirect or resp.status_code in (301, 302, 303, 307, 308):
-            redirect_url = resp.headers.get("Location", "")
-            if redirect_url:
-                r_safe, r_err = _is_safe_url_target(redirect_url)
+        for _hop in range(MAX_REDIRECTS + 1):
+            resp = requests.get(current_url, timeout=15, stream=True, allow_redirects=False, headers={
+                "User-Agent": "OpenHumana/1.0 AudioFetch"
+            })
+            if resp.status_code in (301, 302, 303, 307, 308):
+                location = resp.headers.get("Location", "")
+                if not location:
+                    return None, "Redirect with no Location header"
+                current_url = urllib.parse.urljoin(current_url, location)
+                r_safe, r_err = _is_safe_url_target(current_url)
                 if not r_safe:
                     return None, f"Redirect blocked: {r_err}"
-                resp = requests.get(redirect_url, timeout=15, stream=True, allow_redirects=True, headers={
-                    "User-Agent": "OpenHumana/1.0 AudioFetch"
-                })
+                continue
+            break
+        else:
+            return None, "Too many redirects"
         resp.raise_for_status()
     except requests.exceptions.Timeout:
         return None, "Download timed out — the remote server is too slow"
@@ -342,6 +350,11 @@ def _proxy_download_audio(url, user_id):
     except Exception as e:
         return None, f"Failed to download: {str(e)[:100]}"
 
+    content_type = (resp.headers.get("Content-Type", "") or "").lower().split(";")[0].strip()
+    is_audio_mime = content_type.startswith("audio/") or content_type in (
+        "application/octet-stream", "binary/octet-stream"
+    )
+
     try:
         content_length = int(resp.headers.get("Content-Length", 0) or 0)
     except (ValueError, TypeError):
@@ -349,23 +362,26 @@ def _proxy_download_audio(url, user_id):
     if content_length > MAX_AUDIO_DOWNLOAD_SIZE:
         return None, f"File too large ({content_length // (1024*1024)}MB). Max is 10MB."
 
-    parsed = urllib.parse.urlparse(url)
+    parsed = urllib.parse.urlparse(current_url)
     path_part = parsed.path.rstrip("/")
     orig_name = os.path.basename(path_part) if path_part else "voicemail"
     orig_name = secure_filename(orig_name) or "voicemail"
     ext = orig_name.rsplit(".", 1)[-1].lower() if "." in orig_name else ""
-    if ext not in ALLOWED_AUDIO:
-        content_type = (resp.headers.get("Content-Type", "") or "").lower()
+
+    if ext in ALLOWED_AUDIO and is_audio_mime:
+        pass
+    elif ext in ALLOWED_AUDIO and content_type == "application/octet-stream":
+        pass
+    elif is_audio_mime or content_type == "application/octet-stream":
         if "mpeg" in content_type or "mp3" in content_type:
             ext = "mp3"
         elif "wav" in content_type or "wave" in content_type:
             ext = "wav"
-        elif "audio" in content_type:
-            ext = "mp3"
         else:
-            return None, "URL does not point to an MP3 or WAV file"
-        if "." not in orig_name:
-            orig_name = f"{orig_name}.{ext}"
+            ext = "mp3"
+        orig_name = f"{orig_name.rsplit('.', 1)[0] if '.' in orig_name else orig_name}.{ext}"
+    else:
+        return None, "URL does not point to an audio file (expected audio/mpeg or audio/wav content type)"
 
     unique_filename = f"vm_{user_id}_{_uuid.uuid4().hex[:8]}_{orig_name}"
     filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
