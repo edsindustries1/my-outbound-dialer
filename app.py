@@ -504,6 +504,9 @@ def login_required(f):
 def require_credit(f):
     @functools.wraps(f)
     def wrapped(*args, **kwargs):
+        # Admin-role users are never blocked by credit balance
+        if getattr(current_user, "role", None) == "admin":
+            return f(*args, **kwargs)
         try:
             bal = Decimal(str(getattr(current_user, "credit_balance", 0) or 0))
         except Exception:
@@ -666,7 +669,14 @@ def _provision_plan_features(user_id, plan, granted_by=None):
 
 
 def _get_user_features(user_id):
-    """Return a dict of {feature_key: bool} for a user. Missing keys default to False."""
+    """Return a dict of {feature_key: bool} for a user. Missing keys default to False.
+    Admin-role users always receive all features enabled."""
+    try:
+        user = User.query.get(user_id)
+        if user and getattr(user, "role", None) == "admin":
+            return {key: True for key in FEATURE_DEFINITIONS}
+    except Exception:
+        pass
     rows = UserFeature.query.filter_by(user_id=user_id).all()
     result = {key: False for key in FEATURE_DEFINITIONS}
     for row in rows:
@@ -675,13 +685,27 @@ def _get_user_features(user_id):
 
 
 def _has_feature(user_id, feature_key):
-    """Return True if the user has access to the given feature."""
+    """Return True if the user has access to the given feature.
+    Admin-role users always have all features."""
+    try:
+        user = User.query.get(user_id)
+        if user and getattr(user, "role", None) == "admin":
+            return True
+    except Exception:
+        pass
     rec = UserFeature.query.filter_by(user_id=user_id, feature_key=feature_key).first()
     return bool(rec and rec.enabled)
 
 
 def _get_user_plan(user_id):
-    """Return the user's current plan key ('starter', 'business', or None)."""
+    """Return the user's current plan key ('starter', 'business', or None).
+    Admin-role users always return 'agency'."""
+    try:
+        user = User.query.get(user_id)
+        if user and getattr(user, "role", None) == "admin":
+            return "agency"
+    except Exception:
+        pass
     try:
         rec = UserAppData.query.filter_by(user_id=user_id, data_key="active_plan").first()
         if rec:
