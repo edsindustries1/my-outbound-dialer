@@ -14,4 +14,4 @@ RUN mkdir -p uploads/personalized uploads/gatekeeper logs
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --timeout 120 --workers 2 --log-level info main:app
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --timeout 120 --workers 1 --threads 8 --log-level info main:app
