@@ -819,10 +819,8 @@
                                         </div>
                                     </div>
                                     <div class="wiz-settings-group">
-                                        <label>Fallback Voicemail URL <span style="font-size:11px;color:var(--gads-text-secondary);">(if call goes to voicemail)</span></label>
-                                        <p class="wiz-settings-hint">If the number goes to voicemail instead of a human, Alex will wait for the beep and drop this audio message.</p>
-                                        <input type="text" id="gkFallbackUrl" class="gads-input" placeholder="https://example.com/voicemail.mp3" style="width:100%;">
-                                        <p style="font-size:11px;color:var(--gads-text-tertiary);margin-top:4px;">Leave blank to use your saved default voicemail.</p>
+                                        <label>Fallback Voicemail <span style="font-size:11px;color:var(--gads-text-secondary);">(if call goes to voicemail)</span></label>
+                                        <p class="wiz-settings-hint">If the number goes to voicemail instead of a human, Alex will wait for the beep and drop your default voicemail audio from <a href="#" onclick="navigateTo('humana-voice');return false;" style="color:var(--gads-primary);text-decoration:underline;">Humana Voice</a>.</p>
                                     </div>
                                     <div class="wiz-settings-group">
                                         <label>Dial Mode</label>
@@ -3246,8 +3244,7 @@
                 document.getElementById("wizReviewNumbers").textContent = count || "0 numbers";
                 var vmText = "Standard";
                 if (wizSelectedType === "gatekeeper") {
-                    var gkFb = document.getElementById("gkFallbackUrl");
-                    vmText = "Fallback: " + (gkFb && gkFb.value.trim() ? "Custom URL" : "Saved default");
+                    vmText = "Fallback: Default voicemail";
                 } else if (wizSelectedType === "personalized") {
                     vmText = "Personalized (AI)";
                     var pvmTplSel = document.getElementById("wizPvmTemplateDropdown");
