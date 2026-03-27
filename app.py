@@ -1586,9 +1586,11 @@ def api_update_profile():
 
 
 def _detect_and_set_base_url():
+    """Detect and cache the app's public base URL. Supports Replit, Railway, and generic deployments."""
     global _detected_base_url
     if _detected_base_url:
         return
+    # 1. Replit: REPLIT_DOMAINS env var
     domains = os.environ.get("REPLIT_DOMAINS", "")
     if domains:
         domain = domains.split(",")[0].strip()
@@ -1597,6 +1599,21 @@ def _detect_and_set_base_url():
             set_webhook_base_url(_detected_base_url)
             logger.info(f"Using REPLIT_DOMAINS for base URL: {_detected_base_url}")
             return
+    # 2. Railway: RAILWAY_PUBLIC_DOMAIN env var (automatically set by Railway)
+    railway_domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "").strip()
+    if railway_domain:
+        _detected_base_url = f"https://{railway_domain}"
+        set_webhook_base_url(_detected_base_url)
+        logger.info(f"Using RAILWAY_PUBLIC_DOMAIN for base URL: {_detected_base_url}")
+        return
+    # 3. Explicit PUBLIC_BASE_URL env var (works on any platform)
+    env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    if env_url:
+        _detected_base_url = env_url
+        set_webhook_base_url(env_url)
+        logger.info(f"Using PUBLIC_BASE_URL for base URL: {_detected_base_url}")
+        return
+    # 4. Auto-detect from inbound request headers (fallback for any proxy)
     try:
         host = request.headers.get("X-Forwarded-Host") or request.headers.get("Host") or request.host
         proto = request.headers.get("X-Forwarded-Proto", "https")
@@ -1604,15 +1621,18 @@ def _detect_and_set_base_url():
             detected = f"{proto}://{host}"
             _detected_base_url = detected
             set_webhook_base_url(detected)
-            logger.info(f"Auto-detected public base URL from request: {detected}")
+            logger.info(f"Auto-detected public base URL from request headers: {detected}")
             return
     except Exception:
         pass
-    env_url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-    if env_url:
-        _detected_base_url = env_url
-        set_webhook_base_url(env_url)
-        return
+    logger.warning("Could not detect public base URL — silence/audio URLs may be malformed. Set PUBLIC_BASE_URL env var.")
+
+
+def _get_app_base_url():
+    """Return the current public base URL, attempting detection if not yet set."""
+    if not _detected_base_url:
+        _detect_and_set_base_url()
+    return (_detected_base_url or os.environ.get("PUBLIC_BASE_URL", "")).rstrip("/")
 
 
 # ---- Dashboard Route ----
@@ -1804,7 +1824,6 @@ def start():
     # ---- Handle audio ----
     audio_url = None
     audio_file = request.files.get("audio_file")
-    public_base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
 
     if audio_file and audio_file.filename:
         filename = secure_filename(audio_file.filename)
@@ -1813,7 +1832,7 @@ def start():
             return jsonify({"error": "Only MP3 and WAV files allowed"}), 400
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         audio_file.save(filepath)
-        audio_url = f"{public_base}/audio/{filename}"
+        audio_url = f"{_get_app_base_url()}/audio/{filename}"
         logger.info(f"Audio uploaded: {filename}, URL: {audio_url}")
     elif audio_url_input:
         audio_url = audio_url_input
@@ -1939,8 +1958,7 @@ def start():
         pvm_speed = int(request.form.get("pvm_speed", "82"))
         pvm_humanize = request.form.get("pvm_humanize", "true") == "true"
 
-        _detect_and_set_base_url()
-        base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+        base_url = _get_app_base_url()
 
         contacts = []
         if csv_content_for_pvm:
@@ -2153,8 +2171,7 @@ def upload_voicemail_file():
     unique_filename = f"vm_{current_user.id}_{uuid.uuid4().hex[:8]}_{filename}"
     filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
     audio_file.save(filepath)
-    public_base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-    audio_url = f"{public_base}/audio/{unique_filename}"
+    audio_url = f"{_get_app_base_url()}/audio/{unique_filename}"
     save_as_default = request.form.get("save_as_default", "true").lower() in ("true", "1", "yes")
     if save_as_default:
         save_voicemail_url(audio_url, user_id=current_user.id)
@@ -3364,8 +3381,7 @@ def pvm_preview_audio_endpoint():
     if not voice_id:
         return jsonify({"error": "No voice selected"}), 400
 
-    _detect_and_set_base_url()
-    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    base_url = _get_app_base_url()
 
     voice_settings = data.get("voice_settings", None)
     humanize = data.get("humanize", True)
@@ -3403,8 +3419,7 @@ def pvm_generate():
     if not voice_id:
         return jsonify({"error": "No voice selected"}), 400
 
-    _detect_and_set_base_url()
-    base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    base_url = _get_app_base_url()
     if not base_url:
         return jsonify({"error": "Could not determine public URL for audio serving"}), 400
 
@@ -3457,7 +3472,9 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
             logger.info(f"[SILENCE STOP] {call_control_id} | Stopped silence keepalive before dropping voicemail")
             update_call_state(call_control_id, silence_playing=False)
             import time
-            time.sleep(0.3)
+            # 500ms gives Telnyx time to acknowledge the stop before we send play_audio.
+            # Increased from 300ms for Railway/production environments with higher API latency.
+            time.sleep(0.5)
         except Exception as e:
             logger.error(f"[SILENCE STOP ERROR] {call_control_id} | {e}")
     from datetime import datetime as dt
@@ -3499,6 +3516,11 @@ def webhook():
         return "", 200
 
 def _handle_webhook():
+    # Ensure public base URL is detected from this request's headers on every platform
+    # (Railway, Replit, generic). This is the earliest possible point to detect it so
+    # silence/audio URLs built during AMD handling are always fully-qualified.
+    _detect_and_set_base_url()
+
     body = request.json
     if not body:
         logger.warning("Webhook received with empty body")
@@ -3729,7 +3751,7 @@ def _handle_webhook():
                               vm_pending_user_id=webhook_user_id)
 
             if audio_url:
-                silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+                silence_url = f"{_get_app_base_url()}/static/silence_60s.wav"
                 try:
                     play_audio(call_control_id, silence_url, client_state="silence_keepalive")
                     import time as _time_mod
@@ -3826,7 +3848,7 @@ def _handle_webhook():
             except Exception as e:
                 logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
 
-            _amb_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+            _amb_sil_url = f"{_get_app_base_url()}/static/silence_60s.wav"
             try:
                 import time as _tamb
                 play_audio(call_control_id, _amb_sil_url, client_state="silence_keepalive")
@@ -3914,7 +3936,7 @@ def _handle_webhook():
                 start_recording(call_control_id)
             except Exception as e:
                 logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
-            _unk_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+            _unk_sil_url = f"{_get_app_base_url()}/static/silence_60s.wav"
             try:
                 import time as _tu
                 play_audio(call_control_id, _unk_sil_url, client_state="silence_keepalive")
@@ -4037,7 +4059,7 @@ def _handle_webhook():
                 elapsed = _time_mod2.time() - silence_start if silence_start else 0
                 if elapsed < 110:
                     logger.info(f"[SILENCE REPLAY] {call_control_id} | Silence ended early ({elapsed:.1f}s), replaying to keep line alive while waiting for beep")
-                    silence_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+                    silence_url = f"{_get_app_base_url()}/static/silence_60s.wav"
                     try:
                         play_audio(call_control_id, silence_url, client_state="silence_keepalive")
                     except Exception as e:
@@ -4210,7 +4232,7 @@ def _handle_webhook():
                                       status_description=f"VM greeting detected [{aw_conf}] in listening window — dropping in {aw_delay:.1f}s",
                                       status_color="blue")
                     # Play silence to keep RTP alive while waiting for beep / drop
-                    _aw_sil_url = f"{_detected_base_url or os.environ.get('PUBLIC_BASE_URL', '').rstrip('/')}/static/silence_60s.wav"
+                    _aw_sil_url = f"{_get_app_base_url()}/static/silence_60s.wav"
                     try:
                         import time as _t3
                         play_audio(call_control_id, _aw_sil_url, client_state="silence_keepalive")
@@ -4326,7 +4348,7 @@ def _handle_webhook():
                             agent_persona, knowledge_base=gk_knowledge_base
                         )
                         logger.info(f"[GATEKEEPER] {call_control_id} | Response: '{response_text[:100]}'")
-                        base_url = _detected_base_url or os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+                        base_url = _get_app_base_url()
                         if nav_voice_id and response_text:
                             gk_navigator.speak_response(call_control_id, response_text, nav_voice_id, base_url)
                         update_call_state(call_control_id,
