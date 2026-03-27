@@ -3721,15 +3721,6 @@
                     .catch(function(e) { if (e.message === "auth") return; });
             }
             function vmtPopulateWizardDropdown() {
-                var dd = document.getElementById("wizVmTemplateDropdown");
-                if (!dd) return;
-                var val = dd.value;
-                dd.innerHTML = '<option value="">-- None (manual upload) --</option>';
-                vmtTemplates.forEach(function(t) {
-                    var typeLabel = t.type === 'audio_url' ? '[Audio]' : '[Script]';
-                    dd.innerHTML += '<option value="' + t.id + '">' + typeLabel + ' ' + t.name + '</option>';
-                });
-                dd.value = val;
             }
             function wizSelectVmTemplate() {
             }

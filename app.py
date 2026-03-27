@@ -2138,8 +2138,7 @@ def test_call():
     transfer_num = transfer_number or camp.get("transfer_number") or ""
     if not transfer_num:
         return jsonify({"error": "Transfer number is required for test calls"}), 400
-    audio = camp.get("audio_url") or vm_url
-    set_campaign(audio, transfer_num, [number], dial_mode="sequential", batch_size=1, user_id=current_user.id, is_test=True)
+    set_campaign(vm_url, transfer_num, [number], dial_mode="sequential", batch_size=1, user_id=current_user.id, is_test=True)
 
     from_number = request.form.get("from_number", "").strip() or None
 
