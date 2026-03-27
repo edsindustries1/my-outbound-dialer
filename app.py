@@ -1843,7 +1843,6 @@ def start():
     _detect_and_set_base_url()
     transfer_number = request.form.get("transfer_number", "").strip()
     pasted_numbers = request.form.get("numbers", "").strip()
-    audio_url_input = request.form.get("audio_url", "").strip()
 
     # ---- Parse phone numbers ----
     numbers = []
@@ -1954,31 +1953,8 @@ def start():
     numbers = valid_numbers
 
     # ---- Handle audio ----
-    audio_url = None
-    audio_file = request.files.get("audio_file")
-
-    if audio_file and audio_file.filename:
-        filename = secure_filename(audio_file.filename)
-        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-        if ext not in ALLOWED_AUDIO:
-            return jsonify({"error": "Only MP3 and WAV files allowed"}), 400
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        audio_file.save(filepath)
-        audio_url = f"{_get_app_base_url()}/audio/{filename}"
-        logger.info(f"Audio uploaded: {filename}, URL: {audio_url}")
-    elif audio_url_input:
-        if not _is_local_audio_url(audio_url_input):
-            local_url, dl_err = _proxy_download_audio(audio_url_input, current_user.id)
-            if dl_err:
-                return jsonify({"error": f"Could not download audio: {dl_err}"}), 400
-            logger.info(f"Proxy-downloaded campaign audio: {audio_url_input[:80]} → {local_url}")
-            audio_url = local_url
-        else:
-            audio_url = audio_url_input
-        logger.info(f"Using audio URL: {audio_url}")
-    else:
-        audio_url = get_voicemail_url(user_id=current_user.id)
-        logger.info(f"Using stored voicemail URL: {audio_url}")
+    audio_url = get_voicemail_url(user_id=current_user.id)
+    logger.info(f"Using default voicemail URL: {audio_url}")
 
     if not transfer_number:
         return jsonify({"error": "Transfer number is required"}), 400

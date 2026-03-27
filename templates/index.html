@@ -615,28 +615,23 @@
                             <div class="wiz-step-content" id="wizContent3" style="display:none;">
                                 <h2 class="wiz-step-title" id="wizStep3Title">Configure Voicemail</h2>
 
-                                <!-- GENERAL: standard voicemail -->
+                                <!-- GENERAL: standard voicemail — uses default from Humana Voice -->
                                 <div id="wizStep3General">
-                                    <div class="wiz-vm-template-select" id="wizVmTemplateSelect">
-                                        <label>Use Saved Template</label>
-                                        <div class="gads-input-row">
-                                            <select id="wizVmTemplateDropdown" class="gads-select" onchange="wizSelectVmTemplate()">
-                                                <option value="">-- None (manual upload) --</option>
-                                            </select>
+                                    <div style="padding:16px;background:var(--gads-bg);border-radius:10px;border:1px solid var(--gads-border);">
+                                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#16a34a)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                            <span style="font-weight:600;font-size:14px;">Using your default voicemail</span>
                                         </div>
-                                        <div id="wizVmTemplatePreview" class="wiz-vm-template-preview" style="display:none;"></div>
+                                        <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 12px 0;">This campaign will use the default voicemail set in the <strong>Humana Voice</strong> tab. To change it, go to <a href="#" onclick="navigateTo('humana-voice');return false;" style="color:var(--gads-primary);text-decoration:underline;">Humana Voice</a> and update your default voicemail there.</p>
+                                        <div id="wizDefaultVmPreview" style="display:none;">
+                                            <label style="font-size:12px;color:var(--gads-text-secondary);margin-bottom:4px;display:block;">Audio Preview</label>
+                                            <audio id="wizDefaultVmPlayer" controls preload="metadata" style="width:100%;"></audio>
+                                            <div id="wizDefaultVmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
+                                        </div>
+                                        <div id="wizDefaultVmEmpty" style="display:none;">
+                                            <p style="font-size:13px;color:var(--gads-error);margin:0;">No default voicemail set. Please go to <a href="#" onclick="navigateTo('humana-voice');return false;" style="color:var(--gads-primary);text-decoration:underline;">Humana Voice</a> and upload one first.</p>
+                                        </div>
                                     </div>
-                                    <div class="wiz-vm-divider"><span>or upload manually</span></div>
-                                    <p class="wiz-vm-desc">Upload a file, paste a URL, or use your saved default.</p>
-                                    <div class="drop-zone" id="audioDropZone">
-                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                        <span>Drag &amp; drop audio here or <label for="audioFile" class="drop-zone-browse">browse</label></span>
-                                        <input type="file" name="audio_file" id="audioFile" accept=".mp3,.wav" style="display:none;">
-                                        <div class="drop-zone-filename" id="audioFileName"></div>
-                                    </div>
-                                    <label>Or provide a public audio URL</label>
-                                    <input type="text" name="audio_url" id="audioUrl" placeholder="https://example.com/voicemail.mp3">
-                                    <p class="wiz-vm-hint">Leave empty to use your saved default voicemail URL.</p>
                                 </div>
 
                                 <!-- PERSONALIZED: AI script + voice -->
@@ -1372,37 +1367,15 @@
 
                     <div class="gads-card" style="margin-top:20px;">
                         <div class="gads-card-header">
-                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Default Voicemail Audio</h3>
-                            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:var(--gads-success-bg,#dcfce7);color:var(--gads-success,#16a34a);font-weight:600;">Shared with all campaigns</span>
+                            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg> Default Voicemail</h3>
+                            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:var(--gads-success-bg,#dcfce7);color:var(--gads-success,#16a34a);font-weight:600;">From Humana Voice</span>
                         </div>
-                        <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 10px 0;">Upload once — this default is used for this test call and all campaigns. Override per-campaign in the wizard if needed.</p>
-
-                        <div class="drop-zone" id="testVmDropZone" style="margin-bottom:10px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            <span>Drag &amp; drop MP3 or WAV, or <label for="testVmUploadFile" class="drop-zone-browse" style="cursor:pointer;">browse</label></span>
-                            <input type="file" id="testVmUploadFile" accept=".mp3,.wav" style="display:none;">
-                            <div id="testVmUploadFileName" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
+                        <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 10px 0;">Test calls use your default voicemail from <a href="#" onclick="navigateTo('humana-voice');return false;" style="color:var(--gads-primary);text-decoration:underline;">Humana Voice</a>. Change it there to update all campaigns and test calls.</p>
+                        <div id="testDialerVmPreview" style="display:none;">
+                            <audio id="testDialerVmPlayer" controls preload="metadata" style="width:100%;margin-top:6px;"></audio>
+                            <div id="testDialerVmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
                         </div>
-                        <div id="testVmUploadProgress" style="display:none;margin-bottom:8px;font-size:13px;padding:8px 12px;background:var(--gads-bg);border-radius:8px;color:var(--gads-text-secondary);">
-                            <span class="spinner" style="display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span>Uploading...
-                        </div>
-
-                        <div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px 0;">
-                            <div style="height:1px;flex:1;background:var(--gads-border);"></div>
-                            <span style="font-size:11px;color:var(--gads-text-secondary);">or paste URL</span>
-                            <div style="height:1px;flex:1;background:var(--gads-border);"></div>
-                        </div>
-
-                        <div class="gads-input-row">
-                            <input type="text" id="testVmUrlInput" class="gads-input" placeholder="https://example.com/voicemail.mp3 or .wav">
-                            <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="testVmSaveBtn">Save URL</button>
-                        </div>
-                        <div class="vm-preview" id="testVmPreview" style="display:none;margin-top:10px;">
-                            <label>Audio Preview</label>
-                            <audio id="testVmAudioPlayer" controls preload="metadata" style="width:100%;margin-top:6px;"></audio>
-                            <div id="testVmDuration" style="margin-top:4px;font-size:12px;color:var(--gads-text-secondary);"></div>
-                        </div>
-                        <div id="testVmSaveResult" style="margin-top:8px;font-size:13px;"></div>
+                        <div id="testDialerVmEmpty" style="font-size:13px;color:var(--gads-text-secondary);font-style:italic;">Loading default voicemail...</div>
                     </div>
                 </div>
 
@@ -3112,6 +3085,7 @@
                         if (s3p) s3p.style.display = "none";
                         if (s3k) s3k.style.display = "none";
                         if (t3) t3.textContent = "Configure Voicemail";
+                        loadWizDefaultVm();
                     } else if (wizSelectedType === "personalized") {
                         if (s3g) s3g.style.display = "none";
                         if (s3p) s3p.style.display = "";
@@ -3169,9 +3143,6 @@
                         // sync gatekeeper settings to standard form fields before proceeding
                         var tfMain = document.getElementById("transferNumber");
                         if (tfMain) tfMain.value = tfGk.value.trim();
-                        var fbUrl = document.getElementById("gkFallbackUrl");
-                        var auMain = document.getElementById("audioUrl");
-                        if (fbUrl && auMain) auMain.value = fbUrl.value.trim();
                     } else {
                         var tf = document.getElementById("transferNumber");
                         if (!tf || !tf.value.trim()) {
@@ -3284,11 +3255,7 @@
                     var pvmVoiceSel = document.getElementById("wizPvmVoiceSelect");
                     if (pvmVoiceSel && pvmVoiceSel.selectedIndex > 0) vmText += " / " + pvmVoiceSel.options[pvmVoiceSel.selectedIndex].text;
                 } else {
-                    var audioFile = document.getElementById("audioFile");
-                    var audioUrl = document.getElementById("audioUrl");
-                    if (audioFile && audioFile.files && audioFile.files.length > 0) vmText += " - " + audioFile.files[0].name;
-                    else if (audioUrl && audioUrl.value.trim()) vmText += " - URL";
-                    else vmText += " - Saved default";
+                    vmText += " - Default voicemail";
                 }
                 document.getElementById("wizReviewVm").textContent = vmText;
                 var tf = wizSelectedType === "gatekeeper" ? document.getElementById("transferNumberGk") : document.getElementById("transferNumber");
@@ -3442,7 +3409,6 @@
                         vmUrlInput.value = savedUrl;
                         vmSaveResult.innerHTML = '<span style="color:var(--gads-success);">Voicemail URL saved</span>';
                         showVmPreview(savedUrl);
-                        if (testVmUrlInput) testVmUrlInput.value = savedUrl;
                         setTimeout(function() { vmSaveResult.textContent = ""; }, 3000);
                     }
                 })
@@ -3455,71 +3421,51 @@
             });
 
             // ---- Test Dialer Voicemail URL ----
-            var testVmUrlInput = document.getElementById("testVmUrlInput");
-            var testVmSaveBtn = document.getElementById("testVmSaveBtn");
-            var testVmPreview = document.getElementById("testVmPreview");
-            var testVmAudioPlayer = document.getElementById("testVmAudioPlayer");
-            var testVmDuration = document.getElementById("testVmDuration");
-            var testVmSaveResult = document.getElementById("testVmSaveResult");
-
             function loadTestVmSettings() {
                 apiFetch("/api/voicemail_settings")
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
+                        var previewDiv = document.getElementById("testDialerVmPreview");
+                        var emptyDiv = document.getElementById("testDialerVmEmpty");
+                        var player = document.getElementById("testDialerVmPlayer");
+                        var durEl = document.getElementById("testDialerVmDuration");
                         if (data.voicemail_url) {
-                            testVmUrlInput.value = data.voicemail_url;
-                            showTestVmPreview(data.voicemail_url);
+                            player.src = data.voicemail_url;
+                            previewDiv.style.display = "";
+                            if (emptyDiv) emptyDiv.style.display = "none";
+                            player.addEventListener("loadedmetadata", function() {
+                                durEl.textContent = "Duration: " + Math.round(player.duration) + " seconds";
+                            });
+                        } else {
+                            previewDiv.style.display = "none";
+                            if (emptyDiv) emptyDiv.textContent = "No default voicemail set. Go to Humana Voice to upload one.";
                         }
                     })
                     .catch(function() {});
             }
 
-            function showTestVmPreview(url) {
-                if (!url) { testVmPreview.style.display = "none"; return; }
-                testVmAudioPlayer.src = url;
-                testVmPreview.style.display = "";
-                testVmAudioPlayer.addEventListener("loadedmetadata", function() {
-                    var dur = Math.round(testVmAudioPlayer.duration);
-                    testVmDuration.textContent = "Duration: " + dur + " seconds";
-                });
-                testVmAudioPlayer.addEventListener("error", function() {
-                    testVmDuration.textContent = "Could not load audio preview";
-                });
+            function loadWizDefaultVm() {
+                apiFetch("/api/voicemail_settings")
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        var previewDiv = document.getElementById("wizDefaultVmPreview");
+                        var emptyDiv = document.getElementById("wizDefaultVmEmpty");
+                        var player = document.getElementById("wizDefaultVmPlayer");
+                        var durEl = document.getElementById("wizDefaultVmDuration");
+                        if (data.voicemail_url) {
+                            player.src = data.voicemail_url;
+                            previewDiv.style.display = "";
+                            if (emptyDiv) emptyDiv.style.display = "none";
+                            player.addEventListener("loadedmetadata", function() {
+                                durEl.textContent = "Duration: " + Math.round(player.duration) + " seconds";
+                            });
+                        } else {
+                            if (previewDiv) previewDiv.style.display = "none";
+                            if (emptyDiv) emptyDiv.style.display = "";
+                        }
+                    })
+                    .catch(function() {});
             }
-
-            testVmSaveBtn.addEventListener("click", function() {
-                var url = testVmUrlInput.value.trim();
-                if (!url) { alert("Enter a voicemail URL"); return; }
-                testVmSaveBtn.disabled = true;
-                var isExternal = url.indexOf("/audio/") === -1;
-                testVmSaveBtn.textContent = isExternal ? "Downloading audio..." : "Saving...";
-                apiFetch("/api/voicemail_settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ voicemail_url: url })
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    testVmSaveBtn.disabled = false;
-                    testVmSaveBtn.textContent = "Save";
-                    if (data.error) {
-                        testVmSaveResult.innerHTML = '<span style="color:var(--gads-error);">' + data.error + '</span>';
-                    } else {
-                        var savedUrl = data.voicemail_url || url;
-                        testVmUrlInput.value = savedUrl;
-                        testVmSaveResult.innerHTML = '<span style="color:var(--gads-success);">Voicemail URL saved</span>';
-                        showTestVmPreview(savedUrl);
-                        if (vmUrlInput) vmUrlInput.value = savedUrl;
-                        setTimeout(function() { testVmSaveResult.textContent = ""; }, 3000);
-                    }
-                })
-                .catch(function(e) {
-                    if (e.message === "auth") return;
-                    testVmSaveBtn.disabled = false;
-                    testVmSaveBtn.textContent = "Save";
-                    testVmSaveResult.innerHTML = '<span style="color:var(--gads-error);">Failed to save</span>';
-                });
-            });
 
             // ---- Voicemail File Upload (Humana Voice & Test Dialer) ----
             function setupVmUpload(opts) {
@@ -3555,12 +3501,8 @@
                             var url = data.url;
                             // Sync both URL fields
                             var vi = document.getElementById("vmUrlInput");
-                            var ti = document.getElementById("testVmUrlInput");
                             if (vi) vi.value = url;
-                            if (ti) ti.value = url;
-                            // Show previews
                             showVmPreview(url);
-                            showTestVmPreview(url);
                             if (resultEl) resultEl.innerHTML = '<span style="color:var(--gads-success);">Uploaded &amp; saved as default</span>';
                             setTimeout(function() { if (resultEl) resultEl.textContent = ""; }, 4000);
                             if (opts.onSuccess) opts.onSuccess(url);
@@ -3598,13 +3540,6 @@
                 resultId: "vmSaveResult"
             });
 
-            setupVmUpload({
-                dropZoneId: "testVmDropZone",
-                fileInputId: "testVmUploadFile",
-                fileNameId: "testVmUploadFileName",
-                progressId: "testVmUploadProgress",
-                resultId: "testVmSaveResult"
-            });
 
             // ---- Voicemail Templates ----
             var vmtTemplates = [];
@@ -3797,21 +3732,6 @@
                 dd.value = val;
             }
             function wizSelectVmTemplate() {
-                var dd = document.getElementById("wizVmTemplateDropdown");
-                var preview = document.getElementById("wizVmTemplatePreview");
-                var id = dd.value;
-                if (!id) { preview.style.display = "none"; document.getElementById("audioUrl").value = ""; return; }
-                var t = vmtTemplates.find(function(x) { return x.id === id; });
-                if (!t) { preview.style.display = "none"; return; }
-                if (t.type === "audio_url") {
-                    preview.innerHTML = '<div class="vmt-preview-label">Audio URL template selected:</div><audio controls preload="metadata" style="width:100%;height:32px;"><source src="' + t.content + '"></audio>';
-                    document.getElementById("audioUrl").value = t.content;
-                } else {
-                    var script = t.content.length > 200 ? t.content.substring(0, 200) + '...' : t.content;
-                    preview.innerHTML = '<div class="vmt-preview-label">Script template selected:</div><div class="vmt-script-preview">' + script.replace(/\{(\w+)\}/g, '<span class="pvm-placeholder-tag" style="cursor:default;font-size:11px;padding:1px 4px;">$&</span>') + '</div><p class="vmt-hint" style="margin-top:6px;">This script will be used with personalized voicemail generation.</p>';
-                }
-                preview.style.display = "";
-                apiFetch("/api/vm-templates/" + id + "/use", { method: "POST" }).catch(function() {});
             }
 
             // ---- Saved Transfer Number ----
@@ -4069,9 +3989,6 @@
                     var gkTf = document.getElementById("transferNumberGk");
                     var mainTf = document.getElementById("transferNumber");
                     if (gkTf && mainTf && gkTf.value) mainTf.value = gkTf.value;
-                    var gkFb = document.getElementById("gkFallbackUrl");
-                    var mainAu = document.getElementById("audioUrl");
-                    if (gkFb && mainAu && gkFb.value) mainAu.value = gkFb.value;
                     // sync dial mode/delay for gatekeeper
                     var modeInput = document.getElementById("dialModeInput");
                     var seqGk = document.getElementById("modeSeqGk");
