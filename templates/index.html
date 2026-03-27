@@ -3424,7 +3424,8 @@
                 if (!url) { alert("Enter a voicemail URL"); return; }
                 var script = vmScriptInput.value.trim();
                 saveVmBtn.disabled = true;
-                saveVmBtn.textContent = "Saving...";
+                var isExternal = url.indexOf("/audio/") === -1;
+                saveVmBtn.textContent = isExternal ? "Downloading audio..." : "Saving...";
                 apiFetch("/api/voicemail_settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -3437,8 +3438,11 @@
                     if (data.error) {
                         vmSaveResult.innerHTML = '<span style="color:var(--gads-error);">' + data.error + '</span>';
                     } else {
+                        var savedUrl = data.voicemail_url || url;
+                        vmUrlInput.value = savedUrl;
                         vmSaveResult.innerHTML = '<span style="color:var(--gads-success);">Voicemail URL saved</span>';
-                        showVmPreview(url);
+                        showVmPreview(savedUrl);
+                        if (testVmUrlInput) testVmUrlInput.value = savedUrl;
                         setTimeout(function() { vmSaveResult.textContent = ""; }, 3000);
                     }
                 })
@@ -3487,7 +3491,8 @@
                 var url = testVmUrlInput.value.trim();
                 if (!url) { alert("Enter a voicemail URL"); return; }
                 testVmSaveBtn.disabled = true;
-                testVmSaveBtn.textContent = "Saving...";
+                var isExternal = url.indexOf("/audio/") === -1;
+                testVmSaveBtn.textContent = isExternal ? "Downloading audio..." : "Saving...";
                 apiFetch("/api/voicemail_settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -3500,9 +3505,11 @@
                     if (data.error) {
                         testVmSaveResult.innerHTML = '<span style="color:var(--gads-error);">' + data.error + '</span>';
                     } else {
+                        var savedUrl = data.voicemail_url || url;
+                        testVmUrlInput.value = savedUrl;
                         testVmSaveResult.innerHTML = '<span style="color:var(--gads-success);">Voicemail URL saved</span>';
-                        showTestVmPreview(url);
-                        if (vmUrlInput) vmUrlInput.value = url;
+                        showTestVmPreview(savedUrl);
+                        if (vmUrlInput) vmUrlInput.value = savedUrl;
                         setTimeout(function() { testVmSaveResult.textContent = ""; }, 3000);
                     }
                 })

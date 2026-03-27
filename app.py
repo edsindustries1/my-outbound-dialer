@@ -276,6 +276,122 @@ def add_no_cache_headers(response):
 UPLOAD_FOLDER = "uploads"
 ALLOWED_AUDIO = {"mp3", "wav"}
 ALLOWED_CSV = {"csv", "txt"}
+MAX_AUDIO_DOWNLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+
+
+def _is_local_audio_url(url):
+    """Check if a URL already points to our own /audio/ endpoint."""
+    base = _get_app_base_url()
+    if base and url.startswith(f"{base}/audio/"):
+        return True
+    if url.startswith("/audio/"):
+        return True
+    return False
+
+
+def _is_safe_url_target(url):
+    """Block SSRF: reject private/loopback/link-local IPs and non-http(s) schemes."""
+    import urllib.parse as _up
+    import ipaddress
+    import socket
+    parsed = _up.urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False, "Only http/https URLs are allowed"
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "Invalid URL"
+    try:
+        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        for family, _, _, _, sockaddr in resolved:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+                return False, "URL points to a restricted network address"
+    except socket.gaierror:
+        return False, "Could not resolve hostname"
+    return True, None
+
+
+def _proxy_download_audio(url, user_id):
+    """Download an external audio URL, save locally, return (local_url, error).
+    Returns (local_url, None) on success or (None, error_message) on failure."""
+    import uuid as _uuid
+    import urllib.parse
+    safe, safe_err = _is_safe_url_target(url)
+    if not safe:
+        return None, safe_err
+    try:
+        resp = requests.get(url, timeout=15, stream=True, allow_redirects=False, headers={
+            "User-Agent": "OpenHumana/1.0 AudioFetch"
+        })
+        if resp.is_redirect or resp.status_code in (301, 302, 303, 307, 308):
+            redirect_url = resp.headers.get("Location", "")
+            if redirect_url:
+                r_safe, r_err = _is_safe_url_target(redirect_url)
+                if not r_safe:
+                    return None, f"Redirect blocked: {r_err}"
+                resp = requests.get(redirect_url, timeout=15, stream=True, allow_redirects=True, headers={
+                    "User-Agent": "OpenHumana/1.0 AudioFetch"
+                })
+        resp.raise_for_status()
+    except requests.exceptions.Timeout:
+        return None, "Download timed out — the remote server is too slow"
+    except requests.exceptions.ConnectionError:
+        return None, "Could not connect to the remote server"
+    except requests.exceptions.HTTPError as he:
+        return None, f"Remote server returned error: {he.response.status_code}"
+    except Exception as e:
+        return None, f"Failed to download: {str(e)[:100]}"
+
+    try:
+        content_length = int(resp.headers.get("Content-Length", 0) or 0)
+    except (ValueError, TypeError):
+        content_length = 0
+    if content_length > MAX_AUDIO_DOWNLOAD_SIZE:
+        return None, f"File too large ({content_length // (1024*1024)}MB). Max is 10MB."
+
+    parsed = urllib.parse.urlparse(url)
+    path_part = parsed.path.rstrip("/")
+    orig_name = os.path.basename(path_part) if path_part else "voicemail"
+    orig_name = secure_filename(orig_name) or "voicemail"
+    ext = orig_name.rsplit(".", 1)[-1].lower() if "." in orig_name else ""
+    if ext not in ALLOWED_AUDIO:
+        content_type = (resp.headers.get("Content-Type", "") or "").lower()
+        if "mpeg" in content_type or "mp3" in content_type:
+            ext = "mp3"
+        elif "wav" in content_type or "wave" in content_type:
+            ext = "wav"
+        elif "audio" in content_type:
+            ext = "mp3"
+        else:
+            return None, "URL does not point to an MP3 or WAV file"
+        if "." not in orig_name:
+            orig_name = f"{orig_name}.{ext}"
+
+    unique_filename = f"vm_{user_id}_{_uuid.uuid4().hex[:8]}_{orig_name}"
+    filepath = os.path.join(UPLOAD_FOLDER, unique_filename)
+
+    downloaded = 0
+    try:
+        with open(filepath, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=65536):
+                downloaded += len(chunk)
+                if downloaded > MAX_AUDIO_DOWNLOAD_SIZE:
+                    f.close()
+                    os.remove(filepath)
+                    return None, "File too large (>10MB)"
+                f.write(chunk)
+    except Exception as e:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return None, f"Download failed: {str(e)[:100]}"
+
+    if downloaded < 1000:
+        os.remove(filepath)
+        return None, "Downloaded file is too small — may not be valid audio"
+
+    local_url = f"{_get_app_base_url()}/audio/{unique_filename}"
+    logger.info(f"[PROXY DOWNLOAD] User {user_id}: {url[:80]} → {unique_filename} ({downloaded} bytes)")
+    return local_url, None
 
 # Use 'live' as a default so the build daemon doesn't crash
 APP_PASSWORD = os.getenv("APP_PASSWORD", "")
@@ -1835,8 +1951,15 @@ def start():
         audio_url = f"{_get_app_base_url()}/audio/{filename}"
         logger.info(f"Audio uploaded: {filename}, URL: {audio_url}")
     elif audio_url_input:
-        audio_url = audio_url_input
-        logger.info(f"Using provided audio URL: {audio_url}")
+        if not _is_local_audio_url(audio_url_input):
+            local_url, dl_err = _proxy_download_audio(audio_url_input, current_user.id)
+            if dl_err:
+                return jsonify({"error": f"Could not download audio: {dl_err}"}), 400
+            logger.info(f"Proxy-downloaded campaign audio: {audio_url_input[:80]} → {local_url}")
+            audio_url = local_url
+        else:
+            audio_url = audio_url_input
+        logger.info(f"Using audio URL: {audio_url}")
     else:
         audio_url = get_voicemail_url(user_id=current_user.id)
         logger.info(f"Using stored voicemail URL: {audio_url}")
@@ -2150,6 +2273,12 @@ def save_vm_settings():
         return jsonify({"error": "Voicemail URL is required"}), 400
     if not url.startswith(("http://", "https://")):
         return jsonify({"error": "URL must start with http:// or https://"}), 400
+    if not _is_local_audio_url(url):
+        local_url, err = _proxy_download_audio(url, current_user.id)
+        if err:
+            return jsonify({"error": f"Could not download audio: {err}"}), 400
+        logger.info(f"Proxy-downloaded voicemail: {url[:80]} → {local_url}")
+        url = local_url
     save_voicemail_url(url, user_id=current_user.id, script=script)
     logger.info(f"Voicemail URL updated: {url}, script: {script[:50] if script else '(none)'}...")
     return jsonify({"message": "Voicemail URL saved", "voicemail_url": url, "voicemail_script": script})
