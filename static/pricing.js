@@ -2,7 +2,7 @@
   'use strict';
 
   /* ══ PRICING CONSTANTS ══ */
-  var BASE_COST_PER_DIAL      = 0.020;
+  var BASE_COST_PER_DIAL      = 0.10;
   var SDR_COST_PER_UNIT       = 5000;
   var SDR_CALLS_PER_DAY       = 550;
   var SDR_WORKING_DAYS        = 22;

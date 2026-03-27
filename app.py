@@ -1363,6 +1363,25 @@ ACTION: Reach out within 5 minutes for highest conversion.
         return jsonify({"success": False, "error": "Server error"}), 500
 
 
+@app.route("/api/newsletter", methods=["POST"])
+def api_newsletter():
+    """Store newsletter subscriber email."""
+    from models import NewsletterSubscriber
+    email = request.form.get("email", "").strip()
+    if not email or "@" not in email:
+        return jsonify({"ok": False}), 400
+    try:
+        existing = NewsletterSubscriber.query.filter_by(email=email).first()
+        if not existing:
+            sub = NewsletterSubscriber(email=email)
+            db.session.add(sub)
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Newsletter subscribe error: {e}")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/demo", methods=["POST"])
 def api_demo():
     try:
