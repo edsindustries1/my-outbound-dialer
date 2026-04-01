@@ -220,7 +220,7 @@
             '<div class="lead-left-content">' +
               '<div class="lead-logo-wrap"><img src="/static/images/logo.png" alt="Open Humana" class="lead-logo-img"></div>' +
               '<h2>Hire Your First Digital Employee</h2>' +
-              '<p>Get Alex\'s resume and see why 2,000+ sales teams trust Open Humana to scale their outbound.</p>' +
+              '<p>Alex will send you his resume in 10 seconds. It\'s so good and detailed it might land in the <strong>Promotions</strong> tab of your inbox — be sure to check there too.</p>' +
               '<div class="lead-features">' +
                 '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 3,000+ dials per day</div>' +
                 '<div class="lead-feat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> AI personalized voicemails</div>' +
