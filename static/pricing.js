@@ -161,7 +161,7 @@
     var isBusiness   = selectedPlan === 'business';
     var planSlug     = isBusiness ? 'business' : 'autodialer';
     var platformFee  = isBusiness ? 169 : 69;
-    var planLabel    = isBusiness ? 'Digital Sales Floor Plan' : 'Auto Dialer Plan';
+    var planLabel    = isBusiness ? 'Open Humana Sales Floor' : 'Open Humana Starter';
     var dialRate     = isBusiness ? DIAL_RATE.business     : DIAL_RATE.autodialer;
     var transferRate = isBusiness ? TRANSFER_RATE.business : TRANSFER_RATE.autodialer;
 
