@@ -2078,12 +2078,14 @@ def start():
         pvm_model_id = request.form.get("pvm_model_id", "eleven_turbo_v2_5").strip()
         pvm_script = ""
 
+        _pvm_template_voice_settings = None
         if pvm_template_id:
             from storage import get_vm_templates as _gvt
             templates = _gvt(user_id=current_user.id)
             for t in templates:
                 if t.get("id") == pvm_template_id and t.get("type") == "script":
                     pvm_script = t.get("content", "")
+                    _pvm_template_voice_settings = t.get("voice_settings") or None
                     mark_vm_template_used(pvm_template_id, user_id=current_user.id)
                     break
 
@@ -2130,13 +2132,22 @@ def start():
                 contacts.append({"phone": num, "first_name": "", "last_name": ""})
 
         if contacts:
-            voice_settings = {
-                "stability": pvm_stability / 100.0,
-                "similarity_boost": pvm_similarity / 100.0,
-                "style": pvm_style / 100.0,
-                "speed": pvm_speed / 100.0,
-                "use_speaker_boost": True,
-            }
+            # Use template's saved voice_settings if available (VoiceStyle Engine)
+            if _pvm_template_voice_settings:
+                voice_settings = _pvm_template_voice_settings
+                # Override fish params from template's voice_settings
+                if "fish_speed" in voice_settings:
+                    fish_speed = float(voice_settings["fish_speed"])
+                if "fish_emotion" in voice_settings:
+                    fish_emotion = voice_settings["fish_emotion"]
+            else:
+                voice_settings = {
+                    "stability": pvm_stability / 100.0,
+                    "similarity_boost": pvm_similarity / 100.0,
+                    "style": pvm_style / 100.0,
+                    "speed": pvm_speed / 100.0,
+                    "use_speaker_boost": True,
+                }
             ok, msg = pvm_start_generation(
                 contacts, pvm_script, pvm_voice_id, base_url,
                 voice_settings=voice_settings, humanize=pvm_humanize,
@@ -2723,6 +2734,7 @@ def api_vm_template_create():
     name = data.get("name", "").strip()
     ttype = data.get("type", "")
     content = data.get("content", "").strip()
+    voice_settings = data.get("voice_settings") or None
     if not name:
         return jsonify({"error": "Template name is required"}), 400
     if ttype not in ("audio_url", "script"):
@@ -2733,7 +2745,10 @@ def api_vm_template_create():
     existing = _get_vmt(user_id=current_user.id)
     if len(existing) >= 5:
         return jsonify({"error": "Maximum 5 templates allowed. Delete one to create a new one."}), 400
-    template = save_vm_template({"name": name, "type": ttype, "content": content}, user_id=current_user.id)
+    template = save_vm_template(
+        {"name": name, "type": ttype, "content": content, "voice_settings": voice_settings},
+        user_id=current_user.id
+    )
     logger.info(f"VM template created: {name} ({template['id']})")
     return jsonify({"template": template})
 
@@ -3554,6 +3569,14 @@ def pvm_preview_audio_endpoint():
 
     model_id = data.get("model_id", "eleven_multilingual_v2")
     provider, fish_speed, fish_emotion = _detect_pvm_provider(voice_id, current_user.id, model_id)
+
+    # Voice_settings from VoiceStyle Engine override DB-detected fish params
+    if voice_settings:
+        if "fish_speed" in voice_settings:
+            fish_speed = float(voice_settings["fish_speed"])
+        if "fish_emotion" in voice_settings:
+            fish_emotion = voice_settings["fish_emotion"]
+
     filename, result = pvm_preview_audio(
         contact, template, voice_id,
         voice_settings=voice_settings, humanize=humanize,
@@ -3565,6 +3588,35 @@ def pvm_preview_audio_endpoint():
         return jsonify({"audio_url": audio_url, "script": result, "provider": provider})
     else:
         return jsonify({"error": f"Failed to generate preview: {result}"}), 500
+
+
+@app.route("/api/pvm/processed-script", methods=["POST"])
+@login_required
+def pvm_processed_script_endpoint():
+    """Return an annotated preview of the script showing fillers, pauses, and emphasis markers."""
+    data = request.get_json() or {}
+    template = data.get("template", "")
+    contact = data.get("contact", {})
+    voice_settings = data.get("voice_settings") or {}
+    voice_id = data.get("voice_id", "")
+    model_id = data.get("model_id", "eleven_multilingual_v2")
+    humanize = data.get("humanize", True)
+
+    if not template:
+        return jsonify({"error": "No template provided"}), 400
+
+    provider = "fish_audio"
+    if voice_id:
+        provider, _, _ = _detect_pvm_provider(voice_id, current_user.id, model_id)
+
+    from personalized_vm import render_template as pvm_render, build_processed_script as pvm_build_ps
+    try:
+        rendered = pvm_render(template, contact or {}, humanize=humanize)
+        annotated = pvm_build_ps(rendered, voice_settings, provider)
+        return jsonify({"rendered": rendered, "processed": annotated})
+    except Exception as e:
+        logger.error(f"processed-script error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/pvm/generate", methods=["POST"])

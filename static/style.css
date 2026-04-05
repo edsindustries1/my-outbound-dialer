@@ -2375,6 +2375,48 @@ label {
     justify-content: flex-end;
     padding-top: 8px;
 }
+.vmt-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+@media (max-width: 600px) {
+    .vmt-preset-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.vmt-preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border: 2px solid var(--gads-border-light);
+    border-radius: 10px;
+    background: var(--gads-card-bg);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+}
+.vmt-preset-card:hover {
+    border-color: var(--gads-primary);
+}
+.vmt-preset-card.active {
+    border-color: var(--gads-primary);
+    background: var(--gads-primary-light);
+}
+.vmt-preset-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+.vmt-preset-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gads-text-primary);
+}
+.vmt-preset-desc {
+    font-size: 10px;
+    color: var(--gads-text-secondary);
+    line-height: 1.2;
+}
 .wiz-vm-template-select {
     margin-bottom: 12px;
 }

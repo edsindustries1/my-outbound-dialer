@@ -1252,6 +1252,7 @@ def save_vm_template(data, user_id=None):
         "name": data.get("name", "Untitled"),
         "type": data.get("type", "audio_url"),
         "content": data.get("content", ""),
+        "voice_settings": data.get("voice_settings") or None,
         "created_at": datetime.utcnow().isoformat(),
         "last_used": None,
     }
@@ -1276,6 +1277,8 @@ def update_vm_template(template_id, data, user_id=None):
                     t["type"] = data["type"]
                 if "content" in data:
                     t["content"] = data["content"]
+                if "voice_settings" in data:
+                    t["voice_settings"] = data["voice_settings"] or None
                 _save_vm_templates(templates, user_id)
                 return t
     return None

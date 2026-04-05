@@ -2296,6 +2296,99 @@
                                         </div>
                                         <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
                                     </div>
+
+                                    <!-- Voice Personality Section -->
+                                    <div style="border-top:1px solid var(--gads-border);margin:16px 0 12px 0;"></div>
+                                    <div class="vmt-form-group" id="vmtVoicePersonalitySection">
+                                        <label style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                            Voice Personality
+                                        </label>
+                                        <p class="vmt-hint" style="margin-bottom:10px;">Choose how Alex sounds when leaving this voicemail. Each preset adjusts speech speed, expressiveness, and natural rhythm.</p>
+                                        <div class="vmt-preset-grid" id="vmtPresetGrid">
+                                            <button type="button" class="vmt-preset-card active" data-preset="professional" onclick="vmtSetPreset('professional')">
+                                                <span class="vmt-preset-icon">💼</span>
+                                                <span class="vmt-preset-name">Professional</span>
+                                                <span class="vmt-preset-desc">Clear & measured</span>
+                                            </button>
+                                            <button type="button" class="vmt-preset-card" data-preset="friendly" onclick="vmtSetPreset('friendly')">
+                                                <span class="vmt-preset-icon">😊</span>
+                                                <span class="vmt-preset-name">Friendly</span>
+                                                <span class="vmt-preset-desc">Warm & approachable</span>
+                                            </button>
+                                            <button type="button" class="vmt-preset-card" data-preset="urgent" onclick="vmtSetPreset('urgent')">
+                                                <span class="vmt-preset-icon">⚡</span>
+                                                <span class="vmt-preset-name">Urgent</span>
+                                                <span class="vmt-preset-desc">Direct & emphatic</span>
+                                            </button>
+                                            <button type="button" class="vmt-preset-card" data-preset="empathetic" onclick="vmtSetPreset('empathetic')">
+                                                <span class="vmt-preset-icon">🤝</span>
+                                                <span class="vmt-preset-name">Empathetic</span>
+                                                <span class="vmt-preset-desc">Slow & thoughtful</span>
+                                            </button>
+                                            <button type="button" class="vmt-preset-card" data-preset="conversational" onclick="vmtSetPreset('conversational')">
+                                                <span class="vmt-preset-icon">💬</span>
+                                                <span class="vmt-preset-name">Conversational</span>
+                                                <span class="vmt-preset-desc">Natural & casual</span>
+                                            </button>
+                                        </div>
+                                        <div style="margin-top:10px;">
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtToggleAdvanced()" id="vmtAdvancedToggleBtn" style="font-size:11px;">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                                                Advanced Settings
+                                            </button>
+                                        </div>
+                                        <div id="vmtAdvancedPanel" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--gads-border);border-radius:8px;background:var(--gads-bg-secondary,#f8f9fa);">
+                                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Filler Words</label>
+                                                    <select id="vmtFillers" class="gads-select" style="font-size:12px;" onchange="vmtMarkCustom()">
+                                                        <option value="none">None (clean)</option>
+                                                        <option value="light">Light (So, Well…)</option>
+                                                        <option value="natural">Natural (um, you know…)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Pause Style</label>
+                                                    <select id="vmtPauseStyle" class="gads-select" style="font-size:12px;" onchange="vmtMarkCustom()">
+                                                        <option value="minimal">Minimal</option>
+                                                        <option value="light" selected>Light</option>
+                                                        <option value="natural">Natural</option>
+                                                        <option value="full">Full (dramatic)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Emphasis Mode</label>
+                                                    <select id="vmtEmphasisMode" class="gads-select" style="font-size:12px;" onchange="vmtMarkCustom()">
+                                                        <option value="off">Off</option>
+                                                        <option value="auto" selected>Auto (phone + CTA)</option>
+                                                        <option value="moderate">Moderate</option>
+                                                        <option value="strong">Strong</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Speech Speed: <span id="vmtSpeedVal">82%</span></label>
+                                                    <input type="range" id="vmtSpeedSlider" min="70" max="120" value="82" step="1" style="width:100%;" oninput="document.getElementById('vmtSpeedVal').textContent=this.value+'%';vmtMarkCustom();">
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Expressiveness: <span id="vmtStyleVal">12%</span></label>
+                                                    <input type="range" id="vmtStyleSlider" min="0" max="60" value="12" step="1" style="width:100%;" oninput="document.getElementById('vmtStyleVal').textContent=this.value+'%';vmtMarkCustom();">
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Consistency: <span id="vmtStabilityVal">40%</span></label>
+                                                    <input type="range" id="vmtStabilitySlider" min="0" max="100" value="40" step="1" style="width:100%;" oninput="document.getElementById('vmtStabilityVal').textContent=this.value+'%';vmtMarkCustom();">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top:10px;">
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtShowProcessedScript()" id="vmtProcessedScriptBtn" style="font-size:11px;">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                Preview Processed Script
+                                            </button>
+                                        </div>
+                                        <div id="vmtProcessedScriptBox" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--gads-border);border-radius:6px;background:#fff;font-size:12px;color:var(--gads-text);line-height:1.6;white-space:pre-wrap;max-height:160px;overflow-y:auto;"></div>
+                                    </div>
+
                                     <div style="border-top:1px solid var(--gads-border);margin:12px 0;"></div>
                                     <div class="vmt-form-group">
                                         <label style="display:flex;align-items:center;gap:6px;">
@@ -3638,6 +3731,8 @@
                 document.getElementById("vmtAudioUrl").value = "";
                 document.getElementById("vmtScriptText").value = "";
                 vmtResetPreview();
+                vmtSetPreset("professional");
+                vmtHideAdvanced();
                 vmtSwitchType("audio_url");
                 document.getElementById("vmtFormCard").style.display = "";
                 document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });
@@ -3767,6 +3862,120 @@
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
             }
 
+            // ---- VoiceStyle Engine — preset data (mirrors Python STYLE_PRESETS) ----
+            var VMT_STYLE_PRESETS = {
+                professional: { preset: "professional", stability: 0.40, similarity_boost: 0.82, style: 0.12, speed: 0.82, use_speaker_boost: true, fish_speed: 0.92, fish_emotion: "neutral", fillers: "none", pause_style: "light", emphasis_mode: "auto" },
+                friendly:     { preset: "friendly",     stability: 0.22, similarity_boost: 0.84, style: 0.28, speed: 0.92, use_speaker_boost: true, fish_speed: 1.0,  fish_emotion: "happy",   fillers: "light",   pause_style: "light",   emphasis_mode: "auto" },
+                urgent:       { preset: "urgent",       stability: 0.35, similarity_boost: 0.80, style: 0.18, speed: 1.05, use_speaker_boost: true, fish_speed: 1.08, fish_emotion: "neutral", fillers: "none",    pause_style: "minimal", emphasis_mode: "strong" },
+                empathetic:   { preset: "empathetic",   stability: 0.18, similarity_boost: 0.85, style: 0.35, speed: 0.75, use_speaker_boost: true, fish_speed: 0.88, fish_emotion: "neutral", fillers: "light",   pause_style: "full",    emphasis_mode: "moderate" },
+                conversational:{ preset: "conversational", stability: 0.20, similarity_boost: 0.82, style: 0.25, speed: 0.88, use_speaker_boost: true, fish_speed: 0.97, fish_emotion: "neutral", fillers: "natural", pause_style: "natural", emphasis_mode: "auto" }
+            };
+            var _vmtCurrentPreset = "professional";
+
+            function vmtSetPreset(name) {
+                _vmtCurrentPreset = name;
+                document.querySelectorAll(".vmt-preset-card").forEach(function(btn) {
+                    btn.classList.toggle("active", btn.dataset.preset === name);
+                });
+                var p = VMT_STYLE_PRESETS[name];
+                if (!p) return;
+                vmtApplySettingsToUI(p);
+                vmtHideProcessedScript();
+            }
+
+            function vmtApplySettingsToUI(vs) {
+                if (!vs) return;
+                var speedPct = Math.round((vs.speed || 0.82) * 100);
+                var stylePct = Math.round((vs.style || 0.12) * 100);
+                var stabilityPct = Math.round((vs.stability || 0.40) * 100);
+                var speedSlider = document.getElementById("vmtSpeedSlider");
+                var styleSlider = document.getElementById("vmtStyleSlider");
+                var stabilitySlider = document.getElementById("vmtStabilitySlider");
+                if (speedSlider) { speedSlider.value = speedPct; document.getElementById("vmtSpeedVal").textContent = speedPct + "%"; }
+                if (styleSlider) { styleSlider.value = stylePct; document.getElementById("vmtStyleVal").textContent = stylePct + "%"; }
+                if (stabilitySlider) { stabilitySlider.value = stabilityPct; document.getElementById("vmtStabilityVal").textContent = stabilityPct + "%"; }
+                var fillSel = document.getElementById("vmtFillers");
+                var pauseSel = document.getElementById("vmtPauseStyle");
+                var emphSel = document.getElementById("vmtEmphasisMode");
+                if (fillSel) fillSel.value = vs.fillers || "none";
+                if (pauseSel) pauseSel.value = vs.pause_style || "light";
+                if (emphSel) emphSel.value = vs.emphasis_mode || "auto";
+            }
+
+            function vmtMarkCustom() {
+                _vmtCurrentPreset = null;
+                document.querySelectorAll(".vmt-preset-card").forEach(function(btn) { btn.classList.remove("active"); });
+                vmtHideProcessedScript();
+            }
+
+            function vmtGetVoiceSettings() {
+                var speedVal = parseInt(document.getElementById("vmtSpeedSlider").value || "82");
+                var styleVal = parseInt(document.getElementById("vmtStyleSlider").value || "12");
+                var stabilityVal = parseInt(document.getElementById("vmtStabilitySlider").value || "40");
+                var fillers = document.getElementById("vmtFillers").value || "none";
+                var pauseStyle = document.getElementById("vmtPauseStyle").value || "light";
+                var emphasisMode = document.getElementById("vmtEmphasisMode").value || "auto";
+                var preset = _vmtCurrentPreset || null;
+                var p = preset ? VMT_STYLE_PRESETS[preset] : null;
+                return {
+                    preset: preset,
+                    stability: stabilityVal / 100,
+                    similarity_boost: p ? p.similarity_boost : 0.82,
+                    style: styleVal / 100,
+                    speed: speedVal / 100,
+                    use_speaker_boost: true,
+                    fish_speed: p ? p.fish_speed : (speedVal / 100),
+                    fish_emotion: p ? p.fish_emotion : "neutral",
+                    fillers: fillers,
+                    pause_style: pauseStyle,
+                    emphasis_mode: emphasisMode,
+                };
+            }
+
+            function vmtToggleAdvanced() {
+                var panel = document.getElementById("vmtAdvancedPanel");
+                if (!panel) return;
+                var isVisible = panel.style.display !== "none";
+                panel.style.display = isVisible ? "none" : "";
+                var btn = document.getElementById("vmtAdvancedToggleBtn");
+                if (btn) btn.textContent = isVisible ? "Advanced Settings" : "Hide Advanced";
+            }
+            function vmtHideAdvanced() {
+                var panel = document.getElementById("vmtAdvancedPanel");
+                if (panel) panel.style.display = "none";
+                var btn = document.getElementById("vmtAdvancedToggleBtn");
+                if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> Advanced Settings';
+            }
+            function vmtHideProcessedScript() {
+                var box = document.getElementById("vmtProcessedScriptBox");
+                if (box) box.style.display = "none";
+            }
+
+            function vmtShowProcessedScript() {
+                var template = document.getElementById("vmtScriptText").value.trim();
+                if (!template) { showToast("Enter a script first", "error"); return; }
+                var vs = vmtGetVoiceSettings();
+                var voiceId = document.getElementById("vmtPreviewVoiceSelect").value;
+                var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
+                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: "123 Main St" };
+                _customVars.forEach(function(v) { contact[v] = "Sample Value"; });
+                var btn = document.getElementById("vmtProcessedScriptBtn");
+                if (btn) { btn.disabled = true; btn.textContent = "Loading..."; }
+                apiFetch("/api/pvm/processed-script", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ template: template, contact: contact, voice_settings: vs, voice_id: voiceId, model_id: modelId })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview Processed Script'; }
+                    if (data.error) { showToast(data.error, "error"); return; }
+                    var box = document.getElementById("vmtProcessedScriptBox");
+                    if (box) { box.textContent = data.processed || data.rendered; box.style.display = ""; }
+                }).catch(function(e) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview Processed Script'; }
+                    if (e.message !== "auth") showToast("Failed to load processed script", "error");
+                });
+            }
+
             function vmtPreviewAudio() {
                 var template = document.getElementById("vmtScriptText").value.trim();
                 var status = document.getElementById("vmtPreviewStatus");
@@ -3785,6 +3994,7 @@
                 var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
                 var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: "123 Main St" };
                 _customVars.forEach(function(v) { contact[v] = "Sample Value"; });
+                var vs = vmtGetVoiceSettings();
                 var btn = document.getElementById("vmtPreviewBtn");
                 btn.disabled = true;
                 btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Generating...';
@@ -3793,7 +4003,7 @@
                 apiFetch("/api/pvm/preview-audio", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, model_id: modelId })
+                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, model_id: modelId, voice_settings: vs })
                 }).then(function(r) { return r.json(); }).then(function(data) {
                     btn.disabled = false;
                     btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Preview Voice';
@@ -3831,9 +4041,11 @@
                 var content = type === "audio_url" ? document.getElementById("vmtAudioUrl").value.trim() : document.getElementById("vmtScriptText").value.trim();
                 if (!name) { alert("Please enter a template name"); return; }
                 if (!content) { alert("Please enter " + (type === "audio_url" ? "an audio URL" : "a script")); return; }
+                var payload = { name: name, type: type, content: content };
+                if (type === "script") { payload.voice_settings = vmtGetVoiceSettings(); }
                 var url = id ? "/api/vm-templates/" + id : "/api/vm-templates";
                 var method = id ? "PUT" : "POST";
-                apiFetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name, type: type, content: content }) })
+                apiFetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
                     .then(function(r) { return r.json(); })
                     .then(function(data) {
                         if (data.error) { alert(data.error); return; }
@@ -3850,11 +4062,22 @@
                 document.getElementById("vmtFormTitle").textContent = "Edit Template";
                 document.getElementById("vmtName").value = t.name;
                 vmtResetPreview();
+                vmtHideAdvanced();
+                vmtHideProcessedScript();
                 vmtSwitchType(t.type);
                 if (t.type === "audio_url") {
                     document.getElementById("vmtAudioUrl").value = t.content;
                 } else {
                     document.getElementById("vmtScriptText").value = t.content;
+                    if (t.voice_settings && t.voice_settings.preset && VMT_STYLE_PRESETS[t.voice_settings.preset]) {
+                        vmtSetPreset(t.voice_settings.preset);
+                        vmtApplySettingsToUI(t.voice_settings);
+                    } else if (t.voice_settings) {
+                        vmtApplySettingsToUI(t.voice_settings);
+                        vmtMarkCustom();
+                    } else {
+                        vmtSetPreset("professional");
+                    }
                 }
                 document.getElementById("vmtFormCard").style.display = "";
                 document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });

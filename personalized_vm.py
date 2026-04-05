@@ -50,9 +50,18 @@ _cache_lock = threading.Lock()
 # Audio cache helpers — content-addressed, 30-day TTL
 # ---------------------------------------------------------------------------
 
-def _cache_key(script, voice_id, provider):
-    """SHA-256 hash of the rendered script + voice + provider. Used as cache key."""
-    raw = f"{script}|{voice_id}|{provider}"
+def _cache_key(script, voice_id, provider, voice_settings=None):
+    """SHA-256 hash of the rendered script + voice + provider + voice settings. Used as cache key."""
+    settings_str = ""
+    if voice_settings:
+        try:
+            settings_str = json.dumps(
+                {k: voice_settings[k] for k in sorted(voice_settings) if k not in ("voice_id", "model_id")},
+                sort_keys=True
+            )
+        except Exception:
+            pass
+    raw = f"{script}|{voice_id}|{provider}|{settings_str}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -72,9 +81,9 @@ def _save_cache_index(index):
         json.dump(index, f, indent=2)
 
 
-def _cache_lookup(script, voice_id, provider):
+def _cache_lookup(script, voice_id, provider, voice_settings=None):
     """Return path to a cached audio file if it exists and is not expired, else None."""
-    key = _cache_key(script, voice_id, provider)
+    key = _cache_key(script, voice_id, provider, voice_settings)
     with _cache_lock:
         index = _load_cache_index()
         entry = index.get(key)
@@ -89,9 +98,9 @@ def _cache_lookup(script, voice_id, provider):
         return cached_path
 
 
-def _cache_store(script, voice_id, provider, source_filepath):
+def _cache_store(script, voice_id, provider, source_filepath, voice_settings=None):
     """Copy a freshly-generated audio file into the cache. Returns cached filepath."""
-    key = _cache_key(script, voice_id, provider)
+    key = _cache_key(script, voice_id, provider, voice_settings)
     os.makedirs(CACHE_DIR, exist_ok=True)
     cached_filename = f"c_{key[:16]}.mp3"
     cached_path = os.path.join(CACHE_DIR, cached_filename)
@@ -786,6 +795,298 @@ def render_template(template, contact, humanize=True):
     return result
 
 
+# ---------------------------------------------------------------------------
+# VoiceStyle Engine — per-template voice personality
+# ---------------------------------------------------------------------------
+
+STYLE_PRESETS = {
+    "professional": {
+        "preset": "professional",
+        "stability": 0.40,
+        "similarity_boost": 0.82,
+        "style": 0.12,
+        "speed": 0.82,
+        "use_speaker_boost": True,
+        "fish_speed": 0.92,
+        "fish_emotion": "neutral",
+        "fillers": "none",
+        "pause_style": "light",
+        "emphasis_mode": "auto",
+    },
+    "friendly": {
+        "preset": "friendly",
+        "stability": 0.22,
+        "similarity_boost": 0.84,
+        "style": 0.28,
+        "speed": 0.92,
+        "use_speaker_boost": True,
+        "fish_speed": 1.0,
+        "fish_emotion": "happy",
+        "fillers": "light",
+        "pause_style": "light",
+        "emphasis_mode": "auto",
+    },
+    "urgent": {
+        "preset": "urgent",
+        "stability": 0.35,
+        "similarity_boost": 0.80,
+        "style": 0.18,
+        "speed": 1.05,
+        "use_speaker_boost": True,
+        "fish_speed": 1.08,
+        "fish_emotion": "neutral",
+        "fillers": "none",
+        "pause_style": "minimal",
+        "emphasis_mode": "strong",
+    },
+    "empathetic": {
+        "preset": "empathetic",
+        "stability": 0.18,
+        "similarity_boost": 0.85,
+        "style": 0.35,
+        "speed": 0.75,
+        "use_speaker_boost": True,
+        "fish_speed": 0.88,
+        "fish_emotion": "neutral",
+        "fillers": "light",
+        "pause_style": "full",
+        "emphasis_mode": "moderate",
+    },
+    "conversational": {
+        "preset": "conversational",
+        "stability": 0.20,
+        "similarity_boost": 0.82,
+        "style": 0.25,
+        "speed": 0.88,
+        "use_speaker_boost": True,
+        "fish_speed": 0.97,
+        "fish_emotion": "neutral",
+        "fillers": "natural",
+        "pause_style": "natural",
+        "emphasis_mode": "auto",
+    },
+}
+
+
+def _get_style_preset(name):
+    """Return a full settings dict for a named style preset (or 'professional' as default)."""
+    return dict(STYLE_PRESETS.get(name or "professional", STYLE_PRESETS["professional"]))
+
+
+import random as _random
+
+_FILLERS_STARTERS = ["So, ", "Well, ", "Hey — ", "Hi, so "]
+_FILLERS_LIGHT = ["So, ", "Well, "]
+_FILLERS_NATURAL_MID = ["um, ", "uh, ", "you know, ", "I mean, "]
+
+
+def _inject_fillers(script, level):
+    """Inject natural filler words into the script at appropriate points.
+
+    level: 'none' | 'light' | 'natural'
+    - none: return unchanged
+    - light: prepend a soft starter to the first line only
+    - natural: add mid-sentence fillers at some sentence breaks too
+    """
+    if not level or level == "none":
+        return script
+
+    script = script.strip()
+    if not script:
+        return script
+
+    if level == "light":
+        starter = _FILLERS_LIGHT[_random.randint(0, len(_FILLERS_LIGHT) - 1)]
+        lower = script[0].lower()
+        rest = script[1:]
+        return starter + lower + rest
+
+    if level == "natural":
+        starter = _FILLERS_STARTERS[_random.randint(0, len(_FILLERS_STARTERS) - 1)]
+        lower = script[0].lower()
+        rest = script[1:]
+        script = starter + lower + rest
+        sentences = re.split(r'(?<=[.!?])\s+', script)
+        result = []
+        for i, sent in enumerate(sentences):
+            if i > 0 and i < len(sentences) - 1 and _random.random() < 0.30:
+                filler = _FILLERS_NATURAL_MID[_random.randint(0, len(_FILLERS_NATURAL_MID) - 1)]
+                first_char = sent[0].lower() if sent else ""
+                rest_sent = sent[1:] if sent else ""
+                sent = filler + first_char + rest_sent
+            result.append(sent)
+        return " ".join(result)
+
+    return script
+
+
+def _inject_pauses(script, style, provider):
+    """Inject pause markers into the script.
+
+    style: 'minimal' | 'light' | 'natural' | 'full'
+    provider: 'elevenlabs' | 'fish_audio'
+
+    For ElevenLabs (SSML models): uses <break time="Xs"/>
+    For Fish Audio: uses comma/ellipsis punctuation
+    """
+    if not style or style == "minimal":
+        return script
+
+    is_el = (provider == "elevenlabs")
+
+    def _pause(sec):
+        if is_el:
+            return f' <break time="{sec}s"/> '
+        return ", "
+
+    def _long_pause(sec):
+        if is_el:
+            return f' <break time="{sec}s"/> '
+        return "... "
+
+    if style in ("light", "natural", "full"):
+        script = re.sub(
+            r'(\b(?:call|reach|text|contact)\s+(?:me|us)\s+(?:at|back\s+at|on)\b)',
+            lambda m: _long_pause(0.35) + m.group(0),
+            script, flags=re.IGNORECASE
+        )
+        script = re.sub(
+            r'(\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)',
+            lambda m: m.group(0) + _pause(0.25),
+            script
+        )
+
+    if style in ("natural", "full"):
+        script = re.sub(r'(?<=[.!?])\s+(?=[A-Z])', lambda m: _pause(0.3), script)
+
+    if style == "full":
+        script = re.sub(
+            r'(\b(?:I wanted to reach out|I\'m reaching out|Just wanted to|I was hoping)\b)',
+            lambda m: m.group(0) + _pause(0.25),
+            script, flags=re.IGNORECASE
+        )
+        script = re.sub(r'\.\.\.',
+                        _long_pause(0.4) if is_el else "... ",
+                        script)
+
+    return script
+
+
+def _inject_emphasis(script, mode, provider):
+    """Wrap phone numbers and key CTAs in SSML emphasis (ElevenLabs) or caps hints (Fish Audio).
+
+    mode: 'off' | 'auto' | 'moderate' | 'strong'
+    """
+    if not mode or mode == "off":
+        return script
+
+    is_el = (provider == "elevenlabs")
+
+    level_map = {
+        "auto": "moderate",
+        "moderate": "moderate",
+        "strong": "strong",
+    }
+    el_level = level_map.get(mode, "moderate")
+
+    def _emph(text):
+        if is_el:
+            return f'<emphasis level="{el_level}">{text}</emphasis>'
+        return text
+
+    script = re.sub(
+        r'(\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)',
+        lambda m: _emph(m.group(0)),
+        script
+    )
+
+    cta_pattern = r'\b(call\s+(?:me|us)(?:\s+(?:at|back))?|(?:reach|contact)\s+(?:me|us)|text\s+(?:me|us)|give\s+(?:me|us)\s+a\s+(?:call|ring))\b'
+    script = re.sub(cta_pattern,
+                    lambda m: _emph(m.group(0)),
+                    script, flags=re.IGNORECASE)
+
+    return script
+
+
+def _apply_voice_enhancements(script, settings, provider):
+    """Apply all VoiceStyle Engine enhancements to a script.
+
+    settings: the full voice_settings dict (may include preset, fillers, pause_style, emphasis_mode)
+    provider: 'fish_audio' | 'elevenlabs'
+
+    Returns the enhanced script ready for TTS.
+    """
+    if not settings:
+        return script
+
+    fillers = settings.get("fillers", "none")
+    pause_style = settings.get("pause_style", "light")
+    emphasis_mode = settings.get("emphasis_mode", "auto")
+
+    script = _inject_fillers(script, fillers)
+    script = _inject_pauses(script, pause_style, provider)
+    script = _inject_emphasis(script, emphasis_mode, provider)
+
+    return script
+
+
+def build_processed_script(script, settings, provider):
+    """Return a human-readable annotated version of the script for UI display.
+
+    Shows injected fillers, [⏸] pause markers, and **emphasized** text
+    so users can see exactly what the AI will say.
+    """
+    if not settings:
+        return script
+
+    fillers = settings.get("fillers", "none")
+    pause_style = settings.get("pause_style", "light")
+    emphasis_mode = settings.get("emphasis_mode", "auto")
+
+    processed = _inject_fillers(script, fillers)
+
+    def _pause_marker(sec):
+        return f" [⏸] "
+
+    def _long_pause_marker(sec):
+        return f" [⏸⏸] "
+
+    if pause_style in ("light", "natural", "full"):
+        processed = re.sub(
+            r'(\b(?:call|reach|text|contact)\s+(?:me|us)\s+(?:at|back\s+at|on)\b)',
+            lambda m: _long_pause_marker(0.35) + m.group(0),
+            processed, flags=re.IGNORECASE
+        )
+        processed = re.sub(
+            r'(\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)',
+            lambda m: m.group(0) + _pause_marker(0.25),
+            processed
+        )
+
+    if pause_style in ("natural", "full"):
+        processed = re.sub(r'(?<=[.!?])\s+(?=[A-Z])', " [⏸] ", processed)
+
+    if pause_style == "full":
+        processed = re.sub(
+            r'(\b(?:I wanted to reach out|I\'m reaching out|Just wanted to|I was hoping)\b)',
+            lambda m: m.group(0) + _pause_marker(0.25),
+            processed, flags=re.IGNORECASE
+        )
+
+    if emphasis_mode and emphasis_mode != "off":
+        processed = re.sub(
+            r'(\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)',
+            lambda m: f"**{m.group(0)}**",
+            processed
+        )
+        cta_pattern = r'\b(call\s+(?:me|us)(?:\s+(?:at|back))?|(?:reach|contact)\s+(?:me|us)|text\s+(?:me|us)|give\s+(?:me|us)\s+a\s+(?:call|ring))\b'
+        processed = re.sub(cta_pattern,
+                           lambda m: f"**{m.group(0)}**",
+                           processed, flags=re.IGNORECASE)
+
+    return processed
+
+
 DEFAULT_VOICE_SETTINGS = {
     "stability": 0.28,
     "similarity_boost": 0.82,
@@ -896,6 +1197,8 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
     """Generate a personalized voicemail MP3 for one contact.
 
     provider: "fish_audio" (default, cheaper) or "elevenlabs" (legacy/premium).
+    voice_settings: full VoiceStyle Engine dict (includes preset, fillers, pause_style,
+                    emphasis_mode, fish_speed, fish_emotion, stability, etc.)
 
     Optimisation params (internal):
       _prerendered_script: skip render_template() — script already computed by the batch worker
@@ -908,13 +1211,23 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
 
+    # --- VoiceStyle Engine: override fish params from voice_settings if provided ---
+    if voice_settings:
+        if "fish_speed" in voice_settings:
+            fish_speed = float(voice_settings["fish_speed"])
+        if "fish_emotion" in voice_settings:
+            fish_emotion = voice_settings["fish_emotion"]
+
+    # --- Apply voice enhancements (fillers, pauses, emphasis) ---
+    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider)
+
     # --- Deduplication: worker found a previously-generated file for identical script ---
     if _cached_source and os.path.exists(_cached_source):
         shutil.copy2(_cached_source, filepath)
         return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": True}
 
-    # --- Content-addressed cache lookup ---
-    cached_path = _cache_lookup(script, voice_id, provider)
+    # --- Content-addressed cache lookup (includes voice_settings in key) ---
+    cached_path = _cache_lookup(enhanced_script, voice_id, provider, voice_settings)
     if cached_path:
         shutil.copy2(cached_path, filepath)
         logger.debug(f"PVM cache hit for {phone} ({provider})")
@@ -922,19 +1235,19 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
 
     # --- Generate fresh audio ---
     if provider == "fish_audio":
-        success, error = _generate_audio_fish(script, voice_id, fish_speed=fish_speed,
+        success, error = _generate_audio_fish(enhanced_script, voice_id, fish_speed=fish_speed,
                                                fish_emotion=fish_emotion, filepath=filepath)
     else:
         if not api_key:
             return {"phone": phone, "filename": None, "script": script, "success": False,
                     "error": "ElevenLabs API key not provided"}
-        success, error = _generate_audio_elevenlabs(api_key, script, voice_id, model_id,
+        success, error = _generate_audio_elevenlabs(api_key, enhanced_script, voice_id, model_id,
                                                      voice_settings, filepath)
 
     if success:
         # Store in content-addressed cache for future reuse
         try:
-            _cache_store(script, voice_id, provider, filepath)
+            _cache_store(enhanced_script, voice_id, provider, filepath, voice_settings)
         except Exception as ce:
             logger.warning(f"PVM cache store failed: {ce}")
         return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": False}
@@ -1145,13 +1458,28 @@ def get_generation_status():
 def generate_preview_audio(contact, template, voice_id, voice_settings=None, humanize=True,
                            model_id="eleven_multilingual_v2", provider="fish_audio",
                            fish_speed=1.0, fish_emotion="neutral"):
+    """Generate a preview audio for a single contact.
+
+    voice_settings: full VoiceStyle Engine dict (includes fillers, pause_style, emphasis_mode,
+                    fish_speed, fish_emotion, stability, etc.)
+    """
     script = render_template(template, contact, humanize=humanize)
     filename = f"pvm_preview_{int(time.time())}.mp3"
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
 
+    # Override fish params from voice_settings if provided
+    if voice_settings:
+        if "fish_speed" in voice_settings:
+            fish_speed = float(voice_settings["fish_speed"])
+        if "fish_emotion" in voice_settings:
+            fish_emotion = voice_settings["fish_emotion"]
+
+    # Apply VoiceStyle Engine enhancements
+    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider)
+
     if provider == "fish_audio":
-        success, error = _generate_audio_fish(script, voice_id, fish_speed=fish_speed,
+        success, error = _generate_audio_fish(enhanced_script, voice_id, fish_speed=fish_speed,
                                                fish_emotion=fish_emotion, filepath=filepath)
         if success:
             return filename, script
@@ -1162,7 +1490,7 @@ def generate_preview_audio(contact, template, voice_id, voice_settings=None, hum
             api_key = _get_elevenlabs_api_key()
         except Exception as e:
             return None, str(e)
-        success, error = _generate_audio_elevenlabs(api_key, script, voice_id, model_id,
+        success, error = _generate_audio_elevenlabs(api_key, enhanced_script, voice_id, model_id,
                                                      voice_settings, filepath)
         if success:
             return filename, script
