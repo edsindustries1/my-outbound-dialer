@@ -342,6 +342,7 @@ ADDRESS_ABBREVIATIONS = [
     (r'\bLgt\.?(?=[\s,]|$)', 'Light'),
     (r'\bMt\.?(?=\s+[A-Za-z])', 'Mount'),
     (r'\bMtn\.?(?=[\s,]|$)', 'Mountain'),
+    (r'\bFt\.?(?=[\s,]|$)', 'Fort'),
     # Unit designators — require digit or # after (prevents matching state abbreviations like FL)
     (r'\bApt\.?(?=\s*[#\d])', 'Apartment'),
     (r'\bSte\.?(?=\s*[#\d])', 'Suite'),
@@ -689,6 +690,39 @@ def _humanize_address(text):
     text = re.sub(
         r'^(\d{1,6})(?=\s)',
         lambda m: _speak_street_number(m.group(1)),
+        text
+    )
+
+    # 5a. Pre-pass: expand 'St'/'Ft' as proper-noun prefixes (Saint/Fort)
+    #     BEFORE the main abbreviations loop, which would incorrectly expand them
+    #     as street types.  Rule: St/Ft followed by a Title-Case word that is NOT
+    #     itself a known street-type abbreviation → it's a Saint/Fort prefix.
+    #     Examples: "St John" → "Saint John"; "Ft Hamilton" → "Fort Hamilton"
+    #     Remaining 'St'/'Ft' tokens (those before comma/end) are handled below.
+    _STREET_TYPE_ABBRS = {
+        'st', 'ave', 'blvd', 'dr', 'ln', 'rd', 'ct', 'pl', 'cir', 'pkwy',
+        'hwy', 'tpke', 'ter', 'sq', 'trl', 'expy', 'fwy', 'cres', 'xing',
+        'jct', 'rdg', 'holw', 'mdw', 'mdws', 'gln', 'knl', 'knls', 'spg',
+        'spgs', 'vlg', 'vis', 'aly', 'ally', 'brg', 'cmn', 'lndg', 'mnr',
+        'pt', 'vw', 'sta', 'trce', 'wy', 'gtwy', 'lgt', 'mt', 'mtn', 'ft',
+        'way', 'street', 'avenue', 'boulevard', 'drive', 'lane', 'road',
+        'court', 'place', 'circle', 'parkway', 'highway', 'terrace',
+    }
+
+    def _prefix_expand(m, expansion):
+        following = m.group(2)
+        if following.lower() in _STREET_TYPE_ABBRS:
+            return m.group(0)
+        return expansion + m.group(1) + following
+
+    text = re.sub(
+        r'\bSt\.?(\s+)([A-Z][a-z]+)\b',
+        lambda m: _prefix_expand(m, 'Saint'),
+        text
+    )
+    text = re.sub(
+        r'\bFt\.?(\s+)([A-Z][a-z]+)\b',
+        lambda m: _prefix_expand(m, 'Fort'),
         text
     )
 

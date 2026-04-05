@@ -2421,6 +2421,10 @@
                                             Voice Preview
                                         </label>
                                         <p class="vmt-hint" style="margin-bottom:8px;">Select a voice and click Preview to hear how your script will sound. Variables are replaced with sample values.</p>
+                                        <div style="margin-bottom:8px;display:flex;gap:6px;align-items:center;">
+                                            <input type="text" id="vmtPreviewAddress" class="gads-input" style="font-size:12px;flex:1;" placeholder="Test address, e.g. 17 St John Ct, Petersburg, VA 23803" value="17 St John Ct, Petersburg, VA 23803" title="Address used when previewing scripts that contain {address}">
+                                            <span style="font-size:11px;color:var(--gads-text-tertiary);white-space:nowrap;">{address}</span>
+                                        </div>
                                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
                                             <select id="vmtPreviewVoiceSelect" class="gads-select" style="flex:1;min-width:180px;">
                                                 <option value="">Loading voices...</option>
@@ -4040,7 +4044,8 @@
                 var vs = vmtGetVoiceSettings();
                 var voiceId = document.getElementById("vmtPreviewVoiceSelect").value;
                 var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
-                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: "123 Main St" };
+                var testAddr = (document.getElementById("vmtPreviewAddress") || {value: ""}).value.trim() || "17 St John Ct, Petersburg, VA 23803";
+                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: testAddr };
                 _customVars.forEach(function(v) { contact[v] = "Sample Value"; });
                 var btn = document.getElementById("vmtProcessedScriptBtn");
                 if (btn) { btn.disabled = true; btn.textContent = "Loading..."; }
@@ -4082,7 +4087,8 @@
                     return;
                 }
                 var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
-                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: "123 Main St" };
+                var testAddr = (document.getElementById("vmtPreviewAddress") || {value: ""}).value.trim() || "17 St John Ct, Petersburg, VA 23803";
+                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: testAddr };
                 _customVars.forEach(function(v) { contact[v] = "Sample Value"; });
                 var vs = vmtGetVoiceSettings();
                 var btn = document.getElementById("vmtPreviewBtn");
