@@ -2,30 +2,31 @@
   'use strict';
 
   /* ══ PRICING CONSTANTS ══ */
-  var BASE_COST_PER_DIAL      = 0.10;
-  var SDR_COST_PER_UNIT       = 5000;
-  var SDR_CALLS_PER_DAY       = 550;
-  var SDR_WORKING_DAYS        = 22;
-  var SDR_MONTHLY_CAPACITY    = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS;
+  var DIAL_RATE            = { autodialer: 0.03, business: 0.05 };
+  var TRANSFER_RATE        = { autodialer: 0.15, business: 0.20 };
+  var TRANSFER_CONNECT_PCT = 0.20; // 20% of dials assumed to connect to a live human
+  var SDR_COST_PER_UNIT    = 5000;
+  var SDR_CALLS_PER_DAY    = 550;
+  var SDR_WORKING_DAYS     = 22;
+  var SDR_MONTHLY_CAPACITY = SDR_CALLS_PER_DAY * SDR_WORKING_DAYS;
 
   var ANNUAL_PRICES = {
-    starter:  { annual: 990,  monthly: 82.50,  save: 198  },
-    business: { annual: 3990, monthly: 332.50, save: 798  }
+    autodialer: { annual: 690,  monthly: 57.50,  save: 138  },
+    business:   { annual: 1690, monthly: 140.83, save: 338  }
   };
 
   var ADDONS = [
-    { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.04, monthlyFlat: 0 },
-    { id: 'liveTransfer',   label: 'Live Call Transfer',          costPerDial: 0.02, monthlyFlat: 0 },
-    { id: 'gatekeeper',     label: 'Gatekeeper Navigator',        costPerDial: 0.05, monthlyFlat: 0 },
-    { id: 'transcription',  label: 'Recording & Transcription',   costPerDial: 0.05, monthlyFlat: 0 },
+    { id: 'personalizedVm', label: 'Personalized AI Voicemails', costPerDial: 0.02, monthlyFlat: 0 },
+    { id: 'gatekeeper',     label: 'Gatekeeper Navigator',        costPerDial: 0.03, monthlyFlat: 0 },
+    { id: 'transcription',  label: 'Recording & Transcription',   costPerDial: 0.03, monthlyFlat: 0 },
     { id: 'voiceCloning',   label: 'Voice Cloning',               costPerDial: 0,    monthlyFlat: 19 }
   ];
 
   /* ── Billing cycle state ── */
   var billingCycle = 'monthly'; // 'monthly' | 'annual'
 
-  /* ── Selected plan state (for calculator) ── */
-  var selectedPlan = 'starter'; // 'starter' | 'business'
+  /* ── Selected plan state ── */
+  var selectedPlan = 'autodialer'; // 'autodialer' | 'business'
 
   function selectPlan(slug) {
     selectedPlan = slug;
@@ -34,6 +35,10 @@
     });
     if (dialSlider) {
       dialSlider.value = slug === 'business' ? 300 : 100;
+    }
+    var ltPriceEl = document.getElementById('feat-liveTransfer-price');
+    if (ltPriceEl) {
+      ltPriceEl.innerHTML = '+$' + (slug === 'business' ? '0.20' : '0.15') + '<span class="calc-feat-price-unit">/transfer</span>';
     }
     if (dialSlider && daysSlider) updateCalc();
   }
@@ -77,15 +82,14 @@
   }
 
   /* ── Update add-on breakdown lines ── */
-  function updateAddonLines(dials, days, activeAddons) {
+  function updateAddonLines(dials, days, activeAddons, liveTransferTotal, extraNumTotal) {
     ADDONS.forEach(function (addon) {
-      var wrap    = document.getElementById('addonWrap-' + addon.id);
-      var noteEl  = document.getElementById('addonNote-' + addon.id);
-      var amtEl   = document.getElementById('addonAmt-' + addon.id);
+      var wrap   = document.getElementById('addonWrap-' + addon.id);
+      var noteEl = document.getElementById('addonNote-' + addon.id);
+      var amtEl  = document.getElementById('addonAmt-' + addon.id);
       if (!wrap) return;
 
       var isActive = activeAddons.some(function (a) { return a.id === addon.id; });
-
       if (isActive) {
         wrap.classList.add('active');
         if (addon.costPerDial > 0 && noteEl) {
@@ -99,31 +103,54 @@
         wrap.classList.remove('active');
       }
     });
+
+    /* Live transfer (per-event, not per-dial) */
+    var ltWrap = document.getElementById('addonWrap-liveTransfer');
+    var ltNote = document.getElementById('addonNote-liveTransfer');
+    var ltAmt  = document.getElementById('addonAmt-liveTransfer');
+    var ltCb   = document.getElementById('feat-liveTransfer');
+    if (ltWrap) {
+      if (ltCb && ltCb.checked) {
+        ltWrap.classList.add('active');
+        var transfers = Math.round(dials * days * TRANSFER_CONNECT_PCT);
+        var rate = selectedPlan === 'business' ? 0.20 : 0.15;
+        if (ltNote) ltNote.textContent = transfers.toLocaleString('en-US') + ' est. transfers × $' + rate.toFixed(2) + '/transfer (20% connect rate)';
+        if (ltAmt)  ltAmt.textContent  = fmt(liveTransferTotal);
+      } else {
+        ltWrap.classList.remove('active');
+      }
+    }
+
+    /* Extra phone numbers */
+    var enWrap = document.getElementById('addonWrap-extraNumbers');
+    var enNote = document.getElementById('addonNote-extraNumbers');
+    var enAmt  = document.getElementById('addonAmt-extraNumbers');
+    var enEl   = document.getElementById('feat-extraNumbers');
+    if (enWrap) {
+      var extraNums = enEl ? (parseInt(enEl.value, 10) || 0) : 0;
+      if (extraNums > 0) {
+        enWrap.classList.add('active');
+        if (enNote) enNote.textContent = extraNums + ' extra number' + (extraNums !== 1 ? 's' : '') + ' × $5/mo';
+        if (enAmt)  enAmt.textContent  = '$' + (extraNums * 5);
+      } else {
+        enWrap.classList.remove('active');
+      }
+    }
   }
 
   /* ── Update the plan cards' price display ── */
   function updatePriceCards() {
     var isAnnual = billingCycle === 'annual';
 
-    var starterEl   = document.getElementById('starterPriceDisplay');
-    var businessEl  = document.getElementById('businessPriceDisplay');
-    var starterInfo = document.getElementById('starterAnnualInfo');
-    var businessInfo= document.getElementById('businessAnnualInfo');
-    var starterLbl  = document.getElementById('starterBillingLabel');
-    var businessLbl = document.getElementById('businessBillingLabel');
+    var autodialerEl   = document.getElementById('autodialerPriceDisplay');
+    var businessEl     = document.getElementById('businessPriceDisplay');
+    var autodialerInfo = document.getElementById('autodialerAnnualInfo');
+    var businessInfo   = document.getElementById('businessAnnualInfo');
 
-    if (starterEl) {
-      starterEl.textContent = isAnnual ? '82.50' : '99';
-    }
-    if (businessEl) {
-      businessEl.textContent = isAnnual ? '332.50' : '399';
-    }
-    if (starterInfo)  starterInfo.classList.toggle('show', isAnnual);
-    if (businessInfo) businessInfo.classList.toggle('show', isAnnual);
-
-    var salaryText = isAnnual ? 'Annual salary' : 'Monthly salary';
-    if (starterLbl)  starterLbl.lastChild.textContent = ' ' + salaryText;
-    if (businessLbl) businessLbl.lastChild.textContent = ' ' + salaryText;
+    if (autodialerEl)   autodialerEl.textContent   = isAnnual ? '57.50' : '69';
+    if (businessEl)     businessEl.textContent     = isAnnual ? '140.83' : '169';
+    if (autodialerInfo) autodialerInfo.classList.toggle('show', isAnnual);
+    if (businessInfo)   businessInfo.classList.toggle('show', isAnnual);
   }
 
   /* ── Main calculation ── */
@@ -131,23 +158,38 @@
     var dials = parseInt(dialSlider.value, 10);
     var days  = parseInt(daysSlider.value, 10);
 
-    var isBusiness  = selectedPlan === 'business';
-    var platformFee = isBusiness ? 399 : 99;
-    var planLabel   = isBusiness ? 'Business Plan' : 'Starter Plan';
-    var planSlug    = isBusiness ? 'business' : 'starter';
+    var isBusiness   = selectedPlan === 'business';
+    var planSlug     = isBusiness ? 'business' : 'autodialer';
+    var platformFee  = isBusiness ? 169 : 69;
+    var planLabel    = isBusiness ? 'Digital Sales Floor Plan' : 'Auto Dialer Plan';
+    var dialRate     = isBusiness ? DIAL_RATE.business     : DIAL_RATE.autodialer;
+    var transferRate = isBusiness ? TRANSFER_RATE.business : TRANSFER_RATE.autodialer;
 
-    var baseUsage   = dials * days * BASE_COST_PER_DIAL;
+    var baseUsage = dials * days * dialRate;
 
-    var activeAddons     = getActiveAddons();
-    var addonDialCost    = 0;
-    var addonFlatCost    = 0;
+    var activeAddons  = getActiveAddons();
+    var addonDialCost = 0;
+    var addonFlatCost = 0;
     activeAddons.forEach(function (a) {
       addonDialCost += a.costPerDial;
       addonFlatCost += a.monthlyFlat;
     });
     var addonDialTotal = dials * days * addonDialCost;
-    var total          = platformFee + baseUsage + addonDialTotal + addonFlatCost;
-    var effectiveRate  = BASE_COST_PER_DIAL + addonDialCost;
+
+    /* Live transfer — per transfer event */
+    var ltCb = document.getElementById('feat-liveTransfer');
+    var liveTransferTotal = 0;
+    if (ltCb && ltCb.checked) {
+      liveTransferTotal = dials * days * TRANSFER_CONNECT_PCT * transferRate;
+    }
+
+    /* Extra phone numbers */
+    var enEl      = document.getElementById('feat-extraNumbers');
+    var extraNums = enEl ? (parseInt(enEl.value, 10) || 0) : 0;
+    var extraNumTotal = extraNums * 5;
+
+    var total        = platformFee + baseUsage + addonDialTotal + addonFlatCost + liveTransferTotal + extraNumTotal;
+    var effectiveRate = dialRate + addonDialCost;
 
     var totalMonthlyDials = dials * days;
     var sdrsNeeded        = Math.max(1, Math.ceil(totalMonthlyDials / SDR_MONTHLY_CAPACITY));
@@ -160,9 +202,9 @@
 
     platformFeeEl.textContent = fmt(platformFee);
     usageEl.textContent       = fmt(baseUsage);
-    usageNoteEl.textContent   = dials.toLocaleString('en-US') + ' dials × ' + days + ' days × $' + BASE_COST_PER_DIAL.toFixed(3) + '/dial';
+    usageNoteEl.textContent   = dials.toLocaleString('en-US') + ' dials × ' + days + ' days × $' + dialRate.toFixed(2) + '/dial';
 
-    updateAddonLines(dials, days, activeAddons);
+    updateAddonLines(dials, days, activeAddons, liveTransferTotal, extraNumTotal);
 
     if (effectiveRateNote) {
       effectiveRateNote.textContent = 'at ' + fmtDecimal(effectiveRate) + '/dial effective rate';
@@ -177,7 +219,7 @@
       vsUsEl.textContent  = fmt(total);
     }
 
-    if (vsSdrEl)      vsSdrEl.textContent = fmt(humanSdrCost);
+    if (vsSdrEl)       vsSdrEl.textContent = fmt(humanSdrCost);
     if (sdrCountLabel) {
       var sdrWord = sdrsNeeded === 1 ? 'human SDR' : 'human SDRs';
       sdrCountLabel.textContent = '/ month (' + sdrsNeeded + ' ' + sdrWord + ')';
@@ -194,7 +236,7 @@
         var stackHtml = '<div style="display:flex;justify-content:center;align-items:center;">';
         var smallSvg = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
         for (var i = 0; i < visibleIcons; i++) {
-          var offset = i * -10;
+          var offset  = i * -10;
           var opacity = 1 - (i * 0.12);
           stackHtml += '<div style="margin-left:' + (i === 0 ? 0 : offset) + 'px;opacity:' + opacity + ';">' + smallSvg + '</div>';
         }
@@ -245,7 +287,7 @@
   /* ── Plan card selection (click card to lock calculator to that plan) ── */
   document.querySelectorAll('.pricing-card[data-plan-card]').forEach(function (card) {
     card.addEventListener('click', function (e) {
-      if (e.target.closest('button') || e.target.closest('a')) return;
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
       var slug = card.getAttribute('data-plan-card');
       selectPlan(slug);
       var calcSection = document.getElementById('calculator');
@@ -264,14 +306,18 @@
     cb.addEventListener('change', updateCalc);
   });
 
+  /* ── Wire up extra numbers input ── */
+  var extraNumInput = document.getElementById('feat-extraNumbers');
+  if (extraNumInput) extraNumInput.addEventListener('input', updateCalc);
+
   /* ── Initial render ── */
   updatePriceCards();
 
   if (dialSlider && daysSlider) {
-    selectPlan('starter');
+    selectPlan('business'); // Default to Digital Sales Floor
 
     calcCtaBtn.addEventListener('click', function () {
-      var plan = calcCtaBtn.getAttribute('data-plan') || 'starter';
+      var plan = calcCtaBtn.getAttribute('data-plan') || 'business';
       var url = '/billing?plan=' + encodeURIComponent(plan);
       if (billingCycle === 'annual') url += '&cycle=annual';
       window.location.href = url;
