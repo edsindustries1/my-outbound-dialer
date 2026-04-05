@@ -418,10 +418,13 @@ PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
-    "starter":          {"amount": Decimal("99.00"),   "instances": 1, "included_numbers": 1, "max_numbers": 5,  "billing_days": 30},
-    "business":         {"amount": Decimal("399.00"),  "instances": 5, "included_numbers": 3, "max_numbers": 20, "billing_days": 30},
-    "starter_annual":   {"amount": Decimal("990.00"),  "instances": 1, "included_numbers": 1, "max_numbers": 5,  "billing_days": 365},
-    "business_annual":  {"amount": Decimal("3990.00"), "instances": 5, "included_numbers": 3, "max_numbers": 20, "billing_days": 365},
+    "autodialer":          {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30},
+    "business":            {"amount": Decimal("169.00"),  "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 30},
+    "autodialer_annual":   {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365},
+    "business_annual":     {"amount": Decimal("1690.00"), "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 365},
+    # Legacy aliases
+    "starter":             {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30},
+    "starter_annual":      {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365},
 }
 PLAN_NUMBER_LIMITS = {
     "starter":  {"included": 1, "max": 5},

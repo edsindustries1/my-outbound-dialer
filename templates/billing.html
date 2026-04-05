@@ -100,9 +100,9 @@
                 <span>Open Humana</span>
             </div>
 
-            <div class="plan-label" id="planLabel">Subscribe to</div>
-            <div class="plan-title" id="planTitle">Hire One Employee</div>
-            <div class="plan-price-line">$<span id="planAmount">99</span><span class="period" id="planPeriod">/monthly salary</span></div>
+            <div class="plan-label" id="planLabel">You're subscribing to</div>
+            <div class="plan-title" id="planTitle">Open Humana Starter</div>
+            <div class="plan-price-line">$<span id="planAmount">69</span><span class="period" id="planPeriod">/mo platform fee</span></div>
             <div id="annualNote" style="display:none;margin-bottom:16px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#15803d;font-weight:500;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
               <span id="annualSaveText">You save $198 by paying annually — 2 months free</span>
@@ -172,42 +172,45 @@
 <script src="https://www.paypal.com/sdk/js?client-id={{ processor_id }}&intent=capture&currency=USD&commit=true&disable-funding=paylater,credit"></script>
 <script>
     const PLANS = {
-        starter: {
-            title: 'Your First Digital Employee',
-            amount: 99, annualAmount: 990, annualMonthly: '82.50', annualSave: '$198',
-            planKey: 'starter', annualPlanKey: 'starter_annual',
+        autodialer: {
+            title: 'Open Humana Starter',
+            amount: 69, annualAmount: 690, annualMonthly: '57.50', annualSave: '$138',
+            planKey: 'autodialer', annualPlanKey: 'autodialer_annual',
             features: [
-                '1 Digital Employee (Alex)',
-                '300 outbound dials per day',
-                'AI personalized voicemail with prospect\'s name',
-                'Instant live call transfer when a human picks up',
-                'Real-time call transcription',
-                '1 active campaign at a time'
+                'Alex makes up to 150 outbound dials per day',
+                '3 dedicated phone numbers included',
+                'AI voicemail drop — perfect message, every call',
+                'Answering machine detection (97% accuracy)',
+                'Live call transfer to your phone',
+                'Campaign dashboard & CSV lead upload'
             ],
             savingsHours: '4+ hours',
-            savingsText: 'saved every day on outbound dialing. Alex handles 300 calls while you focus on closing deals.'
+            savingsText: 'saved every day on outbound dialing. Alex handles 150 dials per day so you can focus on closing deals.'
         },
         business: {
-            title: 'Your Full Digital Sales Floor',
-            amount: 399, annualAmount: 3990, annualMonthly: '332.50', annualSave: '$798',
+            title: 'Open Humana Sales Floor',
+            amount: 169, annualAmount: 1690, annualMonthly: '140.83', annualSave: '$338',
             planKey: 'business', annualPlanKey: 'business_annual',
             features: [
-                '5 Digital Employees working in parallel',
-                '2,000 outbound dials per day',
-                'AI personalized voicemails across all campaigns',
-                'Instant live call transfer to any team member',
+                '500 outbound dials per day (10 numbers × 50/day)',
+                '10 dedicated phone numbers included',
+                'AI-personalized voicemails (unique per contact)',
                 'Multiple simultaneous campaigns',
-                'Real-time transcription and reporting dashboard',
-                'Priority support'
+                'Gatekeeper & IVR navigation (beta)',
+                'Call recording & real-time transcription',
+                'CRM integrations (HubSpot, Salesforce, GoHighLevel)'
             ],
-            savingsHours: '20+ hours',
-            savingsText: 'saved every day across your outbound team. 5 AI employees handle 2,000 calls simultaneously.'
-        }
+            savingsHours: '15+ hours',
+            savingsText: 'saved every day. Alex runs 500 calls across 10 numbers while you focus on high-value conversations.'
+        },
+        // Legacy alias
+        starter: null
     };
+    PLANS.starter = PLANS.autodialer;
 
-    const selectedPlan = ("{{ selected_plan or '' }}" || 'starter').toLowerCase();
+    const selectedPlan = ("{{ selected_plan or '' }}" || 'autodialer').toLowerCase();
     const selectedCycle = ("{{ selected_cycle or 'monthly' }}" || 'monthly').toLowerCase();
-    const plan = PLANS[selectedPlan] || PLANS.starter;
+    const plan = PLANS[selectedPlan] || PLANS.autodialer;
     const isAnnual = selectedCycle === 'annual';
     const activePlanKey = isAnnual ? plan.annualPlanKey : plan.planKey;
     const activeAmount = isAnnual ? plan.annualAmount : plan.amount;
@@ -227,7 +230,7 @@
         }
     } else {
         document.getElementById('planAmount').textContent = plan.amount;
-        document.getElementById('planPeriod').textContent = '/monthly salary';
+        document.getElementById('planPeriod').textContent = '/mo platform fee + usage';
     }
 
     const checkSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';

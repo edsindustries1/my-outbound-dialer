@@ -442,6 +442,16 @@
     cb.addEventListener('change', updateBuildCard);
   });
 
+  /* "Get Started" — go directly to billing for the selected base plan */
+  var buildGetStartedBtn = document.getElementById('buildGetStartedBtn');
+  if (buildGetStartedBtn) {
+    buildGetStartedBtn.addEventListener('click', function () {
+      var url = '/billing?plan=' + encodeURIComponent(buildBase);
+      if (billingCycle === 'annual') url += '&cycle=annual';
+      window.location.href = url;
+    });
+  }
+
   /* "See full breakdown" — sync state to main calculator and scroll */
   var buildSeeFullBtn = document.getElementById('buildSeeFullBtn');
   if (buildSeeFullBtn) {
