@@ -3740,10 +3740,30 @@
             function vmtLoadPreviewVoices() {
                 var sel = document.getElementById("vmtPreviewVoiceSelect");
                 if (!sel) return;
-                sel.innerHTML = '<option value="">Loading...</option>';
-                apiFetch("/api/pvm/voices").then(function(r) { return r.json(); }).then(function(data) {
-                    pvmVoicesCache = data.voices || [];
-                    renderVoiceOptions(sel, pvmVoicesCache, "");
+                sel.innerHTML = '<option value="">Loading voices...</option>';
+                apiFetch("/humana-voice/api/my-voices").then(function(r) { return r.json(); }).then(function(voices) {
+                    if (!Array.isArray(voices) || voices.length === 0) {
+                        sel.innerHTML = '<option value="">No voices saved — add voices in Humana Voice</option>';
+                        return;
+                    }
+                    var cloned = voices.filter(function(v) { return v.voice_type === "cloned"; });
+                    var library = voices.filter(function(v) { return v.voice_type !== "cloned"; });
+                    var html = '<option value="">-- Select a voice --</option>';
+                    if (cloned.length > 0) {
+                        html += '<optgroup label="My Cloned Voices">';
+                        cloned.forEach(function(v) {
+                            html += '<option value="' + v.voice_id + '">' + (v.voice_name || v.voice_id) + '</option>';
+                        });
+                        html += '</optgroup>';
+                    }
+                    if (library.length > 0) {
+                        html += '<optgroup label="Library Voices">';
+                        library.forEach(function(v) {
+                            html += '<option value="' + v.voice_id + '">' + (v.voice_name || v.voice_id) + '</option>';
+                        });
+                        html += '</optgroup>';
+                    }
+                    sel.innerHTML = html;
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
             }
 
