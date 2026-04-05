@@ -10,6 +10,7 @@ import io
 import re
 import time
 import json
+import wave
 import shutil
 import hashlib
 import logging
@@ -110,7 +111,7 @@ def _cache_store(script, voice_id, provider, source_filepath, voice_settings=Non
     """Copy a freshly-generated audio file into the cache. Returns cached filepath."""
     key = _cache_key(script, voice_id, provider, voice_settings, model_id=model_id)
     os.makedirs(CACHE_DIR, exist_ok=True)
-    cached_filename = f"c_{key[:16]}.mp3"
+    cached_filename = f"c_{key[:16]}.wav"
     cached_path = os.path.join(CACHE_DIR, cached_filename)
     with _cache_lock:
         if not os.path.exists(cached_path):
@@ -1328,31 +1329,40 @@ def _prepare_fish_text(script):
     return text.strip()
 
 
+def _pcm_to_wav(pcm_bytes, filepath, sample_rate=16000, channels=1, sample_width=2):
+    """Wrap raw PCM bytes in a proper WAV (RIFF) container and write to filepath."""
+    with wave.open(filepath, "wb") as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(sample_width)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm_bytes)
+
+
 def _generate_audio_elevenlabs(api_key, script, voice_id, model_id, voice_settings, filepath):
-    """Call ElevenLabs TTS and save MP3 to filepath. Returns (success, error_str)."""
+    """Call ElevenLabs TTS (pcm_16000) and save as a proper WAV to filepath.
+    Returns (success, error_str)."""
     vs = _build_voice_settings(voice_settings)
     payload = _prepare_tts_payload(script, model_id, vs)
     try:
         resp = requests.post(
-            f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}",
+            f"{ELEVENLABS_API_BASE}/text-to-speech/{voice_id}?output_format=pcm_16000",
             headers={
                 "xi-api-key": api_key,
                 "Content-Type": "application/json",
-                "Accept": "audio/mpeg",
+                "Accept": "*/*",
             },
             json=payload,
             timeout=60,
         )
         resp.raise_for_status()
-        with open(filepath, "wb") as f:
-            f.write(resp.content)
+        _pcm_to_wav(resp.content, filepath)
         return True, None
     except Exception as e:
         return False, str(e)
 
 
 def _generate_audio_fish(script, voice_id, fish_speed=1.0, fish_emotion="neutral", filepath=None):
-    """Call Fish Audio TTS and save MP3 to filepath. Returns (success, error_str)."""
+    """Call Fish Audio TTS and save WAV to filepath. Returns (success, error_str)."""
     try:
         from humana_voice.fish_client import text_to_speech as fish_tts
         fish_text = _prepare_fish_text(script)
@@ -1371,7 +1381,7 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
                                 voice_settings=None, humanize=True, provider="fish_audio",
                                 fish_speed=1.0, fish_emotion="neutral", api_key=None,
                                 _prerendered_script=None, _cached_source=None):
-    """Generate a personalized voicemail MP3 for one contact.
+    """Generate a personalized voicemail WAV for one contact.
 
     provider: "fish_audio" (default, cheaper) or "elevenlabs" (legacy/premium).
     voice_settings: full VoiceStyle Engine dict (includes preset, fillers, pause_style,
@@ -1384,7 +1394,7 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
     script = _prerendered_script if _prerendered_script is not None else render_template(template, contact, humanize=humanize)
     phone = contact.get("phone", "unknown")
     safe_phone = re.sub(r'[^\d]', '', phone)
-    filename = f"pvm_{safe_phone}_{int(time.time())}.mp3"
+    filename = f"pvm_{safe_phone}_{int(time.time())}.wav"
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
 
@@ -1641,7 +1651,7 @@ def generate_preview_audio(contact, template, voice_id, voice_settings=None, hum
                     fish_speed, fish_emotion, stability, etc.)
     """
     script = render_template(template, contact, humanize=humanize)
-    filename = f"pvm_preview_{int(time.time())}.mp3"
+    filename = f"pvm_preview_{int(time.time())}.wav"
     filepath = os.path.join(PVM_DIR, filename)
     os.makedirs(PVM_DIR, exist_ok=True)
 

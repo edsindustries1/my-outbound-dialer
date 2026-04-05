@@ -146,7 +146,7 @@ def text_to_speech(voice_id, text, speed=1.0, emotion="neutral"):
     payload = {
         "reference_id": voice_id,
         "text": text,
-        "format": "mp3",
+        "format": "wav",
         "speed": speed,
     }
     resp = requests.post(
