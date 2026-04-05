@@ -31,6 +31,12 @@
     .plan-billed-yearly{font-size:.8rem;color:#6b7280}
     .plan-save-badge{display:inline-block;width:fit-content;background:#dcfce7;color:#15803d;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:50px}
     .plan-save-badge-featured{background:#16a34a;color:#fff}
+    .pricing-card[data-plan-card]{cursor:pointer;transition:box-shadow .2s,outline .2s}
+    .pricing-card[data-plan-card].plan-card-selected{outline:2.5px solid #111;outline-offset:2px}
+    .pricing-card-featured[data-plan-card].plan-card-selected{outline:2.5px solid #fff;outline-offset:2px}
+    .plan-card-select-badge{display:none;font-size:.72rem;font-weight:700;letter-spacing:.05em;color:#16a34a;text-transform:uppercase;margin-bottom:6px}
+    .plan-card-selected .plan-card-select-badge{display:block}
+    .pricing-card-featured.plan-card-selected .plan-card-select-badge{color:#86efac}
   </style>
 </head>
 <body>
@@ -86,8 +92,9 @@
     </div>
 
     <div class="pricing-grid">
-      <div class="pricing-card">
+      <div class="pricing-card" data-plan-card="starter">
         <div class="pricing-card-top">
+          <div class="plan-card-select-badge">&#10003; Selected for Calculator</div>
           <h2 class="plan-name">Your First Digital Employee</h2>
           <p class="plan-description">Perfect for solo operators and small teams getting started with automated outbound.</p>
           <div class="plan-price">
@@ -166,9 +173,10 @@
         </div>
       </div>
 
-      <div class="pricing-card pricing-card-featured">
+      <div class="pricing-card pricing-card-featured" data-plan-card="business">
         <div class="pricing-badge">Most Popular</div>
         <div class="pricing-card-top">
+          <div class="plan-card-select-badge">&#10003; Selected for Calculator</div>
           <h2 class="plan-name">Your Full Digital Sales Floor</h2>
           <p class="plan-description">Scale your outbound with a squad of digital employees working around the clock.</p>
           <div class="plan-price">
@@ -335,9 +343,9 @@
           <div class="calc-field">
             <div class="calc-field-header">
               <label class="calc-field-label" for="dialSlider">Dials per day</label>
-              <span class="calc-field-value" id="dialDisplay">200</span>
+              <span class="calc-field-value" id="dialDisplay">100</span>
             </div>
-            <input type="range" class="calc-slider" id="dialSlider" min="10" max="2000" step="10" value="200">
+            <input type="range" class="calc-slider" id="dialSlider" min="10" max="2000" step="10" value="100">
             <div class="calc-slider-ticks">
               <span>10</span>
               <span>500</span>

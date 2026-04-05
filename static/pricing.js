@@ -24,6 +24,20 @@
   /* ── Billing cycle state ── */
   var billingCycle = 'monthly'; // 'monthly' | 'annual'
 
+  /* ── Selected plan state (for calculator) ── */
+  var selectedPlan = 'starter'; // 'starter' | 'business'
+
+  function selectPlan(slug) {
+    selectedPlan = slug;
+    document.querySelectorAll('.pricing-card[data-plan-card]').forEach(function (card) {
+      card.classList.toggle('plan-card-selected', card.getAttribute('data-plan-card') === slug);
+    });
+    if (dialSlider) {
+      dialSlider.value = slug === 'business' ? 300 : 100;
+    }
+    if (dialSlider && daysSlider) updateCalc();
+  }
+
   /* ── DOM refs ── */
   var dialSlider        = document.getElementById('dialSlider');
   var daysSlider        = document.getElementById('daysSlider');
@@ -117,7 +131,7 @@
     var dials = parseInt(dialSlider.value, 10);
     var days  = parseInt(daysSlider.value, 10);
 
-    var isBusiness  = dials > 150;
+    var isBusiness  = selectedPlan === 'business';
     var platformFee = isBusiness ? 399 : 99;
     var planLabel   = isBusiness ? 'Business Plan' : 'Starter Plan';
     var planSlug    = isBusiness ? 'business' : 'starter';
@@ -228,6 +242,17 @@
   if (btnMonthly) btnMonthly.addEventListener('click', function () { setBillingCycle('monthly'); });
   if (btnAnnual)  btnAnnual.addEventListener('click',  function () { setBillingCycle('annual');  });
 
+  /* ── Plan card selection (click card to lock calculator to that plan) ── */
+  document.querySelectorAll('.pricing-card[data-plan-card]').forEach(function (card) {
+    card.addEventListener('click', function (e) {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      var slug = card.getAttribute('data-plan-card');
+      selectPlan(slug);
+      var calcSection = document.getElementById('calculator');
+      if (calcSection) calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
   /* ── Wire up sliders ── */
   if (dialSlider && daysSlider) {
     dialSlider.addEventListener('input', updateCalc);
@@ -243,7 +268,7 @@
   updatePriceCards();
 
   if (dialSlider && daysSlider) {
-    updateCalc();
+    selectPlan('starter');
 
     calcCtaBtn.addEventListener('click', function () {
       var plan = calcCtaBtn.getAttribute('data-plan') || 'starter';
