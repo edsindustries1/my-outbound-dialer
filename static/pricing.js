@@ -366,6 +366,96 @@
   var contactUsBtn = document.getElementById('contactUsBtn');
   if (contactUsBtn) contactUsBtn.addEventListener('click', openContactModal);
 
+  /* ══ BUILD YOUR PLAN MINI CALCULATOR ══ */
+  var buildBase        = 'autodialer';
+  var buildDialSlider  = document.getElementById('buildDialSlider');
+  var buildDialDisplay = document.getElementById('buildDialDisplay');
+  var buildTotalEl     = document.getElementById('buildTotal');
+  var buildLtPrice     = document.getElementById('build-ltPrice');
+
+  var BUILD_ADDONS = [
+    { id: 'personalizedVm', costPerDial: 0.02, monthlyFlat: 0,  isTransfer: false },
+    { id: 'liveTransfer',   costPerDial: 0,    monthlyFlat: 0,  isTransfer: true  },
+    { id: 'gatekeeper',     costPerDial: 0.03, monthlyFlat: 0,  isTransfer: false },
+    { id: 'transcription',  costPerDial: 0.03, monthlyFlat: 0,  isTransfer: false },
+    { id: 'voiceCloning',   costPerDial: 0,    monthlyFlat: 19, isTransfer: false }
+  ];
+
+  function updateBuildCard() {
+    var dials = buildDialSlider ? parseInt(buildDialSlider.value, 10) : 100;
+    var days  = 22;
+    var baseFee      = buildBase === 'business' ? 169 : 69;
+    var dialRate     = DIAL_RATE[buildBase];
+    var transferRate = TRANSFER_RATE[buildBase];
+
+    var usage     = dials * days * dialRate;
+    var addonCost = 0;
+
+    BUILD_ADDONS.forEach(function (addon) {
+      var cb = document.getElementById('build-' + addon.id);
+      if (!cb || !cb.checked) return;
+      if (addon.isTransfer) {
+        addonCost += dials * days * TRANSFER_CONNECT_PCT * transferRate;
+      } else if (addon.costPerDial > 0) {
+        addonCost += dials * days * addon.costPerDial;
+      } else if (addon.monthlyFlat > 0) {
+        addonCost += addon.monthlyFlat;
+      }
+    });
+
+    var total = baseFee + usage + addonCost;
+    if (buildTotalEl)     buildTotalEl.textContent    = Math.round(total).toLocaleString('en-US');
+    if (buildDialDisplay) buildDialDisplay.textContent = dials.toLocaleString('en-US');
+
+    if (buildLtPrice) {
+      var rate = buildBase === 'business' ? '0.20' : '0.15';
+      buildLtPrice.textContent = '+$' + rate + '/transfer';
+    }
+
+    if (buildDialSlider) {
+      var pct = ((buildDialSlider.value - buildDialSlider.min) / (buildDialSlider.max - buildDialSlider.min)) * 100;
+      buildDialSlider.style.background = 'linear-gradient(to right, #1a1a1a ' + pct + '%, #e5e7eb ' + pct + '%)';
+    }
+  }
+
+  /* Base plan buttons */
+  ['autodialer', 'business'].forEach(function (slug) {
+    var btn = document.getElementById('buildBase-' + slug);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      buildBase = slug;
+      document.querySelectorAll('.build-base-btn').forEach(function (b) {
+        b.classList.toggle('build-base-btn--active', b.id === 'buildBase-' + slug);
+      });
+      updateBuildCard();
+    });
+  });
+
+  if (buildDialSlider) buildDialSlider.addEventListener('input', updateBuildCard);
+
+  document.querySelectorAll('.build-addon-cb').forEach(function (cb) {
+    cb.addEventListener('change', updateBuildCard);
+  });
+
+  /* "See full breakdown" — sync state to main calculator and scroll */
+  var buildSeeFullBtn = document.getElementById('buildSeeFullBtn');
+  if (buildSeeFullBtn) {
+    buildSeeFullBtn.addEventListener('click', function () {
+      selectPlan(buildBase);
+      if (dialSlider && buildDialSlider) dialSlider.value = buildDialSlider.value;
+      BUILD_ADDONS.forEach(function (addon) {
+        var buildCb = document.getElementById('build-' + addon.id);
+        var calcCb  = document.getElementById('feat-' + addon.id);
+        if (buildCb && calcCb) calcCb.checked = buildCb.checked;
+      });
+      if (dialSlider && daysSlider) updateCalc();
+      var calcSection = document.getElementById('calculator');
+      if (calcSection) calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  updateBuildCard();
+
   if (contactForm) {
     contactForm.addEventListener('submit', async function (e) {
       e.preventDefault();

@@ -266,78 +266,98 @@
         </div>
       </div>
 
-      <!-- ── Agency ── -->
-      <div class="pricing-card">
+      <!-- ── Build Your Plan ── -->
+      <div class="pricing-card" id="buildCard">
         <div class="pricing-card-top">
-          <p style="font-size:.74rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin:0 0 6px;">Agencies &amp; Enterprise</p>
-          <h2 class="plan-name">Agency</h2>
-          <p class="plan-description">Unlimited capacity, white-label rights, custom integrations, and a dedicated account manager — built around your operation.</p>
-          <div class="plan-price-custom">Custom</div>
-          <div class="plan-billing-model" style="margin-top:6px;">
-            <span class="pbm-usage">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              Custom dial rate &nbsp;·&nbsp; Custom transfer rate
-            </span>
+          <p style="font-size:.74rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin:0 0 6px;">Fully Customisable</p>
+          <h2 class="plan-name">Build Your Plan</h2>
+          <p class="plan-description">Pick only the features you need. Set your dial volume and see a live monthly estimate — no sales call required.</p>
+
+          <!-- Base plan picker -->
+          <div class="build-base-row">
+            <button class="build-base-btn build-base-btn--active" id="buildBase-autodialer">
+              Starter<span class="build-base-price">$69/mo</span>
+            </button>
+            <button class="build-base-btn" id="buildBase-business">
+              Sales Floor<span class="build-base-price">$169/mo</span>
+            </button>
           </div>
-          <div class="plan-capacity-row" style="margin-top:12px;">
-            <span class="plan-cap-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="8" r="3"/><circle cx="15" cy="8" r="3"/><path d="M1 20c0-3.5 3.1-6 8-6"/><path d="M23 20c0-3.5-3.1-6-8-6"/><path d="M9 14c5 0 9 2.7 9 6"/></svg>
-              Unlimited Numbers
-            </span>
-            <span class="plan-cap-dot">·</span>
-            <span class="plan-cap-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07A19.5 19.5 0 014.07 11.9 19.8 19.8 0 011 3.28 2 2 0 012.98 1h3a2 2 0 012 1.72c.12.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L7.09 8.7a16 16 0 006.29 6.29l1.06-1.06a2 2 0 012.11-.45c.9.34 1.85.58 2.81.7A2 2 0 0122 16.92z"/></svg>
-              Unlimited dials
-            </span>
-            <span class="plan-cap-dot">·</span>
-            <span class="plan-cap-pill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              White-label
-            </span>
+
+          <!-- Dials/day slider -->
+          <div class="build-slider-wrap">
+            <div class="build-slider-header">
+              <span>Dials per day</span>
+              <span class="build-slider-val" id="buildDialDisplay">100</span>
+            </div>
+            <input type="range" class="calc-slider" id="buildDialSlider" min="10" max="2000" step="10" value="100">
+          </div>
+
+          <!-- Feature toggles -->
+          <div class="build-feats">
+            <label class="build-feat" for="build-personalizedVm">
+              <span class="build-feat-body">
+                <span class="build-feat-name">AI Personalized Voicemails</span>
+                <span class="build-feat-price">+$0.02/dial</span>
+              </span>
+              <span class="calc-feat-sw-wrap">
+                <input type="checkbox" id="build-personalizedVm" class="build-addon-cb">
+                <span class="calc-feat-switch"></span>
+              </span>
+            </label>
+            <label class="build-feat" for="build-liveTransfer">
+              <span class="build-feat-body">
+                <span class="build-feat-name">Live Call Transfer</span>
+                <span class="build-feat-price" id="build-ltPrice">+$0.15/transfer</span>
+              </span>
+              <span class="calc-feat-sw-wrap">
+                <input type="checkbox" id="build-liveTransfer" class="build-addon-cb">
+                <span class="calc-feat-switch"></span>
+              </span>
+            </label>
+            <label class="build-feat" for="build-gatekeeper">
+              <span class="build-feat-body">
+                <span class="build-feat-name">Gatekeeper Navigator</span>
+                <span class="build-feat-price">+$0.03/dial</span>
+              </span>
+              <span class="calc-feat-sw-wrap">
+                <input type="checkbox" id="build-gatekeeper" class="build-addon-cb">
+                <span class="calc-feat-switch"></span>
+              </span>
+            </label>
+            <label class="build-feat" for="build-transcription">
+              <span class="build-feat-body">
+                <span class="build-feat-name">Recording &amp; Transcription</span>
+                <span class="build-feat-price">+$0.03/dial</span>
+              </span>
+              <span class="calc-feat-sw-wrap">
+                <input type="checkbox" id="build-transcription" class="build-addon-cb">
+                <span class="calc-feat-switch"></span>
+              </span>
+            </label>
+            <label class="build-feat" for="build-voiceCloning">
+              <span class="build-feat-body">
+                <span class="build-feat-name">Voice Cloning</span>
+                <span class="build-feat-price">+$19/mo flat</span>
+              </span>
+              <span class="calc-feat-sw-wrap">
+                <input type="checkbox" id="build-voiceCloning" class="build-addon-cb">
+                <span class="calc-feat-switch"></span>
+              </span>
+            </label>
+          </div>
+
+          <!-- Live estimate -->
+          <div class="build-estimate">
+            <div class="build-estimate-label">Est. monthly total</div>
+            <div class="build-estimate-num">
+              <span class="build-estimate-currency">$</span><span id="buildTotal">69</span><span class="build-estimate-unit">/mo</span>
+            </div>
           </div>
         </div>
-        <ul class="plan-features">
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Everything in Digital Sales Floor
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Unlimited phone numbers &amp; daily dials
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Full white-label — your brand, your clients
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Custom voice cloning &amp; persona creation
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            API &amp; webhook access for custom workflows
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Dedicated account manager
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Custom SLA &amp; volume pricing
-          </li>
-          <li>
-            <svg class="plan-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-            Onboarding &amp; training included
-          </li>
-        </ul>
-        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin:0 0 14px;font-size:.81rem;color:#6b7280;line-height:1.5;">
-          <strong style="display:block;margin-bottom:3px;color:#374151;">Live transfer pricing included in your plan</strong>
-          Dial rates, transfer fees, and volume discounts are negotiated as part of your Agency agreement.
-        </div>
+
         <div class="plan-cta-area">
-          <button class="plan-btn plan-btn-outline" id="contactUsBtn">
-            <span class="btn-label">Contact Us</span>
-          </button>
+          <button class="plan-btn plan-btn-fill" id="buildSeeFullBtn">See full breakdown →</button>
+          <p style="font-size:.72rem;color:#9ca3af;text-align:center;margin:10px 0 0;">No commitment — cancel anytime</p>
         </div>
       </div>
 
@@ -780,6 +800,6 @@
     </div>
   </footer>
 
-  <script src="/static/pricing.js?v=8"></script>
+  <script src="/static/pricing.js?v=9"></script>
 </body>
 </html>

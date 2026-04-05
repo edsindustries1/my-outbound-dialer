@@ -864,3 +864,93 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .calc-section-label + .calc-results {
   padding-top: 0;
 }
+
+/* ══════════════ BUILD YOUR PLAN CARD ══════════════ */
+.build-addon-cb:checked + .calc-feat-switch { background: #1a1a1a; }
+.build-addon-cb:checked + .calc-feat-switch::after { transform: translateX(18px); }
+
+.build-base-row {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.build-base-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: var(--font);
+  line-height: 1.3;
+}
+.build-base-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.build-base-btn--active { border-color: var(--accent); background: var(--accent); color: #fff; }
+.build-base-btn--active:hover { background: var(--accent-hover); color: #fff; }
+.build-base-price { font-size: .82rem; font-weight: 700; opacity: .8; }
+.build-base-btn--active .build-base-price { opacity: 1; }
+
+.build-slider-wrap { margin-bottom: 14px; }
+.build-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: .78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.build-slider-val { font-weight: 700; color: var(--text); }
+
+.build-feats { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.build-feat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  background: var(--bg-subtle);
+}
+.build-feat:hover { background: var(--accent-light); border-color: rgba(26,26,26,.2); }
+.build-feat-body { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.build-feat-name { font-size: .82rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.build-feat-price { font-size: .72rem; color: var(--text-muted); font-weight: 500; }
+
+.build-estimate {
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.build-estimate-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.build-estimate-num { display: flex; align-items: baseline; gap: 1px; }
+.build-estimate-currency { font-size: 1rem; font-weight: 700; color: var(--text); }
+.build-estimate-num > span:nth-child(2) {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+.build-estimate-unit { font-size: .85rem; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
