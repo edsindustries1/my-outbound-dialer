@@ -3549,8 +3549,20 @@ def pvm_preview():
     if not template:
         return jsonify({"error": "No template provided"}), 400
     humanize = data.get("humanize", True)
+    voice_settings = data.get("voice_settings") or None
+    model_id = data.get("model_id", "eleven_turbo_v2_5")
+
     rendered = pvm_render_template(template, contact, humanize=humanize)
-    return jsonify({"rendered": rendered})
+
+    # Apply VoiceStyle Engine enhancements when voice_settings provided
+    processed = rendered
+    if voice_settings:
+        voice_id = data.get("voice_id", "")
+        provider, _, _ = _detect_pvm_provider(voice_id, current_user.id, model_id) if voice_id else ("fish_audio", 1.0, "neutral")
+        from personalized_vm import _apply_voice_enhancements as _ave
+        processed = _ave(rendered, voice_settings, provider, model_id=model_id)
+
+    return jsonify({"rendered": rendered, "processed": processed})
 
 
 @app.route("/api/pvm/preview-audio", methods=["POST"])

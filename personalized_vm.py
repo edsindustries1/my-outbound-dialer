@@ -50,11 +50,13 @@ _cache_lock = threading.Lock()
 # Audio cache helpers — content-addressed, 30-day TTL
 # ---------------------------------------------------------------------------
 
-def _cache_key(script, voice_id, provider, voice_settings=None):
-    """SHA-256 hash of the rendered script + voice + provider + voice settings. Used as cache key.
+def _cache_key(script, voice_id, provider, voice_settings=None, model_id=""):
+    """SHA-256 hash of the rendered script + voice + provider + model + voice settings.
 
-    All voice_settings fields (including model_id) are included so different models
-    and style presets produce distinct cache entries.
+    model_id is a first-class cache-key component so callers that pass model_id
+    separately (without embedding it inside voice_settings) still get distinct
+    cache entries per model.  voice_settings is also fully included (minus voice_id
+    which is already a top-level key) to cover preset, fillers, pauses, emphasis, etc.
     """
     settings_str = ""
     if voice_settings:
@@ -65,7 +67,9 @@ def _cache_key(script, voice_id, provider, voice_settings=None):
             )
         except Exception:
             pass
-    raw = f"{script}|{voice_id}|{provider}|{settings_str}"
+    # Use voice_settings.model_id when present, fall back to the explicit arg
+    effective_model = (voice_settings or {}).get("model_id") or model_id
+    raw = f"{script}|{voice_id}|{provider}|{effective_model}|{settings_str}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -85,9 +89,9 @@ def _save_cache_index(index):
         json.dump(index, f, indent=2)
 
 
-def _cache_lookup(script, voice_id, provider, voice_settings=None):
+def _cache_lookup(script, voice_id, provider, voice_settings=None, model_id=""):
     """Return path to a cached audio file if it exists and is not expired, else None."""
-    key = _cache_key(script, voice_id, provider, voice_settings)
+    key = _cache_key(script, voice_id, provider, voice_settings, model_id=model_id)
     with _cache_lock:
         index = _load_cache_index()
         entry = index.get(key)
@@ -102,9 +106,9 @@ def _cache_lookup(script, voice_id, provider, voice_settings=None):
         return cached_path
 
 
-def _cache_store(script, voice_id, provider, source_filepath, voice_settings=None):
+def _cache_store(script, voice_id, provider, source_filepath, voice_settings=None, model_id=""):
     """Copy a freshly-generated audio file into the cache. Returns cached filepath."""
-    key = _cache_key(script, voice_id, provider, voice_settings)
+    key = _cache_key(script, voice_id, provider, voice_settings, model_id=model_id)
     os.makedirs(CACHE_DIR, exist_ok=True)
     cached_filename = f"c_{key[:16]}.mp3"
     cached_path = os.path.join(CACHE_DIR, cached_filename)
@@ -1302,8 +1306,8 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
         shutil.copy2(_cached_source, filepath)
         return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": True}
 
-    # --- Content-addressed cache lookup (includes voice_settings in key) ---
-    cached_path = _cache_lookup(enhanced_script, voice_id, provider, voice_settings)
+    # --- Content-addressed cache lookup (includes voice_settings + model_id in key) ---
+    cached_path = _cache_lookup(enhanced_script, voice_id, provider, voice_settings, model_id=model_id)
     if cached_path:
         shutil.copy2(cached_path, filepath)
         logger.debug(f"PVM cache hit for {phone} ({provider})")
@@ -1323,7 +1327,7 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
     if success:
         # Store in content-addressed cache for future reuse
         try:
-            _cache_store(enhanced_script, voice_id, provider, filepath, voice_settings)
+            _cache_store(enhanced_script, voice_id, provider, filepath, voice_settings, model_id=model_id)
         except Exception as ce:
             logger.warning(f"PVM cache store failed: {ce}")
         return {"phone": phone, "filename": filename, "script": script, "success": True, "from_cache": False}
