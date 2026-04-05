@@ -556,8 +556,13 @@ def _speak_street_number(num_str):
     Humans say addresses as pairs, not as full numbers:
       9         → "nine"
       42        → "forty two"
+      100       → "one hundred"
       123       → "one twenty three"
+      1000      → "ten hundred"
+      1100      → "eleven hundred"
       1234      → "twelve thirty four"
+      2500      → "twenty five hundred"
+      8001      → "eighty oh one"   (zero preserved as "oh")
       12345+    → digit by digit "one two three four five"
     """
     digits = num_str.strip()
@@ -568,15 +573,24 @@ def _speak_street_number(num_str):
         return _number_to_words(int(digits))
     elif n == 3:
         first = int(digits[0])
-        rest = int(digits[1:])
+        rest_str = digits[1:]
+        rest = int(rest_str)
         if rest == 0:
             return _number_to_words(first) + " hundred"
+        if rest < 10:
+            # e.g. "102" → "one oh two"
+            return _number_to_words(first) + " oh " + _number_to_words(rest)
         return _number_to_words(first) + " " + _number_to_words(rest)
     elif n == 4:
         first_pair = int(digits[:2])
-        second_pair = int(digits[2:])
+        second_str = digits[2:]
+        second_pair = int(second_str)
         if second_pair == 0:
+            # e.g. "2500" → "twenty five hundred"
             return _number_to_words(first_pair) + " hundred"
+        if second_pair < 10:
+            # e.g. "8001" → "eighty oh one", "1005" → "ten oh five"
+            return _number_to_words(first_pair) + " oh " + _number_to_words(second_pair)
         return _number_to_words(first_pair) + " " + _number_to_words(second_pair)
     else:
         return " ".join(DIGIT_WORDS.get(d, d) for d in digits)
@@ -613,55 +627,74 @@ def _ordinal_to_word(token):
 def _humanize_address(text):
     """Transform a US property address into naturally spoken form.
 
-    Handles: street number pairs, ordinal street names, unit/apt/lot numbers,
-    route/interstate numbers, PO boxes, all common abbreviations, state codes,
-    directionals, zip code removal.
+    Processing order is critical — each step depends on the previous:
+      1. PO Box (before any digit processing)
+      2. Route / Highway / Interstate numbers
+      3. Fractional house numbers (234 1/2)
+      4. Leading house / street number → spoken pairs (anchored to start of string)
+      5. Abbreviation expansion (street types, unit designators, directionals)
+      6. Ordinal street names (3rd → Third)
+      7. Unit numbers after expansion (Apartment 4B → Apartment four B)
+      8. Hash-style unit numbers (#4B → number four B)
+      9. State code → full name; zip code stripped
+     10. Commas → brief spoken pause
+     11. Final whitespace cleanup
     """
-    # 1. PO Box — convert before anything else
+    if not text or not text.strip():
+        return text
+
+    text = text.strip()
+
+    # 1. PO Box — must be first; converts box number to spoken form
     text = re.sub(
         r'\b(?:P\.?\s*O\.?\s*Box|Post\s+Office\s+Box)\s+(\d+)\b',
-        lambda m: 'P.O. Box ' + _speak_street_number(m.group(1)),
+        lambda m: 'P O Box ' + _speak_street_number(m.group(1)),
         text, flags=re.IGNORECASE
     )
 
-    # 2. Interstate / US Route / State Route numbers
+    # 2. Route / Highway / Interstate numbers — normalize before digit-processing
     text = re.sub(
-        r'\bI-(\d+)\b',
+        r'\b(?:IH|I)-(\d+)\b',
         lambda m: 'Interstate ' + _number_to_words(int(m.group(1))),
         text
     )
     text = re.sub(
         r'\bUS-?(\d+)\b',
-        lambda m: 'U.S. Route ' + _number_to_words(int(m.group(1))),
+        lambda m: 'US Route ' + _number_to_words(int(m.group(1))),
         text, flags=re.IGNORECASE
     )
     text = re.sub(
-        r'\b(?:SR|SH|CR|FM|PR)-?(\d+)\b',
+        r'\b(?:SR|SH|CR|FM|PR|Hwy|Hwys?)-?\s*(\d+)\b',
         lambda m: 'Route ' + _number_to_words(int(m.group(1))),
         text, flags=re.IGNORECASE
     )
     text = re.sub(
-        r'\b(?:Rt|Rte|Route)\.?\s+(\d+)\b',
+        r'\b(?:Rt|Rte|Route)\.?\s+#?(\d+)\b',
         lambda m: 'Route ' + _number_to_words(int(m.group(1))),
         text, flags=re.IGNORECASE
     )
 
-    # 3. Fractional street numbers like "234 1/2"
+    # 3. Fractional house numbers like "234 1/2 Oak St"
     text = re.sub(
-        r'\b(\d{1,5})\s+1/2\b',
+        r'^(\d{1,5})\s+1/2\b',
         lambda m: _speak_street_number(m.group(1)) + ' and a half',
         text
     )
 
-    # 4. Speak the leading street number (at start of string or after a comma)
+    # 4. Leading house / street number — anchored to the very start of the string.
+    #    This is the most important step; using a simple '^' anchor (not lookbehind)
+    #    avoids fixed-width lookbehind issues and reliably processes the house number.
     #    e.g. "1234 Oak St" → "twelve thirty four Oak St"
+    #    e.g. "42 Maple Lane" → "forty two Maple Lane"
     text = re.sub(
-        r'(?:(?<=^)|(?<=,\s))(\d{1,6})(?=\s)',
+        r'^(\d{1,6})(?=\s)',
         lambda m: _speak_street_number(m.group(1)),
         text
     )
 
-    # 5. Expand abbreviations (street types, unit designators, directionals)
+    # 5. Expand abbreviations — street types, unit designators, directionals.
+    #    Applied AFTER step 4 so abbreviation expansion doesn't interfere with
+    #    the leading number detection.
     for abbr, full in ADDRESS_ABBREVIATIONS:
         text = re.sub(abbr, full, text, flags=re.IGNORECASE)
 
@@ -672,10 +705,10 @@ def _humanize_address(text):
         text, flags=re.IGNORECASE
     )
 
-    # 7. Unit/apartment/lot/space numbers after abbreviation expansion
+    # 7. Unit / apartment / lot numbers after abbreviation expansion.
     #    "Apartment 4B" → "Apartment four B"
     #    "Suite 100" → "Suite one hundred"
-    #    "Lot 12" → "Lot twelve"
+    #    Captures optional trailing letter for alphanumeric units like "4B".
     def _speak_unit(match):
         label = match.group(1)
         num = match.group(2)
@@ -688,32 +721,35 @@ def _humanize_address(text):
         _speak_unit, text, flags=re.IGNORECASE
     )
 
-    # 8. "#NNN" hash-style unit numbers → "number NNN"
+    # 8. Hash-style unit numbers: "#4B" → "number four B"
     text = re.sub(
-        r'#(\d{1,4})([A-Za-z]?)\b',
+        r'#\s*(\d{1,4})([A-Za-z]?)\b',
         lambda m: 'number ' + _number_to_words(int(m.group(1))) + (' ' + m.group(2).upper() if m.group(2) else ''),
         text
     )
 
-    # 9. State abbreviations + strip zip code
-    def replace_state(match):
-        prefix = match.group(1)
-        state_abbr = match.group(2)
-        full_name = US_STATE_ABBREVIATIONS.get(state_abbr.upper())
-        if full_name:
-            return f"{prefix}{full_name}"
-        return match.group(0)
-
+    # 9. State abbreviation → full name, then strip ZIP code.
+    #    Only replaces known US state codes (via dict lookup) so random two-letter
+    #    combos in city names are never misidentified as states.
+    #    Matches state codes appearing before an optional zip at the end of the string.
     text = re.sub(
-        r'(,?\s*)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
-        replace_state, text
+        r'(?:,\s*|\s+)([A-Z]{2})(?=\s*(?:\d{5}(?:-\d{4})?)?(?:\s*[,.\n]|\s*$))',
+        lambda m: ', ' + (US_STATE_ABBREVIATIONS.get(m.group(1).upper()) or m.group(1)),
+        text
     )
+
+    # Strip trailing ZIP code (5-digit or ZIP+4)
     text = re.sub(r',?\s*\d{5}(?:-\d{4})?\s*$', '', text)
 
-    # 10. Final cleanup
-    text = re.sub(r'\s{2,}', ' ', text).strip()
-    text = re.sub(r',\s*$', '', text)
-    text = re.sub(r'\s+([.,])', r'\1', text)
+    # 10. Convert commas to a spoken-pause rhythm that sounds natural
+    #     "123 Oak Street, Houston, Texas" → "123 Oak Street,  Houston,  Texas"
+    #     (double space after comma gives TTS engines a breath cue)
+    text = re.sub(r',\s*', ',  ', text)
+
+    # 11. Final cleanup
+    text = re.sub(r'\s{3,}', '  ', text)   # collapse excess spaces, keep doubles
+    text = re.sub(r',\s*$', '', text).strip()
+
     return text
 
 
