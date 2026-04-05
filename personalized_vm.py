@@ -51,12 +51,16 @@ _cache_lock = threading.Lock()
 # ---------------------------------------------------------------------------
 
 def _cache_key(script, voice_id, provider, voice_settings=None):
-    """SHA-256 hash of the rendered script + voice + provider + voice settings. Used as cache key."""
+    """SHA-256 hash of the rendered script + voice + provider + voice settings. Used as cache key.
+
+    All voice_settings fields (including model_id) are included so different models
+    and style presets produce distinct cache entries.
+    """
     settings_str = ""
     if voice_settings:
         try:
             settings_str = json.dumps(
-                {k: voice_settings[k] for k in sorted(voice_settings) if k not in ("voice_id", "model_id")},
+                {k: voice_settings[k] for k in sorted(voice_settings) if k != "voice_id"},
                 sort_keys=True
             )
         except Exception:
@@ -847,7 +851,7 @@ STYLE_PRESETS = {
         "speed": 0.75,
         "use_speaker_boost": True,
         "fish_speed": 0.88,
-        "fish_emotion": "neutral",
+        "fish_emotion": "empathetic",
         "fillers": "light",
         "pause_style": "full",
         "emphasis_mode": "moderate",

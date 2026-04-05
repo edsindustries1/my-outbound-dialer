@@ -2140,6 +2140,9 @@ def start():
                     fish_speed = float(voice_settings["fish_speed"])
                 if "fish_emotion" in voice_settings:
                     fish_emotion = voice_settings["fish_emotion"]
+                # Use template's saved model_id if present
+                if voice_settings.get("model_id"):
+                    pvm_model_id = voice_settings["model_id"]
             else:
                 voice_settings = {
                     "stability": pvm_stability / 100.0,

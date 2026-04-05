@@ -2339,7 +2339,10 @@
                                             </button>
                                         </div>
                                         <div id="vmtAdvancedPanel" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--gads-border);border-radius:8px;background:var(--gads-bg-secondary,#f8f9fa);">
-                                            <p style="font-size:11px;color:var(--gads-text-secondary);margin:0 0 10px 0;font-style:italic;">Settings are applied to both Fish Audio and ElevenLabs providers. Fish-specific and EL-specific controls override the preset where available.</p>
+                                            <div style="margin-bottom:10px;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;" id="vmtProviderBadge">
+                                                <span id="vmtProviderBadgeDot" style="width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;"></span>
+                                                <span id="vmtProviderBadgeText">Provider: auto-detected from voice selection</span>
+                                            </div>
                                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                                                 <div>
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Filler Words</label>
@@ -2371,32 +2374,34 @@
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Speech Speed: <span id="vmtSpeedVal">82%</span></label>
                                                     <input type="range" id="vmtSpeedSlider" min="70" max="120" value="82" step="1" style="width:100%;" oninput="document.getElementById('vmtSpeedVal').textContent=this.value+'%';vmtMarkCustom();">
                                                 </div>
-                                                <div>
+                                                <!-- ElevenLabs-specific controls -->
+                                                <div data-provider="el">
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Expressiveness (EL): <span id="vmtStyleVal">12%</span></label>
                                                     <input type="range" id="vmtStyleSlider" min="0" max="60" value="12" step="1" style="width:100%;" oninput="document.getElementById('vmtStyleVal').textContent=this.value+'%';vmtMarkCustom();">
                                                 </div>
-                                                <div>
+                                                <div data-provider="el">
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Consistency (EL): <span id="vmtStabilityVal">40%</span></label>
                                                     <input type="range" id="vmtStabilitySlider" min="0" max="100" value="40" step="1" style="width:100%;" oninput="document.getElementById('vmtStabilityVal').textContent=this.value+'%';vmtMarkCustom();">
                                                 </div>
-                                                <div>
+                                                <div data-provider="el" style="grid-column:span 2;display:flex;align-items:center;gap:8px;">
+                                                    <input type="checkbox" id="vmtSpeakerBoost" checked onchange="vmtMarkCustom();" style="accent-color:var(--gads-primary);">
+                                                    <label for="vmtSpeakerBoost" style="font-size:11px;color:var(--gads-text-secondary);cursor:pointer;">Speaker Boost (EL — enhances clarity)</label>
+                                                </div>
+                                                <!-- Fish Audio-specific controls -->
+                                                <div data-provider="fish">
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Fish Audio Speed: <span id="vmtFishSpeedVal">0.92x</span></label>
                                                     <input type="range" id="vmtFishSpeedSlider" min="70" max="130" value="92" step="1" style="width:100%;" oninput="document.getElementById('vmtFishSpeedVal').textContent=(this.value/100).toFixed(2)+'x';vmtMarkCustom();">
                                                 </div>
-                                                <div>
+                                                <div data-provider="fish">
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Fish Audio Emotion</label>
                                                     <select id="vmtFishEmotion" class="gads-select" style="font-size:12px;" onchange="vmtMarkCustom()">
                                                         <option value="neutral" selected>Neutral</option>
                                                         <option value="happy">Happy</option>
+                                                        <option value="empathetic">Empathetic</option>
+                                                        <option value="energetic">Energetic</option>
+                                                        <option value="urgent">Urgent</option>
                                                         <option value="sad">Sad</option>
-                                                        <option value="angry">Angry</option>
-                                                        <option value="fearful">Fearful</option>
-                                                        <option value="surprised">Surprised</option>
                                                     </select>
-                                                </div>
-                                                <div style="display:flex;align-items:center;gap:8px;grid-column:span 2;">
-                                                    <input type="checkbox" id="vmtSpeakerBoost" checked onchange="vmtMarkCustom();" style="accent-color:var(--gads-primary);">
-                                                    <label for="vmtSpeakerBoost" style="font-size:11px;color:var(--gads-text-secondary);cursor:pointer;">Speaker Boost (ElevenLabs — enhances clarity at lower volumes)</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -3852,15 +3857,48 @@
                 if (modelSel) modelSel.value = "eleven_turbo_v2_5";
             }
 
+            var _vmtFishVoiceIds = new Set();
+
+            function vmtUpdateProviderUI(voiceId) {
+                var isFish = voiceId ? _vmtFishVoiceIds.has(voiceId) : true;
+                var isEl = voiceId ? !isFish : false;
+                var badge = document.getElementById("vmtProviderBadgeText");
+                var dot = document.getElementById("vmtProviderBadgeDot");
+                var panel = document.getElementById("vmtAdvancedPanel");
+                if (badge) {
+                    if (!voiceId) {
+                        badge.textContent = "Provider: select a voice to detect";
+                        if (dot) dot.style.background = "#9ca3af";
+                    } else if (isFish) {
+                        badge.textContent = "Provider: Fish Audio (Humana Voice)";
+                        if (dot) dot.style.background = "#0ea5e9";
+                    } else {
+                        badge.textContent = "Provider: ElevenLabs";
+                        if (dot) dot.style.background = "#7c3aed";
+                    }
+                }
+                if (panel) {
+                    panel.querySelectorAll("[data-provider='fish']").forEach(function(el) {
+                        el.style.display = (!voiceId || isFish) ? "" : "none";
+                    });
+                    panel.querySelectorAll("[data-provider='el']").forEach(function(el) {
+                        el.style.display = (!voiceId || isEl) ? "" : "none";
+                    });
+                }
+            }
+
             function vmtLoadPreviewVoices() {
                 var sel = document.getElementById("vmtPreviewVoiceSelect");
                 if (!sel) return;
                 sel.innerHTML = '<option value="">Loading voices...</option>';
                 apiFetch("/humana-voice/api/my-voices").then(function(r) { return r.json(); }).then(function(voices) {
+                    _vmtFishVoiceIds = new Set();
                     if (!Array.isArray(voices) || voices.length === 0) {
                         sel.innerHTML = '<option value="">No voices saved — add voices in Humana Voice</option>';
+                        vmtUpdateProviderUI("");
                         return;
                     }
+                    voices.forEach(function(v) { _vmtFishVoiceIds.add(v.voice_id); });
                     var cloned = voices.filter(function(v) { return v.voice_type === "cloned"; });
                     var library = voices.filter(function(v) { return v.voice_type !== "cloned"; });
                     var html = '<option value="">-- Select a voice --</option>';
@@ -3879,15 +3917,25 @@
                         html += '</optgroup>';
                     }
                     sel.innerHTML = html;
+                    vmtUpdateProviderUI(sel.value);
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
             }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                var voiceSel = document.getElementById("vmtPreviewVoiceSelect");
+                if (voiceSel) {
+                    voiceSel.addEventListener("change", function() {
+                        vmtUpdateProviderUI(this.value);
+                    });
+                }
+            });
 
             // ---- VoiceStyle Engine — preset data (mirrors Python STYLE_PRESETS) ----
             var VMT_STYLE_PRESETS = {
                 professional: { preset: "professional", stability: 0.40, similarity_boost: 0.82, style: 0.12, speed: 0.82, use_speaker_boost: true, fish_speed: 0.92, fish_emotion: "neutral", fillers: "none", pause_style: "light", emphasis_mode: "auto" },
                 friendly:     { preset: "friendly",     stability: 0.22, similarity_boost: 0.84, style: 0.28, speed: 0.92, use_speaker_boost: true, fish_speed: 1.0,  fish_emotion: "happy",   fillers: "light",   pause_style: "light",   emphasis_mode: "auto" },
                 urgent:       { preset: "urgent",       stability: 0.35, similarity_boost: 0.80, style: 0.18, speed: 1.05, use_speaker_boost: true, fish_speed: 1.08, fish_emotion: "neutral", fillers: "none",    pause_style: "minimal", emphasis_mode: "strong" },
-                empathetic:   { preset: "empathetic",   stability: 0.18, similarity_boost: 0.85, style: 0.35, speed: 0.75, use_speaker_boost: true, fish_speed: 0.88, fish_emotion: "neutral", fillers: "light",   pause_style: "full",    emphasis_mode: "moderate" },
+                empathetic:   { preset: "empathetic",   stability: 0.18, similarity_boost: 0.85, style: 0.35, speed: 0.75, use_speaker_boost: true, fish_speed: 0.88, fish_emotion: "empathetic", fillers: "light",   pause_style: "full",    emphasis_mode: "moderate" },
                 conversational:{ preset: "conversational", stability: 0.20, similarity_boost: 0.82, style: 0.25, speed: 0.88, use_speaker_boost: true, fish_speed: 0.97, fish_emotion: "neutral", fillers: "natural", pause_style: "natural", emphasis_mode: "auto" }
             };
             var _vmtCurrentPreset = "professional";
@@ -3905,6 +3953,8 @@
 
             function vmtApplySettingsToUI(vs) {
                 if (!vs) return;
+                // Update provider UI based on saved voice_id if present
+                if (vs.voice_id) vmtUpdateProviderUI(vs.voice_id);
                 var speedPct = Math.round((vs.speed || 0.82) * 100);
                 var stylePct = Math.round((vs.style || 0.12) * 100);
                 var stabilityPct = Math.round((vs.stability || 0.40) * 100);
@@ -3961,6 +4011,7 @@
                     pause_style: pauseStyle,
                     emphasis_mode: emphasisMode,
                     model_id: modelId,
+                    voice_id: (document.getElementById("vmtPreviewVoiceSelect") || {value:""}).value || ""
                 };
             }
 
