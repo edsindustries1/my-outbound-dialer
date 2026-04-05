@@ -937,23 +937,24 @@ def _inject_pauses(script, style, provider):
     """Inject pause markers into the script.
 
     style: 'minimal' | 'light' | 'natural' | 'full'
-    provider: 'elevenlabs' | 'fish_audio'
+    provider: 'elevenlabs' | 'fish_audio' | '_el_plain'
 
-    For ElevenLabs (SSML models): uses <break time="Xs"/>
-    For Fish Audio: uses comma/ellipsis punctuation
+    For ElevenLabs with SSML-capable models: uses <break time="Xs"/>
+    For Fish Audio and non-SSML ElevenLabs ('_el_plain'): uses comma/ellipsis punctuation
     """
     if not style or style == "minimal":
         return script
 
-    is_el = (provider == "elevenlabs")
+    # Only emit SSML tags for ElevenLabs when the model supports SSML
+    is_el_ssml = (provider == "elevenlabs")
 
     def _pause(sec):
-        if is_el:
+        if is_el_ssml:
             return f' <break time="{sec}s"/> '
         return ", "
 
     def _long_pause(sec):
-        if is_el:
+        if is_el_ssml:
             return f' <break time="{sec}s"/> '
         return "... "
 
@@ -979,21 +980,26 @@ def _inject_pauses(script, style, provider):
             script, flags=re.IGNORECASE
         )
         script = re.sub(r'\.\.\.',
-                        _long_pause(0.4) if is_el else "... ",
+                        _long_pause(0.4) if is_el_ssml else "... ",
                         script)
 
     return script
 
 
 def _inject_emphasis(script, mode, provider):
-    """Wrap phone numbers and key CTAs in SSML emphasis (ElevenLabs) or caps hints (Fish Audio).
+    """Wrap phone numbers and key CTAs with emphasis hints.
 
     mode: 'off' | 'auto' | 'moderate' | 'strong'
+    provider: 'elevenlabs' | 'fish_audio' | '_el_plain'
+
+    ElevenLabs SSML-capable models: wraps in <emphasis level="..."> tags.
+    Fish Audio / non-SSML ElevenLabs: uses light UPPER-CASE capitalization
+    on key words so TTS naturally stresses them.
     """
     if not mode or mode == "off":
         return script
 
-    is_el = (provider == "elevenlabs")
+    is_el_ssml = (provider == "elevenlabs")
 
     level_map = {
         "auto": "moderate",
@@ -1003,16 +1009,19 @@ def _inject_emphasis(script, mode, provider):
     el_level = level_map.get(mode, "moderate")
 
     def _emph(text):
-        if is_el:
+        if is_el_ssml:
             return f'<emphasis level="{el_level}">{text}</emphasis>'
-        return text
+        # Fish Audio / plain EL: capitalize key words for natural stress
+        return text.upper()
 
+    # Phone numbers
     script = re.sub(
         r'(\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b)',
         lambda m: _emph(m.group(0)),
         script
     )
 
+    # Call-to-action phrases
     cta_pattern = r'\b(call\s+(?:me|us)(?:\s+(?:at|back))?|(?:reach|contact)\s+(?:me|us)|text\s+(?:me|us)|give\s+(?:me|us)\s+a\s+(?:call|ring))\b'
     script = re.sub(cta_pattern,
                     lambda m: _emph(m.group(0)),
@@ -1021,24 +1030,33 @@ def _inject_emphasis(script, mode, provider):
     return script
 
 
-def _apply_voice_enhancements(script, settings, provider):
+def _apply_voice_enhancements(script, settings, provider, model_id=""):
     """Apply all VoiceStyle Engine enhancements to a script.
 
     settings: the full voice_settings dict (may include preset, fillers, pause_style, emphasis_mode)
     provider: 'fish_audio' | 'elevenlabs'
+    model_id: used to gate SSML injection for ElevenLabs; only inject SSML tags for SSML_MODELS.
 
-    Returns the enhanced script ready for TTS.
+    Default for each key is the no-op value so legacy templates (those without a VoiceStyle
+    preset stored in voice_settings) pass through this pipeline unchanged.
     """
     if not settings:
         return script
 
-    fillers = settings.get("fillers", "none")
-    pause_style = settings.get("pause_style", "light")
-    emphasis_mode = settings.get("emphasis_mode", "auto")
+    # Explicit no-ops when keys are absent — legacy templates must be unaffected
+    fillers = settings.get("fillers") or "none"
+    pause_style = settings.get("pause_style") or "minimal"
+    emphasis_mode = settings.get("emphasis_mode") or "off"
+
+    # For ElevenLabs, only use SSML markup when the model actually supports it.
+    # When the model is not in SSML_MODELS, use a sentinel that suppresses tags.
+    effective_provider = provider
+    if provider == "elevenlabs" and model_id and model_id not in SSML_MODELS:
+        effective_provider = "_el_plain"  # EL without SSML capability
 
     script = _inject_fillers(script, fillers)
-    script = _inject_pauses(script, pause_style, provider)
-    script = _inject_emphasis(script, emphasis_mode, provider)
+    script = _inject_pauses(script, pause_style, effective_provider)
+    script = _inject_emphasis(script, emphasis_mode, effective_provider)
 
     return script
 
@@ -1052,9 +1070,10 @@ def build_processed_script(script, settings, provider):
     if not settings:
         return script
 
-    fillers = settings.get("fillers", "none")
-    pause_style = settings.get("pause_style", "light")
-    emphasis_mode = settings.get("emphasis_mode", "auto")
+    # No-op defaults so legacy templates (without VoiceStyle keys) render unchanged
+    fillers = settings.get("fillers") or "none"
+    pause_style = settings.get("pause_style") or "minimal"
+    emphasis_mode = settings.get("emphasis_mode") or "off"
 
     processed = _inject_fillers(script, fillers)
 
@@ -1276,7 +1295,7 @@ def generate_audio_for_contact(contact, template, voice_id, model_id="eleven_mul
             fish_emotion = voice_settings["fish_emotion"]
 
     # --- Apply voice enhancements (fillers, pauses, emphasis) ---
-    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider)
+    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider, model_id=model_id)
 
     # --- Deduplication: worker found a previously-generated file for identical script ---
     if _cached_source and os.path.exists(_cached_source):
@@ -1533,7 +1552,7 @@ def generate_preview_audio(contact, template, voice_id, voice_settings=None, hum
             fish_emotion = voice_settings["fish_emotion"]
 
     # Apply VoiceStyle Engine enhancements
-    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider)
+    enhanced_script = _apply_voice_enhancements(script, voice_settings, provider, model_id=model_id)
 
     if provider == "fish_audio":
         success, error = _generate_audio_fish(enhanced_script, voice_id, fish_speed=fish_speed,
