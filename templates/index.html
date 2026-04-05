@@ -2296,6 +2296,39 @@
                                         </div>
                                         <textarea id="vmtScriptText" class="gads-textarea" rows="6" placeholder="Hi {first_name}, this is a friendly reminder about your account balance of {amount}..."></textarea>
                                     </div>
+                                    <div style="border-top:1px solid var(--gads-border);margin:12px 0;"></div>
+                                    <div class="vmt-form-group">
+                                        <label style="display:flex;align-items:center;gap:6px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                            Voice Preview
+                                        </label>
+                                        <p class="vmt-hint" style="margin-bottom:8px;">Select a voice and click Preview to hear how your script will sound. Variables are replaced with sample values.</p>
+                                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+                                            <select id="vmtPreviewVoiceSelect" class="gads-select" style="flex:1;min-width:180px;">
+                                                <option value="">Loading voices...</option>
+                                            </select>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtLoadPreviewVoices()" title="Refresh voices">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                            </button>
+                                        </div>
+                                        <div style="margin-bottom:8px;">
+                                            <select id="vmtPreviewModel" class="gads-select">
+                                                <option value="eleven_multilingual_v2">Multilingual v2 (Best quality)</option>
+                                                <option value="eleven_turbo_v2_5" selected>Turbo v2.5 (Fast + natural)</option>
+                                                <option value="eleven_flash_v2_5">Flash v2.5 (Ultra-fast)</option>
+                                                <option value="eleven_english_v1">English v1 (Classic)</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" id="vmtPreviewBtn" onclick="vmtPreviewAudio()">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                            Preview Voice
+                                        </button>
+                                        <div id="vmtPreviewResult" style="display:none;margin-top:10px;">
+                                            <audio id="vmtPreviewPlayer" controls preload="metadata" style="width:100%;margin-bottom:8px;"></audio>
+                                            <div id="vmtPreviewScript" style="font-size:12px;color:var(--gads-text-secondary);background:var(--gads-bg-secondary,#f8f9fa);border:1px solid var(--gads-border);border-radius:6px;padding:8px 10px;line-height:1.5;white-space:pre-wrap;"></div>
+                                        </div>
+                                        <div id="vmtPreviewStatus" style="margin-top:6px;font-size:12px;color:var(--gads-text-secondary);"></div>
+                                    </div>
                                 </div>
                                 <div class="vmt-form-actions">
                                     <button type="button" class="gads-btn gads-btn-primary" onclick="vmtSave()">Save Template</button>
@@ -3604,9 +3637,11 @@
                 document.getElementById("vmtName").value = "";
                 document.getElementById("vmtAudioUrl").value = "";
                 document.getElementById("vmtScriptText").value = "";
+                vmtResetPreview();
                 vmtSwitchType("audio_url");
                 document.getElementById("vmtFormCard").style.display = "";
                 document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });
+                vmtLoadPreviewVoices();
             }
             function vmtCloseForm() {
                 document.getElementById("vmtFormCard").style.display = "none";
@@ -3687,6 +3722,77 @@
                 }).catch(function() {});
             }
 
+            function vmtResetPreview() {
+                var result = document.getElementById("vmtPreviewResult");
+                var status = document.getElementById("vmtPreviewStatus");
+                var player = document.getElementById("vmtPreviewPlayer");
+                var scriptEl = document.getElementById("vmtPreviewScript");
+                if (result) result.style.display = "none";
+                if (status) status.textContent = "";
+                if (player) { player.pause(); player.src = ""; }
+                if (scriptEl) scriptEl.textContent = "";
+            }
+
+            function vmtLoadPreviewVoices() {
+                var sel = document.getElementById("vmtPreviewVoiceSelect");
+                if (!sel) return;
+                var currentVal = sel.value;
+                sel.innerHTML = '<option value="">Loading...</option>';
+                apiFetch("/api/pvm/voices").then(function(r) { return r.json(); }).then(function(data) {
+                    pvmVoicesCache = data.voices || [];
+                    renderVoiceOptions(sel, pvmVoicesCache, currentVal);
+                    if (!sel.value && pvmVoicesCache.length > 0) {
+                        apiFetch("/api/voice-preset").then(function(r2) { return r2.json(); }).then(function(pd) {
+                            var preset = pd.preset || {};
+                            if (preset.voice_id) renderVoiceOptions(sel, pvmVoicesCache, preset.voice_id);
+                            if (preset.model_id) {
+                                var modelSel = document.getElementById("vmtPreviewModel");
+                                if (modelSel) modelSel.value = preset.model_id;
+                            }
+                        }).catch(function() {});
+                    }
+                }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
+            }
+
+            function vmtPreviewAudio() {
+                var template = document.getElementById("vmtScriptText").value.trim();
+                if (!template) { showToast("Enter a script first", "error"); return; }
+                var voiceId = document.getElementById("vmtPreviewVoiceSelect").value;
+                if (!voiceId) { showToast("Select a voice to preview", "error"); return; }
+                var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
+                var contact = { first_name: "Alex", last_name: "Smith", amount: "$500", date: "January 15", email: "alex@example.com", address: "123 Main St" };
+                _customVars.forEach(function(v) { contact[v] = "Sample Value"; });
+                var btn = document.getElementById("vmtPreviewBtn");
+                var status = document.getElementById("vmtPreviewStatus");
+                var result = document.getElementById("vmtPreviewResult");
+                btn.disabled = true;
+                btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Generating...';
+                status.textContent = "Generating audio preview...";
+                if (result) result.style.display = "none";
+                apiFetch("/api/pvm/preview-audio", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ template: template, contact: contact, voice_id: voiceId, model_id: modelId })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Preview Voice';
+                    if (data.error) { status.textContent = "Error: " + data.error; showToast(data.error, "error"); return; }
+                    status.textContent = "";
+                    var player = document.getElementById("vmtPreviewPlayer");
+                    var scriptEl = document.getElementById("vmtPreviewScript");
+                    player.src = data.audio_url;
+                    scriptEl.textContent = data.script || template;
+                    result.style.display = "";
+                    player.play().catch(function() {});
+                }).catch(function(e) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Preview Voice';
+                    if (e.message === "auth") return;
+                    status.textContent = "Failed to generate preview.";
+                    showToast("Preview failed", "error");
+                });
+            }
+
             document.getElementById("vmtNewVarInput").addEventListener("keydown", function(e) {
                 if (e.key === "Enter") { e.preventDefault(); vmtAddCustomVar(); }
             });
@@ -3717,6 +3823,7 @@
                 document.getElementById("vmtEditId").value = t.id;
                 document.getElementById("vmtFormTitle").textContent = "Edit Template";
                 document.getElementById("vmtName").value = t.name;
+                vmtResetPreview();
                 vmtSwitchType(t.type);
                 if (t.type === "audio_url") {
                     document.getElementById("vmtAudioUrl").value = t.content;
@@ -3725,6 +3832,7 @@
                 }
                 document.getElementById("vmtFormCard").style.display = "";
                 document.getElementById("vmtFormCard").scrollIntoView({ behavior: "smooth" });
+                vmtLoadPreviewVoices();
             }
             function vmtDelete(id) {
                 if (!confirm("Delete this voicemail template?")) return;
