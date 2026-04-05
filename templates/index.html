@@ -3743,16 +3743,7 @@
                 sel.innerHTML = '<option value="">Loading...</option>';
                 apiFetch("/api/pvm/voices").then(function(r) { return r.json(); }).then(function(data) {
                     pvmVoicesCache = data.voices || [];
-                    apiFetch("/api/voice-preset").then(function(r2) { return r2.json(); }).then(function(pd) {
-                        var preset = pd.preset || {};
-                        renderVoiceOptions(sel, pvmVoicesCache, preset.voice_id || "");
-                        if (preset.model_id) {
-                            var modelSel = document.getElementById("vmtPreviewModel");
-                            if (modelSel) modelSel.value = preset.model_id;
-                        }
-                    }).catch(function() {
-                        renderVoiceOptions(sel, pvmVoicesCache, "");
-                    });
+                    renderVoiceOptions(sel, pvmVoicesCache, "");
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
             }
 
