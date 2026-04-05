@@ -369,7 +369,9 @@
   /* ══ BUILD YOUR PLAN MINI CALCULATOR ══ */
   var buildBase        = 'autodialer';
   var buildDialSlider  = document.getElementById('buildDialSlider');
+  var buildDaysSlider  = document.getElementById('buildDaysSlider');
   var buildDialDisplay = document.getElementById('buildDialDisplay');
+  var buildDaysDisplay = document.getElementById('buildDaysDisplay');
   var buildTotalEl     = document.getElementById('buildTotal');
   var buildLtPrice     = document.getElementById('build-ltPrice');
 
@@ -383,7 +385,7 @@
 
   function updateBuildCard() {
     var dials = buildDialSlider ? parseInt(buildDialSlider.value, 10) : 100;
-    var days  = 22;
+    var days  = buildDaysSlider ? parseInt(buildDaysSlider.value, 10) : 22;
     var baseFee      = buildBase === 'business' ? 169 : 69;
     var dialRate     = DIAL_RATE[buildBase];
     var transferRate = TRANSFER_RATE[buildBase];
@@ -406,16 +408,18 @@
     var total = baseFee + usage + addonCost;
     if (buildTotalEl)     buildTotalEl.textContent    = Math.round(total).toLocaleString('en-US');
     if (buildDialDisplay) buildDialDisplay.textContent = dials.toLocaleString('en-US');
+    if (buildDaysDisplay) buildDaysDisplay.textContent = days;
 
     if (buildLtPrice) {
       var rate = buildBase === 'business' ? '0.20' : '0.15';
       buildLtPrice.textContent = '+$' + rate + '/transfer';
     }
 
-    if (buildDialSlider) {
-      var pct = ((buildDialSlider.value - buildDialSlider.min) / (buildDialSlider.max - buildDialSlider.min)) * 100;
-      buildDialSlider.style.background = 'linear-gradient(to right, #1a1a1a ' + pct + '%, #e5e7eb ' + pct + '%)';
-    }
+    [buildDialSlider, buildDaysSlider].forEach(function (sl) {
+      if (!sl) return;
+      var pct = ((sl.value - sl.min) / (sl.max - sl.min)) * 100;
+      sl.style.background = 'linear-gradient(to right, #1a1a1a ' + pct + '%, #e5e7eb ' + pct + '%)';
+    });
   }
 
   /* Base plan buttons */
@@ -432,6 +436,7 @@
   });
 
   if (buildDialSlider) buildDialSlider.addEventListener('input', updateBuildCard);
+  if (buildDaysSlider) buildDaysSlider.addEventListener('input', updateBuildCard);
 
   document.querySelectorAll('.build-addon-cb').forEach(function (cb) {
     cb.addEventListener('change', updateBuildCard);
@@ -443,6 +448,7 @@
     buildSeeFullBtn.addEventListener('click', function () {
       selectPlan(buildBase);
       if (dialSlider && buildDialSlider) dialSlider.value = buildDialSlider.value;
+      if (daysSlider && buildDaysSlider) daysSlider.value = buildDaysSlider.value;
       BUILD_ADDONS.forEach(function (addon) {
         var buildCb = document.getElementById('build-' + addon.id);
         var calcCb  = document.getElementById('feat-' + addon.id);

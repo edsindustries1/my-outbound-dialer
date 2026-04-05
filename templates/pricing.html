@@ -292,6 +292,15 @@
             <input type="range" class="calc-slider" id="buildDialSlider" min="10" max="2000" step="10" value="100">
           </div>
 
+          <!-- Working days slider -->
+          <div class="build-slider-wrap">
+            <div class="build-slider-header">
+              <span>Working days / month</span>
+              <span class="build-slider-val" id="buildDaysDisplay">22</span>
+            </div>
+            <input type="range" class="calc-slider" id="buildDaysSlider" min="10" max="31" step="1" value="22">
+          </div>
+
           <!-- Feature toggles -->
           <div class="build-feats">
             <label class="build-feat" for="build-personalizedVm">
@@ -316,7 +325,7 @@
             </label>
             <label class="build-feat" for="build-gatekeeper">
               <span class="build-feat-body">
-                <span class="build-feat-name">Gatekeeper Navigator</span>
+                <span class="build-feat-name">Gatekeeper Navigator <span class="feat-beta-badge">Beta</span></span>
                 <span class="build-feat-price">+$0.03/dial</span>
               </span>
               <span class="calc-feat-sw-wrap">
@@ -483,7 +492,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
             </div>
             <div class="calc-feat-body">
-              <span class="calc-feat-name">Gatekeeper Navigator</span>
+              <span class="calc-feat-name">Gatekeeper Navigator <span class="feat-beta-badge">Beta</span></span>
               <span class="calc-feat-desc">AI talks through receptionists &amp; IVR menus to reach the decision-maker</span>
             </div>
             <span class="calc-feat-price">+$0.03<span class="calc-feat-price-unit">/dial</span></span>
@@ -800,6 +809,6 @@
     </div>
   </footer>
 
-  <script src="/static/pricing.js?v=9"></script>
+  <script src="/static/pricing.js?v=10"></script>
 </body>
 </html>
