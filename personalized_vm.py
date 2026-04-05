@@ -841,7 +841,34 @@ def _conversational_smoothing(text):
     return text.strip()
 
 
+# --- Inline address detection ------------------------------------------------
+# Detects raw US address strings typed directly in a script body (i.e. NOT via
+# the {address} placeholder).  Requires a recognised street-type abbreviation
+# followed by an uppercase 2-letter state code and 5-digit ZIP to keep
+# specificity high and avoid false positives.
+_ST_TYPES_FOR_INLINE = (
+    'St|Ave|Blvd|Dr|Ln|Rd|Ct|Pl|Cir|Pkwy|Hwy|Tpke|Ter|Sq|Trl|Way|Expy'
+    '|Fwy|Xing|Jct|Rdg|Holw|Mdw|Mdws|Gln|Knl|Knls|Spg|Spgs|Vlg|Vis'
+    '|Aly|Brg|Cmn|Lndg|Mnr|Pt|Vw|Sta|Trce|Wy|Gtwy|Lgt|Mtn'
+)
+_INLINE_ADDR_RE = re.compile(
+    r'\b(\d{1,6}'                              # house number (1-6 digits)
+    r'(?:\s+\w+){0,6}'                         # street-name words (0-6)
+    r'\s+(?:' + _ST_TYPES_FOR_INLINE + r')\.?' # known street-type abbreviation
+    r'[^.!?\n]{0,60}'                          # city + punctuation (≤60 chars)
+    r'(?-i:[A-Z]{2})\s+\d{5}(?:-\d{4})?)'     # UPPERCASE state code + ZIP
+    r'\b',
+    re.IGNORECASE,
+)
+
+
+def _humanize_inline_addresses(text):
+    """Replace raw US address strings in script text with humanized speech."""
+    return _INLINE_ADDR_RE.sub(lambda m: _humanize_address(m.group(1)), text)
+
+
 def humanize_text(text):
+    text = _humanize_inline_addresses(text)
     text = _humanize_date(text)
     text = _humanize_phone(text)
     text = _humanize_amount(text)

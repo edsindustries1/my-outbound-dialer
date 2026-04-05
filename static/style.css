@@ -44,7 +44,7 @@
 /* ---- Dark Mode ---- */
 [data-theme="dark"] {
     --gads-bg: #0f0f17;
-    --gads-bg-secondary: #141425;
+    --gads-bg-secondary: #1a1a2e;
     --gads-surface: #1a1a2e;
     --gads-surface-hover: #242440;
     --gads-sidebar-bg: #141425;
