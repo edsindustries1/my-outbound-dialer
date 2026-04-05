@@ -3609,11 +3609,14 @@ def pvm_processed_script_endpoint():
     if voice_id:
         provider, _, _ = _detect_pvm_provider(voice_id, current_user.id, model_id)
 
-    from personalized_vm import render_template as pvm_render, build_processed_script as pvm_build_ps
+    from personalized_vm import (render_template as pvm_render,
+                                 build_processed_script as pvm_build_ps,
+                                 build_processed_script_html as pvm_build_ps_html)
     try:
         rendered = pvm_render(template, contact or {}, humanize=humanize)
         annotated = pvm_build_ps(rendered, voice_settings, provider)
-        return jsonify({"rendered": rendered, "processed": annotated})
+        annotated_html = pvm_build_ps_html(rendered, voice_settings, provider)
+        return jsonify({"rendered": rendered, "processed": annotated, "processed_html": annotated_html})
     except Exception as e:
         logger.error(f"processed-script error: {e}")
         return jsonify({"error": str(e)}), 500

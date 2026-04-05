@@ -2339,6 +2339,7 @@
                                             </button>
                                         </div>
                                         <div id="vmtAdvancedPanel" style="display:none;margin-top:12px;padding:12px;border:1px solid var(--gads-border);border-radius:8px;background:var(--gads-bg-secondary,#f8f9fa);">
+                                            <p style="font-size:11px;color:var(--gads-text-secondary);margin:0 0 10px 0;font-style:italic;">Settings are applied to both Fish Audio and ElevenLabs providers. Fish-specific and EL-specific controls override the preset where available.</p>
                                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                                                 <div>
                                                     <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Filler Words</label>
@@ -2371,12 +2372,31 @@
                                                     <input type="range" id="vmtSpeedSlider" min="70" max="120" value="82" step="1" style="width:100%;" oninput="document.getElementById('vmtSpeedVal').textContent=this.value+'%';vmtMarkCustom();">
                                                 </div>
                                                 <div>
-                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Expressiveness: <span id="vmtStyleVal">12%</span></label>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Expressiveness (EL): <span id="vmtStyleVal">12%</span></label>
                                                     <input type="range" id="vmtStyleSlider" min="0" max="60" value="12" step="1" style="width:100%;" oninput="document.getElementById('vmtStyleVal').textContent=this.value+'%';vmtMarkCustom();">
                                                 </div>
                                                 <div>
-                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Consistency: <span id="vmtStabilityVal">40%</span></label>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Consistency (EL): <span id="vmtStabilityVal">40%</span></label>
                                                     <input type="range" id="vmtStabilitySlider" min="0" max="100" value="40" step="1" style="width:100%;" oninput="document.getElementById('vmtStabilityVal').textContent=this.value+'%';vmtMarkCustom();">
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Fish Audio Speed: <span id="vmtFishSpeedVal">0.92x</span></label>
+                                                    <input type="range" id="vmtFishSpeedSlider" min="70" max="130" value="92" step="1" style="width:100%;" oninput="document.getElementById('vmtFishSpeedVal').textContent=(this.value/100).toFixed(2)+'x';vmtMarkCustom();">
+                                                </div>
+                                                <div>
+                                                    <label style="font-size:11px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Fish Audio Emotion</label>
+                                                    <select id="vmtFishEmotion" class="gads-select" style="font-size:12px;" onchange="vmtMarkCustom()">
+                                                        <option value="neutral" selected>Neutral</option>
+                                                        <option value="happy">Happy</option>
+                                                        <option value="sad">Sad</option>
+                                                        <option value="angry">Angry</option>
+                                                        <option value="fearful">Fearful</option>
+                                                        <option value="surprised">Surprised</option>
+                                                    </select>
+                                                </div>
+                                                <div style="display:flex;align-items:center;gap:8px;grid-column:span 2;">
+                                                    <input type="checkbox" id="vmtSpeakerBoost" checked onchange="vmtMarkCustom();" style="accent-color:var(--gads-primary);">
+                                                    <label for="vmtSpeakerBoost" style="font-size:11px;color:var(--gads-text-secondary);cursor:pointer;">Speaker Boost (ElevenLabs — enhances clarity at lower volumes)</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -3888,18 +3908,25 @@
                 var speedPct = Math.round((vs.speed || 0.82) * 100);
                 var stylePct = Math.round((vs.style || 0.12) * 100);
                 var stabilityPct = Math.round((vs.stability || 0.40) * 100);
+                var fishSpeedPct = Math.round((vs.fish_speed || 0.92) * 100);
                 var speedSlider = document.getElementById("vmtSpeedSlider");
                 var styleSlider = document.getElementById("vmtStyleSlider");
                 var stabilitySlider = document.getElementById("vmtStabilitySlider");
+                var fishSpeedSlider = document.getElementById("vmtFishSpeedSlider");
                 if (speedSlider) { speedSlider.value = speedPct; document.getElementById("vmtSpeedVal").textContent = speedPct + "%"; }
                 if (styleSlider) { styleSlider.value = stylePct; document.getElementById("vmtStyleVal").textContent = stylePct + "%"; }
                 if (stabilitySlider) { stabilitySlider.value = stabilityPct; document.getElementById("vmtStabilityVal").textContent = stabilityPct + "%"; }
+                if (fishSpeedSlider) { fishSpeedSlider.value = fishSpeedPct; document.getElementById("vmtFishSpeedVal").textContent = (fishSpeedPct/100).toFixed(2) + "x"; }
                 var fillSel = document.getElementById("vmtFillers");
                 var pauseSel = document.getElementById("vmtPauseStyle");
                 var emphSel = document.getElementById("vmtEmphasisMode");
+                var fishEmotSel = document.getElementById("vmtFishEmotion");
+                var speakerBoost = document.getElementById("vmtSpeakerBoost");
                 if (fillSel) fillSel.value = vs.fillers || "none";
                 if (pauseSel) pauseSel.value = vs.pause_style || "light";
                 if (emphSel) emphSel.value = vs.emphasis_mode || "auto";
+                if (fishEmotSel) fishEmotSel.value = vs.fish_emotion || "neutral";
+                if (speakerBoost) speakerBoost.checked = vs.use_speaker_boost !== false;
             }
 
             function vmtMarkCustom() {
@@ -3912,23 +3939,28 @@
                 var speedVal = parseInt(document.getElementById("vmtSpeedSlider").value || "82");
                 var styleVal = parseInt(document.getElementById("vmtStyleSlider").value || "12");
                 var stabilityVal = parseInt(document.getElementById("vmtStabilitySlider").value || "40");
+                var fishSpeedVal = parseInt(document.getElementById("vmtFishSpeedSlider").value || "92");
                 var fillers = document.getElementById("vmtFillers").value || "none";
                 var pauseStyle = document.getElementById("vmtPauseStyle").value || "light";
                 var emphasisMode = document.getElementById("vmtEmphasisMode").value || "auto";
+                var fishEmotion = document.getElementById("vmtFishEmotion").value || "neutral";
+                var speakerBoost = document.getElementById("vmtSpeakerBoost").checked;
                 var preset = _vmtCurrentPreset || null;
                 var p = preset ? VMT_STYLE_PRESETS[preset] : null;
+                var modelId = document.getElementById("vmtPreviewModel").value || "eleven_turbo_v2_5";
                 return {
                     preset: preset,
                     stability: stabilityVal / 100,
                     similarity_boost: p ? p.similarity_boost : 0.82,
                     style: styleVal / 100,
                     speed: speedVal / 100,
-                    use_speaker_boost: true,
-                    fish_speed: p ? p.fish_speed : (speedVal / 100),
-                    fish_emotion: p ? p.fish_emotion : "neutral",
+                    use_speaker_boost: speakerBoost,
+                    fish_speed: fishSpeedVal / 100,
+                    fish_emotion: fishEmotion,
                     fillers: fillers,
                     pause_style: pauseStyle,
                     emphasis_mode: emphasisMode,
+                    model_id: modelId,
                 };
             }
 
@@ -3969,7 +4001,14 @@
                     if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview Processed Script'; }
                     if (data.error) { showToast(data.error, "error"); return; }
                     var box = document.getElementById("vmtProcessedScriptBox");
-                    if (box) { box.textContent = data.processed || data.rendered; box.style.display = ""; }
+                    if (box) {
+                        if (data.processed_html) {
+                            box.innerHTML = data.processed_html;
+                        } else {
+                            box.textContent = data.processed || data.rendered;
+                        }
+                        box.style.display = "";
+                    }
                 }).catch(function(e) {
                     if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview Processed Script'; }
                     if (e.message !== "auth") showToast("Failed to load processed script", "error");
@@ -4069,14 +4108,19 @@
                     document.getElementById("vmtAudioUrl").value = t.content;
                 } else {
                     document.getElementById("vmtScriptText").value = t.content;
-                    if (t.voice_settings && t.voice_settings.preset && VMT_STYLE_PRESETS[t.voice_settings.preset]) {
-                        vmtSetPreset(t.voice_settings.preset);
-                        vmtApplySettingsToUI(t.voice_settings);
-                    } else if (t.voice_settings) {
-                        vmtApplySettingsToUI(t.voice_settings);
+                    var vs = t.voice_settings || null;
+                    if (vs && vs.preset && VMT_STYLE_PRESETS[vs.preset]) {
+                        vmtSetPreset(vs.preset);
+                        vmtApplySettingsToUI(vs);
+                    } else if (vs) {
+                        vmtApplySettingsToUI(vs);
                         vmtMarkCustom();
                     } else {
                         vmtSetPreset("professional");
+                    }
+                    if (vs && vs.model_id) {
+                        var modelSel = document.getElementById("vmtPreviewModel");
+                        if (modelSel) modelSel.value = vs.model_id;
                     }
                 }
                 document.getElementById("vmtFormCard").style.display = "";

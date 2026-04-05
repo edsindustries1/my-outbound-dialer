@@ -880,13 +880,18 @@ _FILLERS_LIGHT = ["So, ", "Well, "]
 _FILLERS_NATURAL_MID = ["um, ", "uh, ", "you know, ", "I mean, "]
 
 
-def _inject_fillers(script, level):
+def _inject_fillers(script, level, _rng=None):
     """Inject natural filler words into the script at appropriate points.
 
     level: 'none' | 'light' | 'natural'
     - none: return unchanged
     - light: prepend a soft starter to the first line only
     - natural: add mid-sentence fillers at some sentence breaks too
+
+    _rng: optional random.Random instance for reproducible output. When None,
+          a deterministic seed derived from the script content is used so that
+          build_processed_script() and _apply_voice_enhancements() produce the
+          same filler choices for the same script.
     """
     if not level or level == "none":
         return script
@@ -895,22 +900,26 @@ def _inject_fillers(script, level):
     if not script:
         return script
 
+    if _rng is None:
+        seed = int(hashlib.sha256(script.encode("utf-8")).hexdigest()[:8], 16)
+        _rng = _random.Random(seed)
+
     if level == "light":
-        starter = _FILLERS_LIGHT[_random.randint(0, len(_FILLERS_LIGHT) - 1)]
+        starter = _FILLERS_LIGHT[_rng.randint(0, len(_FILLERS_LIGHT) - 1)]
         lower = script[0].lower()
         rest = script[1:]
         return starter + lower + rest
 
     if level == "natural":
-        starter = _FILLERS_STARTERS[_random.randint(0, len(_FILLERS_STARTERS) - 1)]
+        starter = _FILLERS_STARTERS[_rng.randint(0, len(_FILLERS_STARTERS) - 1)]
         lower = script[0].lower()
         rest = script[1:]
         script = starter + lower + rest
         sentences = re.split(r'(?<=[.!?])\s+', script)
         result = []
         for i, sent in enumerate(sentences):
-            if i > 0 and i < len(sentences) - 1 and _random.random() < 0.30:
-                filler = _FILLERS_NATURAL_MID[_random.randint(0, len(_FILLERS_NATURAL_MID) - 1)]
+            if i > 0 and i < len(sentences) - 1 and _rng.random() < 0.30:
+                filler = _FILLERS_NATURAL_MID[_rng.randint(0, len(_FILLERS_NATURAL_MID) - 1)]
                 first_char = sent[0].lower() if sent else ""
                 rest_sent = sent[1:] if sent else ""
                 sent = filler + first_char + rest_sent
@@ -1085,6 +1094,50 @@ def build_processed_script(script, settings, provider):
                            processed, flags=re.IGNORECASE)
 
     return processed
+
+
+def build_processed_script_html(script, settings, provider):
+    """Return a safe HTML version of the processed script for in-browser display.
+
+    Fillers are highlighted in blue, pause markers in muted grey, and emphasized
+    text in bold primary-color. The output is sanitized so it is safe to render
+    as innerHTML.
+    """
+    import html as _html_mod
+
+    plain = build_processed_script(script, settings, provider)
+    safe = _html_mod.escape(plain)
+
+    # Bold emphasis markers (**text**) → colored <strong>
+    safe = re.sub(
+        r'\*\*(.+?)\*\*',
+        r'<strong style="color:var(--gads-primary,#4f46e5);">\1</strong>',
+        safe
+    )
+
+    # Long pause [⏸⏸]
+    safe = safe.replace(
+        '[⏸⏸]',
+        '<span style="color:#9ca3af;font-size:11px;font-weight:600;" title="Long pause">[⏸⏸]</span>'
+    )
+
+    # Short pause [⏸]
+    safe = safe.replace(
+        '[⏸]',
+        '<span style="color:#9ca3af;font-size:11px;font-weight:600;" title="Pause">[⏸]</span>'
+    )
+
+    # Filler words — highlight common starter fillers in blue
+    _FILLER_RE = re.compile(
+        r'(^(?:So, |Well, |Hey — |Hi, so )|(?:um, |uh, |you know, |I mean, ))',
+        re.IGNORECASE
+    )
+    safe = _FILLER_RE.sub(
+        r'<span style="color:#2563eb;font-style:italic;">\1</span>',
+        safe
+    )
+
+    return safe
 
 
 DEFAULT_VOICE_SETTINGS = {
