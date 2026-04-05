@@ -212,8 +212,10 @@
 
     var annualData = ANNUAL_PRICES[planSlug];
     if (billingCycle === 'annual' && annualData) {
-      totalEl.textContent = '$' + annualData.monthly.toFixed(2) + ' / mo  ·  $' + annualData.annual.toLocaleString('en-US') + '/yr';
-      vsUsEl.textContent  = fmt(total);
+      /* In annual mode the platform fee is discounted — recalculate full monthly cost */
+      var annualMonthlyTotal = annualData.monthly + baseUsage + addonDialTotal + addonFlatCost + liveTransferTotal + extraNumTotal;
+      totalEl.textContent = fmt(annualMonthlyTotal) + ' / mo (annualized platform fee)';
+      vsUsEl.textContent  = fmt(annualMonthlyTotal);
     } else {
       totalEl.textContent = fmt(total) + ' / mo';
       vsUsEl.textContent  = fmt(total);
@@ -261,7 +263,7 @@
     calcCtaBtn.setAttribute('data-plan', planSlug);
     calcCtaBtn.setAttribute('data-amount', platformFee);
     if (billingCycle === 'annual' && annualData) {
-      calcCtaBtn.textContent = 'Get Started — $' + annualData.monthly.toFixed(2) + '/mo billed annually →';
+      calcCtaBtn.textContent = 'Get Started — ' + fmt(annualMonthlyTotal) + '/mo (platform billed annually) →';
     } else {
       calcCtaBtn.textContent = 'Get Started for ' + fmt(platformFee) + '/mo →';
     }
