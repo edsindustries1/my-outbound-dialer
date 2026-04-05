@@ -3727,30 +3727,32 @@
                 var status = document.getElementById("vmtPreviewStatus");
                 var player = document.getElementById("vmtPreviewPlayer");
                 var scriptEl = document.getElementById("vmtPreviewScript");
+                var voiceSel = document.getElementById("vmtPreviewVoiceSelect");
+                var modelSel = document.getElementById("vmtPreviewModel");
                 if (result) result.style.display = "none";
                 if (status) status.textContent = "";
                 if (player) { player.pause(); player.src = ""; }
                 if (scriptEl) scriptEl.textContent = "";
+                if (voiceSel) voiceSel.value = "";
+                if (modelSel) modelSel.value = "eleven_turbo_v2_5";
             }
 
             function vmtLoadPreviewVoices() {
                 var sel = document.getElementById("vmtPreviewVoiceSelect");
                 if (!sel) return;
-                var currentVal = sel.value;
                 sel.innerHTML = '<option value="">Loading...</option>';
                 apiFetch("/api/pvm/voices").then(function(r) { return r.json(); }).then(function(data) {
                     pvmVoicesCache = data.voices || [];
-                    renderVoiceOptions(sel, pvmVoicesCache, currentVal);
-                    if (!sel.value && pvmVoicesCache.length > 0) {
-                        apiFetch("/api/voice-preset").then(function(r2) { return r2.json(); }).then(function(pd) {
-                            var preset = pd.preset || {};
-                            if (preset.voice_id) renderVoiceOptions(sel, pvmVoicesCache, preset.voice_id);
-                            if (preset.model_id) {
-                                var modelSel = document.getElementById("vmtPreviewModel");
-                                if (modelSel) modelSel.value = preset.model_id;
-                            }
-                        }).catch(function() {});
-                    }
+                    apiFetch("/api/voice-preset").then(function(r2) { return r2.json(); }).then(function(pd) {
+                        var preset = pd.preset || {};
+                        renderVoiceOptions(sel, pvmVoicesCache, preset.voice_id || "");
+                        if (preset.model_id) {
+                            var modelSel = document.getElementById("vmtPreviewModel");
+                            if (modelSel) modelSel.value = preset.model_id;
+                        }
+                    }).catch(function() {
+                        renderVoiceOptions(sel, pvmVoicesCache, "");
+                    });
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
             }
 
