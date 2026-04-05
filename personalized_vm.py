@@ -279,19 +279,83 @@ US_STATE_ABBREVIATIONS = {
 }
 
 ADDRESS_ABBREVIATIONS = [
-    (r'\bSt\b\.?', 'Street'), (r'\bAve\b\.?', 'Avenue'), (r'\bBlvd\b\.?', 'Boulevard'),
-    (r'\bDr\b\.?', 'Drive'), (r'\bLn\b\.?', 'Lane'), (r'\bRd\b\.?', 'Road'),
-    (r'\bCt\b\.?', 'Court'), (r'\bPl\b\.?', 'Place'), (r'\bCir\b\.?', 'Circle'),
-    (r'\bPkwy\b\.?', 'Parkway'), (r'\bHwy\b\.?', 'Highway'), (r'\bApt\b\.?', 'Apartment'),
-    (r'\bSte\b\.?', 'Suite'), (r'\bBldg\b\.?', 'Building'), (r'\bFl\b\.?', 'Floor'),
-    (r'\bTpke\b\.?', 'Turnpike'), (r'\bTer\b\.?', 'Terrace'),
-    (r'\bSq\b\.?', 'Square'), (r'\bTrl\b\.?', 'Trail'), (r'\bExpy\b\.?', 'Expressway'),
-    (r'\bFwy\b\.?', 'Freeway'), (r'\bCres\b\.?', 'Crescent'),
-    (r'(?<![\'\'`\w])N\.?(?=\s+[A-Z])', 'North'), (r'(?<![\'\'`\w])S\.?(?=\s+[A-Z])', 'South'),
-    (r'(?<![\'\'`\w])E\.?(?=\s+[A-Z])', 'East'), (r'(?<![\'\'`\w])W\.?(?=\s+[A-Z])', 'West'),
-    (r'\bNE\b\.?(?=\s+[A-Z])', 'Northeast'), (r'\bNW\b\.?(?=\s+[A-Z])', 'Northwest'),
-    (r'\bSE\b\.?(?=\s+[A-Z])', 'Southeast'), (r'\bSW\b\.?(?=\s+[A-Z])', 'Southwest'),
+    # Street types — match at word boundary before comma, space, or end
+    (r'\bSt\.?(?=[\s,]|$)', 'Street'),
+    (r'\bAve\.?(?=[\s,]|$)', 'Avenue'),
+    (r'\bBlvd\.?(?=[\s,]|$)', 'Boulevard'),
+    (r'\bDr\.?(?=[\s,]|$)', 'Drive'),
+    (r'\bLn\.?(?=[\s,]|$)', 'Lane'),
+    (r'\bRd\.?(?=[\s,]|$)', 'Road'),
+    (r'\bCt\.?(?=[\s,]|$)', 'Court'),
+    (r'\bPl\.?(?=[\s,]|$)', 'Place'),
+    (r'\bCir\.?(?=[\s,]|$)', 'Circle'),
+    (r'\bPkwy\.?(?=[\s,]|$)', 'Parkway'),
+    (r'\bHwy\.?(?=[\s,]|$)', 'Highway'),
+    (r'\bTpke\.?(?=[\s,]|$)', 'Turnpike'),
+    (r'\bTer\.?(?=[\s,]|$)', 'Terrace'),
+    (r'\bSq\.?(?=[\s,]|$)', 'Square'),
+    (r'\bTrl\.?(?=[\s,]|$)', 'Trail'),
+    (r'\bExpy\.?(?=[\s,]|$)', 'Expressway'),
+    (r'\bFwy\.?(?=[\s,]|$)', 'Freeway'),
+    (r'\bCres\.?(?=[\s,]|$)', 'Crescent'),
+    (r'\bXing\.?(?=[\s,]|$)', 'Crossing'),
+    (r'\bJct\.?(?=[\s,]|$)', 'Junction'),
+    (r'\bRdg\.?(?=[\s,]|$)', 'Ridge'),
+    (r'\bHolw\.?(?=[\s,]|$)', 'Hollow'),
+    (r'\bMdw\.?(?=[\s,]|$)', 'Meadow'),
+    (r'\bMdws\.?(?=[\s,]|$)', 'Meadows'),
+    (r'\bGln\.?(?=[\s,]|$)', 'Glen'),
+    (r'\bKnl\.?(?=[\s,]|$)', 'Knoll'),
+    (r'\bKnls\.?(?=[\s,]|$)', 'Knolls'),
+    (r'\bSpg\.?(?=[\s,]|$)', 'Spring'),
+    (r'\bSpgs\.?(?=[\s,]|$)', 'Springs'),
+    (r'\bVlg\.?(?=[\s,]|$)', 'Village'),
+    (r'\bVis\.?(?=[\s,]|$)', 'Vista'),
+    (r'\bAlly?\.?(?=[\s,]|$)', 'Alley'),
+    (r'\bBrg\.?(?=[\s,]|$)', 'Bridge'),
+    (r'\bCmn\.?(?=[\s,]|$)', 'Common'),
+    (r'\bLndg\.?(?=[\s,]|$)', 'Landing'),
+    (r'\bMnr\.?(?=[\s,]|$)', 'Manor'),
+    (r'\bPt\.?(?=[\s,]|$)', 'Point'),
+    (r'\bVw\.?(?=[\s,]|$)', 'View'),
+    (r'\bSta\.?(?=[\s,]|$)', 'Station'),
+    (r'\bTrce\.?(?=[\s,]|$)', 'Trace'),
+    (r'\bWy\.?(?=[\s,]|$)', 'Way'),
+    (r'\bGtwy\.?(?=[\s,]|$)', 'Gateway'),
+    (r'\bLgt\.?(?=[\s,]|$)', 'Light'),
+    (r'\bMt\.?(?=\s+[A-Za-z])', 'Mount'),
+    (r'\bMtn\.?(?=[\s,]|$)', 'Mountain'),
+    # Unit designators — require digit or # after (prevents matching state abbreviations like FL)
+    (r'\bApt\.?(?=\s*[#\d])', 'Apartment'),
+    (r'\bSte\.?(?=\s*[#\d])', 'Suite'),
+    (r'\bBldg\.?(?=\s*[#\dA-Za-z])', 'Building'),
+    (r'\bFl\.(?=\s*[#\d])', 'Floor'),
+    # Directionals — match before letters/digits, and also at end of string or before comma
+    (r'(?<!\w)N\.?(?=\s+[\w])', 'North'),
+    (r'(?<!\w)S\.?(?=\s+[\w])', 'South'),
+    (r'(?<!\w)E\.?(?=\s+[\w])', 'East'),
+    (r'(?<!\w)W\.?(?=\s+[\w])', 'West'),
+    (r'\bNE\b\.?(?=[\s,]|$)', 'Northeast'),
+    (r'\bNW\b\.?(?=[\s,]|$)', 'Northwest'),
+    (r'\bSE\b\.?(?=[\s,]|$)', 'Southeast'),
+    (r'\bSW\b\.?(?=[\s,]|$)', 'Southwest'),
 ]
+
+ORDINAL_WORDS = {
+    '1st': 'First', '2nd': 'Second', '3rd': 'Third', '4th': 'Fourth',
+    '5th': 'Fifth', '6th': 'Sixth', '7th': 'Seventh', '8th': 'Eighth',
+    '9th': 'Ninth', '10th': 'Tenth', '11th': 'Eleventh', '12th': 'Twelfth',
+    '13th': 'Thirteenth', '14th': 'Fourteenth', '15th': 'Fifteenth',
+    '16th': 'Sixteenth', '17th': 'Seventeenth', '18th': 'Eighteenth',
+    '19th': 'Nineteenth', '20th': 'Twentieth', '21st': 'Twenty-first',
+    '22nd': 'Twenty-second', '23rd': 'Twenty-third', '24th': 'Twenty-fourth',
+    '25th': 'Twenty-fifth', '26th': 'Twenty-sixth', '27th': 'Twenty-seventh',
+    '28th': 'Twenty-eighth', '29th': 'Twenty-ninth', '30th': 'Thirtieth',
+    '31st': 'Thirty-first', '40th': 'Fortieth', '41st': 'Forty-first',
+    '50th': 'Fiftieth', '51st': 'Fifty-first', '60th': 'Sixtieth',
+    '70th': 'Seventieth', '80th': 'Eightieth', '90th': 'Ninetieth',
+    '100th': 'One hundredth', '101st': 'One hundred first',
+}
 
 DIGIT_WORDS = {
     '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
@@ -469,10 +533,152 @@ def _humanize_amount(text):
     return text
 
 
+def _speak_street_number(num_str):
+    """Speak a street number the way humans naturally say it.
+
+    Humans say addresses as pairs, not as full numbers:
+      9         → "nine"
+      42        → "forty two"
+      123       → "one twenty three"
+      1234      → "twelve thirty four"
+      12345+    → digit by digit "one two three four five"
+    """
+    digits = num_str.strip()
+    if not digits or not digits.isdigit():
+        return num_str
+    n = len(digits)
+    if n <= 2:
+        return _number_to_words(int(digits))
+    elif n == 3:
+        first = int(digits[0])
+        rest = int(digits[1:])
+        if rest == 0:
+            return _number_to_words(first) + " hundred"
+        return _number_to_words(first) + " " + _number_to_words(rest)
+    elif n == 4:
+        first_pair = int(digits[:2])
+        second_pair = int(digits[2:])
+        if second_pair == 0:
+            return _number_to_words(first_pair) + " hundred"
+        return _number_to_words(first_pair) + " " + _number_to_words(second_pair)
+    else:
+        return " ".join(DIGIT_WORDS.get(d, d) for d in digits)
+
+
+def _ordinal_to_word(token):
+    """Convert ordinal like '3rd', '21st', '101st' to spoken word."""
+    key = token.lower()
+    if key in ORDINAL_WORDS:
+        return ORDINAL_WORDS[key]
+    # Fallback: parse the number and build spoken form
+    m = re.match(r'^(\d+)(st|nd|rd|th)$', key)
+    if not m:
+        return token
+    n = int(m.group(1))
+    base = _number_to_words(n)
+    suffix_map = {1: 'first', 2: 'second', 3: 'third'}
+    last_two = n % 100
+    last_one = n % 10
+    if 11 <= last_two <= 13:
+        spoken = base + 'th'
+    elif last_one == 1:
+        spoken = base.rstrip('e').rstrip('n') if base.endswith('one') else base
+        spoken = base[:-3] + 'first' if base.endswith('one') else base + 'th'
+    elif last_one == 2:
+        spoken = base[:-3] + 'second' if base.endswith('two') else base + 'th'
+    elif last_one == 3:
+        spoken = base[:-5] + 'third' if base.endswith('three') else base + 'th'
+    else:
+        spoken = base + 'th'
+    return spoken.capitalize()
+
+
 def _humanize_address(text):
+    """Transform a US property address into naturally spoken form.
+
+    Handles: street number pairs, ordinal street names, unit/apt/lot numbers,
+    route/interstate numbers, PO boxes, all common abbreviations, state codes,
+    directionals, zip code removal.
+    """
+    # 1. PO Box — convert before anything else
+    text = re.sub(
+        r'\b(?:P\.?\s*O\.?\s*Box|Post\s+Office\s+Box)\s+(\d+)\b',
+        lambda m: 'P.O. Box ' + _speak_street_number(m.group(1)),
+        text, flags=re.IGNORECASE
+    )
+
+    # 2. Interstate / US Route / State Route numbers
+    text = re.sub(
+        r'\bI-(\d+)\b',
+        lambda m: 'Interstate ' + _number_to_words(int(m.group(1))),
+        text
+    )
+    text = re.sub(
+        r'\bUS-?(\d+)\b',
+        lambda m: 'U.S. Route ' + _number_to_words(int(m.group(1))),
+        text, flags=re.IGNORECASE
+    )
+    text = re.sub(
+        r'\b(?:SR|SH|CR|FM|PR)-?(\d+)\b',
+        lambda m: 'Route ' + _number_to_words(int(m.group(1))),
+        text, flags=re.IGNORECASE
+    )
+    text = re.sub(
+        r'\b(?:Rt|Rte|Route)\.?\s+(\d+)\b',
+        lambda m: 'Route ' + _number_to_words(int(m.group(1))),
+        text, flags=re.IGNORECASE
+    )
+
+    # 3. Fractional street numbers like "234 1/2"
+    text = re.sub(
+        r'\b(\d{1,5})\s+1/2\b',
+        lambda m: _speak_street_number(m.group(1)) + ' and a half',
+        text
+    )
+
+    # 4. Speak the leading street number (at start of string or after a comma)
+    #    e.g. "1234 Oak St" → "twelve thirty four Oak St"
+    text = re.sub(
+        r'(?:(?<=^)|(?<=,\s))(\d{1,6})(?=\s)',
+        lambda m: _speak_street_number(m.group(1)),
+        text
+    )
+
+    # 5. Expand abbreviations (street types, unit designators, directionals)
     for abbr, full in ADDRESS_ABBREVIATIONS:
         text = re.sub(abbr, full, text, flags=re.IGNORECASE)
 
+    # 6. Ordinal street names: "3rd Avenue" → "Third Avenue"
+    text = re.sub(
+        r'\b(\d{1,3}(?:st|nd|rd|th))\b',
+        lambda m: _ordinal_to_word(m.group(1)),
+        text, flags=re.IGNORECASE
+    )
+
+    # 7. Unit/apartment/lot/space numbers after abbreviation expansion
+    #    "Apartment 4B" → "Apartment four B"
+    #    "Suite 100" → "Suite one hundred"
+    #    "Lot 12" → "Lot twelve"
+    def _speak_unit(match):
+        label = match.group(1)
+        num = match.group(2)
+        letter = match.group(3) or ''
+        spoken_num = _number_to_words(int(num))
+        return label + ' ' + spoken_num + (' ' + letter.upper() if letter else '')
+
+    text = re.sub(
+        r'\b(Apartment|Suite|Unit|Lot|Floor|Building|Space|Room|Box)\s+#?(\d{1,4})([A-Za-z]?)\b',
+        _speak_unit, text, flags=re.IGNORECASE
+    )
+
+    # 8. "#NNN" hash-style unit numbers → "number NNN"
+    text = re.sub(
+        r'#(\d{1,4})([A-Za-z]?)\b',
+        lambda m: 'number ' + _number_to_words(int(m.group(1))) + (' ' + m.group(2).upper() if m.group(2) else ''),
+        text
+    )
+
+    # 9. State abbreviations + strip zip code
     def replace_state(match):
         prefix = match.group(1)
         state_abbr = match.group(2)
@@ -482,12 +688,12 @@ def _humanize_address(text):
         return match.group(0)
 
     text = re.sub(
-        r'(,?\s+)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
+        r'(,?\s*)([A-Z]{2})(\s+\d{5}(?:-\d{4})?)?(?=\s*[,.\n]|\s*$|\s+\d{5})',
         replace_state, text
     )
+    text = re.sub(r',?\s*\d{5}(?:-\d{4})?\s*$', '', text)
 
-    text = re.sub(r',\s*\d{5}(?:-\d{4})?\s*$', '', text)
-    text = re.sub(r'\s+\.', '.', text)
+    # 10. Final cleanup
     text = re.sub(r'\s{2,}', ' ', text).strip()
     text = re.sub(r',\s*$', '', text)
     text = re.sub(r'\s+([.,])', r'\1', text)
@@ -581,10 +787,10 @@ def render_template(template, contact, humanize=True):
 
 
 DEFAULT_VOICE_SETTINGS = {
-    "stability": 0.35,
-    "similarity_boost": 0.80,
-    "style": 0.15,
-    "speed": 0.82,
+    "stability": 0.28,
+    "similarity_boost": 0.82,
+    "style": 0.20,
+    "speed": 0.80,
     "use_speaker_boost": True,
 }
 
