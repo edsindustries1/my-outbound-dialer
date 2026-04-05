@@ -785,7 +785,7 @@
 
           var estNote = document.createElement('div');
           estNote.style.cssText = 'font-size:0.72rem;color:rgba(255,255,255,0.2);margin-bottom:16px;padding:0 4px;font-style:italic;';
-          estNote.textContent = 'Estimates based on call history and standard rates. Revenue assumes $99/mo subscription + $0.10/call credit charge.';
+          estNote.textContent = 'Estimates based on call history and standard rates. Revenue assumes $69/mo (Starter) or $169/mo (Sales Floor) subscription + $0.10/call credit charge.';
           body.appendChild(estNote);
 
           var wrap = document.createElement('div');
@@ -887,8 +887,8 @@
       var planRow = document.createElement('div');
       planRow.className = 'plan-selector-row';
       var plans = [
-        {key:'starter', label:'Starter $99'},
-        {key:'business', label:'Business $399'},
+        {key:'starter', label:'Starter $69'},
+        {key:'business', label:'Sales Floor $169'},
         {key:'agency', label:'Agency Custom'},
         {key:'none', label:'No Plan'},
       ];
@@ -1086,7 +1086,7 @@
 
       /* User card */
       var initial = (u.name || u.email).charAt(0).toUpperCase();
-      var planLabel = { starter: 'Starter $99', business: 'Business $399', agency: 'Agency', none: 'No Plan' }[u.plan] || u.plan;
+      var planLabel = { starter: 'Starter $69', business: 'Sales Floor $169', agency: 'Agency', none: 'No Plan' }[u.plan] || u.plan;
 
       var html = '<div class="quick-user-card">';
       html += '<div class="quick-user-avatar">' + initial + '</div>';

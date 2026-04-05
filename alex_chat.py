@@ -84,7 +84,7 @@ How It Works:
 - Every call is transcribed in real-time and logged with full detail
 
 Key Features:
-- Personalized AI voicemails using ElevenLabs voice cloning — each voicemail sounds unique and mentions the prospect by name
+- Personalized AI voicemails using Humana Voice cloning — each voicemail sounds unique and mentions the prospect by name
 - Live call transfer — when someone picks up, they're connected to the client's team instantly
 - 500+ dials per day per Digital Employee
 - 50+ language fluency — Alex can leave voicemails and handle calls in any language

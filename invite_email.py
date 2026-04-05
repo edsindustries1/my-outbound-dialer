@@ -315,7 +315,7 @@ def build_lead_confirmation_html(name):
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Voice Technology</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">ElevenLabs AI voice cloning with SSML</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Humana Voice &mdash; AI voice cloning with SSML</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -361,7 +361,7 @@ def build_lead_confirmation_html(name):
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Annual Cost</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);text-align:center;">$45,000&ndash;$75,000</td>
-        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">From $99/mo + usage</td>
+        <td style="padding:8px 0;color:#ffffff;font-weight:700;text-align:center;">From $69/mo + usage</td>
       </tr>
       <tr><td colspan="3" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -390,7 +390,7 @@ def build_lead_confirmation_html(name):
     <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Monthly Retainer</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">$99/mo &mdash; covers platform access, all features, and unlimited campaigns</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">From $69/mo (Starter) &mdash; platform access, all core features, and unlimited campaigns. Sales Floor at $169/mo adds 500 dials/day, 10 numbers, and CRM sync.</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -526,7 +526,7 @@ def send_lead_confirmation_async(to_email, name):
             first_name = name.split()[0] if name else "Hiring Manager"
             html = build_lead_confirmation_html(name)
             send_email(to_email, f"Hi {first_name} — Alex's resume, as requested", html,
-                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops\n- 12+ touchpoints per lead\n\nMonthly Salary: $99/mo. No benefits required. No PTO. No training period.\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
+                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops (Humana Voice)\n- 12+ touchpoints per lead\n\nStarting from $69/mo (Starter) or $169/mo (Sales Floor). No benefits required. No PTO. No training period.\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
         except Exception as e:
             logger.exception(f"Failed to send lead confirmation to {to_email}: {e}")
     threading.Thread(target=_send, daemon=True).start()
