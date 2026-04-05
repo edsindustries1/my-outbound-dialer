@@ -442,13 +442,48 @@
     cb.addEventListener('change', updateBuildCard);
   });
 
-  /* "Get Started" — go directly to billing for the selected base plan */
+  /* "Get Started" — open contact modal pre-filled with their custom plan summary */
   var buildGetStartedBtn = document.getElementById('buildGetStartedBtn');
   if (buildGetStartedBtn) {
     buildGetStartedBtn.addEventListener('click', function () {
-      var url = '/billing?plan=' + encodeURIComponent(buildBase);
-      if (billingCycle === 'annual') url += '&cycle=annual';
-      window.location.href = url;
+      /* Build a readable summary of their selections */
+      var dials = buildDialSlider ? parseInt(buildDialSlider.value, 10) : 100;
+      var days  = buildDaysSlider ? parseInt(buildDaysSlider.value, 10) : 22;
+      var baseName  = buildBase === 'business' ? 'Open Humana Sales Floor ($169/mo)' : 'Open Humana Starter ($69/mo)';
+      var totalEl2  = document.getElementById('buildTotal');
+      var estTotal  = totalEl2 ? totalEl2.textContent : '?';
+
+      var selectedFeatures = [];
+      BUILD_ADDONS.forEach(function (addon) {
+        var cb = document.getElementById('build-' + addon.id);
+        if (cb && cb.checked) {
+          var labelEl = cb.closest('label');
+          var nameEl  = labelEl ? labelEl.querySelector('.build-feat-name') : null;
+          if (nameEl) selectedFeatures.push(nameEl.textContent.trim().replace(/\s*Beta\s*/i, ' (beta)').trim());
+        }
+      });
+
+      var msgLines = [
+        'Base plan: ' + baseName,
+        'Dials per day: ' + dials.toLocaleString('en-US'),
+        'Working days/month: ' + days,
+        'Selected add-ons: ' + (selectedFeatures.length ? selectedFeatures.join(', ') : 'None'),
+        'Estimated monthly total: $' + estTotal + '/mo',
+        '',
+        'Please reach out to get me set up on this custom plan.'
+      ];
+
+      /* Pre-fill the contact modal message */
+      var msgField = document.querySelector('#contactForm textarea[name="message"]');
+      if (msgField) msgField.value = msgLines.join('\n');
+
+      /* Update modal heading to reflect Build Your Plan context */
+      var modalHeading = document.querySelector('#contactModal h3');
+      if (modalHeading) modalHeading.textContent = 'Get started with your custom plan';
+      var modalSub = document.querySelector('#contactModal > .contact-inner > p');
+      if (modalSub) modalSub.textContent = 'Your plan details are pre-filled below. Add your contact info and we\'ll get you set up.';
+
+      openContactModal();
     });
   }
 
