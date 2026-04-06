@@ -164,6 +164,22 @@ _SUBDOMAIN_PUBLIC_PREFIXES = (
     "/blog/",
 )
 
+_SUBDOMAIN_APP_ONLY_PATHS = frozenset({
+    "/login",
+    "/signup",
+    "/register",
+    "/logout",
+    "/verify-otp",
+    "/resend-otp",
+    "/profile-setup",
+    "/dashboard",
+    "/setup-account",
+    "/forgot-password",
+    "/reset-password",
+    "/admin",
+    "/super-admin",
+})
+
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
@@ -319,13 +335,18 @@ def _subdomain_routing():
     if not is_app_domain and not is_marketing_domain:
         return
 
-    is_public = path in _SUBDOMAIN_PUBLIC_PATHS or any(
-        path.startswith(pfx) for pfx in _SUBDOMAIN_PUBLIC_PREFIXES
-    )
-
-    if is_marketing_domain and not is_public:
-        qs = f"?{request.query_string.decode()}" if request.query_string else ""
-        return redirect(f"https://{APP_DOMAIN}{path}{qs}", 302)
+    if is_marketing_domain:
+        is_infrastructure = any(path.startswith(pfx) for pfx in _SUBDOMAIN_PUBLIC_PREFIXES)
+        if is_infrastructure:
+            return
+        is_app_only_api = (
+            path.startswith("/api/")
+            and path not in _SUBDOMAIN_PUBLIC_PATHS
+        )
+        should_redirect = path in _SUBDOMAIN_APP_ONLY_PATHS or is_app_only_api
+        if should_redirect:
+            qs = f"?{request.query_string.decode()}" if request.query_string else ""
+            return redirect(f"https://{APP_DOMAIN}{path}{qs}", 302)
 
     if is_app_domain and path == "/":
         if current_user.is_authenticated:
