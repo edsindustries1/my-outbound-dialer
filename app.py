@@ -5692,6 +5692,25 @@ def admin_restore():
     return redirect(url_for("admin_panel", success=f"Access restored for {target.email}"))
 
 
+@app.route("/admin/set-password", methods=["POST"])
+@admin_required
+def admin_set_password():
+    data = request.get_json(silent=True) or {}
+    user_id = data.get("user_id")
+    new_password = data.get("new_password", "")
+    if not user_id:
+        return jsonify({"success": False, "error": "Missing user_id"})
+    if not new_password or len(new_password) < 8:
+        return jsonify({"success": False, "error": "Password must be at least 8 characters"})
+    target = db.session.get(User, int(user_id))
+    if not target:
+        return jsonify({"success": False, "error": "User not found"})
+    target.set_password(new_password)
+    db.session.commit()
+    logger.info(f"Super admin set password for user {target.email} (id={target.id})")
+    return jsonify({"success": True})
+
+
 @app.route("/setup-account", methods=["GET", "POST"])
 def setup_account():
     token = request.args.get("token") or request.form.get("token", "")

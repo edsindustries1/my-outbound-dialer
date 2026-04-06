@@ -455,6 +455,7 @@
               <td style="display:flex;gap:6px;align-items:center;">
                 <button class="btn-view" onclick="viewActivity({{ u.id }})">Details</button>
                 <button class="btn-view" onclick="openFeatures({{ u.id }}, '{{ u.name | e }}')" style="border-color:rgba(139,92,246,0.3);color:#a78bfa;" title="Manage feature access">Features</button>
+                <button class="btn-view" onclick="openSetPassword({{ u.id }}, '{{ u.name | e }}', '{{ u.email | e }}')" style="border-color:rgba(245,158,11,0.35);color:#f59e0b;" title="Set a new password for this user">Set PW</button>
               </td>
             </tr>
             {% endfor %}
@@ -525,6 +526,34 @@
       </div>
       <div class="modal-body" id="costModalBody">
         <div class="loading">Loading cost data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SET PASSWORD MODAL ===== -->
+  <div class="modal-overlay" id="setPasswordModal" onclick="if(event.target===this)closeSetPasswordModal()">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h2>Set Password</h2>
+        <button class="modal-close" onclick="closeSetPasswordModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="setPwUserInfo" style="margin-bottom:18px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;">
+          <div id="setPwUserName" style="font-weight:700;font-size:0.9rem;color:#fff;"></div>
+          <div id="setPwUserEmail" style="font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:3px;"></div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">New Password</label>
+          <input type="password" id="setPwInput" placeholder="Enter new password (min 8 chars)"
+            style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:0.88rem;font-family:'Inter',sans-serif;padding:10px 14px;outline:none;"
+            onkeydown="if(event.key==='Enter')submitSetPassword()"
+            oninput="document.getElementById('setPwError').textContent=''">
+        </div>
+        <div id="setPwError" style="color:#ef4444;font-size:0.8rem;min-height:18px;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button onclick="closeSetPasswordModal()" style="padding:9px 18px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:0.84rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+          <button id="setPwSubmitBtn" onclick="submitSetPassword()" style="padding:9px 22px;background:linear-gradient(135deg,rgba(245,158,11,0.25),rgba(245,158,11,0.15));color:#f59e0b;border:1px solid rgba(245,158,11,0.4);border-radius:8px;font-size:0.84rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity 0.2s;">Set Password</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1214,6 +1243,62 @@
 
     // Load cache stats on page load
     loadPvmCache();
+
+    // ---- Set Password Modal ----
+    var _setPwUserId = null;
+
+    function openSetPassword(userId, userName, userEmail) {
+      _setPwUserId = userId;
+      document.getElementById('setPwUserName').textContent = userName;
+      document.getElementById('setPwUserEmail').textContent = userEmail;
+      document.getElementById('setPwInput').value = '';
+      document.getElementById('setPwError').textContent = '';
+      document.getElementById('setPwSubmitBtn').disabled = false;
+      document.getElementById('setPwSubmitBtn').textContent = 'Set Password';
+      document.getElementById('setPasswordModal').classList.add('active');
+      setTimeout(function() { document.getElementById('setPwInput').focus(); }, 80);
+    }
+
+    function closeSetPasswordModal() {
+      document.getElementById('setPasswordModal').classList.remove('active');
+      _setPwUserId = null;
+    }
+
+    function submitSetPassword() {
+      var pw = document.getElementById('setPwInput').value;
+      var errEl = document.getElementById('setPwError');
+      var btn = document.getElementById('setPwSubmitBtn');
+      if (!pw || pw.length < 8) {
+        errEl.textContent = 'Password must be at least 8 characters.';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      fetch('/admin/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: _setPwUserId, new_password: pw })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        btn.disabled = false;
+        btn.textContent = 'Set Password';
+        if (res.success) {
+          errEl.style.color = '#10b981';
+          errEl.textContent = 'Password updated successfully.';
+          setTimeout(closeSetPasswordModal, 1200);
+        } else {
+          errEl.style.color = '#ef4444';
+          errEl.textContent = res.error || 'Failed to update password.';
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Set Password';
+        errEl.style.color = '#ef4444';
+        errEl.textContent = 'Network error. Please try again.';
+      });
+    }
   </script>
 </body>
 </html>
