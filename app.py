@@ -851,6 +851,72 @@ def _capture_paypal_order(order_id):
     return resp.json()
 
 
+# --- Telnyx webhook signature verification (Ed25519) ---
+_telnyx_pubkey_cache = {"key": None, "fetched_at": 0}
+
+def _get_telnyx_public_key():
+    """Fetch and cache the Telnyx Ed25519 public key (refreshed every hour)."""
+    now = time.time()
+    if _telnyx_pubkey_cache["key"] and (now - _telnyx_pubkey_cache["fetched_at"]) < 3600:
+        return _telnyx_pubkey_cache["key"]
+    try:
+        api_key = os.environ.get("TELNYX_API_KEY", "")
+        if not api_key:
+            return None
+        resp = requests.get(
+            "https://api.telnyx.com/v2/webhooks/public_key",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        key_b64 = resp.json().get("data", {}).get("public_key", "")
+        if key_b64:
+            _telnyx_pubkey_cache["key"] = key_b64
+            _telnyx_pubkey_cache["fetched_at"] = now
+            return key_b64
+    except Exception as e:
+        logger.warning(f"[Telnyx] Could not fetch public key: {e}")
+    return _telnyx_pubkey_cache["key"]  # Return stale if available
+
+
+def _verify_telnyx_signature(raw_body: bytes, sig_header: str, ts_header: str):
+    """
+    Verify Telnyx Ed25519 webhook signature.
+    Returns (ok: bool, reason: str).
+    On key unavailability, allows through with a warning rather than blocking calls.
+    """
+    if not sig_header or not ts_header:
+        return False, "missing_headers"
+
+    # Anti-replay: reject events older than 5 minutes
+    try:
+        ts = int(ts_header)
+        if abs(time.time() - ts) > 300:
+            return False, f"timestamp_too_old({ts})"
+    except (ValueError, TypeError):
+        return False, "invalid_timestamp"
+
+    public_key_b64 = _get_telnyx_public_key()
+    if not public_key_b64:
+        logger.warning("[Telnyx] Webhook signature skipped — public key unavailable")
+        return True, "key_unavailable"
+
+    try:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        from cryptography.exceptions import InvalidSignature
+        signed_payload = f"{ts_header}|".encode() + raw_body
+        sig_bytes = base64.b64decode(sig_header)
+        key_bytes = base64.b64decode(public_key_b64)
+        pub_key = Ed25519PublicKey.from_public_bytes(key_bytes)
+        pub_key.verify(sig_bytes, signed_payload)
+        return True, "ok"
+    except InvalidSignature:
+        return False, "invalid_signature"
+    except Exception as e:
+        logger.warning(f"[Telnyx] Signature verification error: {e}")
+        return True, f"error:{e}"  # Fail-open on unexpected errors
+
+
 def _verify_webhook(transmission_id, timestamp, webhook_id, event_body, cert_url, auth_algo, transmission_sig):
     access_token = _paypal_access_token()
     url = f"{_paypal_base_url()}/v1/notifications/verify-webhook-signature"
@@ -3745,6 +3811,15 @@ def webhook():
     Always returns 200 immediately to avoid timeouts.
     All call logic decisions are made here based on event type.
     """
+    # --- Telnyx Ed25519 signature verification ---
+    raw_body = request.get_data()
+    sig   = request.headers.get("Telnyx-Signature-Ed25519", "")
+    ts    = request.headers.get("Telnyx-Timestamp", "")
+    ok, reason = _verify_telnyx_signature(raw_body, sig, ts)
+    if not ok:
+        logger.warning(f"[Telnyx] Rejected webhook — {reason}")
+        return "", 200  # Always 200 so Telnyx doesn't retry spoofed events
+
     try:
         return _handle_webhook()
     except Exception as e:
@@ -4671,6 +4746,9 @@ def _handle_webhook():
                 from datetime import datetime as dt
                 updates["ring_end"] = dt.utcnow().timestamp()
             update_call_state(call_control_id, **updates)
+            # Deduct call credit for successful outcomes (voicemail dropped or transferred)
+            if webhook_user_id:
+                _bill_successful_call(call_control_id, webhook_user_id)
         logger.info(f"Call ended: {call_control_id} | cause={hangup_cause} source={hangup_source} sip={sip_code}")
         persist_call_log(call_control_id)
         signal_call_complete(call_control_id)
