@@ -131,6 +131,39 @@ from personalized_vm import (
 _amd_timers = {}
 _detected_base_url = None
 
+# ---- Subdomain routing ----
+MARKETING_DOMAIN = os.environ.get("MARKETING_DOMAIN", "www.openhumana.com").lower().strip()
+APP_DOMAIN = os.environ.get("APP_DOMAIN", "www.app.openhumana.com").lower().strip()
+
+_SUBDOMAIN_PUBLIC_PATHS = frozenset({
+    "/",
+    "/about",
+    "/blog",
+    "/blog-page",
+    "/help",
+    "/compliance",
+    "/privacy",
+    "/terms",
+    "/contact",
+    "/pricing",
+    "/billing",
+    "/api/health",
+    "/api/chat",
+    "/api/chat-alex",
+    "/api/lead",
+    "/api/newsletter",
+    "/api/demo",
+})
+
+_SUBDOMAIN_PUBLIC_PREFIXES = (
+    "/webhook",
+    "/audio/",
+    "/static/",
+    "/api/paypal/",
+    "/compare",
+    "/blog/",
+)
+
 # ---- Logging Setup ----
 os.makedirs("logs", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
@@ -264,6 +297,41 @@ from gatekeeper import navigator as gk_navigator
 app.register_blueprint(humana_voice_bp)
 
 from supa_auth import supabase_available, supabase_sign_up, supabase_sign_in, supabase_send_otp, supabase_verify_otp
+
+@app.before_request
+def _subdomain_routing():
+    """Redirect app-only paths to APP_DOMAIN and the app root to dashboard/login."""
+    if not MARKETING_DOMAIN or not APP_DOMAIN or MARKETING_DOMAIN == APP_DOMAIN:
+        return
+
+    host = (
+        request.headers.get("X-Forwarded-Host")
+        or request.headers.get("Host")
+        or request.host
+        or ""
+    ).lower().split(":")[0]
+
+    path = request.path
+
+    is_app_domain = host == APP_DOMAIN
+    is_marketing_domain = host == MARKETING_DOMAIN
+
+    if not is_app_domain and not is_marketing_domain:
+        return
+
+    is_public = path in _SUBDOMAIN_PUBLIC_PATHS or any(
+        path.startswith(pfx) for pfx in _SUBDOMAIN_PUBLIC_PREFIXES
+    )
+
+    if is_marketing_domain and not is_public:
+        qs = f"?{request.query_string.decode()}" if request.query_string else ""
+        return redirect(f"https://{APP_DOMAIN}{path}{qs}", 302)
+
+    if is_app_domain and path == "/":
+        if current_user.is_authenticated:
+            return redirect(url_for("dashboard"), 302)
+        return redirect(url_for("login"), 302)
+
 
 @app.after_request
 def add_no_cache_headers(response):
