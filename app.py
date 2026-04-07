@@ -3379,6 +3379,232 @@ def api_integrations_pipedrive_save():
     return jsonify({"ok": True, "company": cfg.get("company_domain", "")})
 
 
+# ── Synthflow AI Dialer Integration ──────────────────────────────────────────
+
+# In-memory Synthflow campaign state (single-worker; isolated from Telnyx campaigns)
+_sf_campaigns = {}   # user_id -> {campaign_id, status, numbers, dialed, total, agent_name, model_id, from_number}
+_sf_lock = threading.Lock()
+
+
+@app.route("/api/integrations/synthflow", methods=["GET"])
+@login_required
+def api_integrations_synthflow_get():
+    from integrations import get_integration_config, KEY_SYNTHFLOW
+    cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
+    return jsonify({
+        "connected":  bool(cfg.get("api_key")),
+        "enabled":    bool(cfg.get("enabled")),
+        "agent_name": cfg.get("agent_name", ""),
+        "model_id":   cfg.get("model_id", ""),
+    })
+
+
+@app.route("/api/integrations/synthflow", methods=["POST"])
+@login_required
+def api_integrations_synthflow_save():
+    from integrations import (get_integration_config, set_integration_config,
+                              KEY_SYNTHFLOW, synthflow_verify_credentials)
+    data     = request.get_json() or {}
+    cfg      = get_integration_config(current_user.id, KEY_SYNTHFLOW)
+    api_key  = data.get("api_key", "").strip()
+    model_id = data.get("model_id", "").strip()
+
+    if api_key and model_id:
+        agent_name, err = synthflow_verify_credentials(api_key, model_id)
+        if err:
+            return jsonify({"error": err}), 400
+        cfg["api_key"]    = api_key
+        cfg["model_id"]   = model_id
+        cfg["agent_name"] = agent_name
+        cfg["enabled"]    = True
+    if "enabled" in data:
+        cfg["enabled"] = bool(data["enabled"])
+    if data.get("disconnect"):
+        cfg = {}
+    set_integration_config(current_user.id, KEY_SYNTHFLOW, cfg)
+    return jsonify({"ok": True, "agent_name": cfg.get("agent_name", ""),
+                    "model_id": cfg.get("model_id", "")})
+
+
+@app.route("/api/integrations/synthflow/test", methods=["POST"])
+@login_required
+def api_integrations_synthflow_test():
+    from integrations import get_integration_config, KEY_SYNTHFLOW, synthflow_verify_credentials
+    cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
+    if not cfg.get("api_key") or not cfg.get("model_id"):
+        return jsonify({"error": "Connect Synthflow first."}), 400
+    agent_name, err = synthflow_verify_credentials(cfg["api_key"], cfg["model_id"])
+    if err:
+        return jsonify({"error": err}), 400
+    return jsonify({"ok": True, "agent_name": agent_name})
+
+
+@app.route("/api/synthflow/campaign", methods=["POST"])
+@login_required
+def api_synthflow_campaign_start():
+    """Start an AI-agent outbound campaign via Synthflow."""
+    import requests as _req
+    from integrations import get_integration_config, KEY_SYNTHFLOW
+
+    data = request.get_json() or {}
+    user_id = current_user.id
+
+    cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
+    if not cfg.get("api_key") or not cfg.get("model_id"):
+        return jsonify({"error": "Synthflow not connected. Go to Integrations and connect your Synthflow account first."}), 400
+
+    with _sf_lock:
+        existing = _sf_campaigns.get(user_id, {})
+        if existing.get("status") == "running":
+            return jsonify({"error": "A Synthflow campaign is already running. Stop it first."}), 409
+
+    numbers_raw = data.get("numbers", [])
+    from_number  = (data.get("from_number") or "").strip()
+    delay_s      = max(1, int(data.get("delay", 5)))
+
+    # Accept contact list IDs or raw numbers
+    if not numbers_raw:
+        return jsonify({"error": "No phone numbers provided."}), 400
+
+    numbers = [str(n).strip() for n in numbers_raw if str(n).strip()]
+    if not numbers:
+        return jsonify({"error": "No valid phone numbers."}), 400
+
+    api_key  = cfg["api_key"]
+    model_id = cfg["model_id"]
+    agent_name = cfg.get("agent_name", "AI Agent")
+    campaign_id = f"sf_{user_id}_{int(__import__('time').time())}"
+
+    with _sf_lock:
+        _sf_campaigns[user_id] = {
+            "campaign_id": campaign_id,
+            "status":      "running",
+            "numbers":     numbers,
+            "dialed":      0,
+            "total":       len(numbers),
+            "agent_name":  agent_name,
+            "model_id":    model_id,
+            "from_number": from_number,
+            "errors":      0,
+            "calls":       [],
+        }
+
+    def _run_campaign():
+        import time as _time
+        hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        url  = "https://api.synthflow.ai/v2/agent/make_call_sip_outbound"
+
+        for idx, number in enumerate(numbers):
+            with _sf_lock:
+                state = _sf_campaigns.get(user_id, {})
+                if state.get("status") != "running":
+                    break
+
+            payload = {
+                "model_id":    model_id,
+                "phone":       number,
+                "from_number": from_number or None,
+            }
+            try:
+                resp = _req.post(url, headers=hdrs, json=payload, timeout=15)
+                call_id = None
+                if resp.ok:
+                    rj = resp.json()
+                    call_id = ((rj.get("response") or {}).get("call_id")
+                               or rj.get("call_id") or rj.get("id"))
+                    logger.info(f"[SYNTHFLOW] call to {number} => call_id={call_id}")
+                else:
+                    logger.warning(f"[SYNTHFLOW] call to {number} => HTTP {resp.status_code}: {resp.text[:200]}")
+                    with _sf_lock:
+                        if user_id in _sf_campaigns:
+                            _sf_campaigns[user_id]["errors"] += 1
+            except Exception as e:
+                logger.error(f"[SYNTHFLOW] call to {number} exception: {e}")
+                with _sf_lock:
+                    if user_id in _sf_campaigns:
+                        _sf_campaigns[user_id]["errors"] += 1
+
+            with _sf_lock:
+                if user_id in _sf_campaigns:
+                    _sf_campaigns[user_id]["dialed"] += 1
+                    if call_id:
+                        _sf_campaigns[user_id]["calls"].append({"number": number, "call_id": call_id})
+
+            if idx < len(numbers) - 1:
+                _time.sleep(delay_s)
+
+        with _sf_lock:
+            if user_id in _sf_campaigns:
+                _sf_campaigns[user_id]["status"] = "completed"
+
+    import threading as _t
+    _t.Thread(target=_run_campaign, daemon=True).start()
+
+    return jsonify({"ok": True, "campaign_id": campaign_id, "total": len(numbers)})
+
+
+@app.route("/api/synthflow/campaign/status", methods=["GET"])
+@login_required
+def api_synthflow_campaign_status():
+    user_id = current_user.id
+    with _sf_lock:
+        state = dict(_sf_campaigns.get(user_id, {}))
+    if not state:
+        return jsonify({"status": "idle"})
+    return jsonify({
+        "campaign_id": state.get("campaign_id"),
+        "status":      state.get("status", "idle"),
+        "dialed":      state.get("dialed", 0),
+        "total":       state.get("total", 0),
+        "errors":      state.get("errors", 0),
+        "agent_name":  state.get("agent_name", ""),
+        "calls":       state.get("calls", [])[-50:],
+    })
+
+
+@app.route("/api/synthflow/campaign/stop", methods=["POST"])
+@login_required
+def api_synthflow_campaign_stop():
+    user_id = current_user.id
+    with _sf_lock:
+        if user_id in _sf_campaigns:
+            _sf_campaigns[user_id]["status"] = "stopped"
+    return jsonify({"ok": True})
+
+
+@app.route("/api/integrations/synthflow/webhook", methods=["POST"])
+def api_synthflow_webhook():
+    """Public webhook receiver for Synthflow call completion events."""
+    from integrations import fire_all_integrations
+    try:
+        data = request.get_json(silent=True) or {}
+        uid_str = request.args.get("uid", "")
+        user_id = int(uid_str) if uid_str.isdigit() else None
+
+        event     = data.get("event", "")
+        call_data = data.get("data") or data
+
+        logger.info(f"[SYNTHFLOW WEBHOOK] event={event} user_id={user_id}")
+
+        if user_id and event in ("call.completed", "call_completed", "completed"):
+            call_record = {
+                "phone_number": call_data.get("phone") or call_data.get("to") or call_data.get("phone_number", ""),
+                "status":       "completed",
+                "source":       "synthflow",
+                "call_id":      call_data.get("call_id") or call_data.get("id", ""),
+                "duration":     call_data.get("duration"),
+                "recording_url": call_data.get("recording_url"),
+                "transcript":   call_data.get("transcript", ""),
+                "raw":          call_data,
+            }
+            fire_all_integrations(user_id, call_record)
+
+        return jsonify({"received": True})
+    except Exception as e:
+        logger.error(f"[SYNTHFLOW WEBHOOK] error: {e}")
+        return jsonify({"received": True})
+
+
 @app.route("/api/crm-contacts", methods=["GET"])
 @login_required
 def api_crm_contacts():

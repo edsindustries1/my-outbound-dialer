@@ -173,6 +173,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                     <span>Settings</span>
                 </a>
+                <a class="gads-nav-item" data-page="aiagent" onclick="navigateTo('aiagent')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M9 8h.01M15 8h.01"/></svg>
+                    <span>AI Agent Dialer</span>
+                </a>
                 <a class="gads-nav-item" data-page="humana-voice" onclick="navigateTo('humana-voice')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                     <span>Humana Voice</span>
@@ -1742,6 +1746,47 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- ── SYNTHFLOW AI DIALER ── -->
+                        <div class="intg-panel" id="intg-synthflow-panel" style="border-bottom:none;">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">Synthflow AI Dialer</div>
+                                    <div class="intg-panel-desc">Connect your Synthflow AI agent to power outbound calls — runs AI conversations at scale.</div>
+                                </div>
+                                <span class="intg-badge" id="synthflow-badge">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div id="synthflow-connected-view" style="display:none;">
+                                    <div class="intg-connected-row" style="margin-bottom:12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gads-success,#4ade80)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Agent: <strong id="synthflow-agent-name"></strong>
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" style="margin-left:auto;" onclick="disconnectSynthflow()">Disconnect</button>
+                                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+                                            <input type="checkbox" id="synthflowEnabled" onchange="toggleSynthflow(this)"> Enable
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="synthflow-disconnected-view" style="display:none;">
+                                    <div class="intg-setup-notice" style="margin-bottom:12px;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <span>In Synthflow go to <strong>Settings → API</strong>, copy your API key. Then copy your <strong>Model ID</strong> from the agent URL or settings page.</span>
+                                    </div>
+                                    <div class="pvm-section" style="margin-top:0;">
+                                        <label>API Key</label>
+                                        <input type="password" id="synthflowApiKey" class="gads-input" placeholder="sf_…" autocomplete="new-password">
+                                    </div>
+                                    <div class="pvm-section">
+                                        <label>Model ID (Agent ID)</label>
+                                        <input type="text" id="synthflowModelId" class="gads-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                                    </div>
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" style="margin-top:10px;" onclick="connectSynthflow()">Verify &amp; Connect</button>
+                                    <div id="synthflowMsg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div><!-- /integrations-card -->
 
                 </div>
@@ -1848,6 +1893,21 @@
                                 </div>
                                 <div class="intg-pick-end">
                                     <span class="intg-badge" id="gsheets-badge2">—</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                            </div>
+
+                            <!-- Synthflow card -->
+                            <div class="intg-pick-card" onclick="intgOpen('synthflow')">
+                                <div class="intg-logo" style="flex-shrink:0;background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                                </div>
+                                <div class="intg-pick-body">
+                                    <div class="intg-pick-name">Synthflow AI Dialer</div>
+                                    <div class="intg-pick-desc">Power outbound calls with your Synthflow AI voice agent — runs AI conversations at scale.</div>
+                                </div>
+                                <div class="intg-pick-end">
+                                    <span class="intg-badge" id="synthflow-badge2">—</span>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gads-text-tertiary);"><polyline points="9 18 15 12 9 6"/></svg>
                                 </div>
                             </div>
@@ -2134,9 +2194,161 @@
                             </div>
                         </div><!-- /intg-detail-gsheets -->
 
+                        <!-- ── SYNTHFLOW ── -->
+                        <div class="intg-detail-panel" id="intg-detail-synthflow" style="display:none">
+                            <div class="intg-detail-body">
+                                <!-- Connected -->
+                                <div id="synthflow-connected-view2" style="display:none">
+                                    <div class="intg-status-bar intg-status-bar--connected">
+                                        <div class="intg-status-bar-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+                                        <div class="intg-status-bar-info">
+                                            <div class="intg-status-bar-title">Connected</div>
+                                            <div class="intg-status-bar-sub">Agent: <strong id="synthflow-agent-name2"></strong></div>
+                                        </div>
+                                        <div class="intg-status-bar-actions">
+                                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" id="synthflowEnabled2" onchange="toggleSynthflow(this)"> Enable</label>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="disconnectSynthflow()">Disconnect</button>
+                                        </div>
+                                    </div>
+                                    <div class="intg-guide" style="margin-top:16px;">
+                                        <div class="intg-guide-title">Webhook URL (paste into Synthflow)</div>
+                                        <div style="font-size:12px;color:var(--gads-text-secondary);margin-bottom:8px;">Set this as your outbound webhook in Synthflow so completed call events fire your integrations (CRM sync, Sheets, etc).</div>
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <code id="synthflow-webhook-url2" style="font-size:11px;background:var(--gads-surface-2,#f4f4f5);padding:7px 10px;border-radius:6px;flex:1;word-break:break-all;"></code>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="copySynthflowWebhook()">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Disconnected -->
+                                <div id="synthflow-disconnected-view2" style="display:none">
+                                    <div class="intg-guide">
+                                        <div class="intg-guide-title">How to connect Synthflow</div>
+                                        <ol class="intg-guide-steps">
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">1</span><span>Log in to <a href="https://app.synthflow.ai" target="_blank" rel="noopener" style="color:var(--gads-primary);">Synthflow</a> and go to <strong>Settings → API</strong>. Copy your API key.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">2</span><span>Open the agent you want to use, copy its <strong>Model ID</strong> from the URL or Settings tab.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">3</span><span>Paste both below and click <strong>Verify &amp; Connect</strong>.</span></li>
+                                            <li class="intg-guide-step"><span class="intg-guide-step-num">4</span><span>After connecting, copy the webhook URL shown and add it in Synthflow's <strong>Webhook</strong> settings so call completions trigger your CRM sync.</span></li>
+                                        </ol>
+                                    </div>
+                                    <div class="intg-connect-card">
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">API Key</label>
+                                            <input type="password" id="synthflowApiKey2" class="gads-input" placeholder="sf_…" autocomplete="new-password">
+                                        </div>
+                                        <div class="intg-connect-field">
+                                            <label class="intg-field-label">Model ID (Agent ID)</label>
+                                            <input type="text" id="synthflowModelId2" class="gads-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                                        </div>
+                                        <div><button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="connectSynthflow2()">Verify &amp; Connect</button></div>
+                                        <div id="synthflowMsg2" style="font-size:12px;min-height:16px;color:var(--gads-text-secondary);"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /intg-detail-synthflow -->
+
                     </div><!-- /integrations-page-card -->
                     </div><!-- /intg-detail-area -->
                 </div><!-- /page-integrations -->
+
+                <!-- ==================== PAGE: AI AGENT DIALER ==================== -->
+                <div class="gads-page" id="page-aiagent" style="display:none">
+                    <div class="gads-page-header">
+                        <h2>AI Agent Dialer</h2>
+                    </div>
+                    <p style="font-size:13px;color:var(--gads-text-secondary);margin:0 0 20px;">Launch outbound calls powered by your Synthflow AI voice agent. The agent handles live conversations autonomously.</p>
+
+                    <!-- Connection check banner -->
+                    <div id="aiagent-not-connected" style="display:none;margin-bottom:20px;">
+                        <div class="intg-setup-notice" style="padding:14px 16px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span>Synthflow is not connected yet. Go to <a href="#" onclick="navigateTo('integrations');return false;" style="color:var(--gads-primary);font-weight:600;">Integrations</a> and connect your Synthflow account to use the AI Agent Dialer.</span>
+                        </div>
+                    </div>
+
+                    <!-- Campaign launcher -->
+                    <div id="aiagent-connected-area" style="display:none;">
+                        <div class="gads-card" style="margin-bottom:20px;padding:22px 24px;">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                                <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;font-size:15px;">Agent: <span id="aiagent-name-display" style="color:var(--gads-primary);"></span></div>
+                                    <div style="font-size:12px;color:var(--gads-text-secondary);">Synthflow AI</div>
+                                </div>
+                                <div style="margin-left:auto;">
+                                    <span id="aiagent-campaign-status-badge" style="display:none;font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600;"></span>
+                                </div>
+                            </div>
+
+                            <!-- Phone number list input -->
+                            <div class="pvm-section" style="margin-top:0;">
+                                <label>Phone Numbers to Call</label>
+                                <textarea id="aiagentNumbers" class="gads-input" rows="5" style="resize:vertical;" placeholder="One number per line, e.g.:&#10;+12125551234&#10;+13105557890&#10;…"></textarea>
+                                <div style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">E.164 format preferred (e.g. +12125551234). One number per line.</div>
+                            </div>
+
+                            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+                                <div class="pvm-section" style="margin-top:0;flex:1;min-width:140px;">
+                                    <label>From Number <span style="font-weight:400;color:var(--gads-text-secondary);">(optional)</span></label>
+                                    <input type="text" id="aiagentFromNumber" class="gads-input" placeholder="+12125550001">
+                                </div>
+                                <div class="pvm-section" style="margin-top:0;width:130px;">
+                                    <label>Delay Between Calls (s)</label>
+                                    <input type="number" id="aiagentDelay" class="gads-input" value="5" min="1" max="60">
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;">
+                                <button type="button" class="gads-btn gads-btn-primary" id="aiagentStartBtn" onclick="sfStartCampaign()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                    Start Campaign
+                                </button>
+                                <button type="button" class="gads-btn gads-btn-outline" id="aiagentStopBtn" onclick="sfStopCampaign()" style="display:none;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><rect x="6" y="6" width="12" height="12"/></svg>
+                                    Stop
+                                </button>
+                                <div id="aiagentMsg" style="font-size:12px;min-height:16px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Live progress -->
+                        <div class="gads-card" id="aiagent-progress-card" style="padding:20px 24px;display:none;">
+                            <div style="font-weight:700;font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Campaign Progress
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:14px;margin-bottom:16px;">
+                                <div style="text-align:center;">
+                                    <div id="aiagent-dialed-count" style="font-size:28px;font-weight:800;color:var(--gads-primary);">0</div>
+                                    <div style="font-size:11px;color:var(--gads-text-secondary);">Dialed</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <div id="aiagent-total-count" style="font-size:28px;font-weight:800;">0</div>
+                                    <div style="font-size:11px;color:var(--gads-text-secondary);">Total</div>
+                                </div>
+                                <div style="text-align:center;">
+                                    <div id="aiagent-errors-count" style="font-size:28px;font-weight:800;color:#f87171;">0</div>
+                                    <div style="font-size:11px;color:var(--gads-text-secondary);">Errors</div>
+                                </div>
+                            </div>
+                            <div style="background:var(--gads-border);border-radius:99px;height:6px;overflow:hidden;margin-bottom:14px;">
+                                <div id="aiagent-progress-bar" style="height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:99px;transition:width 0.4s;width:0%;"></div>
+                            </div>
+                            <div id="aiagent-calls-log" style="max-height:200px;overflow-y:auto;font-size:12px;"></div>
+                        </div>
+
+                        <!-- Webhook URL info card -->
+                        <div class="gads-card" style="padding:18px 24px;">
+                            <div style="font-weight:700;font-size:13px;margin-bottom:10px;">Synthflow Webhook URL</div>
+                            <div style="font-size:12px;color:var(--gads-text-secondary);margin-bottom:8px;">Paste this URL into your Synthflow agent's webhook settings so completed calls trigger your CRM syncs.</div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <code id="aiagent-webhook-url" style="font-size:11px;background:var(--gads-surface-2,#f4f4f5);padding:7px 10px;border-radius:6px;flex:1;word-break:break-all;"></code>
+                                <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="copySynthflowWebhook()">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /page-aiagent -->
 
                 <!-- ==================== PAGE: VOICE STUDIO ==================== -->
                 <div class="gads-page" id="page-humana-voice" style="display:none">
@@ -2599,6 +2811,7 @@
             testdialer:   'Test Dialer',
             settings:        'Settings',
             integrations:    'Integrations',
+            aiagent:         'AI Agent Dialer',
             'humana-voice':  'Humana Voice'
         };
 
@@ -2665,6 +2878,21 @@
             if (page === 'integrations') {
                 if (typeof intgShowPicker === 'function') intgShowPicker();
                 if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus();
+            }
+            if (page === 'aiagent') {
+                if (typeof loadIntegrationStatus === 'function') loadIntegrationStatus();
+                apiFetch('/api/synthflow/campaign/status')
+                    .then(function(r){ return r.json(); })
+                    .then(function(d){
+                        if (d.status === 'running') {
+                            document.getElementById('aiagent-progress-card').style.display = '';
+                            var startBtn = document.getElementById('aiagentStartBtn');
+                            var stopBtn  = document.getElementById('aiagentStopBtn');
+                            if (startBtn) startBtn.disabled = true;
+                            if (stopBtn) stopBtn.style.display = '';
+                            if (typeof window._sfPollStatus === 'function') window._sfPollStatus();
+                        }
+                    }).catch(function(){});
             }
             if (page === 'humana-voice') {
                 if (typeof hvInit === 'function') hvInit();
@@ -7086,6 +7314,12 @@
             desc:  'Append a row to your spreadsheet for every completed call — lightweight reporting without a full CRM.',
             logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>',
             logoBg: '#34a853'
+        },
+        synthflow: {
+            title: 'Synthflow AI Dialer',
+            desc:  'Connect your Synthflow AI voice agent to power outbound calls at scale — autonomous AI conversations.',
+            logoHtml: '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
+            logoBg: 'linear-gradient(135deg,#6366f1,#8b5cf6)'
         }
     };
     window.intgOpen = function(key) {
@@ -7211,6 +7445,35 @@
                 _setVal('gsheetsSheetName2', gs.sheet_name || 'Call Log');
                 _setChk('gsheetsEnabled',  !!gs.enabled);
                 _setChk('gsheetsEnabled2', !!gs.enabled);
+            }
+
+            // ── Synthflow ──
+            var sf = d.synthflow || {};
+            var sfConn = sf.connected;
+            var sfLabel = sfConn && sf.enabled ? 'Connected · Active' : (sfConn ? 'Connected · Disabled' : 'Not connected');
+            var sfCls   = sfConn && sf.enabled ? 'active' : 'inactive';
+            _badge('synthflow-badge',  sfLabel, sfCls);
+            _badge('synthflow-badge2', sfLabel, sfCls);
+            _show('synthflow-connected-view',     sfConn);
+            _show('synthflow-disconnected-view',  !sfConn);
+            _show('synthflow-connected-view2',    sfConn);
+            _show('synthflow-disconnected-view2', !sfConn);
+            if (sfConn) {
+                _setText('synthflow-agent-name',  sf.agent_name || '—');
+                _setText('synthflow-agent-name2', sf.agent_name || '—');
+                _setChk('synthflowEnabled',  !!sf.enabled);
+                _setChk('synthflowEnabled2', !!sf.enabled);
+            }
+            // Update AI Agent Dialer page
+            var uid = '{{ current_user.id if current_user and current_user.is_authenticated else "" }}';
+            var whBase = window.location.origin;
+            var sfWh = whBase + '/api/integrations/synthflow/webhook?uid=' + uid;
+            _setText('aiagent-webhook-url', sfWh);
+            _setText('synthflow-webhook-url2', sfWh);
+            _show('aiagent-not-connected',   !sfConn);
+            _show('aiagent-connected-area',  sfConn);
+            if (sfConn) {
+                _setText('aiagent-name-display', sf.agent_name || '—');
             }
 
         }).catch(function(e){ if (e.message === 'auth') return; });
@@ -7449,6 +7712,164 @@
             .then(function(){ _intgMsg('gsheetsMsg2', 'Sheet config saved', true); loadIntegrationStatus(); })
             .catch(function(e){ if (e.message === 'auth') return; _intgMsg('gsheetsMsg2', 'Save failed', false); });
     };
+
+    // ── Synthflow functions ──
+
+    window.connectSynthflow = function() {
+        var key = (document.getElementById('synthflowApiKey') || {}).value || '';
+        var mid = (document.getElementById('synthflowModelId') || {}).value || '';
+        if (!key.trim()) { _intgMsg('synthflowMsg', 'Paste your API Key first.', false); return; }
+        if (!mid.trim()) { _intgMsg('synthflowMsg', 'Paste your Model ID first.', false); return; }
+        _intgMsg('synthflowMsg', 'Verifying…', true);
+        apiFetch('/api/integrations/synthflow', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_key: key.trim(), model_id: mid.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('synthflowMsg', d.error, false); return; }
+                _intgMsg('synthflowMsg', 'Connected! Agent: ' + (d.agent_name || ''), true);
+                var ki = document.getElementById('synthflowApiKey');  if (ki) ki.value = '';
+                var mi = document.getElementById('synthflowModelId'); if (mi) mi.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('synthflowMsg', 'Request failed', false); });
+    };
+
+    window.connectSynthflow2 = function() {
+        var key = (document.getElementById('synthflowApiKey2') || {}).value || '';
+        var mid = (document.getElementById('synthflowModelId2') || {}).value || '';
+        if (!key.trim()) { _intgMsg('synthflowMsg2', 'Paste your API Key first.', false); return; }
+        if (!mid.trim()) { _intgMsg('synthflowMsg2', 'Paste your Model ID first.', false); return; }
+        _intgMsg('synthflowMsg2', 'Verifying…', true);
+        apiFetch('/api/integrations/synthflow', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_key: key.trim(), model_id: mid.trim() }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('synthflowMsg2', d.error, false); return; }
+                _intgMsg('synthflowMsg2', 'Connected! Agent: ' + (d.agent_name || ''), true);
+                var ki = document.getElementById('synthflowApiKey2');  if (ki) ki.value = '';
+                var mi = document.getElementById('synthflowModelId2'); if (mi) mi.value = '';
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('synthflowMsg2', 'Request failed', false); });
+    };
+
+    window.disconnectSynthflow = function() {
+        if (!confirm('Disconnect Synthflow? AI agent dialing will stop.')) return;
+        apiFetch('/api/integrations/synthflow', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ disconnect: true }) })
+            .then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    window.toggleSynthflow = function(chk) {
+        apiFetch('/api/integrations/synthflow', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ enabled: chk.checked }) })
+            .then(function(r){ return r.json(); }).then(function(){ loadIntegrationStatus(); })
+            .catch(function(){});
+    };
+
+    window.copySynthflowWebhook = function() {
+        var el = document.getElementById('aiagent-webhook-url') || document.getElementById('synthflow-webhook-url2');
+        var txt = el ? el.textContent : '';
+        if (!txt) return;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(txt).then(function(){ _intgMsg('aiagentMsg', 'Webhook URL copied!', true); }).catch(function(){});
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = txt; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+            _intgMsg('aiagentMsg', 'Webhook URL copied!', true);
+        }
+    };
+
+    // ── AI Agent Dialer campaign ──
+    var _sfPollTimer = null;
+
+    window.sfStartCampaign = function() {
+        var raw = (document.getElementById('aiagentNumbers') || {}).value || '';
+        var numbers = raw.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
+        if (!numbers.length) { _intgMsg('aiagentMsg', 'Enter at least one phone number.', false); return; }
+        var fromNum = (document.getElementById('aiagentFromNumber') || {}).value || '';
+        var delay   = parseInt((document.getElementById('aiagentDelay') || {}).value || '5', 10) || 5;
+        _intgMsg('aiagentMsg', 'Starting campaign…', true);
+        apiFetch('/api/synthflow/campaign', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ numbers: numbers, from_number: fromNum, delay: delay }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('aiagentMsg', d.error, false); return; }
+                _intgMsg('aiagentMsg', 'Campaign started — dialing ' + d.total + ' number(s)…', true);
+                var startBtn = document.getElementById('aiagentStartBtn');
+                var stopBtn  = document.getElementById('aiagentStopBtn');
+                if (startBtn) startBtn.disabled = true;
+                if (stopBtn) stopBtn.style.display = '';
+                document.getElementById('aiagent-progress-card').style.display = '';
+                _sfPollStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('aiagentMsg', 'Request failed', false); });
+    };
+
+    window.sfStopCampaign = function() {
+        apiFetch('/api/synthflow/campaign/stop', { method: 'POST' }).catch(function(){});
+        _intgMsg('aiagentMsg', 'Stopping…', true);
+    };
+
+    function _sfPollStatus() {
+        if (_sfPollTimer) clearTimeout(_sfPollTimer);
+        apiFetch('/api/synthflow/campaign/status')
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                var dialed = d.dialed || 0;
+                var total  = d.total  || 0;
+                var errors = d.errors || 0;
+                var status = d.status || 'idle';
+                var pct    = total > 0 ? Math.round(dialed / total * 100) : 0;
+
+                _setText('aiagent-dialed-count', dialed);
+                _setText('aiagent-total-count',  total);
+                _setText('aiagent-errors-count', errors);
+                var bar = document.getElementById('aiagent-progress-bar');
+                if (bar) bar.style.width = pct + '%';
+
+                var badge = document.getElementById('aiagent-campaign-status-badge');
+                if (badge) {
+                    badge.style.display = '';
+                    if (status === 'running') {
+                        badge.textContent = 'Running';
+                        badge.style.background = 'rgba(99,102,241,0.12)';
+                        badge.style.color = '#6366f1';
+                    } else if (status === 'completed') {
+                        badge.textContent = 'Completed';
+                        badge.style.background = 'rgba(74,222,128,0.12)';
+                        badge.style.color = '#4ade80';
+                    } else if (status === 'stopped') {
+                        badge.textContent = 'Stopped';
+                        badge.style.background = 'rgba(148,163,184,0.12)';
+                        badge.style.color = '#64748b';
+                    }
+                }
+
+                var calls = d.calls || [];
+                var logEl = document.getElementById('aiagent-calls-log');
+                if (logEl && calls.length) {
+                    var html = '';
+                    calls.slice(-30).reverse().forEach(function(c){
+                        html += '<div style="padding:3px 0;border-bottom:1px solid var(--gads-border,#e5e7eb);display:flex;justify-content:space-between;">' +
+                            '<span>' + (c.number || '—') + '</span>' +
+                            '<span style="color:var(--gads-text-secondary,#6b7280);font-size:11px;">' + (c.call_id ? 'ID: ' + c.call_id.substring(0,12) + '…' : 'queued') + '</span>' +
+                        '</div>';
+                    });
+                    logEl.innerHTML = html;
+                }
+
+                if (status === 'running') {
+                    _sfPollTimer = setTimeout(_sfPollStatus, 3000);
+                } else {
+                    var startBtn = document.getElementById('aiagentStartBtn');
+                    var stopBtn  = document.getElementById('aiagentStopBtn');
+                    if (startBtn) startBtn.disabled = false;
+                    if (stopBtn) stopBtn.style.display = 'none';
+                    if (status === 'completed') _intgMsg('aiagentMsg', 'Campaign complete! Dialed ' + dialed + '/' + total + '.', true);
+                    else if (status === 'stopped') _intgMsg('aiagentMsg', 'Campaign stopped. Dialed ' + dialed + '/' + total + '.', true);
+                }
+            })
+            .catch(function(e){ if (e.message !== 'auth') { _sfPollTimer = setTimeout(_sfPollStatus, 5000); } });
+    }
+    window._sfPollStatus = _sfPollStatus;
 
     // ── CRM Quick-Call Contacts Panel ──
     var _crmState = {};

@@ -29,6 +29,7 @@ KEY_HUBSPOT     = "hubspot_config"
 KEY_GHL         = "ghl_config"
 KEY_PIPEDRIVE   = "pipedrive_config"
 KEY_GSHEETS_CFG = "google_sheets_config"
+KEY_SYNTHFLOW   = "synthflow_config"
 
 
 # ── Config helpers ─────────────────────────────────────────────────────────────
@@ -105,6 +106,7 @@ def integration_status(user_id):
             "service_account_configured": gs_service_account_ok,
             "service_account_email":      _get_sa_email(),
         },
+        "synthflow": _synthflow_status(user_id),
     }
 
 
@@ -866,3 +868,39 @@ def fire_all_integrations(user_id, call_record):
                 logger.error(f"[INTEGRATIONS] {name} error for user {user_id}: {e}")
 
     threading.Thread(target=_run, daemon=True).start()
+
+
+# ── Synthflow AI Dialer ───────────────────────────────────────────────────────
+
+def _synthflow_status(user_id):
+    cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
+    return {
+        "connected":  bool(cfg.get("api_key")),
+        "enabled":    bool(cfg.get("enabled")),
+        "agent_name": cfg.get("agent_name", ""),
+        "model_id":   cfg.get("model_id", ""),
+    }
+
+
+def synthflow_verify_credentials(api_key, model_id):
+    """
+    Call the Synthflow API to verify the key + model_id are valid.
+    Returns (agent_name: str, error: str|None).
+    """
+    try:
+        import requests as _req
+        url  = f"https://api.synthflow.ai/v2/agents/{model_id}"
+        hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        resp = _req.get(url, headers=hdrs, timeout=12)
+        if resp.status_code == 401:
+            return None, "Invalid API key — check your Synthflow credentials."
+        if resp.status_code == 404:
+            return None, "Agent not found — double-check the Model ID."
+        if resp.status_code != 200:
+            return None, f"Synthflow returned HTTP {resp.status_code}."
+        data = resp.json()
+        agent = (data.get("response", {}) or {}).get("agent", {}) or data.get("agent", {}) or {}
+        name  = agent.get("name") or agent.get("agent_name") or data.get("name", "")
+        return name or "(unnamed agent)", None
+    except Exception as e:
+        return None, f"Connection error: {e}"
