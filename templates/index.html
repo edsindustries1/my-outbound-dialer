@@ -2403,51 +2403,85 @@
 
                 <!-- ==================== PAGE: TEST AGENT ==================== -->
                 <div class="gads-page" id="page-sftest" style="display:none">
-                    <div style="max-width:520px;margin:0 auto;padding:30px 0;">
+                    <style>
+                        @keyframes sftestPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+                        .sftest-bubble { max-width:78%; padding:9px 14px; border-radius:14px; font-size:13.5px; line-height:1.5; margin-bottom:8px; word-break:break-word; }
+                        .sftest-bubble.agent { background:var(--gads-primary,#6366f1); color:#fff; margin-left:auto; border-bottom-right-radius:3px; }
+                        .sftest-bubble.caller { background:var(--gads-surface-2,#f4f4f5); color:var(--gads-text); margin-right:auto; border-bottom-left-radius:3px; }
+                        .sftest-bubble-wrap { display:flex; flex-direction:column; }
+                        .sftest-bubble-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--gads-text-secondary); margin-bottom:2px; }
+                        .sftest-bubble-label.agent { text-align:right; }
+                    </style>
+                    <div style="max-width:820px;margin:0 auto;padding:28px 0;">
                         <h2 style="font-weight:700;font-size:22px;margin-bottom:4px;">Test Synthflow Agent</h2>
-                        <p style="color:var(--gads-text-secondary);font-size:14px;margin-bottom:28px;">Enter any phone number and hit Dial — your AI agent will call it instantly so you can test the conversation.</p>
+                        <p style="color:var(--gads-text-secondary);font-size:14px;margin-bottom:24px;">Dial any number — the live conversation transcript appears below in real time.</p>
 
                         <div id="sftest-not-connected" style="display:none;background:var(--gads-surface-2,#f4f4f5);border:1px solid var(--gads-border);border-radius:10px;padding:18px 22px;margin-bottom:24px;color:var(--gads-text-secondary);font-size:14px;">
                             <strong>Synthflow not connected.</strong> Go to <a href="#" onclick="navigateTo('integrations');return false;" style="color:var(--gads-primary);font-weight:600;">Integrations</a> and connect your Synthflow account first.
                         </div>
 
                         <div id="sftest-connected-area">
-                            <div style="background:var(--gads-surface-2,#f9fafb);border:1px solid var(--gads-border);border-radius:12px;padding:26px;">
-                                <div style="margin-bottom:20px;">
-                                    <div style="font-size:12px;font-weight:600;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Agent</div>
-                                    <div id="sftest-agent-name" style="font-weight:700;font-size:16px;color:var(--gads-primary);">—</div>
-                                </div>
-
-                                <div style="margin-bottom:16px;">
-                                    <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Phone Number to Call</label>
-                                    <div style="display:flex;gap:8px;align-items:center;">
-                                        <input type="tel" id="sftestPhone" class="gads-input" placeholder="+12125550100  or  2125550100" style="flex:1;font-size:15px;letter-spacing:.03em;" onkeydown="if(event.key==='Enter')sfManualDial();">
-                                        <button type="button" class="gads-btn gads-btn-primary" id="sftestDialBtn" onclick="sfManualDial()" style="padding:0 22px;height:40px;font-size:14px;white-space:nowrap;">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
-                                            Dial
-                                        </button>
-                                        <button type="button" class="gads-btn" id="sftestHangupBtn" onclick="sfHangUp()" style="display:none;padding:0 22px;height:40px;font-size:14px;white-space:nowrap;background:#ef4444;color:#fff;border:none;">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;transform:rotate(135deg);"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
-                                            Hang Up
-                                        </button>
+                            <!-- ── Dialer card ── -->
+                            <div style="background:var(--gads-surface-2,#f9fafb);border:1px solid var(--gads-border);border-radius:12px;padding:22px 26px;margin-bottom:18px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                                    <div>
+                                        <div style="font-size:11px;font-weight:700;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Agent</div>
+                                        <div id="sftest-agent-name" style="font-weight:700;font-size:15px;color:var(--gads-primary);">—</div>
+                                    </div>
+                                    <!-- Active call pill -->
+                                    <div id="sftestActiveCall" style="display:none;align-items:center;gap:8px;padding:6px 14px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35);border-radius:20px;">
+                                        <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:sftestPulse 1.2s infinite;"></span>
+                                        <span style="font-size:12px;font-weight:700;color:#16a34a;">Live</span>
+                                        <span id="sftestTimer" style="font-size:12px;font-weight:600;color:var(--gads-text-secondary);font-variant-numeric:tabular-nums;">0:00</span>
                                     </div>
                                 </div>
 
-                                <!-- Active call indicator -->
-                                <div id="sftestActiveCall" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;align-items:center;gap:10px;">
-                                    <span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;animation:sftestPulse 1.2s infinite;flex-shrink:0;"></span>
-                                    <span style="font-size:13px;font-weight:600;color:var(--gads-text);">Call in progress</span>
-                                    <span id="sftestActiveNumber" style="font-size:12px;color:var(--gads-text-secondary);margin-left:4px;"></span>
+                                <div style="margin-top:16px;">
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <input type="tel" id="sftestPhone" class="gads-input" placeholder="+12125550100  or  2125550100" style="flex:1;font-size:15px;letter-spacing:.03em;" onkeydown="if(event.key==='Enter')sfManualDial();">
+                                        <button type="button" class="gads-btn gads-btn-primary" id="sftestDialBtn" onclick="sfManualDial()" style="padding:0 22px;height:40px;font-size:14px;white-space:nowrap;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                                            Dial
+                                        </button>
+                                        <button type="button" class="gads-btn" id="sftestHangupBtn" onclick="sfHangUp()" style="display:none;padding:0 22px;height:40px;font-size:14px;white-space:nowrap;background:#ef4444;color:#fff;border:none;border-radius:7px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;transform:rotate(135deg);"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                                            Hang Up
+                                        </button>
+                                    </div>
+                                    <div id="sftestMsg" style="font-size:12px;min-height:16px;margin-top:6px;"></div>
                                 </div>
-                                <style>@keyframes sftestPulse{0%,100%{opacity:1;}50%{opacity:.3;}}</style>
+                            </div>
 
-                                <div id="sftestMsg" style="font-size:13px;min-height:18px;margin-top:6px;"></div>
-
-                                <!-- Recent test call log -->
-                                <div id="sftestLog" style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--gads-border);">
-                                    <div style="font-size:12px;font-weight:600;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;">Last Test Calls</div>
-                                    <ul id="sftestLogList" style="list-style:none;padding:0;margin:0;font-size:13px;"></ul>
+                            <!-- ── Live Monitor panel ── -->
+                            <div id="sftestMonitor" style="display:none;border:1px solid var(--gads-border);border-radius:12px;overflow:hidden;">
+                                <!-- Header -->
+                                <div style="padding:12px 18px;background:var(--gads-surface-2,#f4f4f5);border-bottom:1px solid var(--gads-border);display:flex;align-items:center;justify-content:space-between;">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gads-primary,#6366f1)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                        <span style="font-weight:700;font-size:13px;">Live Conversation</span>
+                                        <span id="sftestMonitorStatus" style="font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:rgba(99,102,241,.12);color:var(--gads-primary,#6366f1);">Connecting…</span>
+                                    </div>
+                                    <div style="font-size:11px;color:var(--gads-text-secondary);">Updates every 5 s</div>
                                 </div>
+                                <!-- Chat window -->
+                                <div id="sftestChat" style="height:360px;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:4px;background:var(--gads-bg,#fff);">
+                                    <div id="sftestChatEmpty" style="margin:auto;text-align:center;color:var(--gads-text-secondary);font-size:13px;">
+                                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto 10px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                        Transcript will appear here as the conversation happens
+                                    </div>
+                                </div>
+                                <!-- Footer legend -->
+                                <div style="padding:8px 18px;background:var(--gads-surface-2,#f4f4f5);border-top:1px solid var(--gads-border);display:flex;gap:18px;font-size:11px;color:var(--gads-text-secondary);">
+                                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--gads-primary,#6366f1);vertical-align:-1px;margin-right:4px;"></span>Agent</span>
+                                    <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--gads-surface-2,#e4e4e7);border:1px solid #ccc;vertical-align:-1px;margin-right:4px;"></span>Caller</span>
+                                    <span style="margin-left:auto;" id="sftestLineCount"></span>
+                                </div>
+                            </div>
+
+                            <!-- Recent test call log -->
+                            <div id="sftestLog" style="display:none;margin-top:18px;padding:16px 20px;background:var(--gads-surface-2,#f9fafb);border:1px solid var(--gads-border);border-radius:12px;">
+                                <div style="font-size:12px;font-weight:700;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;">Recent Calls</div>
+                                <ul id="sftestLogList" style="list-style:none;padding:0;margin:0;font-size:13px;"></ul>
                             </div>
 
                             <p style="font-size:12px;color:var(--gads-text-secondary);margin-top:14px;">
@@ -8068,29 +8102,132 @@
                 + '</li>';
         }).join('');
     }
-    var _sftestActiveCallId = null;
+    // ── Live Monitor state ───────────────────────────────────────────
+    var _sftestActiveCallId  = null;
+    var _sftestPollTimer     = null;
+    var _sftestTimerInterval = null;
+    var _sftestStartTs       = null;
+    var _sftestChatLines     = [];   // [{speaker, text}]
 
+    // ── Timer ─────────────────────────────────────────────────────────
+    function _sftestStartTimer() {
+        _sftestStartTs = Date.now();
+        _sftestTimerInterval = setInterval(function() {
+            var el = document.getElementById('sftestTimer');
+            if (!el) return;
+            var sec = Math.floor((Date.now() - _sftestStartTs) / 1000);
+            var m = Math.floor(sec / 60), s = sec % 60;
+            el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
+    }
+    function _sftestStopTimer() {
+        if (_sftestTimerInterval) { clearInterval(_sftestTimerInterval); _sftestTimerInterval = null; }
+    }
+
+    // ── Chat renderer ─────────────────────────────────────────────────
+    function _sftestRenderChat(lines) {
+        var chat  = document.getElementById('sftestChat');
+        var empty = document.getElementById('sftestChatEmpty');
+        var count = document.getElementById('sftestLineCount');
+        if (!chat) return;
+        if (!lines || !lines.length) { return; }
+        if (empty) empty.style.display = 'none';
+        // Only append new lines (avoid re-rendering everything)
+        var newLines = lines.slice(_sftestChatLines.length);
+        newLines.forEach(function(ln) {
+            _sftestChatLines.push(ln);
+            var spk = (ln.speaker || ln.role || ln.track || '').toLowerCase();
+            var isAgent = spk.indexOf('agent') !== -1 || spk === 'assistant' || spk === 'ai' || spk === 'bot';
+            var cls     = isAgent ? 'agent' : 'caller';
+            var label   = isAgent ? 'Agent' : 'Caller';
+            var wrap = document.createElement('div');
+            wrap.className = 'sftest-bubble-wrap';
+            wrap.innerHTML =
+                '<div class="sftest-bubble-label ' + cls + '">' + label + '</div>' +
+                '<div class="sftest-bubble ' + cls + '">' + _sftestEsc(ln.text || ln.message || '') + '</div>';
+            chat.appendChild(wrap);
+        });
+        // Auto-scroll
+        chat.scrollTop = chat.scrollHeight;
+        if (count) count.textContent = _sftestChatLines.length + ' line' + (_sftestChatLines.length !== 1 ? 's' : '');
+    }
+    function _sftestEsc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Show/hide active call state ───────────────────────────────────
     function _sftestSetCallActive(callId, toNumber) {
         _sftestActiveCallId = callId || null;
         var dialBtn   = document.getElementById('sftestDialBtn');
         var hangupBtn = document.getElementById('sftestHangupBtn');
         var activeDiv = document.getElementById('sftestActiveCall');
-        var activeNum = document.getElementById('sftestActiveNumber');
+        var monitor   = document.getElementById('sftestMonitor');
         var phoneInp  = document.getElementById('sftestPhone');
+        var statusEl  = document.getElementById('sftestMonitorStatus');
         if (callId) {
             dialBtn.style.display   = 'none';
             hangupBtn.style.display = '';
             activeDiv.style.display = 'flex';
-            if (activeNum) activeNum.textContent = toNumber || '';
+            monitor.style.display   = 'block';
+            if (statusEl) { statusEl.textContent = 'Connecting…'; statusEl.style.background='rgba(99,102,241,.12)'; statusEl.style.color='var(--gads-primary,#6366f1)'; }
             if (phoneInp) phoneInp.disabled = true;
+            _sftestChatLines = [];
+            var chat = document.getElementById('sftestChat');
+            if (chat) { chat.innerHTML = ''; var e=document.createElement('div'); e.id='sftestChatEmpty'; e.style.cssText='margin:auto;text-align:center;color:var(--gads-text-secondary);font-size:13px;'; e.innerHTML='<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto 10px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Transcript will appear here as the conversation happens'; chat.appendChild(e); }
+            _sftestStartTimer();
+            _sftestStartMonitor(callId);
         } else {
             dialBtn.style.display   = '';
             dialBtn.disabled        = false;
-            dialBtn.innerHTML       = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Dial';
+            dialBtn.innerHTML       = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Dial';
             hangupBtn.style.display = 'none';
             activeDiv.style.display = 'none';
             if (phoneInp) phoneInp.disabled = false;
+            if (statusEl) { statusEl.textContent = 'Ended'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
+            _sftestStopTimer();
+            _sftestStopMonitor();
         }
+    }
+
+    // ── Live polling ──────────────────────────────────────────────────
+    function _sftestStartMonitor(callId) {
+        _sftestStopMonitor();
+        _sftestPollLive(callId);
+    }
+    function _sftestStopMonitor() {
+        if (_sftestPollTimer) { clearTimeout(_sftestPollTimer); _sftestPollTimer = null; }
+    }
+    function _sftestPollLive(callId) {
+        if (!callId || callId !== _sftestActiveCallId) return;
+        apiFetch('/api/integrations/synthflow/call-live?call_id=' + encodeURIComponent(callId))
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                var statusEl = document.getElementById('sftestMonitorStatus');
+                if (d.transcript && d.transcript.length) {
+                    _sftestRenderChat(d.transcript);
+                    if (statusEl) { statusEl.textContent = 'Live'; statusEl.style.background='rgba(34,197,94,.12)'; statusEl.style.color='#16a34a'; }
+                } else {
+                    if (statusEl && statusEl.textContent === 'Connecting…') { /* keep */ }
+                    else if (statusEl) statusEl.textContent = 'Waiting for speech…';
+                }
+                // If Synthflow already completed the call
+                if (d.call_status === 'completed' || d.call_status === 'ended' || d.call_status === 'failed') {
+                    if (statusEl) { statusEl.textContent = 'Call ended'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
+                    _sftestStopTimer();
+                    _sftestStopMonitor();
+                    _sftestSetCallActive(null);
+                    return;
+                }
+                // Schedule next poll
+                if (_sftestActiveCallId) {
+                    _sftestPollTimer = setTimeout(function(){ _sftestPollLive(callId); }, 5000);
+                }
+            })
+            .catch(function(e) {
+                if (e.message !== 'auth' && _sftestActiveCallId) {
+                    _sftestPollTimer = setTimeout(function(){ _sftestPollLive(callId); }, 8000);
+                }
+            });
     }
 
     window.sfManualDial = function() {
@@ -8103,7 +8240,7 @@
         }
         var btn = document.getElementById('sftestDialBtn');
         btn.disabled    = true;
-        btn.textContent = 'Dialing\u2026';
+        btn.textContent = 'Dialing…';
         msg.textContent = '';
         apiFetch('/api/integrations/synthflow/test', {
             method: 'POST',
@@ -8114,7 +8251,7 @@
             .then(function(d) {
                 if (d.ok) {
                     var callId = d.call_id || ('manual_' + Date.now());
-                    msg.textContent = 'Call initiated to ' + d.to + (d.call_id ? '  (ID: ' + d.call_id + ')' : '');
+                    msg.textContent = 'Call initiated to ' + d.to + (d.call_id ? '' : ' (no call ID returned)');
                     msg.style.color = 'var(--gads-success,#22c55e)';
                     _sftestHistory.push({ok: true, phone: d.to, label: 'Called'});
                     _sftestRenderLog();
@@ -8125,14 +8262,11 @@
                     _sftestHistory.push({ok: false, phone: phone, label: d.error || 'Failed'});
                     _sftestRenderLog();
                     btn.disabled = false;
-                    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Dial';
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Dial';
                 }
             })
             .catch(function(e) {
-                if (e.message !== 'auth') {
-                    msg.textContent = 'Request failed.';
-                    msg.style.color = 'var(--gads-danger,#ef4444)';
-                }
+                if (e.message !== 'auth') { msg.textContent = 'Request failed.'; msg.style.color = 'var(--gads-danger,#ef4444)'; }
                 btn.disabled = false;
                 btn.innerHTML = 'Dial';
             });
@@ -8143,7 +8277,7 @@
         var hangupBtn = document.getElementById('sftestHangupBtn');
         var msg       = document.getElementById('sftestMsg');
         hangupBtn.disabled    = true;
-        hangupBtn.textContent = 'Hanging up\u2026';
+        hangupBtn.textContent = 'Hanging up…';
         var callId = _sftestActiveCallId;
         apiFetch('/api/integrations/synthflow/hangup', {
             method: 'POST',
@@ -8157,21 +8291,20 @@
                     msg.style.color = 'var(--gads-text-secondary)';
                     _sftestHistory.push({ok: true, phone: document.getElementById('sftestPhone').value, label: 'Hung up'});
                 } else {
-                    msg.textContent = d.error || 'Hang up may have failed — check Synthflow dashboard.';
+                    msg.textContent = d.error || 'Hang up may have failed.';
                     msg.style.color = 'var(--gads-danger,#ef4444)';
                 }
                 _sftestRenderLog();
             })
             .catch(function(e) {
-                if (e.message !== 'auth') {
-                    msg.textContent = 'Hang up request failed.';
-                    msg.style.color = 'var(--gads-danger,#ef4444)';
-                }
+                if (e.message !== 'auth') { msg.textContent = 'Hang up request failed.'; msg.style.color = 'var(--gads-danger,#ef4444)'; }
             })
             .finally(function() {
                 hangupBtn.disabled = false;
                 _sftestSetCallActive(null);
             });
+    };
+
     };
 
     function _sfPollStatus() {

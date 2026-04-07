@@ -3500,6 +3500,94 @@ def api_integrations_synthflow_test():
         return jsonify({"error": f"Request failed: {e}"}), 500
 
 
+@app.route("/api/integrations/synthflow/call-live", methods=["GET"])
+@login_required
+def api_synthflow_call_live():
+    """
+    Poll Synthflow for live call status + partial transcript.
+    Returns {call_status, duration, transcript: [{speaker, text}]}.
+    Also checks our local CallRecord for webhook-delivered transcript as fallback.
+    """
+    import requests as _req
+    import json as _json
+    from integrations import get_integration_config, KEY_SYNTHFLOW
+    cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
+    if not cfg.get("api_key"):
+        return jsonify({"error": "not connected"}), 400
+
+    call_id = (request.args.get("call_id") or "").strip()
+    api_key  = cfg["api_key"]
+    hdrs     = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+    transcript   = []
+    call_status  = "in_progress"
+    duration_sec = 0
+
+    # ── 1. Try Synthflow live API (multiple URL patterns) ──────────────
+    for url in [
+        f"https://api.synthflow.ai/v2/call/{call_id}",
+        f"https://api.synthflow.ai/v2/calls/{call_id}",
+    ]:
+        if not call_id or call_id.startswith("manual_"):
+            break
+        try:
+            resp = _req.get(url, headers=hdrs, timeout=8)
+            logger.debug(f"[SF LIVE] {url} => {resp.status_code}")
+            if resp.status_code == 200:
+                data  = resp.json()
+                inner = (data.get("response") or data.get("data") or data)
+                # Extract transcript
+                raw = inner.get("transcript") or inner.get("transcription") or []
+                if isinstance(raw, list):
+                    for item in raw:
+                        spk  = (item.get("speaker") or item.get("role") or
+                                item.get("track") or "").strip()
+                        text = (item.get("text") or item.get("message") or
+                                item.get("content") or "").strip()
+                        if text:
+                            transcript.append({"speaker": spk, "text": text})
+                elif isinstance(raw, str) and raw:
+                    for line in raw.split("\n"):
+                        line = line.strip()
+                        if ":" in line:
+                            parts = line.split(":", 1)
+                            transcript.append({"speaker": parts[0].strip(), "text": parts[1].strip()})
+                        elif line:
+                            transcript.append({"speaker": "agent", "text": line})
+                # Extract status
+                call_status  = (inner.get("status") or inner.get("call_status") or
+                                inner.get("state") or call_status)
+                duration_sec = int(inner.get("duration") or inner.get("duration_seconds") or 0)
+                break
+            if resp.status_code not in (404, 405):
+                break
+        except Exception as ex:
+            logger.debug(f"[SF LIVE] {url} error: {ex}")
+
+    # ── 2. Fallback: check local CallRecord for webhook transcript ─────
+    if not transcript and call_id and not call_id.startswith("manual_"):
+        try:
+            cr = CallRecord.query.filter(
+                CallRecord.user_id == current_user.id,
+                CallRecord.status_description.like(f"sf:{call_id}%"),
+            ).first()
+            if cr and cr.transcript:
+                raw = _json.loads(cr.transcript)
+                if isinstance(raw, list):
+                    transcript = raw
+            if cr and cr.status in ("completed", "failed", "busy", "no-answer"):
+                call_status = "completed"
+        except Exception:
+            pass
+
+    return jsonify({
+        "call_id":     call_id,
+        "call_status": call_status,
+        "duration":    duration_sec,
+        "transcript":  transcript,
+    })
+
+
 @app.route("/api/integrations/synthflow/hangup", methods=["POST"])
 @login_required
 def api_integrations_synthflow_hangup():
