@@ -3500,6 +3500,62 @@ def api_integrations_synthflow_test():
         return jsonify({"error": f"Request failed: {e}"}), 500
 
 
+@app.route("/api/integrations/synthflow/hangup", methods=["POST"])
+@login_required
+def api_integrations_synthflow_hangup():
+    """End an active Synthflow call by call_id."""
+    import requests as _req
+    from integrations import get_integration_config, KEY_SYNTHFLOW
+    cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
+    if not cfg.get("api_key"):
+        return jsonify({"error": "Synthflow not connected."}), 400
+
+    body    = request.get_json(silent=True) or {}
+    call_id = (body.get("call_id") or "").strip()
+    if not call_id or call_id.startswith("manual_"):
+        # Synthflow has no real call_id — best effort, treat as ended
+        return jsonify({"ok": True, "note": "no call_id — call considered ended"})
+
+    api_key = cfg["api_key"]
+    hdrs    = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+    # Try the most common Synthflow hangup endpoint patterns
+    tried = []
+    for method, url, kw in [
+        ("POST",   f"https://api.synthflow.ai/v2/call/{call_id}/end",    {}),
+        ("POST",   f"https://api.synthflow.ai/v2/calls/{call_id}/end",   {}),
+        ("DELETE", f"https://api.synthflow.ai/v2/call/{call_id}",        {}),
+        ("POST",   "https://api.synthflow.ai/v2/call/end",
+         {"json": {"call_id": call_id}}),
+    ]:
+        try:
+            resp = _req.request(method, url, headers=hdrs, timeout=10, **kw)
+            tried.append(f"{method} {url} => {resp.status_code}")
+            logger.info(f"[SYNTHFLOW HANGUP] {method} {url} => {resp.status_code}")
+            if resp.status_code in (200, 201, 204):
+                return jsonify({"ok": True, "call_id": call_id})
+            if resp.status_code == 401:
+                return jsonify({"error": "Invalid API key."}), 401
+            if resp.status_code not in (404, 405):
+                # Got a meaningful error — surface it
+                err = ""
+                try:
+                    err = resp.json().get("message") or resp.json().get("error") or resp.text[:200]
+                except Exception:
+                    err = resp.text[:200]
+                logger.warning(f"[SYNTHFLOW HANGUP] {resp.status_code}: {err}")
+                return jsonify({"error": f"Synthflow error: {err or resp.status_code}"}), 400
+        except Exception as ex:
+            logger.warning(f"[SYNTHFLOW HANGUP] {method} {url} exception: {ex}")
+
+    logger.warning(f"[SYNTHFLOW HANGUP] All hangup attempts failed: {tried}")
+    # If we exhausted all options, tell the user to hang up from the Synthflow dashboard
+    return jsonify({
+        "ok":    False,
+        "error": "Could not hang up automatically — please end the call from your Synthflow dashboard."
+    }), 400
+
+
 @app.route("/api/synthflow/campaign", methods=["POST"])
 @login_required
 def api_synthflow_campaign_start():
