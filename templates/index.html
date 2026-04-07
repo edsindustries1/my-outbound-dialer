@@ -2458,16 +2458,16 @@
                                 <div style="padding:12px 18px;background:var(--gads-surface-2,#f4f4f5);border-bottom:1px solid var(--gads-border);display:flex;align-items:center;justify-content:space-between;">
                                     <div style="display:flex;align-items:center;gap:10px;">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gads-primary,#6366f1)" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                                        <span style="font-weight:700;font-size:13px;">Live Conversation</span>
+                                        <span style="font-weight:700;font-size:13px;">Call Transcript</span>
                                         <span id="sftestMonitorStatus" style="font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:rgba(99,102,241,.12);color:var(--gads-primary,#6366f1);">Connecting…</span>
                                     </div>
-                                    <div style="font-size:11px;color:var(--gads-text-secondary);">Updates every 5 s</div>
+                                    <button onclick="_sftestCloseMonitor()" style="background:none;border:none;cursor:pointer;padding:2px 6px;font-size:16px;color:var(--gads-text-secondary);line-height:1;" title="Close">&times;</button>
                                 </div>
                                 <!-- Chat window -->
                                 <div id="sftestChat" style="height:360px;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:4px;background:var(--gads-bg,#fff);">
                                     <div id="sftestChatEmpty" style="margin:auto;text-align:center;color:var(--gads-text-secondary);font-size:13px;">
                                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto 10px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                                        Transcript will appear here as the conversation happens
+                                        <span id="sftestChatEmptyText">Transcript will appear here after the call ends</span>
                                     </div>
                                 </div>
                                 <!-- Footer legend -->
@@ -8102,9 +8102,12 @@
                 + '</li>';
         }).join('');
     }
-    // ── Live Monitor state ───────────────────────────────────────────
+    // ── Monitor state ─────────────────────────────────────────────────
     var _sftestActiveCallId  = null;
+    var _sftestLastCallId    = null;   // retained after call ends for transcript fetch
     var _sftestPollTimer     = null;
+    var _sftestTxTimer       = null;   // post-call transcript fetch timer
+    var _sftestTxAttempts    = 0;
     var _sftestTimerInterval = null;
     var _sftestStartTs       = null;
     var _sftestChatLines     = [];   // [{speaker, text}]
@@ -8157,6 +8160,7 @@
 
     // ── Show/hide active call state ───────────────────────────────────
     function _sftestSetCallActive(callId, toNumber) {
+        var prevCallId      = _sftestActiveCallId;
         _sftestActiveCallId = callId || null;
         var dialBtn   = document.getElementById('sftestDialBtn');
         var hangupBtn = document.getElementById('sftestHangupBtn');
@@ -8164,70 +8168,130 @@
         var monitor   = document.getElementById('sftestMonitor');
         var phoneInp  = document.getElementById('sftestPhone');
         var statusEl  = document.getElementById('sftestMonitorStatus');
+        var emptyTxt  = document.getElementById('sftestChatEmptyText');
+
         if (callId) {
+            // ── Call starting ──
+            _sftestLastCallId = callId;
             dialBtn.style.display   = 'none';
             hangupBtn.style.display = '';
             activeDiv.style.display = 'flex';
             monitor.style.display   = 'block';
-            if (statusEl) { statusEl.textContent = 'Connecting…'; statusEl.style.background='rgba(99,102,241,.12)'; statusEl.style.color='var(--gads-primary,#6366f1)'; }
+            if (statusEl) { statusEl.textContent = 'In progress'; statusEl.style.background='rgba(99,102,241,.12)'; statusEl.style.color='var(--gads-primary,#6366f1)'; }
             if (phoneInp) phoneInp.disabled = true;
             _sftestChatLines = [];
             var chat = document.getElementById('sftestChat');
-            if (chat) { chat.innerHTML = ''; var e=document.createElement('div'); e.id='sftestChatEmpty'; e.style.cssText='margin:auto;text-align:center;color:var(--gads-text-secondary);font-size:13px;'; e.innerHTML='<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto 10px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Transcript will appear here as the conversation happens'; chat.appendChild(e); }
+            if (chat) chat.innerHTML = '<div id="sftestChatEmpty" style="margin:auto;text-align:center;color:var(--gads-text-secondary);font-size:13px;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;display:block;margin:0 auto 10px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span id="sftestChatEmptyText">Call in progress \u2014 transcript will appear when the call ends</span></div>';
             _sftestStartTimer();
-            _sftestStartMonitor(callId);
+            // Light poll just to detect when Synthflow marks call completed
+            _sftestStopMonitor();
+            _sftestPollCallStatus(callId);
         } else {
+            // ── Call ended — keep monitor open, fetch transcript ──
             dialBtn.style.display   = '';
             dialBtn.disabled        = false;
             dialBtn.innerHTML       = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Dial';
             hangupBtn.style.display = 'none';
             activeDiv.style.display = 'none';
             if (phoneInp) phoneInp.disabled = false;
-            if (statusEl) { statusEl.textContent = 'Ended'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
             _sftestStopTimer();
             _sftestStopMonitor();
+            var fetchId = prevCallId || _sftestLastCallId;
+            if (fetchId && !fetchId.startsWith('manual_')) {
+                if (statusEl) { statusEl.textContent = 'Fetching transcript\u2026'; statusEl.style.background='rgba(234,179,8,.12)'; statusEl.style.color='#b45309'; }
+                var et = document.getElementById('sftestChatEmptyText');
+                if (et) et.textContent = 'Fetching transcript\u2026 this may take a few seconds.';
+                _sftestTxAttempts = 0;
+                _sftestFetchTranscript(fetchId);
+            } else {
+                if (statusEl) { statusEl.textContent = 'Ended'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
+            }
         }
     }
 
-    // ── Live polling ──────────────────────────────────────────────────
-    function _sftestStartMonitor(callId) {
+    // ── Close transcript panel manually ──────────────────────────────
+    window._sftestCloseMonitor = function() {
+        var monitor = document.getElementById('sftestMonitor');
+        if (monitor) monitor.style.display = 'none';
         _sftestStopMonitor();
-        _sftestPollLive(callId);
-    }
-    function _sftestStopMonitor() {
-        if (_sftestPollTimer) { clearTimeout(_sftestPollTimer); _sftestPollTimer = null; }
-    }
-    function _sftestPollLive(callId) {
+    };
+
+    // ── Poll during call just to detect completion ─────────────────
+    function _sftestPollCallStatus(callId) {
         if (!callId || callId !== _sftestActiveCallId) return;
         apiFetch('/api/integrations/synthflow/call-live?call_id=' + encodeURIComponent(callId))
             .then(function(r){ return r.json(); })
             .then(function(d) {
-                var statusEl = document.getElementById('sftestMonitorStatus');
-                if (d.transcript && d.transcript.length) {
-                    _sftestRenderChat(d.transcript);
-                    if (statusEl) { statusEl.textContent = 'Live'; statusEl.style.background='rgba(34,197,94,.12)'; statusEl.style.color='#16a34a'; }
-                } else {
-                    if (statusEl && statusEl.textContent === 'Connecting…') { /* keep */ }
-                    else if (statusEl) statusEl.textContent = 'Waiting for speech…';
-                }
-                // If Synthflow already completed the call
                 if (d.call_status === 'completed' || d.call_status === 'ended' || d.call_status === 'failed') {
-                    if (statusEl) { statusEl.textContent = 'Call ended'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
                     _sftestStopTimer();
                     _sftestStopMonitor();
-                    _sftestSetCallActive(null);
+                    _sftestActiveCallId = null;
+                    // reset controls
+                    var dialBtn = document.getElementById('sftestDialBtn');
+                    var hangupBtn = document.getElementById('sftestHangupBtn');
+                    var activeDiv = document.getElementById('sftestActiveCall');
+                    var phoneInp = document.getElementById('sftestPhone');
+                    if (dialBtn) { dialBtn.style.display=''; dialBtn.disabled=false; }
+                    if (hangupBtn) hangupBtn.style.display='none';
+                    if (activeDiv) activeDiv.style.display='none';
+                    if (phoneInp) phoneInp.disabled=false;
+                    // start transcript fetch
+                    var statusEl = document.getElementById('sftestMonitorStatus');
+                    if (statusEl) { statusEl.textContent='Fetching transcript\u2026'; statusEl.style.background='rgba(234,179,8,.12)'; statusEl.style.color='#b45309'; }
+                    var et = document.getElementById('sftestChatEmptyText');
+                    if (et) et.textContent = 'Fetching transcript\u2026';
+                    _sftestTxAttempts = 0;
+                    _sftestFetchTranscript(callId);
                     return;
                 }
-                // Schedule next poll
                 if (_sftestActiveCallId) {
-                    _sftestPollTimer = setTimeout(function(){ _sftestPollLive(callId); }, 5000);
+                    _sftestPollTimer = setTimeout(function(){ _sftestPollCallStatus(callId); }, 8000);
                 }
             })
             .catch(function(e) {
                 if (e.message !== 'auth' && _sftestActiveCallId) {
-                    _sftestPollTimer = setTimeout(function(){ _sftestPollLive(callId); }, 8000);
+                    _sftestPollTimer = setTimeout(function(){ _sftestPollCallStatus(callId); }, 12000);
                 }
             });
+    }
+
+    // ── Post-call transcript fetcher ──────────────────────────────────
+    function _sftestFetchTranscript(callId) {
+        _sftestTxAttempts++;
+        var statusEl = document.getElementById('sftestMonitorStatus');
+        var emptyTxt = document.getElementById('sftestChatEmptyText');
+        var MAX = 12;  // 12 × 5 s = 60 s max
+        apiFetch('/api/integrations/synthflow/call-live?call_id=' + encodeURIComponent(callId))
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.transcript && d.transcript.length) {
+                    // Got it — render and mark done
+                    _sftestRenderChat(d.transcript);
+                    if (statusEl) { statusEl.textContent = 'Transcript ready'; statusEl.style.background='rgba(34,197,94,.12)'; statusEl.style.color='#16a34a'; }
+                } else if (_sftestTxAttempts < MAX) {
+                    // Still waiting — try again
+                    var wait = _sftestTxAttempts < 4 ? 5000 : 8000;
+                    if (statusEl) { statusEl.textContent = 'Fetching\u2026 (' + _sftestTxAttempts + '/' + MAX + ')'; statusEl.style.background='rgba(234,179,8,.12)'; statusEl.style.color='#b45309'; }
+                    if (emptyTxt) emptyTxt.textContent = 'Waiting for Synthflow to process the recording\u2026';
+                    _sftestTxTimer = setTimeout(function(){ _sftestFetchTranscript(callId); }, wait);
+                } else {
+                    // Gave up
+                    if (statusEl) { statusEl.textContent = 'No transcript'; statusEl.style.background='rgba(239,68,68,.1)'; statusEl.style.color='#ef4444'; }
+                    if (emptyTxt) emptyTxt.textContent = 'No transcript was returned by Synthflow for this call.';
+                }
+            })
+            .catch(function(e) {
+                if (e.message === 'auth') return;
+                if (_sftestTxAttempts < MAX) {
+                    _sftestTxTimer = setTimeout(function(){ _sftestFetchTranscript(callId); }, 8000);
+                }
+            });
+    }
+
+    // ── Polling helpers ───────────────────────────────────────────────
+    function _sftestStopMonitor() {
+        if (_sftestPollTimer) { clearTimeout(_sftestPollTimer); _sftestPollTimer = null; }
+        if (_sftestTxTimer)   { clearTimeout(_sftestTxTimer);   _sftestTxTimer   = null; }
     }
 
     window.sfManualDial = function() {
