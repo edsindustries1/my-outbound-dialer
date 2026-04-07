@@ -7,8 +7,11 @@
     --gads-bg: #f8f9fb;
     --gads-bg-secondary: #f3f4f6;
     --gads-surface: #ffffff;
+    --gads-surface-2: #f3f4f6;
     --gads-surface-hover: #f3f4f6;
     --gads-sidebar-bg: #ffffff;
+    --gads-accent: #6366f1;
+    --gads-accent-light: rgba(99,102,241,.12);
     --gads-primary: #111827;
     --gads-primary-hover: #000000;
     --gads-primary-light: rgba(17,24,39,0.06);
@@ -46,6 +49,7 @@
     --gads-bg: #0f0f17;
     --gads-bg-secondary: #1a1a2e;
     --gads-surface: #1a1a2e;
+    --gads-surface-2: #202038;
     --gads-surface-hover: #242440;
     --gads-sidebar-bg: #141425;
     --gads-primary: #e0e0e8;
