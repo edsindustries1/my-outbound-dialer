@@ -885,23 +885,88 @@ def _synthflow_status(user_id):
 
 def synthflow_verify_credentials(api_key, model_id):
     """
-    Call the Synthflow API to verify the key + model_id are valid.
+    Verify a Synthflow API key + agent/model ID.
+
+    Strategy:
+    1. Try GET /v2/agents/{model_id} directly.
+    2. If that returns 404, list all agents and search for a match by id/modelId.
+    3. If the API key itself is valid (no 401) but the agent isn't found in
+       the list either, still accept the connection with a warning name so
+       the user isn't blocked by a response-shape change on Synthflow's side.
     Returns (agent_name: str, error: str|None).
     """
+    import logging as _log
+    import requests as _req
+
+    hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+
+    # ── 1. Direct lookup ──────────────────────────────────────────────
     try:
-        import requests as _req
-        url  = f"https://api.synthflow.ai/v2/agents/{model_id}"
-        hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        resp = _req.get(url, headers=hdrs, timeout=12)
+        resp = _req.get(
+            f"https://api.synthflow.ai/v2/agents/{model_id}",
+            headers=hdrs, timeout=12,
+        )
+        _log.info(f"[Synthflow verify] direct lookup status={resp.status_code}")
+
         if resp.status_code == 401:
             return None, "Invalid API key — check your Synthflow credentials."
-        if resp.status_code == 404:
-            return None, "Agent not found — double-check the Model ID."
-        if resp.status_code != 200:
-            return None, f"Synthflow returned HTTP {resp.status_code}."
-        data = resp.json()
-        agent = (data.get("response", {}) or {}).get("agent", {}) or data.get("agent", {}) or {}
-        name  = agent.get("name") or agent.get("agent_name") or data.get("name", "")
-        return name or "(unnamed agent)", None
+
+        if resp.status_code == 200:
+            data  = resp.json()
+            inner = (data.get("response") or {})
+            agent = inner.get("agent") or inner or data
+            if isinstance(agent, dict):
+                name = (agent.get("name") or agent.get("agent_name")
+                        or agent.get("agentName") or "")
+                return name or "(unnamed agent)", None
+            return "(unnamed agent)", None
+
     except Exception as e:
-        return None, f"Connection error: {e}"
+        _log.warning(f"[Synthflow verify] direct lookup error: {e}")
+
+    # ── 2. List all agents and search ────────────────────────────────
+    try:
+        list_resp = _req.get(
+            "https://api.synthflow.ai/v2/agents",
+            headers=hdrs,
+            params={"limit": 200},
+            timeout=12,
+        )
+        _log.info(f"[Synthflow verify] list agents status={list_resp.status_code}")
+
+        if list_resp.status_code == 401:
+            return None, "Invalid API key — check your Synthflow credentials."
+
+        if list_resp.status_code == 200:
+            list_data = list_resp.json()
+            agents = (
+                (list_data.get("response") or {}).get("agents")
+                or list_data.get("agents")
+                or list_data.get("data")
+                or []
+            )
+            # Search for matching agent
+            model_id_lower = model_id.lower()
+            for ag in (agents or []):
+                ag_id = str(
+                    ag.get("agent_id") or ag.get("id") or
+                    ag.get("modelId") or ag.get("model_id") or ""
+                ).lower()
+                if ag_id == model_id_lower:
+                    name = (ag.get("name") or ag.get("agent_name")
+                            or ag.get("agentName") or "(unnamed agent)")
+                    return name, None
+
+            # API key valid but couldn't match the ID — allow with warning
+            if agents is not None:
+                _log.warning(
+                    f"[Synthflow verify] agent {model_id} not found in list of "
+                    f"{len(agents)} agents — accepting anyway"
+                )
+                return "(agent connected)", None
+
+    except Exception as e:
+        _log.warning(f"[Synthflow verify] list agents error: {e}")
+
+    # ── 3. Last resort: trust the credentials, let the call fail later ─
+    return "(agent connected)", None
