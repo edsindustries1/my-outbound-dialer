@@ -177,6 +177,10 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M9 8h.01M15 8h.01"/></svg>
                     <span>AI Agent Dialer</span>
                 </a>
+                <a class="gads-nav-item" data-page="sftest" onclick="navigateTo('sftest')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                    <span>Test Agent</span>
+                </a>
                 <a class="gads-nav-item" data-page="humana-voice" onclick="navigateTo('humana-voice')">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                     <span>Humana Voice</span>
@@ -2397,7 +2401,52 @@
                     </div>
                 </div><!-- /page-aiagent -->
 
-                <!-- ==================== PAGE: VOICE STUDIO ==================== -->
+                <!-- ==================== PAGE: TEST AGENT ==================== -->
+                <div class="gads-page" id="page-sftest" style="display:none">
+                    <div style="max-width:520px;margin:0 auto;padding:30px 0;">
+                        <h2 style="font-weight:700;font-size:22px;margin-bottom:4px;">Test Synthflow Agent</h2>
+                        <p style="color:var(--gads-text-secondary);font-size:14px;margin-bottom:28px;">Enter any phone number and hit Dial — your AI agent will call it instantly so you can test the conversation.</p>
+
+                        <div id="sftest-not-connected" style="display:none;background:var(--gads-surface-2,#f4f4f5);border:1px solid var(--gads-border);border-radius:10px;padding:18px 22px;margin-bottom:24px;color:var(--gads-text-secondary);font-size:14px;">
+                            <strong>Synthflow not connected.</strong> Go to <a href="#" onclick="navigateTo('integrations');return false;" style="color:var(--gads-primary);font-weight:600;">Integrations</a> and connect your Synthflow account first.
+                        </div>
+
+                        <div id="sftest-connected-area">
+                            <div style="background:var(--gads-surface-2,#f9fafb);border:1px solid var(--gads-border);border-radius:12px;padding:26px;">
+                                <div style="margin-bottom:20px;">
+                                    <div style="font-size:12px;font-weight:600;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;">Agent</div>
+                                    <div id="sftest-agent-name" style="font-weight:700;font-size:16px;color:var(--gads-primary);">—</div>
+                                </div>
+
+                                <div style="margin-bottom:16px;">
+                                    <label style="font-size:13px;font-weight:600;margin-bottom:6px;display:block;">Phone Number to Call</label>
+                                    <div style="display:flex;gap:8px;align-items:center;">
+                                        <input type="tel" id="sftestPhone" class="gads-input" placeholder="+12125550100  or  2125550100" style="flex:1;font-size:15px;letter-spacing:.03em;" onkeydown="if(event.key==='Enter')sfManualDial();">
+                                        <button type="button" class="gads-btn gads-btn-primary" id="sftestDialBtn" onclick="sfManualDial()" style="padding:0 22px;height:40px;font-size:14px;white-space:nowrap;">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:5px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.11 8.8a16 16 0 006.09 6.09l1.16-1.14a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                                            Dial
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="sftestMsg" style="font-size:13px;min-height:18px;margin-top:4px;"></div>
+
+                                <!-- Recent test call log -->
+                                <div id="sftestLog" style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--gads-border);">
+                                    <div style="font-size:12px;font-weight:600;color:var(--gads-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;">Last Test Calls</div>
+                                    <ul id="sftestLogList" style="list-style:none;padding:0;margin:0;font-size:13px;"></ul>
+                                </div>
+                            </div>
+
+                            <p style="font-size:12px;color:var(--gads-text-secondary);margin-top:14px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:-2px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Calls are placed using your connected Synthflow agent. Standard call rates apply.
+                            </p>
+                        </div>
+                    </div>
+                </div><!-- /page-sftest -->
+
+                <!-- ==================== PAGE: VOICE STUDIO ====================
                 <div class="gads-page" id="page-humana-voice" style="display:none">
 
                     <!-- Page header -->
@@ -2859,6 +2908,7 @@
             settings:        'Settings',
             integrations:    'Integrations',
             aiagent:         'AI Agent Dialer',
+            sftest:          'Test Agent',
             'humana-voice':  'Humana Voice'
         };
 
@@ -2940,6 +2990,9 @@
                             if (typeof window._sfPollStatus === 'function') window._sfPollStatus();
                         }
                     }).catch(function(){});
+            }
+            if (page === 'sftest') {
+                if (typeof _sftestInit === 'function') _sftestInit();
             }
             if (page === 'humana-voice') {
                 if (typeof hvInit === 'function') hvInit();
@@ -7970,6 +8023,80 @@
             });
     };
     window.testSynthflowCall = window.sfTestCall;  // spec-alias
+
+    // ── Test Agent page (sftest) ─────────────────────────────────────
+    var _sftestHistory = [];
+    function _sftestInit() {
+        apiFetch('/api/integrations/synthflow')
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                var connected = d.connected && d.enabled;
+                document.getElementById('sftest-not-connected').style.display = connected ? 'none' : 'block';
+                document.getElementById('sftest-connected-area').style.display = connected ? 'block' : 'none';
+                if (connected) {
+                    document.getElementById('sftest-agent-name').textContent = d.agent_name || d.model_id || 'Synthflow Agent';
+                    _sftestRenderLog();
+                }
+            })
+            .catch(function() {
+                document.getElementById('sftest-not-connected').style.display = 'block';
+                document.getElementById('sftest-connected-area').style.display = 'none';
+            });
+    }
+    function _sftestRenderLog() {
+        var list = document.getElementById('sftestLogList');
+        var wrap = document.getElementById('sftestLog');
+        if (!_sftestHistory.length) { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'block';
+        list.innerHTML = _sftestHistory.slice(-6).reverse().map(function(h) {
+            var col = h.ok ? 'var(--gads-success,#22c55e)' : 'var(--gads-danger,#ef4444)';
+            return '<li style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--gads-border);">'
+                + '<span style="font-weight:600;">' + h.phone + '</span>'
+                + '<span style="color:' + col + ';font-size:12px;margin-left:auto;">' + h.label + '</span>'
+                + '</li>';
+        }).join('');
+    }
+    window.sfManualDial = function() {
+        var phone = (document.getElementById('sftestPhone').value || '').trim();
+        var msg = document.getElementById('sftestMsg');
+        if (!phone) {
+            msg.textContent = 'Please enter a phone number.';
+            msg.style.color = 'var(--gads-danger,#ef4444)';
+            return;
+        }
+        var btn = document.getElementById('sftestDialBtn');
+        btn.disabled = true;
+        btn.textContent = 'Dialing…';
+        msg.textContent = '';
+        apiFetch('/api/integrations/synthflow/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({phone: phone})
+        })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.ok) {
+                    msg.textContent = 'Call initiated to ' + d.to + (d.call_id ? '  (ID: ' + d.call_id + ')' : '');
+                    msg.style.color = 'var(--gads-success,#22c55e)';
+                    _sftestHistory.push({ok: true, phone: d.to, label: 'Called'});
+                } else {
+                    msg.textContent = d.error || 'Failed to place call.';
+                    msg.style.color = 'var(--gads-danger,#ef4444)';
+                    _sftestHistory.push({ok: false, phone: phone, label: d.error || 'Failed'});
+                }
+                _sftestRenderLog();
+            })
+            .catch(function(e) {
+                if (e.message !== 'auth') {
+                    msg.textContent = 'Request failed.';
+                    msg.style.color = 'var(--gads-danger,#ef4444)';
+                }
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = 'Dial';
+            });
+    };
 
     function _sfPollStatus() {
         if (_sfPollTimer) clearTimeout(_sfPollTimer);

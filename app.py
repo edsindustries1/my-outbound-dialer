@@ -3450,22 +3450,30 @@ def api_integrations_synthflow_save():
 @app.route("/api/integrations/synthflow/test", methods=["POST"])
 @login_required
 def api_integrations_synthflow_test():
-    """Place a real test call to the user's first provisioned number via Synthflow."""
+    """Place a real test call via Synthflow. Optional `phone` body param overrides provisioned number."""
     import requests as _req
     from integrations import get_integration_config, KEY_SYNTHFLOW
     cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
     if not cfg.get("api_key") or not cfg.get("model_id"):
         return jsonify({"error": "Connect Synthflow first."}), 400
 
-    user_pn = ProvisionedNumber.query.filter_by(
-        user_id=current_user.id, status="active"
-    ).first()
-    if not user_pn:
-        return jsonify({"error": "No active provisioned phone number found. Add a number first."}), 400
+    api_key  = cfg["api_key"]
+    model_id = cfg["model_id"]
 
-    to_number = user_pn.phone_number
-    api_key   = cfg["api_key"]
-    model_id  = cfg["model_id"]
+    # Accept a custom target number from the request body (manual dialer)
+    body      = request.get_json(silent=True) or {}
+    to_number = (body.get("phone") or "").strip()
+    if to_number:
+        to_number = _sf_normalize_e164(to_number)
+        if not to_number:
+            return jsonify({"error": "Invalid phone number format."}), 400
+    else:
+        user_pn = ProvisionedNumber.query.filter_by(
+            user_id=current_user.id, status="active"
+        ).first()
+        if not user_pn:
+            return jsonify({"error": "No active provisioned phone number found. Add a number first."}), 400
+        to_number = user_pn.phone_number
 
     try:
         hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
