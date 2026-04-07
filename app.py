@@ -3607,12 +3607,15 @@ def api_integrations_synthflow_hangup():
     api_key = cfg["api_key"]
     hdrs    = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
-    # Try the most common Synthflow hangup endpoint patterns
+    # Try all known Synthflow hangup endpoint patterns
     tried = []
     for method, url, kw in [
-        ("POST",   f"https://api.synthflow.ai/v2/call/{call_id}/end",    {}),
         ("POST",   f"https://api.synthflow.ai/v2/calls/{call_id}/end",   {}),
+        ("DELETE", f"https://api.synthflow.ai/v2/calls/{call_id}",       {}),
+        ("POST",   f"https://api.synthflow.ai/v2/call/{call_id}/end",    {}),
         ("DELETE", f"https://api.synthflow.ai/v2/call/{call_id}",        {}),
+        ("POST",   "https://api.synthflow.ai/v2/calls/end",
+         {"json": {"call_id": call_id}}),
         ("POST",   "https://api.synthflow.ai/v2/call/end",
          {"json": {"call_id": call_id}}),
     ]:
@@ -3625,7 +3628,6 @@ def api_integrations_synthflow_hangup():
             if resp.status_code == 401:
                 return jsonify({"error": "Invalid API key."}), 401
             if resp.status_code not in (404, 405):
-                # Got a meaningful error — surface it
                 err = ""
                 try:
                     err = resp.json().get("message") or resp.json().get("error") or resp.text[:200]
@@ -3637,10 +3639,11 @@ def api_integrations_synthflow_hangup():
             logger.warning(f"[SYNTHFLOW HANGUP] {method} {url} exception: {ex}")
 
     logger.warning(f"[SYNTHFLOW HANGUP] All hangup attempts failed: {tried}")
-    # If we exhausted all options, tell the user to hang up from the Synthflow dashboard
     return jsonify({
-        "ok":    False,
-        "error": "Could not hang up automatically — please end the call from your Synthflow dashboard."
+        "ok":           False,
+        "no_api":       True,
+        "dashboard_url": "https://app.synthflow.ai",
+        "error": "Synthflow does not expose a hang-up API. Please end the call from your Synthflow dashboard."
     }), 400
 
 

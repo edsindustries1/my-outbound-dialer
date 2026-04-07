@@ -8290,6 +8290,10 @@
                     msg.textContent = 'Call ended.';
                     msg.style.color = 'var(--gads-text-secondary)';
                     _sftestHistory.push({ok: true, phone: document.getElementById('sftestPhone').value, label: 'Hung up'});
+                } else if (d.no_api) {
+                    msg.innerHTML = 'Synthflow has no hang-up API &mdash; <a href="' + (d.dashboard_url || 'https://app.synthflow.ai') + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;font-weight:600;">end the call in your dashboard &rarr;</a>';
+                    msg.style.color = 'var(--gads-danger,#ef4444)';
+                    _sftestHistory.push({ok: false, phone: document.getElementById('sftestPhone').value, label: 'Manual hang-up needed'});
                 } else {
                     msg.textContent = d.error || 'Hang up may have failed.';
                     msg.style.color = 'var(--gads-danger,#ef4444)';
