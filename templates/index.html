@@ -7969,6 +7969,7 @@
                 btns.forEach(function(b){ if (b) b.disabled = false; });
             });
     };
+    window.testSynthflowCall = window.sfTestCall;  // spec-alias
 
     function _sfPollStatus() {
         if (_sfPollTimer) clearTimeout(_sfPollTimer);

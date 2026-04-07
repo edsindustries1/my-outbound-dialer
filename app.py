@@ -3891,8 +3891,8 @@ def api_synthflow_webhook():
 
         return jsonify({"received": True})
     except Exception as e:
-        logger.error(f"[SYNTHFLOW WEBHOOK] error: {e}")
-        return jsonify({"received": True})
+        logger.error(f"[SYNTHFLOW WEBHOOK] unhandled error: {e}", exc_info=True)
+        return jsonify({"received": False, "error": "internal error"}), 500
 
 
 @app.route("/api/crm-contacts", methods=["GET"])
