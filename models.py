@@ -232,6 +232,7 @@ class Campaign(db.Model):
     navigator_knowledge_base = db.Column(Text, default='', nullable=False)
     campaign_type = db.Column(db.String(30), default='telnyx', nullable=False)
     sf_model_id = db.Column(Text, nullable=True)
+    name = db.Column(db.String(255), default='', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -389,6 +390,10 @@ def _ensure_schema():
             if "sf_model_id" not in camp_cols:
                 logger.warning("DB schema missing campaigns.sf_model_id; applying ALTER TABLE")
                 db.session.execute(text("ALTER TABLE campaigns ADD COLUMN sf_model_id TEXT"))
+                db.session.commit()
+            if "name" not in camp_cols:
+                logger.warning("DB schema missing campaigns.name; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE campaigns ADD COLUMN name VARCHAR(255) DEFAULT '' NOT NULL"))
                 db.session.commit()
 
         if "call_records" in inspector.get_table_names():
