@@ -3764,24 +3764,23 @@ def api_synthflow_webhook():
         tok     = request.args.get("tok", "")
         user_id = int(uid_str) if uid_str.isdigit() else None
 
-        # Authenticate: verify webhook token
-        if user_id and tok:
-            cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
-            stored_tok = cfg.get("webhook_token", "")
-            if stored_tok and tok != stored_tok:
-                logger.warning(f"[SYNTHFLOW WEBHOOK] Invalid token for user {user_id}")
-                return jsonify({"received": False, "error": "invalid token"}), 401
-        elif user_id and not tok:
-            # Legacy URLs without token — still accept but log warning
-            logger.warning(f"[SYNTHFLOW WEBHOOK] No token provided for user {user_id} — accepting (legacy)")
+        # Authenticate: require valid token for ALL requests
+        if not user_id:
+            logger.warning("[SYNTHFLOW WEBHOOK] Missing uid param — rejecting")
+            return jsonify({"received": False, "error": "missing uid"}), 401
+        if not tok:
+            logger.warning(f"[SYNTHFLOW WEBHOOK] Missing tok param for user {user_id} — rejecting")
+            return jsonify({"received": False, "error": "missing token"}), 401
+        cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
+        stored_tok = cfg.get("webhook_token", "")
+        if not stored_tok or tok != stored_tok:
+            logger.warning(f"[SYNTHFLOW WEBHOOK] Invalid token for user {user_id}")
+            return jsonify({"received": False, "error": "invalid token"}), 401
 
         event     = data.get("event", "")
         call_data = data.get("data") or data
 
         logger.info(f"[SYNTHFLOW WEBHOOK] event={event} user_id={user_id}")
-
-        if not user_id:
-            return jsonify({"received": True})
 
         phone = (call_data.get("phone") or call_data.get("to") or
                  call_data.get("phone_number", "")).strip()

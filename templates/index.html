@@ -1768,6 +1768,13 @@
                                             <input type="checkbox" id="synthflowEnabled" onchange="toggleSynthflow(this)"> Enable
                                         </label>
                                     </div>
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="sfTestCall()" id="sf-test-call-btn">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 015.11 15.9a19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                                            Test Call
+                                        </button>
+                                        <span id="sf-test-call-msg" style="font-size:11px;"></span>
+                                    </div>
                                 </div>
                                 <div id="synthflow-disconnected-view" style="display:none;">
                                     <div class="intg-setup-notice" style="margin-bottom:12px;">
@@ -2294,10 +2301,19 @@
                                 <input type="text" id="aiagentCampaignName" class="gads-input" placeholder="e.g. Q2 Follow-up">
                             </div>
 
-                            <!-- Phone number list input -->
+                            <!-- Phone number list input — CSV upload or manual entry -->
                             <div class="pvm-section" style="margin-top:12px;">
                                 <label>Phone Numbers to Call</label>
-                                <textarea id="aiagentNumbers" class="gads-input" rows="5" style="resize:vertical;" placeholder="One number per line (E.164 format preferred):&#10;+12125551234&#10;+13105557890&#10;…&#10;&#10;10-digit US numbers are accepted too (e.g. 2125551234)."></textarea>
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+                                    <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px dashed var(--gads-border,#e5e7eb);border-radius:7px;font-size:12px;background:var(--gads-surface-2,#f9fafb);color:var(--gads-text-secondary);transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gads-primary,#6366f1)'" onmouseout="this.style.borderColor='var(--gads-border,#e5e7eb)'">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        Upload CSV
+                                        <input type="file" id="aiagentCsvFile" accept=".csv,text/csv" style="display:none;" onchange="sfLoadCsv(this)">
+                                    </label>
+                                    <span style="font-size:11px;color:var(--gads-text-secondary);">Phone numbers in first column. Or type manually below.</span>
+                                </div>
+                                <div id="aiagent-csv-preview" style="display:none;margin-bottom:8px;padding:8px 12px;background:var(--gads-surface-2,#f4f4f5);border-radius:7px;font-size:11px;color:var(--gads-text-secondary);"></div>
+                                <textarea id="aiagentNumbers" class="gads-input" rows="5" style="resize:vertical;" placeholder="One number per line (E.164 format preferred):&#10;+12125551234&#10;+13105557890&#10;…&#10;&#10;10-digit US numbers accepted too (e.g. 2125551234)."></textarea>
                                 <div id="aiagent-number-count" style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">No numbers entered yet.</div>
                             </div>
 
@@ -7797,19 +7813,50 @@
     var _sfPollTimer = null;
 
     // Live number count display
+    function _sfCountNumbers() {
+        var ta  = document.getElementById('aiagentNumbers');
+        var el  = document.getElementById('aiagent-number-count');
+        if (!ta || !el) return;
+        var nums = ta.value.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
+        el.textContent = nums.length ? nums.length + ' number' + (nums.length === 1 ? '' : 's') + ' entered.' : 'No numbers entered yet.';
+    }
     (function() {
-        function _sfCountNumbers() {
-            var ta  = document.getElementById('aiagentNumbers');
-            var el  = document.getElementById('aiagent-number-count');
-            if (!ta || !el) return;
-            var nums = ta.value.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
-            el.textContent = nums.length ? nums.length + ' number' + (nums.length === 1 ? '' : 's') + ' entered.' : 'No numbers entered yet.';
-        }
         document.addEventListener('DOMContentLoaded', function() {
             var ta = document.getElementById('aiagentNumbers');
             if (ta) ta.addEventListener('input', _sfCountNumbers);
         });
     })();
+
+    // CSV file upload — parse first column, populate textarea + show preview
+    window.sfLoadCsv = function(input) {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var text    = e.target.result || '';
+            var rows    = text.split(/\r?\n/);
+            var numbers = [];
+            rows.forEach(function(row, idx) {
+                if (!row.trim()) return;
+                var cell = row.split(',')[0].replace(/^["']|["']$/g, '').trim();
+                // Skip header rows that contain letters only (no digits)
+                if (idx === 0 && /^[a-zA-Z\s_]+$/.test(cell)) return;
+                if (cell) numbers.push(cell);
+            });
+            var ta = document.getElementById('aiagentNumbers');
+            if (ta) { ta.value = numbers.join('\n'); _sfCountNumbers(); }
+            var preview = document.getElementById('aiagent-csv-preview');
+            if (preview) {
+                var sampleLines = numbers.slice(0, 5).map(function(n){ return '<code>' + n + '</code>'; }).join(', ');
+                preview.innerHTML = '<strong>' + numbers.length + ' number' + (numbers.length === 1 ? '' : 's') + '</strong> loaded from <em>' + file.name + '</em>.' +
+                    (numbers.length > 0 ? ' Preview: ' + sampleLines + (numbers.length > 5 ? '…' : '') : '');
+                preview.style.display = '';
+            }
+            // Reset file input so same file can be re-selected
+            input.value = '';
+        };
+        reader.readAsText(file);
+    };
 
     window.sfStartCampaign = function() {
         var raw          = (document.getElementById('aiagentNumbers') || {}).value || '';
@@ -7842,24 +7889,25 @@
     };
 
     window.sfTestCall = function() {
-        var btn = document.getElementById('sf-test-call-btn2');
-        var msg = document.getElementById('sf-test-call-msg2');
-        if (btn) btn.disabled = true;
-        if (msg) { msg.textContent = 'Placing test call…'; msg.style.color = ''; }
+        // Update both the compact card and the detail panel
+        var btns = [document.getElementById('sf-test-call-btn'), document.getElementById('sf-test-call-btn2')];
+        var msgs = [document.getElementById('sf-test-call-msg'), document.getElementById('sf-test-call-msg2')];
+        btns.forEach(function(b){ if (b) b.disabled = true; });
+        msgs.forEach(function(m){ if (m) { m.textContent = 'Placing test call…'; m.style.color = ''; } });
         apiFetch('/api/integrations/synthflow/test', { method: 'POST' })
             .then(function(r){ return r.json(); })
             .then(function(d) {
                 if (d.error) {
-                    if (msg) { msg.textContent = d.error; msg.style.color = 'var(--gads-danger,#ef4444)'; }
+                    msgs.forEach(function(m){ if (m) { m.textContent = d.error; m.style.color = 'var(--gads-danger,#ef4444)'; } });
                 } else {
-                    if (msg) { msg.textContent = 'Call placed to ' + (d.to || 'your number') + '!'; msg.style.color = 'var(--gads-success,#4ade80)'; }
+                    msgs.forEach(function(m){ if (m) { m.textContent = 'Call placed to ' + (d.to || 'your number') + '!'; m.style.color = 'var(--gads-success,#4ade80)'; } });
                 }
-                if (btn) { btn.disabled = false; }
+                btns.forEach(function(b){ if (b) b.disabled = false; });
             })
             .catch(function(e){
                 if (e.message === 'auth') return;
-                if (msg) { msg.textContent = 'Request failed'; msg.style.color = 'var(--gads-danger,#ef4444)'; }
-                if (btn) { btn.disabled = false; }
+                msgs.forEach(function(m){ if (m) { m.textContent = 'Request failed'; m.style.color = 'var(--gads-danger,#ef4444)'; } });
+                btns.forEach(function(b){ if (b) b.disabled = false; });
             });
     };
 
