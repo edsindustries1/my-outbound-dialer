@@ -875,10 +875,11 @@ def fire_all_integrations(user_id, call_record):
 def _synthflow_status(user_id):
     cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
     return {
-        "connected":  bool(cfg.get("api_key")),
-        "enabled":    bool(cfg.get("enabled")),
-        "agent_name": cfg.get("agent_name", ""),
-        "model_id":   cfg.get("model_id", ""),
+        "connected":     bool(cfg.get("api_key")),
+        "enabled":       bool(cfg.get("enabled")),
+        "agent_name":    cfg.get("agent_name", ""),
+        "model_id":      cfg.get("model_id", ""),
+        "webhook_token": cfg.get("webhook_token", ""),
     }
 
 

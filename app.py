@@ -3382,8 +3382,27 @@ def api_integrations_pipedrive_save():
 # ── Synthflow AI Dialer Integration ──────────────────────────────────────────
 
 # In-memory Synthflow campaign state (single-worker; isolated from Telnyx campaigns)
-_sf_campaigns = {}   # user_id -> {campaign_id, status, numbers, dialed, total, agent_name, model_id, from_number}
+_sf_campaigns = {}   # user_id -> campaign state dict
 _sf_lock = threading.Lock()
+
+
+def _sf_normalize_e164(number):
+    """Normalize a phone number to E.164 format best-effort."""
+    import re
+    digits = re.sub(r'\D', '', number)
+    if len(digits) == 10:
+        return f"+1{digits}"
+    if len(digits) == 11 and digits.startswith('1'):
+        return f"+{digits}"
+    if len(digits) > 7:
+        return f"+{digits}"
+    return number.strip()
+
+
+def _sf_generate_token():
+    """Generate a random webhook token."""
+    import secrets
+    return secrets.token_urlsafe(24)
 
 
 @app.route("/api/integrations/synthflow", methods=["GET"])
@@ -3413,10 +3432,12 @@ def api_integrations_synthflow_save():
         agent_name, err = synthflow_verify_credentials(api_key, model_id)
         if err:
             return jsonify({"error": err}), 400
-        cfg["api_key"]    = api_key
-        cfg["model_id"]   = model_id
-        cfg["agent_name"] = agent_name
-        cfg["enabled"]    = True
+        cfg["api_key"]          = api_key
+        cfg["model_id"]         = model_id
+        cfg["agent_name"]       = agent_name
+        cfg["enabled"]          = True
+        if not cfg.get("webhook_token"):
+            cfg["webhook_token"] = _sf_generate_token()
     if "enabled" in data:
         cfg["enabled"] = bool(data["enabled"])
     if data.get("disconnect"):
@@ -3429,118 +3450,263 @@ def api_integrations_synthflow_save():
 @app.route("/api/integrations/synthflow/test", methods=["POST"])
 @login_required
 def api_integrations_synthflow_test():
-    from integrations import get_integration_config, KEY_SYNTHFLOW, synthflow_verify_credentials
+    """Place a real test call to the user's first provisioned number via Synthflow."""
+    import requests as _req
+    from integrations import get_integration_config, KEY_SYNTHFLOW
     cfg = get_integration_config(current_user.id, KEY_SYNTHFLOW)
     if not cfg.get("api_key") or not cfg.get("model_id"):
         return jsonify({"error": "Connect Synthflow first."}), 400
-    agent_name, err = synthflow_verify_credentials(cfg["api_key"], cfg["model_id"])
-    if err:
-        return jsonify({"error": err}), 400
-    return jsonify({"ok": True, "agent_name": agent_name})
+
+    user_pn = ProvisionedNumber.query.filter_by(
+        user_id=current_user.id, status="active"
+    ).first()
+    if not user_pn:
+        return jsonify({"error": "No active provisioned phone number found. Add a number first."}), 400
+
+    to_number = user_pn.phone_number
+    api_key   = cfg["api_key"]
+    model_id  = cfg["model_id"]
+
+    try:
+        hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        resp = _req.post(
+            "https://api.synthflow.ai/v2/agent/make_call_sip_outbound",
+            headers=hdrs,
+            json={"model_id": model_id, "phone": to_number},
+            timeout=15,
+        )
+        if not resp.ok:
+            return jsonify({"error": f"Synthflow API error: HTTP {resp.status_code}"}), 400
+        rj      = resp.json()
+        call_id = ((rj.get("response") or {}).get("call_id") or rj.get("call_id") or rj.get("id", ""))
+        return jsonify({"ok": True, "to": to_number, "call_id": call_id,
+                        "agent_name": cfg.get("agent_name", "")})
+    except Exception as e:
+        return jsonify({"error": f"Request failed: {e}"}), 500
 
 
 @app.route("/api/synthflow/campaign", methods=["POST"])
 @login_required
 def api_synthflow_campaign_start():
-    """Start an AI-agent outbound campaign via Synthflow."""
+    """Start an AI-agent outbound campaign via Synthflow with DB persistence."""
     import requests as _req
+    import time as _time
+    import json as _json
+    import re as _re
     from integrations import get_integration_config, KEY_SYNTHFLOW
+    from models import Campaign, CallRecord
 
-    data = request.get_json() or {}
+    data    = request.get_json() or {}
     user_id = current_user.id
 
     cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
     if not cfg.get("api_key") or not cfg.get("model_id"):
-        return jsonify({"error": "Synthflow not connected. Go to Integrations and connect your Synthflow account first."}), 400
+        return jsonify({"error": "Synthflow not connected. Go to Integrations to connect first."}), 400
 
     with _sf_lock:
         existing = _sf_campaigns.get(user_id, {})
         if existing.get("status") == "running":
             return jsonify({"error": "A Synthflow campaign is already running. Stop it first."}), 409
 
-    numbers_raw = data.get("numbers", [])
+    numbers_raw  = data.get("numbers", [])
     from_number  = (data.get("from_number") or "").strip()
     delay_s      = max(1, int(data.get("delay", 5)))
+    campaign_name = (data.get("campaign_name") or "Synthflow Campaign").strip()
+    dial_mode    = "sequential"  # Synthflow campaigns are always sequential
 
-    # Accept contact list IDs or raw numbers
     if not numbers_raw:
         return jsonify({"error": "No phone numbers provided."}), 400
 
-    numbers = [str(n).strip() for n in numbers_raw if str(n).strip()]
-    if not numbers:
-        return jsonify({"error": "No valid phone numbers."}), 400
+    # Normalize and deduplicate
+    numbers = list(dict.fromkeys(
+        _sf_normalize_e164(str(n).strip())
+        for n in numbers_raw if str(n).strip()
+    ))
 
-    api_key  = cfg["api_key"]
-    model_id = cfg["model_id"]
+    # DNC filtering
+    from storage import get_dnc_list
+    _dnc_raw = get_dnc_list(user_id=user_id)
+    dnc_numbers = set(e["number"] for e in _dnc_raw) if _dnc_raw else set()
+    original_count = len(numbers)
+    numbers = [n for n in numbers if n not in dnc_numbers]
+    removed = original_count - len(numbers)
+
+    if not numbers:
+        return jsonify({"error": f"All {original_count} numbers are on the DNC list."}), 400
+
+    api_key    = cfg["api_key"]
+    model_id   = cfg["model_id"]
     agent_name = cfg.get("agent_name", "AI Agent")
-    campaign_id = f"sf_{user_id}_{int(__import__('time').time())}"
+
+    # Create Campaign row in DB
+    try:
+        camp = Campaign(
+            user_id=user_id,
+            status="active",
+            numbers=_json.dumps(numbers),
+            dialed_count=0,
+            total_count=len(numbers),
+            dial_mode=dial_mode,
+            batch_size=1,
+            dial_delay=delay_s,
+            from_number=from_number or None,
+            campaign_type="synthflow",
+            sf_model_id=model_id,
+            navigator_knowledge_base=campaign_name,
+        )
+        db.session.add(camp)
+        db.session.flush()  # get camp.id
+        db_campaign_id = camp.id
+        db.session.commit()
+        logger.info(f"[SYNTHFLOW] Created Campaign id={db_campaign_id} for user {user_id}")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"[SYNTHFLOW] Failed to create Campaign: {e}")
+        db_campaign_id = None
 
     with _sf_lock:
         _sf_campaigns[user_id] = {
-            "campaign_id": campaign_id,
-            "status":      "running",
-            "numbers":     numbers,
-            "dialed":      0,
-            "total":       len(numbers),
-            "agent_name":  agent_name,
-            "model_id":    model_id,
-            "from_number": from_number,
-            "errors":      0,
-            "calls":       [],
+            "db_campaign_id": db_campaign_id,
+            "status":         "running",
+            "numbers":        numbers,
+            "dialed":         0,
+            "total":          len(numbers),
+            "agent_name":     agent_name,
+            "model_id":       model_id,
+            "from_number":    from_number,
+            "errors":         0,
+            "calls":          [],
+            "dnc_removed":    removed,
         }
 
     def _run_campaign():
-        import time as _time
         hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         url  = "https://api.synthflow.ai/v2/agent/make_call_sip_outbound"
 
-        for idx, number in enumerate(numbers):
-            with _sf_lock:
-                state = _sf_campaigns.get(user_id, {})
-                if state.get("status") != "running":
-                    break
+        with app.app_context():
+            for idx, number in enumerate(numbers):
+                with _sf_lock:
+                    state = _sf_campaigns.get(user_id, {})
+                    if state.get("status") != "running":
+                        break
 
-            payload = {
-                "model_id":    model_id,
-                "phone":       number,
-                "from_number": from_number or None,
-            }
-            try:
-                resp = _req.post(url, headers=hdrs, json=payload, timeout=15)
+                # Create CallRecord for this dial
+                cr_id = f"sf_{db_campaign_id or user_id}_{idx}_{int(_time.time())}"
+                try:
+                    cr = CallRecord(
+                        call_control_id=cr_id,
+                        campaign_id=db_campaign_id,
+                        user_id=user_id,
+                        phone_number=number,
+                        from_number=from_number or "",
+                        status="initiated",
+                        source="synthflow",
+                    )
+                    db.session.add(cr)
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"[SYNTHFLOW] CallRecord create error for {number}: {e}")
+
                 call_id = None
-                if resp.ok:
-                    rj = resp.json()
-                    call_id = ((rj.get("response") or {}).get("call_id")
-                               or rj.get("call_id") or rj.get("id"))
-                    logger.info(f"[SYNTHFLOW] call to {number} => call_id={call_id}")
-                else:
-                    logger.warning(f"[SYNTHFLOW] call to {number} => HTTP {resp.status_code}: {resp.text[:200]}")
-                    with _sf_lock:
-                        if user_id in _sf_campaigns:
-                            _sf_campaigns[user_id]["errors"] += 1
-            except Exception as e:
-                logger.error(f"[SYNTHFLOW] call to {number} exception: {e}")
+                error_occurred = False
+                try:
+                    payload = {
+                        "model_id":    model_id,
+                        "phone":       number,
+                        "from_number": from_number or None,
+                    }
+                    resp = _req.post(url, headers=hdrs, json=payload, timeout=15)
+                    if resp.ok:
+                        rj = resp.json()
+                        call_id = ((rj.get("response") or {}).get("call_id")
+                                   or rj.get("call_id") or rj.get("id"))
+                        logger.info(f"[SYNTHFLOW] call to {number} => call_id={call_id}")
+                        # Update CallRecord with Synthflow call_id
+                        try:
+                            cr_row = CallRecord.query.filter_by(call_control_id=cr_id).first()
+                            if cr_row:
+                                cr_row.status = "ringing"
+                                if call_id:
+                                    cr_row.status_description = f"sf:{call_id}"
+                                db.session.commit()
+                        except Exception:
+                            db.session.rollback()
+                    else:
+                        logger.warning(f"[SYNTHFLOW] call to {number} => HTTP {resp.status_code}: {resp.text[:200]}")
+                        error_occurred = True
+                        try:
+                            cr_row = CallRecord.query.filter_by(call_control_id=cr_id).first()
+                            if cr_row:
+                                cr_row.status = "failed"
+                                cr_row.hangup_cause = f"API {resp.status_code}"
+                                db.session.commit()
+                        except Exception:
+                            db.session.rollback()
+                except Exception as e:
+                    logger.error(f"[SYNTHFLOW] call to {number} exception: {e}")
+                    error_occurred = True
+                    try:
+                        cr_row = CallRecord.query.filter_by(call_control_id=cr_id).first()
+                        if cr_row:
+                            cr_row.status = "failed"
+                            cr_row.hangup_cause = str(e)[:100]
+                            db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+
                 with _sf_lock:
                     if user_id in _sf_campaigns:
-                        _sf_campaigns[user_id]["errors"] += 1
+                        _sf_campaigns[user_id]["dialed"] += 1
+                        if error_occurred:
+                            _sf_campaigns[user_id]["errors"] += 1
+                        _sf_campaigns[user_id]["calls"].append(
+                            {"number": number, "call_id": call_id, "error": error_occurred}
+                        )
 
+                # Update Campaign row progress
+                try:
+                    if db_campaign_id:
+                        camp_row = Campaign.query.get(db_campaign_id)
+                        if camp_row:
+                            camp_row.dialed_count = idx + 1
+                            db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+                if idx < len(numbers) - 1:
+                    _time.sleep(delay_s)
+
+            # Mark campaign complete
             with _sf_lock:
+                final_status = _sf_campaigns.get(user_id, {}).get("status", "running")
+                if final_status == "running":
+                    final_status = "completed"
                 if user_id in _sf_campaigns:
-                    _sf_campaigns[user_id]["dialed"] += 1
-                    if call_id:
-                        _sf_campaigns[user_id]["calls"].append({"number": number, "call_id": call_id})
+                    _sf_campaigns[user_id]["status"] = final_status
 
-            if idx < len(numbers) - 1:
-                _time.sleep(delay_s)
-
-        with _sf_lock:
-            if user_id in _sf_campaigns:
-                _sf_campaigns[user_id]["status"] = "completed"
+            try:
+                if db_campaign_id:
+                    camp_row = Campaign.query.get(db_campaign_id)
+                    if camp_row:
+                        camp_row.status = final_status
+                        db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     import threading as _t
     _t.Thread(target=_run_campaign, daemon=True).start()
 
-    return jsonify({"ok": True, "campaign_id": campaign_id, "total": len(numbers)})
+    msg = f"Campaign started — {len(numbers)} numbers queued."
+    if removed:
+        msg += f" ({removed} removed from DNC list.)"
+    return jsonify({
+        "ok": True,
+        "db_campaign_id": db_campaign_id,
+        "total": len(numbers),
+        "dnc_removed": removed,
+        "msg": msg,
+    })
 
 
 @app.route("/api/synthflow/campaign/status", methods=["GET"])
@@ -3552,13 +3718,14 @@ def api_synthflow_campaign_status():
     if not state:
         return jsonify({"status": "idle"})
     return jsonify({
-        "campaign_id": state.get("campaign_id"),
-        "status":      state.get("status", "idle"),
-        "dialed":      state.get("dialed", 0),
-        "total":       state.get("total", 0),
-        "errors":      state.get("errors", 0),
-        "agent_name":  state.get("agent_name", ""),
-        "calls":       state.get("calls", [])[-50:],
+        "db_campaign_id": state.get("db_campaign_id"),
+        "status":         state.get("status", "idle"),
+        "dialed":         state.get("dialed", 0),
+        "total":          state.get("total", 0),
+        "errors":         state.get("errors", 0),
+        "agent_name":     state.get("agent_name", ""),
+        "dnc_removed":    state.get("dnc_removed", 0),
+        "calls":          state.get("calls", [])[-50:],
     })
 
 
@@ -3569,35 +3736,125 @@ def api_synthflow_campaign_stop():
     with _sf_lock:
         if user_id in _sf_campaigns:
             _sf_campaigns[user_id]["status"] = "stopped"
+    # Update DB campaign as stopped
+    try:
+        from models import Campaign
+        state = _sf_campaigns.get(user_id, {})
+        db_campaign_id = state.get("db_campaign_id")
+        if db_campaign_id:
+            camp = Campaign.query.get(db_campaign_id)
+            if camp:
+                camp.status = "stopped"
+                db.session.commit()
+    except Exception:
+        db.session.rollback()
     return jsonify({"ok": True})
 
 
 @app.route("/api/integrations/synthflow/webhook", methods=["POST"])
 def api_synthflow_webhook():
-    """Public webhook receiver for Synthflow call completion events."""
-    from integrations import fire_all_integrations
+    """
+    Public webhook receiver for Synthflow call completion events.
+    Authentication: ?uid=<user_id>&tok=<webhook_token> query params.
+    """
+    from integrations import get_integration_config, KEY_SYNTHFLOW, fire_all_integrations
     try:
-        data = request.get_json(silent=True) or {}
+        data    = request.get_json(silent=True) or {}
         uid_str = request.args.get("uid", "")
+        tok     = request.args.get("tok", "")
         user_id = int(uid_str) if uid_str.isdigit() else None
+
+        # Authenticate: verify webhook token
+        if user_id and tok:
+            cfg = get_integration_config(user_id, KEY_SYNTHFLOW)
+            stored_tok = cfg.get("webhook_token", "")
+            if stored_tok and tok != stored_tok:
+                logger.warning(f"[SYNTHFLOW WEBHOOK] Invalid token for user {user_id}")
+                return jsonify({"received": False, "error": "invalid token"}), 401
+        elif user_id and not tok:
+            # Legacy URLs without token — still accept but log warning
+            logger.warning(f"[SYNTHFLOW WEBHOOK] No token provided for user {user_id} — accepting (legacy)")
 
         event     = data.get("event", "")
         call_data = data.get("data") or data
 
         logger.info(f"[SYNTHFLOW WEBHOOK] event={event} user_id={user_id}")
 
-        if user_id and event in ("call.completed", "call_completed", "completed"):
-            call_record = {
-                "phone_number": call_data.get("phone") or call_data.get("to") or call_data.get("phone_number", ""),
-                "status":       "completed",
-                "source":       "synthflow",
-                "call_id":      call_data.get("call_id") or call_data.get("id", ""),
-                "duration":     call_data.get("duration"),
-                "recording_url": call_data.get("recording_url"),
-                "transcript":   call_data.get("transcript", ""),
-                "raw":          call_data,
+        if not user_id:
+            return jsonify({"received": True})
+
+        phone = (call_data.get("phone") or call_data.get("to") or
+                 call_data.get("phone_number", "")).strip()
+        sf_call_id = (call_data.get("call_id") or call_data.get("id", "")).strip()
+        transferred = bool(call_data.get("transferred") or call_data.get("meeting_booked"))
+        transcript_raw = call_data.get("transcript", "")
+        if isinstance(transcript_raw, list):
+            transcript_str = "\n".join(
+                f"{t.get('speaker','?')}: {t.get('text','')}" for t in transcript_raw
+            )
+        else:
+            transcript_str = str(transcript_raw)
+        recording_url = call_data.get("recording_url", "")
+        duration      = call_data.get("duration") or call_data.get("call_duration")
+
+        # Find and update matching CallRecord
+        if event in ("call.completed", "call_completed", "completed", "call.ended"):
+            from models import CallRecord
+            import json as _json
+            cr = None
+            # Try to find by Synthflow call_id stored in status_description
+            if sf_call_id:
+                cr = CallRecord.query.filter(
+                    CallRecord.user_id == user_id,
+                    CallRecord.status_description.like(f"sf:{sf_call_id}%")
+                ).order_by(CallRecord.created_at.desc()).first()
+            # Fall back to phone number lookup
+            if not cr and phone:
+                cr = CallRecord.query.filter_by(
+                    user_id=user_id, phone_number=phone, source="synthflow"
+                ).order_by(CallRecord.created_at.desc()).first()
+            if cr:
+                cr.status = "completed"
+                cr.voicemail_dropped = False
+                cr.transferred = transferred
+                cr.recording_url = recording_url or cr.recording_url
+                if duration:
+                    try:
+                        cr.vm_duration = int(float(duration))
+                    except Exception:
+                        pass
+                # Store transcript as JSON list of lines
+                try:
+                    lines = [{"track": "agent", "text": l} for l in transcript_str.split("\n") if l.strip()]
+                    cr.transcript = _json.dumps(lines)
+                except Exception:
+                    pass
+                cr.hangup_cause = "completed"
+                cr.status_description = "AI call completed"
+                cr.status_color = "green" if transferred else "blue"
+                try:
+                    db.session.commit()
+                    logger.info(f"[SYNTHFLOW WEBHOOK] Updated CallRecord id={cr.id} for {phone}")
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"[SYNTHFLOW WEBHOOK] DB update error: {e}")
+
+            # Build integration-compatible call record dict
+            call_record_dict = {
+                "phone_number":   phone,
+                "from_number":    call_data.get("from_number", ""),
+                "status":         "completed",
+                "source":         "synthflow",
+                "call_id":        sf_call_id,
+                "transferred":    transferred,
+                "voicemail_dropped": False,
+                "amd_result":     "human" if transferred else "unknown",
+                "duration":       duration,
+                "recording_url":  recording_url,
+                "transcript":     transcript_str,
+                "hangup_cause":   "completed",
             }
-            fire_all_integrations(user_id, call_record)
+            fire_all_integrations(user_id, call_record_dict)
 
         return jsonify({"received": True})
     except Exception as e:

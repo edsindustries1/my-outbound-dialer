@@ -2218,6 +2218,13 @@
                                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="copySynthflowWebhook()">Copy</button>
                                         </div>
                                     </div>
+                                    <div style="margin-top:12px;">
+                                        <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="sfTestCall()" id="sf-test-call-btn2">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 015.11 15.9a19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                                            Test Call (to your number)
+                                        </button>
+                                        <span id="sf-test-call-msg2" style="font-size:12px;margin-left:8px;"></span>
+                                    </div>
                                 </div>
                                 <!-- Disconnected -->
                                 <div id="synthflow-disconnected-view2" style="display:none">
@@ -2281,11 +2288,17 @@
                                 </div>
                             </div>
 
-                            <!-- Phone number list input -->
+                            <!-- Campaign Name -->
                             <div class="pvm-section" style="margin-top:0;">
+                                <label>Campaign Name</label>
+                                <input type="text" id="aiagentCampaignName" class="gads-input" placeholder="e.g. Q2 Follow-up">
+                            </div>
+
+                            <!-- Phone number list input -->
+                            <div class="pvm-section" style="margin-top:12px;">
                                 <label>Phone Numbers to Call</label>
-                                <textarea id="aiagentNumbers" class="gads-input" rows="5" style="resize:vertical;" placeholder="One number per line, e.g.:&#10;+12125551234&#10;+13105557890&#10;…"></textarea>
-                                <div style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">E.164 format preferred (e.g. +12125551234). One number per line.</div>
+                                <textarea id="aiagentNumbers" class="gads-input" rows="5" style="resize:vertical;" placeholder="One number per line (E.164 format preferred):&#10;+12125551234&#10;+13105557890&#10;…&#10;&#10;10-digit US numbers are accepted too (e.g. 2125551234)."></textarea>
+                                <div id="aiagent-number-count" style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">No numbers entered yet.</div>
                             </div>
 
                             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
@@ -7464,10 +7477,12 @@
                 _setChk('synthflowEnabled',  !!sf.enabled);
                 _setChk('synthflowEnabled2', !!sf.enabled);
             }
-            // Update AI Agent Dialer page
+            // Update AI Agent Dialer page — include webhook_token for security
             var uid = '{{ current_user.id if current_user and current_user.is_authenticated else "" }}';
             var whBase = window.location.origin;
-            var sfWh = whBase + '/api/integrations/synthflow/webhook?uid=' + uid;
+            var sfTok = sf.webhook_token || '';
+            var sfWh = whBase + '/api/integrations/synthflow/webhook?uid=' + uid +
+                       (sfTok ? '&tok=' + sfTok : '');
             _setText('aiagent-webhook-url', sfWh);
             _setText('synthflow-webhook-url2', sfWh);
             _show('aiagent-not-connected',   !sfConn);
@@ -7781,18 +7796,36 @@
     // ── AI Agent Dialer campaign ──
     var _sfPollTimer = null;
 
+    // Live number count display
+    (function() {
+        function _sfCountNumbers() {
+            var ta  = document.getElementById('aiagentNumbers');
+            var el  = document.getElementById('aiagent-number-count');
+            if (!ta || !el) return;
+            var nums = ta.value.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
+            el.textContent = nums.length ? nums.length + ' number' + (nums.length === 1 ? '' : 's') + ' entered.' : 'No numbers entered yet.';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var ta = document.getElementById('aiagentNumbers');
+            if (ta) ta.addEventListener('input', _sfCountNumbers);
+        });
+    })();
+
     window.sfStartCampaign = function() {
-        var raw = (document.getElementById('aiagentNumbers') || {}).value || '';
-        var numbers = raw.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
+        var raw          = (document.getElementById('aiagentNumbers') || {}).value || '';
+        var numbers      = raw.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
+        var campaignName = ((document.getElementById('aiagentCampaignName') || {}).value || '').trim() || 'Synthflow Campaign';
         if (!numbers.length) { _intgMsg('aiagentMsg', 'Enter at least one phone number.', false); return; }
         var fromNum = (document.getElementById('aiagentFromNumber') || {}).value || '';
         var delay   = parseInt((document.getElementById('aiagentDelay') || {}).value || '5', 10) || 5;
         _intgMsg('aiagentMsg', 'Starting campaign…', true);
-        apiFetch('/api/synthflow/campaign', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ numbers: numbers, from_number: fromNum, delay: delay }) })
+        apiFetch('/api/synthflow/campaign', { method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ numbers: numbers, from_number: fromNum, delay: delay, campaign_name: campaignName }) })
             .then(function(r){ return r.json(); })
             .then(function(d) {
                 if (d.error) { _intgMsg('aiagentMsg', d.error, false); return; }
-                _intgMsg('aiagentMsg', 'Campaign started — dialing ' + d.total + ' number(s)…', true);
+                var msg = d.msg || ('Campaign started — dialing ' + d.total + ' number(s)…');
+                _intgMsg('aiagentMsg', msg, true);
                 var startBtn = document.getElementById('aiagentStartBtn');
                 var stopBtn  = document.getElementById('aiagentStopBtn');
                 if (startBtn) startBtn.disabled = true;
@@ -7806,6 +7839,28 @@
     window.sfStopCampaign = function() {
         apiFetch('/api/synthflow/campaign/stop', { method: 'POST' }).catch(function(){});
         _intgMsg('aiagentMsg', 'Stopping…', true);
+    };
+
+    window.sfTestCall = function() {
+        var btn = document.getElementById('sf-test-call-btn2');
+        var msg = document.getElementById('sf-test-call-msg2');
+        if (btn) btn.disabled = true;
+        if (msg) { msg.textContent = 'Placing test call…'; msg.style.color = ''; }
+        apiFetch('/api/integrations/synthflow/test', { method: 'POST' })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) {
+                    if (msg) { msg.textContent = d.error; msg.style.color = 'var(--gads-danger,#ef4444)'; }
+                } else {
+                    if (msg) { msg.textContent = 'Call placed to ' + (d.to || 'your number') + '!'; msg.style.color = 'var(--gads-success,#4ade80)'; }
+                }
+                if (btn) { btn.disabled = false; }
+            })
+            .catch(function(e){
+                if (e.message === 'auth') return;
+                if (msg) { msg.textContent = 'Request failed'; msg.style.color = 'var(--gads-danger,#ef4444)'; }
+                if (btn) { btn.disabled = false; }
+            });
     };
 
     function _sfPollStatus() {

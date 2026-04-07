@@ -230,6 +230,8 @@ class Campaign(db.Model):
     prospect_company = db.Column(db.String(255), default='', nullable=False)
     navigator_voice_id = db.Column(db.String(255), nullable=True)
     navigator_knowledge_base = db.Column(Text, default='', nullable=False)
+    campaign_type = db.Column(db.String(30), default='telnyx', nullable=False)
+    sf_model_id = db.Column(Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -280,6 +282,7 @@ class CallRecord(db.Model):
     status_description = db.Column(db.String(255), default='', nullable=False)
     status_color = db.Column(db.String(20), default='blue', nullable=False)
     vm_duration = db.Column(db.Integer, nullable=True)
+    source = db.Column(db.String(50), default='telnyx', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -377,6 +380,24 @@ def _ensure_schema():
             """))
             db.session.commit()
 
+        if "campaigns" in inspector.get_table_names():
+            camp_cols = {col["name"] for col in inspector.get_columns("campaigns")}
+            if "campaign_type" not in camp_cols:
+                logger.warning("DB schema missing campaigns.campaign_type; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE campaigns ADD COLUMN campaign_type VARCHAR(30) DEFAULT 'telnyx' NOT NULL"))
+                db.session.commit()
+            if "sf_model_id" not in camp_cols:
+                logger.warning("DB schema missing campaigns.sf_model_id; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE campaigns ADD COLUMN sf_model_id TEXT"))
+                db.session.commit()
+
+        if "call_records" in inspector.get_table_names():
+            cr_cols = {col["name"] for col in inspector.get_columns("call_records")}
+            if "source" not in cr_cols:
+                logger.warning("DB schema missing call_records.source; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE call_records ADD COLUMN source VARCHAR(50) DEFAULT 'telnyx' NOT NULL"))
+                db.session.commit()
+
         _seed_max_concurrent_lines()
         _recover_interrupted_campaigns()
 
@@ -422,9 +443,18 @@ def _seed_max_concurrent_lines():
 
 def _recover_interrupted_campaigns():
     try:
-        active_campaigns = Campaign.query.filter(
-            Campaign.status.in_(['active', 'paused'])
-        ).all()
+        # Only recover telnyx campaigns; synthflow campaigns are external and
+        # cannot be resumed from in-memory state after a restart.
+        # campaign_type column may not exist yet on first run (migration adds it).
+        try:
+            active_campaigns = Campaign.query.filter(
+                Campaign.status.in_(['active', 'paused']),
+                Campaign.campaign_type != 'synthflow',
+            ).all()
+        except Exception:
+            active_campaigns = Campaign.query.filter(
+                Campaign.status.in_(['active', 'paused'])
+            ).all()
         if not active_campaigns:
             return
         for camp in active_campaigns:
