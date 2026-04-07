@@ -3477,7 +3477,7 @@ def api_integrations_synthflow_test():
 
     try:
         hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        payload = {"model_id": model_id, "phone_number": to_number}
+        payload = {"model_id": model_id, "to_phone_number": to_number}
         resp = _req.post(
             "https://api.synthflow.ai/v2/agent/make_call_sip_outbound",
             headers=hdrs,
@@ -3628,8 +3628,8 @@ def api_synthflow_campaign_start():
             error_occurred = False
             try:
                 payload = {
-                    "model_id":    model_id,
-                    "phone_number": number,
+                    "model_id":       model_id,
+                    "to_phone_number": number,
                 }
                 resp = _req.post(url, headers=hdrs, json=payload, timeout=15)
                 if resp.ok:
