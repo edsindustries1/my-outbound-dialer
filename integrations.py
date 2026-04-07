@@ -900,13 +900,17 @@ def synthflow_verify_credentials(api_key, model_id):
 
     hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
 
-    # ── 1. Direct lookup ──────────────────────────────────────────────
+    # ── 1. Direct lookup (try both singular and plural URL forms) ─────
     try:
-        resp = _req.get(
+        # Synthflow uses singular /v2/agent throughout (matches make_call endpoint)
+        for lookup_url in [
+            f"https://api.synthflow.ai/v2/agent/{model_id}",
             f"https://api.synthflow.ai/v2/agents/{model_id}",
-            headers=hdrs, timeout=12,
-        )
-        _log.info(f"[Synthflow verify] direct lookup status={resp.status_code}")
+        ]:
+            resp = _req.get(lookup_url, headers=hdrs, timeout=12)
+            _log.info(f"[Synthflow verify] {lookup_url} => {resp.status_code}")
+            if resp.status_code != 404:
+                break
 
         if resp.status_code == 401:
             return None, "Invalid API key — check your Synthflow credentials."
@@ -924,15 +928,17 @@ def synthflow_verify_credentials(api_key, model_id):
     except Exception as e:
         _log.warning(f"[Synthflow verify] direct lookup error: {e}")
 
-    # ── 2. List all agents and search ────────────────────────────────
+    # ── 2. List all agents and search (try both URL forms) ───────────
     try:
-        list_resp = _req.get(
+        list_resp = None
+        for list_url in [
+            "https://api.synthflow.ai/v2/agent",
             "https://api.synthflow.ai/v2/agents",
-            headers=hdrs,
-            params={"limit": 200},
-            timeout=12,
-        )
-        _log.info(f"[Synthflow verify] list agents status={list_resp.status_code}")
+        ]:
+            list_resp = _req.get(list_url, headers=hdrs, params={"limit": 200}, timeout=12)
+            _log.info(f"[Synthflow verify] list {list_url} => {list_resp.status_code}")
+            if list_resp.status_code != 404:
+                break
 
         if list_resp.status_code == 401:
             return None, "Invalid API key — check your Synthflow credentials."

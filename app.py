@@ -3477,14 +3477,21 @@ def api_integrations_synthflow_test():
 
     try:
         hdrs = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        payload = {"model_id": model_id, "phone_number": to_number}
         resp = _req.post(
             "https://api.synthflow.ai/v2/agent/make_call_sip_outbound",
             headers=hdrs,
-            json={"model_id": model_id, "phone": to_number},
+            json=payload,
             timeout=15,
         )
         if not resp.ok:
-            return jsonify({"error": f"Synthflow API error: HTTP {resp.status_code}"}), 400
+            err_body = ""
+            try:
+                err_body = resp.json().get("message") or resp.json().get("error") or resp.text[:300]
+            except Exception:
+                err_body = resp.text[:300]
+            logger.warning(f"[SYNTHFLOW TEST DIAL] HTTP {resp.status_code}: {err_body}")
+            return jsonify({"error": f"Synthflow error: {err_body or ('HTTP ' + str(resp.status_code))}"}), 400
         rj      = resp.json()
         call_id = ((rj.get("response") or {}).get("call_id") or rj.get("call_id") or rj.get("id", ""))
         return jsonify({"ok": True, "to": to_number, "call_id": call_id,
@@ -3622,8 +3629,7 @@ def api_synthflow_campaign_start():
             try:
                 payload = {
                     "model_id":    model_id,
-                    "phone":       number,
-                    "from_number": from_number or None,
+                    "phone_number": number,
                 }
                 resp = _req.post(url, headers=hdrs, json=payload, timeout=15)
                 if resp.ok:
