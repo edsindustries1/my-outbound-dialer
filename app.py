@@ -3508,11 +3508,13 @@ def api_synthflow_campaign_start():
         if existing.get("status") == "running":
             return jsonify({"error": "A Synthflow campaign is already running. Stop it first."}), 409
 
-    numbers_raw  = data.get("numbers", [])
-    from_number  = (data.get("from_number") or "").strip()
-    delay_s      = max(1, int(data.get("delay", 5)))
+    numbers_raw   = data.get("numbers", [])
+    from_number   = (data.get("from_number") or "").strip()
+    delay_s       = max(1, min(10, int(data.get("delay", 5))))
     campaign_name = (data.get("campaign_name") or "Synthflow Campaign").strip()
-    dial_mode    = "sequential"  # Synthflow campaigns are always sequential
+    dial_mode     = data.get("dial_mode", "sequential")
+    if dial_mode not in ("sequential", "parallel"):
+        dial_mode = "sequential"
 
     if not numbers_raw:
         return jsonify({"error": "No phone numbers provided."}), 400
@@ -3838,20 +3840,27 @@ def api_synthflow_webhook():
                     db.session.rollback()
                     logger.error(f"[SYNTHFLOW WEBHOOK] DB update error: {e}")
 
-            # Build integration-compatible call record dict
+            # Build Telnyx-compatible call_record dict for fire_all_integrations
+            dur_int = 0
+            try:
+                dur_int = int(float(duration)) if duration else 0
+            except Exception:
+                pass
             call_record_dict = {
-                "phone_number":   phone,
-                "from_number":    call_data.get("from_number", ""),
-                "status":         "completed",
-                "source":         "synthflow",
-                "call_id":        sf_call_id,
-                "transferred":    transferred,
+                "number":            phone,          # primary key used by all CRM integrations
+                "from_number":       call_data.get("from_number", ""),
+                "status":            "completed",
+                "status_description": "AI call completed" + (" — transferred" if transferred else ""),
+                "source":            "synthflow",
+                "call_id":           sf_call_id,
+                "transferred":       transferred,
                 "voicemail_dropped": False,
-                "amd_result":     "human" if transferred else "unknown",
-                "duration":       duration,
-                "recording_url":  recording_url,
-                "transcript":     transcript_str,
-                "hangup_cause":   "completed",
+                "amd_result":        "human_answered" if transferred else "not_answered",
+                "ring_duration":     dur_int,
+                "recording_url":     recording_url,
+                "transcript":        transcript_str,
+                "hangup_cause":      "call_rejected" if not transferred else "normal_clearing",
+                "contact_id":        None,
             }
             fire_all_integrations(user_id, call_record_dict)
 

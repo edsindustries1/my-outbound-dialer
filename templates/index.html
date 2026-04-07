@@ -2322,9 +2322,27 @@
                                     <label>From Number <span style="font-weight:400;color:var(--gads-text-secondary);">(optional)</span></label>
                                     <input type="text" id="aiagentFromNumber" class="gads-input" placeholder="+12125550001">
                                 </div>
-                                <div class="pvm-section" style="margin-top:0;width:130px;">
-                                    <label>Delay Between Calls (s)</label>
-                                    <input type="number" id="aiagentDelay" class="gads-input" value="5" min="1" max="60">
+                                <div class="pvm-section" style="margin-top:0;min-width:160px;flex:1;">
+                                    <label>Delay Between Calls: <strong><span id="aiagentDelayVal">5</span>s</strong></label>
+                                    <input type="range" id="aiagentDelay" min="1" max="10" value="5" style="width:100%;accent-color:var(--gads-primary,#6366f1);" oninput="document.getElementById('aiagentDelayVal').textContent=this.value">
+                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gads-text-secondary);">
+                                        <span>1s</span><span>10s</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dial Mode toggle -->
+                            <div class="pvm-section" style="margin-top:4px;">
+                                <label>Dial Mode</label>
+                                <div style="display:flex;gap:8px;margin-top:6px;">
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:7px 14px;border:1px solid var(--gads-border,#e5e7eb);border-radius:7px;font-size:13px;" id="sfDialModeSeqLabel">
+                                        <input type="radio" name="sfDialMode" value="sequential" checked onchange="sfUpdateDialMode()">
+                                        Sequential <span style="font-size:11px;color:var(--gads-text-secondary);margin-left:2px;">one at a time</span>
+                                    </label>
+                                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:7px 14px;border:1px solid var(--gads-border,#e5e7eb);border-radius:7px;font-size:13px;" id="sfDialModeParLabel">
+                                        <input type="radio" name="sfDialMode" value="parallel" onchange="sfUpdateDialMode()">
+                                        Parallel <span style="font-size:11px;color:var(--gads-text-secondary);margin-left:2px;">simultaneous</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -7827,7 +7845,7 @@
         });
     })();
 
-    // CSV file upload — parse first column, populate textarea + show preview
+    // CSV file upload — parse with phone/name/company preview
     window.sfLoadCsv = function(input) {
         var file = input.files && input.files[0];
         if (!file) return;
@@ -7836,20 +7854,47 @@
             var text    = e.target.result || '';
             var rows    = text.split(/\r?\n/);
             var numbers = [];
+            var previewRows = [];
+            var hasHeader = false;
+
+            // Detect header row (first row with no digits in first column)
+            var firstRow = rows[0] || '';
+            var firstCell = firstRow.split(',')[0].replace(/^["']|["']$/g, '').trim();
+            if (/^[a-zA-Z\s_]+$/.test(firstCell)) { hasHeader = true; }
+
             rows.forEach(function(row, idx) {
                 if (!row.trim()) return;
-                var cell = row.split(',')[0].replace(/^["']|["']$/g, '').trim();
-                // Skip header rows that contain letters only (no digits)
-                if (idx === 0 && /^[a-zA-Z\s_]+$/.test(cell)) return;
-                if (cell) numbers.push(cell);
+                if (idx === 0 && hasHeader) return;
+                var cols = row.split(',').map(function(c){ return c.replace(/^["']|["']$/g, '').trim(); });
+                var phone = cols[0] || '';
+                var name  = cols[1] || '';
+                var co    = cols[2] || '';
+                if (phone) {
+                    numbers.push(phone);
+                    if (previewRows.length < 5) previewRows.push({ phone: phone, name: name, co: co });
+                }
             });
+
             var ta = document.getElementById('aiagentNumbers');
             if (ta) { ta.value = numbers.join('\n'); _sfCountNumbers(); }
+
             var preview = document.getElementById('aiagent-csv-preview');
             if (preview) {
-                var sampleLines = numbers.slice(0, 5).map(function(n){ return '<code>' + n + '</code>'; }).join(', ');
-                preview.innerHTML = '<strong>' + numbers.length + ' number' + (numbers.length === 1 ? '' : 's') + '</strong> loaded from <em>' + file.name + '</em>.' +
-                    (numbers.length > 0 ? ' Preview: ' + sampleLines + (numbers.length > 5 ? '…' : '') : '');
+                var tableHtml = '';
+                if (previewRows.length) {
+                    tableHtml = '<table style="border-collapse:collapse;width:100%;font-size:11px;margin-top:4px;">' +
+                        '<thead><tr>' +
+                        '<th style="text-align:left;padding:2px 8px;background:rgba(0,0,0,.05);">Phone</th>' +
+                        '<th style="text-align:left;padding:2px 8px;background:rgba(0,0,0,.05);">Name</th>' +
+                        '<th style="text-align:left;padding:2px 8px;background:rgba(0,0,0,.05);">Company</th>' +
+                        '</tr></thead><tbody>';
+                    previewRows.forEach(function(r){
+                        tableHtml += '<tr><td style="padding:2px 8px;">' + r.phone + '</td><td style="padding:2px 8px;color:#6b7280;">' + (r.name||'—') + '</td><td style="padding:2px 8px;color:#6b7280;">' + (r.co||'—') + '</td></tr>';
+                    });
+                    tableHtml += '</tbody></table>';
+                    if (numbers.length > 5) tableHtml += '<div style="padding:2px 8px;color:#6b7280;">…and ' + (numbers.length - 5) + ' more</div>';
+                }
+                preview.innerHTML = '<strong>' + numbers.length + ' contact' + (numbers.length === 1 ? '' : 's') + '</strong> loaded from <em>' + file.name + '</em>.' + tableHtml;
                 preview.style.display = '';
             }
             // Reset file input so same file can be re-selected
@@ -7858,16 +7903,30 @@
         reader.readAsText(file);
     };
 
+    window.sfUpdateDialMode = function() {
+        var modeEls = document.querySelectorAll('input[name="sfDialMode"]');
+        var seqLbl = document.getElementById('sfDialModeSeqLabel');
+        var parLbl = document.getElementById('sfDialModeParLabel');
+        modeEls.forEach(function(el) {
+            var lbl = el.closest('label');
+            if (!lbl) return;
+            lbl.style.borderColor = el.checked ? 'var(--gads-primary,#6366f1)' : 'var(--gads-border,#e5e7eb)';
+            lbl.style.background  = el.checked ? 'rgba(99,102,241,0.06)' : '';
+        });
+    };
+
     window.sfStartCampaign = function() {
         var raw          = (document.getElementById('aiagentNumbers') || {}).value || '';
         var numbers      = raw.split('\n').map(function(n){ return n.trim(); }).filter(function(n){ return n; });
         var campaignName = ((document.getElementById('aiagentCampaignName') || {}).value || '').trim() || 'Synthflow Campaign';
         if (!numbers.length) { _intgMsg('aiagentMsg', 'Enter at least one phone number.', false); return; }
-        var fromNum = (document.getElementById('aiagentFromNumber') || {}).value || '';
-        var delay   = parseInt((document.getElementById('aiagentDelay') || {}).value || '5', 10) || 5;
+        var fromNum  = (document.getElementById('aiagentFromNumber') || {}).value || '';
+        var delay    = parseInt((document.getElementById('aiagentDelay') || {}).value || '5', 10) || 5;
+        var modeEl   = document.querySelector('input[name="sfDialMode"]:checked');
+        var dialMode = modeEl ? modeEl.value : 'sequential';
         _intgMsg('aiagentMsg', 'Starting campaign…', true);
         apiFetch('/api/synthflow/campaign', { method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ numbers: numbers, from_number: fromNum, delay: delay, campaign_name: campaignName }) })
+            body: JSON.stringify({ numbers: numbers, from_number: fromNum, delay: delay, campaign_name: campaignName, dial_mode: dialMode }) })
             .then(function(r){ return r.json(); })
             .then(function(d) {
                 if (d.error) { _intgMsg('aiagentMsg', d.error, false); return; }
