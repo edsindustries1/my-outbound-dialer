@@ -175,48 +175,48 @@ def build_lead_confirmation_html(name, calendly_url=""):
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr>
         <td style="vertical-align:top;padding:0 0 4px;">
-          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Outbound Dialing Specialist &mdash; Real Estate &amp; Mortgage</p>
-          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Multi-market &bull; Ongoing</p>
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Outbound Call Automation &mdash; AMD + Voicemail Drop</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Core Capability &bull; Available on All Plans</p>
         </td>
       </tr>
       <tr><td style="padding:8px 0 0;">
-        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Running up to 15 concurrent outbound lines with real-time AMD. Voicemails dropped automatically via Humana Voice when machines are detected &mdash; each one personalized to the prospect's name and property. Live-answered calls bridge to the agent's desk in under 200ms.</p>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Dials your lead list automatically across 3 parallel lines (Autodialer) or 10 parallel lines (Business). Every call is assessed in real time using AMD &mdash; if a machine answers, a personalized Humana Voice voicemail is dropped at the beep. If a human answers, your team is bridged instantly. No manual dialing. No missed calls.</p>
       </td></tr>
     </table>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr>
         <td style="vertical-align:top;padding:0 0 4px;">
-          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">AI Conversation Agent &mdash; Synthflow Dialer Integration</p>
-          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">SaaS &amp; Insurance Clients &bull; Ongoing</p>
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Humana Voice &mdash; AI-Personalized Voicemail Generation</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Core Capability &bull; Available on All Plans</p>
         </td>
       </tr>
       <tr><td style="padding:8px 0 0;">
-        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">When a human picks up, I don&rsquo;t just transfer &mdash; I can hold a full AI-powered conversation via Synthflow integration, qualify the lead in real time, and hand off only when they&rsquo;re ready to buy. Full call transcripts delivered automatically after every conversation.</p>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Each voicemail is uniquely generated using the prospect&rsquo;s name and your campaign script. It does not sound like a broadcast &mdash; it sounds like a colleague who called specifically for them. Upload your own voice sample and every voicemail plays in your voice, not a generic one.</p>
       </td></tr>
     </table>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       <tr>
         <td style="vertical-align:top;padding:0 0 4px;">
-          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">CRM Integration Lead &mdash; HubSpot &amp; GoHighLevel</p>
-          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Solar &amp; Home Services &bull; Ongoing</p>
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Live Call Transfer &mdash; Sub-200ms Bridge</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Core Capability &bull; Available on All Plans</p>
         </td>
       </tr>
       <tr><td style="padding:8px 0 0;">
-        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Every completed call is logged to HubSpot, GoHighLevel, or Pipedrive automatically &mdash; no manual data entry. Google Sheets reporting available for teams that prefer spreadsheets. Zero data falls through the cracks.</p>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">When a human picks up, the call is bridged to your designated number in under 200 milliseconds. No delay, no dead air, no dropped context. Your team takes it from there &mdash; warm, ready, and never missing an opportunity.</p>
       </td></tr>
     </table>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:4px;">
       <tr>
         <td style="vertical-align:top;padding:0 0 4px;">
-          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">Gatekeeper Navigator &mdash; B2B Prospecting</p>
-          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Nationwide &bull; All Engagements</p>
+          <p style="margin:0;font-size:14px;color:#ffffff;font-weight:700;">CRM &amp; Workflow Integration</p>
+          <p style="margin:3px 0 0;font-size:11px;color:rgba(255,255,255,0.35);">Core Capability &bull; Available on All Plans</p>
         </td>
       </tr>
       <tr><td style="padding:8px 0 0;">
-        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">IVRs, auto-attendants, and receptionists are not obstacles &mdash; they&rsquo;re routing systems I&rsquo;m trained to navigate. I reach the decision-maker directly, without scripts that sound robotic, and without burning your human team on cold screening.</p>
+        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">Every completed call is logged automatically to HubSpot, GoHighLevel, Pipedrive, or Google Sheets. Webhooks are available for any custom workflow. No manual data entry, no missed records, no pipeline gaps.</p>
       </td></tr>
     </table>
   </td></tr>
@@ -246,20 +246,11 @@ def build_lead_confirmation_html(name, calendly_url=""):
       </tr>
       <tr>
         <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
+          <div style="width:6px;height:6px;background:rgba(255,200,0,0.6);border-radius:50%;margin-top:7px;"></div>
         </td>
         <td style="padding:0 0 16px 14px;vertical-align:top;">
-          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">AI Conversation via Synthflow Integration</p>
-          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">When activated, I hold the full conversation using AI &mdash; qualifying, answering objections, and booking meetings &mdash; before handing the call to your team. A complete transcript is available after every call.</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:0 0 16px;vertical-align:top;">
-          <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;margin-top:7px;"></div>
-        </td>
-        <td style="padding:0 0 16px 14px;vertical-align:top;">
-          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Gatekeeper &amp; IVR Navigation</p>
-          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">Auto-attendants, IVRs, and receptionists don&rsquo;t stop me. I navigate them to reach the decision-maker &mdash; without burning your human team on screening calls that go nowhere.</p>
+          <p style="margin:0 0 3px;font-size:14px;color:#ffffff;font-weight:600;">Gatekeeper &amp; IVR Navigation <span style="font-size:10px;font-weight:600;color:rgba(255,200,0,0.8);background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.25);border-radius:4px;padding:1px 6px;letter-spacing:0.5px;vertical-align:middle;margin-left:6px;">BETA &mdash; COMING SOON</span></p>
+          <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.75;">I will navigate auto-attendants, IVRs, and receptionists to reach the decision-maker directly &mdash; without burning your human team on screening calls that lead nowhere. Currently in beta and launching soon.</p>
         </td>
       </tr>
       <tr>
@@ -310,8 +301,8 @@ def build_lead_confirmation_html(name, calendly_url=""):
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 14px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
       <tr>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="220">Concurrent Lines</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">5 lines (Autodialer) &bull; 15 lines (Business) &mdash; up to 750+ calls/day</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="220">Parallel Dialing Lines</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">3 simultaneous lines (Autodialer) &bull; 10 simultaneous lines (Business) &mdash; customizable</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -327,11 +318,6 @@ def build_lead_confirmation_html(name, calendly_url=""):
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">Live Transfer Speed</td>
         <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Sub-200ms bridge to your team when a human answers</td>
-      </tr>
-      <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
-      <tr>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;">AI Conversations</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);">Synthflow integration &mdash; full AI call handling with post-call transcript</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -416,7 +402,7 @@ def build_lead_confirmation_html(name, calendly_url=""):
     <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
       <tr>
         <td style="padding:8px 0;color:rgba(255,255,255,0.8);font-weight:600;" width="200">Monthly Retainer</td>
-        <td style="padding:8px 0;color:rgba(255,255,255,0.5);"><strong style="color:rgba(255,255,255,0.8);">Autodialer &mdash; $69/mo</strong> (or $690/yr): 1 Alex instance, 5 concurrent lines, 3 phone numbers included, max 10. Core features: AMD, Humana Voice voicemails, live transfer, gatekeeper navigation.<br><br><strong style="color:rgba(255,255,255,0.8);">Business &mdash; $169/mo</strong> (or $1,690/yr): 3 Alex instances, 15 concurrent lines, 10 phone numbers included, max 30. Adds call recording, multi-campaign, advanced analytics, and voice cloning.</td>
+        <td style="padding:8px 0;color:rgba(255,255,255,0.5);"><strong style="color:rgba(255,255,255,0.8);">Autodialer &mdash; $69/mo</strong> (or $690/yr annual): 3 parallel dialing lines, 3 phone numbers included. Features: AMD, Humana Voice voicemail drops, live transfer. Plan is customizable &mdash; additional numbers available at $1/mo each (up to 10 total).<br><br><strong style="color:rgba(255,255,255,0.8);">Business &mdash; $169/mo</strong> (or $1,690/yr annual): 10 parallel dialing lines, 10 phone numbers included. Adds call recording &amp; transcription, multiple simultaneous campaigns, advanced analytics, and voice cloning. Customizable up to 30 numbers. Plus usage &mdash; per connected call.</td>
       </tr>
       <tr><td colspan="2" style="padding:0;"><hr style="border:none;border-top:1px solid rgba(255,255,255,0.04);margin:0;"></td></tr>
       <tr>
@@ -451,14 +437,7 @@ def build_lead_confirmation_html(name, calendly_url=""):
     </table>
   </td></tr>
 
-  <tr><td style="padding:0 48px 36px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:10px;">
-      <tr><td style="padding:20px 24px;text-align:center;">
-        <p style="margin:0 0 4px;font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:2px;font-weight:600;">References</p>
-        <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.55);line-height:1.8;">Currently serving <strong style="color:rgba(255,255,255,0.8);">200+ companies</strong> across Real Estate, Solar, Insurance, Home Services, and Financial Services. Available upon request.</p>
-      </td></tr>
-    </table>
-  </td></tr>
+  <tr><td style="padding:0 48px 36px;"></td></tr>
 
 </table>
 </td></tr>
@@ -559,7 +538,7 @@ def send_lead_confirmation_async(to_email, name):
             cal_url = _get_calendly_url()
             html = build_lead_confirmation_html(name, calendly_url=cal_url)
             send_email(to_email, f"Hi {first_name} — Alex's resume, as requested", html,
-                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I am Alex — a digital outbound employee deployed by Everyday Digital Solutions.\n\nHere is what I do:\n\n- Real-time AMD: I detect whether each call reaches a human or a machine the moment it connects\n- Humana Voice voicemail drops: AI-personalized per prospect — not a blast, a message that sounds like I did my homework\n- Instant live transfer: When a human answers, your team is bridged in under 200ms\n- Gatekeeper & IVR navigation: I reach decision-makers, not voiceboxes\n- AI conversations via Synthflow: I can hold the full call — qualify, handle objections, and hand off only when they're ready\n- CRM sync: HubSpot, GoHighLevel, Pipedrive, Google Sheets — logged automatically after every call\n- 50+ languages — no interpreter fees, no accent barriers\n- 24/7/365 — no sick days, no PTO, no training period\n\nPlans:\n- Autodialer: $69/mo ($690/yr) — 1 instance, 5 concurrent lines, 3 numbers included\n- Business: $169/mo ($1,690/yr) — 3 instances, 15 concurrent lines, 10 numbers included\n\nCancel anytime. No contracts.\n\nBook a 15-minute call to get started: {cal_url}\n\nRespectfully,\nAlex\nDigital Outbound Associate — Open Humana\nEveryday Digital Solutions")
+                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I am Alex — a digital outbound employee deployed by Everyday Digital Solutions.\n\nWhat I do:\n\n- Outbound auto-dialing: 3 parallel lines (Autodialer) or 10 parallel lines (Business), running continuously\n- Real-time AMD: Every call is assessed instantly — machine or human, handled correctly every time\n- Humana Voice voicemail drops: Each voicemail is AI-generated using the prospect's name and your script\n- Instant live transfer: Human answers get bridged to your team in under 200ms\n- CRM sync: Every call logged automatically to HubSpot, GoHighLevel, Pipedrive, or Google Sheets\n- 50+ languages — no interpreter fees, no accent barriers\n- 24/7/365 — no sick days, no PTO, no training period\n- Gatekeeper & IVR navigation: Beta feature, launching soon\n\nPlans:\n- Autodialer: $69/mo ($690/yr) — 3 parallel lines, 3 numbers included, customizable\n- Business: $169/mo ($1,690/yr) — 10 parallel lines, 10 numbers included, customizable\n- Plus usage per connected call. Cancel anytime. No contracts.\n\nBook a 15-minute call to get started: {cal_url}\n\nRespectfully,\nAlex\nDigital Outbound Associate — Open Humana\nEveryday Digital Solutions")
         except Exception as e:
             logger.exception(f"Failed to send lead confirmation to {to_email}: {e}")
     threading.Thread(target=_send, daemon=True).start()
