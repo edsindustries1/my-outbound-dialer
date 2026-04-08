@@ -11,6 +11,16 @@ logger = logging.getLogger("voicemail_app")
 
 BASE_URL = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
 
+CALENDLY_DEFAULT = "https://calendly.com/openhumana/30min"
+
+
+def _get_calendly_url():
+    try:
+        from models import AppConfig
+        return AppConfig.get("calendly_url", CALENDLY_DEFAULT) or CALENDLY_DEFAULT
+    except Exception:
+        return CALENDLY_DEFAULT
+
 
 def _get_base_url():
     url = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
@@ -81,8 +91,9 @@ def build_invite_html(invite_token, grant_free_access=False):
 </html>"""
 
 
-def build_lead_confirmation_html(name):
+def build_lead_confirmation_html(name, calendly_url=""):
     base = _get_base_url()
+    calendly_url = calendly_url or CALENDLY_DEFAULT
     first_name = name.split()[0] if name else "Hiring Manager"
     return f"""<!DOCTYPE html>
 <html>
@@ -437,12 +448,18 @@ def build_lead_confirmation_html(name):
 </table>
 </td></tr>
 
-<tr><td style="padding:32px 52px 0;text-align:center;background:#ffffff;">
+<tr><td style="padding:32px 52px 16px;text-align:center;background:#ffffff;">
   <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111;">Ready to bring Alex on board?</p>
-  <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.7;">Our team will reach out within 24 hours to discuss deployment. In the meantime, you can explore the platform or schedule Alex&rsquo;s first shift today.</p>
+  <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.7;">Our team will reach out within 24 hours to discuss deployment. Or skip the wait — book a quick 15-minute call right now and we&rsquo;ll get Alex deployed for your business today.</p>
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">
+    <tr><td style="background:#0055ff;border-radius:10px;">
+      <a href="{calendly_url}" style="display:inline-block;padding:16px 44px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">&#128197; Book a 15-Min Meeting</a>
+    </td></tr>
+  </table>
+  <p style="margin:0 0 16px;font-size:12px;color:#aaa;">or explore plans below</p>
   <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
     <tr><td style="background:#0a0a1a;border-radius:10px;">
-      <a href="{base}/pricing" style="display:inline-block;padding:16px 48px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">Hire Alex Now &rarr;</a>
+      <a href="{base}/pricing" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">Hire Alex Now &rarr;</a>
     </td></tr>
   </table>
 </td></tr>
@@ -524,16 +541,18 @@ def send_lead_confirmation_async(to_email, name):
     def _send():
         try:
             first_name = name.split()[0] if name else "Hiring Manager"
-            html = build_lead_confirmation_html(name)
+            cal_url = _get_calendly_url()
+            html = build_lead_confirmation_html(name, calendly_url=cal_url)
             send_email(to_email, f"Hi {first_name} — Alex's resume, as requested", html,
-                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops (Humana Voice)\n- 12+ touchpoints per lead\n\nStarting from $69/mo (Starter) or $169/mo (Sales Floor). No benefits required. No PTO. No training period.\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
+                       f"Dear {first_name},\n\nThank you for your interest in hiring through Open Humana. I have reviewed your inquiry and I am formally submitting my credentials for immediate consideration.\n\nI am Alex, Senior Digital Associate and BDR Specialist. I currently serve over 200 companies across Real Estate, Solar, Insurance, Home Services, and Financial Services.\n\nKey highlights:\n- 500+ personalized dials per day\n- 50+ languages fluency\n- 24/7/365 availability with zero downtime\n- Sub-200ms live call transfer\n- AI-personalized voicemail drops (Humana Voice)\n- 12+ touchpoints per lead\n\nStarting from $69/mo (Starter) or $169/mo (Sales Floor). No benefits required. No PTO. No training period.\n\nBook a 15-minute meeting with us: {cal_url}\n\nOur team will reach out within 24 hours to discuss deployment.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
         except Exception as e:
             logger.exception(f"Failed to send lead confirmation to {to_email}: {e}")
     threading.Thread(target=_send, daemon=True).start()
 
 
-def build_demo_confirmation_html(name):
+def build_demo_confirmation_html(name, calendly_url=""):
     base = _get_base_url()
+    calendly_url = calendly_url or CALENDLY_DEFAULT
     first_name = name.split()[0] if name else "there"
     return f"""<!DOCTYPE html>
 <html>
@@ -592,7 +611,13 @@ def build_demo_confirmation_html(name):
   </table>
 </td></tr>
 
-<tr><td style="padding:0 52px 32px;background:#ffffff;" align="center">
+<tr><td style="padding:0 52px 8px;background:#ffffff;" align="center">
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;">
+    <tr><td style="background:#0055ff;border-radius:8px;">
+      <a href="{calendly_url}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:-0.01em;">&#128197; Book a 15-Min Meeting</a>
+    </td></tr>
+  </table>
+  <p style="margin:0 0 12px;font-size:12px;color:#aaa;">or visit the platform</p>
   <a href="{base}" style="display:inline-block;padding:14px 40px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;letter-spacing:-0.01em;">Visit Open Humana</a>
 </td></tr>
 
@@ -618,9 +643,10 @@ def send_demo_confirmation_async(to_email, name):
     def _send():
         try:
             first_name = name.split()[0] if name else "there"
-            html = build_demo_confirmation_html(name)
+            cal_url = _get_calendly_url()
+            html = build_demo_confirmation_html(name, calendly_url=cal_url)
             send_email(to_email, f"Hi {first_name} — Your Open Humana Demo is Confirmed", html,
-                       f"Dear {first_name},\n\nThank you for showing your interest in Open Humana. We've received your demo request and one of our digital employees will reach out to you shortly.\n\nKeep an eye on your inbox and phone — when we reach out, it will feel like nothing you've experienced before.\n\nWhat to expect from your demo:\n1. Live outbound call demonstration using AI voice\n2. AI-personalized voicemail drop — hear it yourself\n3. Live call transfer directly to your phone\n4. Dashboard walkthrough and campaign setup\n\nWe'll be in touch shortly.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
+                       f"Dear {first_name},\n\nThank you for showing your interest in Open Humana. We've received your demo request and one of our digital employees will reach out to you shortly.\n\nKeep an eye on your inbox and phone — when we reach out, it will feel like nothing you've experienced before.\n\nWhat to expect from your demo:\n1. Live outbound call demonstration using AI voice\n2. AI-personalized voicemail drop — hear it yourself\n3. Live call transfer directly to your phone\n4. Dashboard walkthrough and campaign setup\n\nBook a 15-minute meeting with us right now: {cal_url}\n\nWe'll be in touch shortly.\n\nRespectfully,\nAlex\nSenior Digital Associate — Open Humana")
         except Exception as e:
             logger.exception(f"Failed to send demo confirmation to {to_email}: {e}")
     threading.Thread(target=_send, daemon=True).start()
