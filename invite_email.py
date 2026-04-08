@@ -442,20 +442,15 @@ def build_lead_confirmation_html(name, calendly_url=""):
 </table>
 </td></tr>
 
-<tr><td style="padding:32px 52px 16px;text-align:center;background:#ffffff;">
+<tr><td style="padding:32px 52px 28px;text-align:center;background:#ffffff;">
   <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#111;">Ready to bring Alex on board?</p>
-  <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.7;">Our team will reach out within 24 hours to discuss deployment. Or skip the wait — book a quick 15-minute call right now and we&rsquo;ll get Alex deployed for your business today.</p>
-  <table cellpadding="0" cellspacing="0" style="margin:0 auto 14px;">
-    <tr><td style="background:#0055ff;border-radius:10px;">
-      <a href="{calendly_url}" style="display:inline-block;padding:16px 44px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">&#128197; Book a 15-Min Meeting</a>
-    </td></tr>
-  </table>
-  <p style="margin:0 0 16px;font-size:12px;color:#aaa;">or explore plans below</p>
-  <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+  <p style="margin:0 0 20px;font-size:14px;color:#666;line-height:1.7;">If you have questions, simply reply to this email. To get started or learn more about plans, visit the link below.</p>
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto 20px;">
     <tr><td style="background:#0a0a1a;border-radius:10px;">
-      <a href="{base}/pricing" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">Hire Alex Now &rarr;</a>
+      <a href="{base}/pricing" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:0.3px;">View Plans &amp; Get Started</a>
     </td></tr>
   </table>
+  <p style="margin:0;font-size:13px;color:#888;">Prefer a call first? <a href="{calendly_url}" style="color:#6366f1;text-decoration:none;font-weight:600;">Schedule a 15-minute intro</a></p>
 </td></tr>
 
 <tr><td style="padding:32px 52px;text-align:center;background:#ffffff;">
@@ -605,14 +600,13 @@ def build_demo_confirmation_html(name, calendly_url=""):
   </table>
 </td></tr>
 
-<tr><td style="padding:0 52px 8px;background:#ffffff;" align="center">
-  <table cellpadding="0" cellspacing="0" style="margin:0 auto 12px;">
-    <tr><td style="background:#0055ff;border-radius:8px;">
-      <a href="{calendly_url}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:-0.01em;">&#128197; Book a 15-Min Meeting</a>
+<tr><td style="padding:0 52px 24px;background:#ffffff;" align="center">
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+    <tr><td style="background:#111827;border-radius:8px;">
+      <a href="{base}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:-0.01em;">Visit Open Humana</a>
     </td></tr>
   </table>
-  <p style="margin:0 0 12px;font-size:12px;color:#aaa;">or visit the platform</p>
-  <a href="{base}" style="display:inline-block;padding:14px 40px;background:#111827;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:700;font-size:15px;letter-spacing:-0.01em;">Visit Open Humana</a>
+  <p style="margin:0;font-size:13px;color:#888;">Want to talk first? <a href="{calendly_url}" style="color:#6366f1;text-decoration:none;font-weight:600;">Book a 15-minute intro call</a></p>
 </td></tr>
 
 <tr><td style="padding:0 52px 32px;background:#ffffff;">

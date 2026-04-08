@@ -28,13 +28,8 @@ def _build_welcome_html(user_name, user_email, calendly_url=""):
     calendly_btn = ""
     if calendly_url:
         calendly_btn = f"""
-<tr><td style="padding:0 52px 24px;text-align:center;background:#ffffff;">
-  <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
-    <tr><td style="background:#0055ff;border-radius:10px;">
-      <a href="{calendly_url}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:0.3px;">&#128197; Book a 15-Min Meeting</a>
-    </td></tr>
-  </table>
-  <p style="margin:10px 0 0;font-size:11px;color:#aaa;font-family:'Helvetica Neue',Arial,sans-serif;">or click below to review the full onboarding agreement</p>
+<tr><td style="padding:0 52px 8px;text-align:center;background:#ffffff;">
+  <p style="margin:0;font-size:13px;color:#888;font-family:'Helvetica Neue',Arial,sans-serif;">Prefer to talk first? <a href="{calendly_url}" style="color:#6366f1;text-decoration:none;font-weight:600;font-family:'Helvetica Neue',Arial,sans-serif;">Schedule a 15-minute intro call</a></p>
 </td></tr>"""
     return f"""<!DOCTYPE html>
 <html>
