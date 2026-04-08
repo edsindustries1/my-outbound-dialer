@@ -12,12 +12,15 @@ logger = logging.getLogger("voicemail_app")
 BASE_URL = "https://voice-blast.replit.app"
 
 
+CALENDLY_DEFAULT = "https://calendly.com/openhumana/30min"
+
+
 def _get_calendly_url():
     try:
         from models import AppConfig
-        return AppConfig.get("calendly_url", "") or ""
+        return AppConfig.get("calendly_url", CALENDLY_DEFAULT) or CALENDLY_DEFAULT
     except Exception:
-        return ""
+        return CALENDLY_DEFAULT
 
 
 def _build_welcome_html(user_name, user_email, calendly_url=""):
