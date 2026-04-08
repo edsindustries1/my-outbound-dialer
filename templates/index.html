@@ -1750,6 +1750,30 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- ── CALENDLY BOOKING LINK ── -->
+                        <div class="intg-panel" id="intg-calendly-panel" style="border-bottom:none;">
+                            <div class="intg-panel-header">
+                                <div class="intg-logo" style="background:linear-gradient(135deg,#006bff,#00a2ff);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                </div>
+                                <div class="intg-panel-meta">
+                                    <div class="intg-panel-title" style="color:#111;font-weight:700;">Calendly Booking Link</div>
+                                    <div class="intg-panel-desc">Paste your Calendly URL — it will appear as a "Book a Meeting" button in every welcome email sent to new signups.</div>
+                                </div>
+                                <span class="intg-badge" id="calendly-badge">—</span>
+                            </div>
+                            <div class="intg-body">
+                                <div class="pvm-section" style="margin-top:0;">
+                                    <label>Your Calendly URL</label>
+                                    <input type="url" id="calendlyUrl" class="gads-input" placeholder="https://calendly.com/yourname/30min">
+                                </div>
+                                <div style="display:flex;gap:8px;margin-top:10px;">
+                                    <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" onclick="saveCalendlyUrl()">Save</button>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="clearCalendlyUrl()">Clear</button>
+                                </div>
+                                <div id="calendlyMsg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                            </div>
+                        </div>
                         <!-- ── SYNTHFLOW AI DIALER ── -->
                         <div class="intg-panel" id="intg-synthflow-panel" style="border-bottom:none;">
                             <div class="intg-panel-header">
@@ -7593,6 +7617,12 @@
                 _setChk('gsheetsEnabled2', !!gs.enabled);
             }
 
+            // ── Calendly ──
+            var cal = d.calendly || {};
+            var calSet = !!cal.url;
+            _badge('calendly-badge', calSet ? 'Set · Active' : 'Not set', calSet ? 'active' : 'inactive');
+            if (calSet) { _setVal('calendlyUrl', cal.url); }
+
             // ── Synthflow ──
             var sf = d.synthflow || {};
             var sfConn = sf.connected;
@@ -7783,6 +7813,26 @@
         apiFetch('/api/integrations/google-sheets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ disconnect: true }) })
             .then(function(){ loadIntegrationStatus(); })
             .catch(function(){});
+    };
+
+    // ── Calendly ──
+    window.saveCalendlyUrl = function() {
+        var url = (document.getElementById('calendlyUrl') || {}).value || '';
+        if (url && !url.startsWith('http')) { _intgMsg('calendlyMsg', 'Please enter a valid URL starting with https://', false); return; }
+        _intgMsg('calendlyMsg', 'Saving…', true);
+        apiFetch('/api/settings/calendly-url', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url: url }) })
+            .then(function(r){ return r.json(); })
+            .then(function(d) {
+                if (d.error) { _intgMsg('calendlyMsg', 'Error: ' + d.error, false); return; }
+                _intgMsg('calendlyMsg', url ? 'Calendly link saved — it will appear in all welcome emails.' : 'Cleared.', true);
+                loadIntegrationStatus();
+            })
+            .catch(function(e){ if (e.message === 'auth') return; _intgMsg('calendlyMsg', 'Save failed', false); });
+    };
+    window.clearCalendlyUrl = function() {
+        if (!confirm('Remove the Calendly link from welcome emails?')) return;
+        document.getElementById('calendlyUrl').value = '';
+        window.saveCalendlyUrl();
     };
 
     // ── Page-2 bridge functions (Integrations dedicated page) ──

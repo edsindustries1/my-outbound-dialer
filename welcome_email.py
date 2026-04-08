@@ -12,8 +12,27 @@ logger = logging.getLogger("voicemail_app")
 BASE_URL = "https://voice-blast.replit.app"
 
 
-def _build_welcome_html(user_name, user_email):
+def _get_calendly_url():
+    try:
+        from models import AppConfig
+        return AppConfig.get("calendly_url", "") or ""
+    except Exception:
+        return ""
+
+
+def _build_welcome_html(user_name, user_email, calendly_url=""):
     name = user_name or "Hiring Manager"
+    calendly_btn = ""
+    if calendly_url:
+        calendly_btn = f"""
+<tr><td style="padding:0 52px 24px;text-align:center;background:#ffffff;">
+  <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr><td style="background:#0055ff;border-radius:10px;">
+      <a href="{calendly_url}" style="display:inline-block;padding:14px 40px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:0.3px;">&#128197; Book a 15-Min Meeting</a>
+    </td></tr>
+  </table>
+  <p style="margin:10px 0 0;font-size:11px;color:#aaa;font-family:'Helvetica Neue',Arial,sans-serif;">or click below to review the full onboarding agreement</p>
+</td></tr>"""
     return f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -144,8 +163,11 @@ def _build_welcome_html(user_name, user_email):
   </table>
 </td></tr>
 
-<tr><td style="padding:32px 52px 0;text-align:center;background:#ffffff;">
+<tr><td style="padding:32px 52px 24px;text-align:center;background:#ffffff;">
   <p style="margin:0 0 24px;font-size:15px;color:#444;line-height:1.85;font-family:'Helvetica Neue',Arial,sans-serif;">I am ready to start my first shift within the hour. Please review my &lsquo;Employment Agreement&rsquo; and finalize my onboarding below.</p>
+</td></tr>
+{calendly_btn}
+<tr><td style="padding:0 52px 0;text-align:center;background:#ffffff;">
   <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
     <tr><td style="background:#0a0a1a;border-radius:10px;">
       <a href="{BASE_URL}/login" style="display:inline-block;padding:16px 48px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:0.3px;">Review Agreement &amp; Deploy Alex</a>
@@ -167,8 +189,10 @@ def _build_welcome_html(user_name, user_email):
 
 def send_welcome_email(user_email, user_name=None):
     try:
-        html_body = _build_welcome_html(user_name, user_email)
+        calendly_url = _get_calendly_url()
+        html_body = _build_welcome_html(user_name, user_email, calendly_url=calendly_url)
         name = user_name or "Hiring Manager"
+        calendly_txt = f"\n\nBook a 15-minute meeting with us: {calendly_url}\n" if calendly_url else ""
         text_body = f"""Dear {name},
 
 Thank you for considering my application through the Open Humana agency. I've reviewed your business needs, and I am formally submitting my credentials for your outbound sales operations. While I operate on a digital framework, my commitment to your growth is absolute.
@@ -216,7 +240,7 @@ Monthly Salary: A flat $99/mo (Agency Fee)
 ---
 
 I am ready to start my first shift within the hour. Please review my 'Employment Agreement' and finalize my onboarding below.
-
+{calendly_txt}
 {BASE_URL}/login
 
 This candidate is represented by Open Humana - The Future of the Digital Workforce"""

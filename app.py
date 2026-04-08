@@ -3155,7 +3155,32 @@ def api_gmail_status():
 @login_required
 def api_integrations_status():
     from integrations import integration_status
-    return jsonify(integration_status(current_user.id))
+    data = integration_status(current_user.id)
+    calendly_url = AppConfig.get("calendly_url", "")
+    data["calendly"] = {"url": calendly_url}
+    return jsonify(data)
+
+
+@app.route("/api/settings/calendly-url", methods=["POST"])
+@login_required
+def api_settings_calendly_url_save():
+    if getattr(current_user, "role", "user") != "admin":
+        return jsonify({"error": "Admin only"}), 403
+    data = request.get_json() or {}
+    url  = (data.get("url") or "").strip()
+    if url and not url.startswith("http"):
+        return jsonify({"error": "Invalid URL"}), 400
+    if url:
+        AppConfig.set("calendly_url", url)
+    else:
+        try:
+            row = AppConfig.query.filter_by(key="calendly_url").first()
+            if row:
+                db.session.delete(row)
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return jsonify({"ok": True})
 
 
 # ── Outbound Webhooks ──────────────────────────────────────────────────────────
