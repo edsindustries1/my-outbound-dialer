@@ -5592,7 +5592,8 @@ def _handle_webhook():
         hangup_source = payload.get("hangup_source", "unknown")
         sip_code = payload.get("sip_hangup_cause", "")
 
-        if is_active_transfer(call_control_id):
+        _was_active_transfer = is_active_transfer(call_control_id)
+        if _was_active_transfer:
             logger.info(f"Transferred call {call_control_id} hung up, resuming campaign")
             resume_after_transfer(call_control_id, user_id=webhook_user_id)
 
@@ -5604,7 +5605,10 @@ def _handle_webhook():
             current_status = state.get("status", "")
             updates = {"hangup_cause": hangup_cause}
 
-            if current_status not in ("transferred", "voicemail_complete"):
+            if current_status == "transferred" and _was_active_transfer:
+                updates["status_description"] = "Answered by human — transferred (campaign resumed)"
+                updates["status_color"] = "green"
+            elif current_status not in ("transferred", "voicemail_complete"):
                 updates["status"] = "hangup"
                 ring_dur = ""
                 if state.get("ring_start"):
