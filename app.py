@@ -1204,7 +1204,7 @@ def _bill_successful_call(call_control_id, user_id, amount=CALL_COST):
         if state.get("billed"):
             return
         status = state.get("status", "")
-        if status not in ("transferred", "voicemail_complete"):
+        if status not in ("transferred", "transfer_complete", "voicemail_complete"):
             return
         user = User.query.filter_by(id=user_id).first()
         if not user:
@@ -5606,6 +5606,7 @@ def _handle_webhook():
             updates = {"hangup_cause": hangup_cause}
 
             if current_status == "transferred" and _was_active_transfer:
+                updates["status"] = "transfer_complete"
                 updates["status_description"] = "Answered by human — transferred (campaign resumed)"
                 updates["status_color"] = "green"
             elif current_status not in ("transferred", "voicemail_complete"):
