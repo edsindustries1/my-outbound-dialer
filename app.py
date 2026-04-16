@@ -5363,6 +5363,11 @@ def _handle_webhook():
                     "please listen carefully as our",
                     "to speak to a representative",
                     "to speak with a representative",
+                    # Common IVR greeting openers (no human would say these first)
+                    "thank you for calling",
+                    "thanks for calling",
+                    "your call is important",
+                    "your call is very important",
                     # Fax/modem tones transcribed as text
                     "beep beep beep", "beep beep",
                 ]
