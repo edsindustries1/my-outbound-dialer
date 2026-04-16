@@ -4772,7 +4772,7 @@ def _handle_webhook():
 
         if result in ("human", "human_residence", "human_business"):
             update_call_state(call_control_id, machine_detected=False, status="human_detected",
-                              amd_result=result, status_description="Human detected", status_color="blue")
+                              amd_result=result, status_description="Human detected — verifying...", status_color="blue")
             try:
                 start_transcription(call_control_id)
             except Exception as e:
@@ -4800,33 +4800,75 @@ def _handle_webhook():
                 return "", 200
             # ---- End Gatekeeper Navigator ----
 
-            if transfer_num and not state.get("transferred") and not state.get("voicemail_dropped") and claim_call_action(call_control_id, "transfer") and mark_transferred(call_control_id):
-                logger.info(f"[TRANSFER] {call_control_id} | HUMAN detected, transferring to {transfer_num} (caller ID: {customer_num})")
-                if state.get("quick_call") and webhook_user_id:
-                    _qc_cid = state.get("quick_call_crm_contact_id", "")
-                    if _qc_cid:
-                        set_quick_call_status(webhook_user_id, _qc_cid, "connected",
-                                              call_control_id=call_control_id,
-                                              crm_source=state.get("quick_call_crm_source", ""))
-                try:
-                    success = transfer_call(call_control_id, transfer_num, customer_number=customer_num)
-                except Exception as e:
-                    logger.error(f"[TRANSFER ERROR] {call_control_id} | {e}")
-                    success = False
-                if success:
-                    pause_for_transfer(call_control_id, user_id=webhook_user_id)
-                    update_call_state(call_control_id, status="transferred",
-                                      status_description="Answered by human - transferred (campaign paused)", status_color="green")
-                else:
-                    logger.error(f"[TRANSFER FAILED] {call_control_id} | hanging up")
-                    update_call_state(call_control_id, status="transfer_failed",
-                                      status_description="Transfer failed", status_color="red")
-                    hangup_call(call_control_id)
-            elif not transfer_num:
+            if not transfer_num:
                 logger.warning(f"[NO TRANSFER] {call_control_id} | HUMAN detected but no transfer number configured")
                 update_call_state(call_control_id, status="human_no_transfer",
                                   status_description="Human answered - no transfer number", status_color="yellow")
                 hangup_call(call_control_id)
+            else:
+                # ── Human Verification Window (4 seconds) ──────────────────────────────
+                # Telnyx AMD occasionally misclassifies IVR auto-attendants, AI assistants,
+                # and fax/modem lines as "human." Instead of bridging immediately, we open
+                # a 4-second listening window. Live transcription runs during this window:
+                # • If IVR/fax patterns are detected → hang up (do NOT transfer)
+                # • If window expires cleanly → proceed with transfer as normal
+                # Real humans typically say nothing in the first 1–2s, so the window costs
+                # at most 4s of ring time for clean human answers.
+                update_call_state(call_control_id,
+                                  human_verification=True,
+                                  human_verification_transfer_num=transfer_num,
+                                  human_verification_customer_num=customer_num,
+                                  status_description="Human detected — verifying (4s)...", status_color="blue")
+                _hv_cid = call_control_id
+                _hv_transfer = transfer_num
+                _hv_cust = customer_num
+                _hv_uid = webhook_user_id
+                _HV_TERMINAL = {"transferred", "voicemail_complete", "hangup", "voicemail_playing", "ivr_rejected"}
+
+                def _human_verification_callback(ccid, t_num, cust, uid):
+                    _amd_timers.pop(f"hv_{ccid}", None)
+                    st = get_call_state(ccid)
+                    if not st or st.get("transferred") or st.get("voicemail_dropped") or st.get("status") in _HV_TERMINAL or st.get("ivr_rejected"):
+                        logger.info(f"[HV] {ccid} | Verification window elapsed — call already handled, skipping")
+                        return
+                    update_call_state(ccid, human_verification=False)
+                    if claim_call_action(ccid, "transfer") and mark_transferred(ccid):
+                        logger.info(f"[HV] {ccid} | Verification passed — transferring to {t_num} (caller ID: {cust})")
+                        if st.get("quick_call") and uid:
+                            _qc_contact = st.get("quick_call_crm_contact_id", "")
+                            if _qc_contact:
+                                try:
+                                    set_quick_call_status(uid, _qc_contact, "connected",
+                                                          call_control_id=ccid,
+                                                          crm_source=st.get("quick_call_crm_source", ""))
+                                except Exception:
+                                    pass
+                        try:
+                            success = transfer_call(ccid, t_num, customer_number=cust)
+                        except Exception as e:
+                            logger.error(f"[TRANSFER ERROR] {ccid} | {e}")
+                            success = False
+                        if success:
+                            pause_for_transfer(ccid, user_id=uid)
+                            update_call_state(ccid, status="transferred",
+                                              status_description="Answered by human - transferred (campaign paused)", status_color="green")
+                        else:
+                            logger.error(f"[TRANSFER FAILED] {ccid} | hanging up")
+                            update_call_state(ccid, status="transfer_failed",
+                                              status_description="Transfer failed", status_color="red")
+                            hangup_call(ccid)
+                    else:
+                        logger.info(f"[HV] {ccid} | claim_call_action failed — call already actioned")
+
+                _prev_hv = _amd_timers.pop(f"hv_{call_control_id}", None)
+                if _prev_hv:
+                    _prev_hv.cancel()
+                hv_timer = threading.Timer(4.0, _human_verification_callback,
+                                           args=[_hv_cid, _hv_transfer, _hv_cust, _hv_uid])
+                hv_timer.daemon = True
+                _amd_timers[f"hv_{call_control_id}"] = hv_timer
+                hv_timer.start()
+                logger.info(f"[HV] {call_control_id} | 4s human verification window started — listening for IVR/fax patterns")
 
         elif result == "fax":
             update_call_state(call_control_id, machine_detected=True, status="machine_detected",
@@ -4869,11 +4911,13 @@ def _handle_webhook():
                 except Exception as e:
                     logger.error(f"[LAYER2] {call_control_id} | Failed to start transcription on machine: {e}")
 
-                # ── LAYER 3: 3-second safety-net timer (Kixie/PhoneBurner standard) ──
-                # AMD fires MID-GREETING. By T+3s the greeting is finishing and beep is
-                # imminent or has just fired. Drop now: any pre-beep audio is discarded
-                # by the VM system; it records cleanly from the beep point forward.
-                # This prevents the VM system from hanging up due to post-beep silence.
+                # ── LAYER 3: 18-second last-resort safety timer ───────────────────────
+                # AMD fires MID-GREETING (typically 2–5s in). Layer 1 (beep event) and
+                # Layer 2 (keyword detection) are the primary triggers. This timer is a
+                # final fallback: if neither fires within 18s the greeting has certainly
+                # ended and we drop rather than silently waste the call.
+                # 18s gives the entire typical VM greeting (5–15s) + several extra seconds
+                # of margin so we NEVER drop before the beep.
                 _vm_safe_url = audio_url
                 _vm_safe_pvm = is_personalized
                 _vm_safe_cust = customer_number
@@ -4890,8 +4934,8 @@ def _handle_webhook():
                             and not st.get("transferred")
                             and st.get("machine_detected")
                             and st.get("status") not in _TERMINAL_STATUSES):
-                        logger.info(f"[LAYER3] {ccid} | 3s safety timer fired — dropping voicemail now (Kixie/PhoneBurner method)")
-                        update_call_state(ccid, status_description="Dropping voicemail (safety timer)", status_color="blue")
+                        logger.info(f"[LAYER3] {ccid} | 18s safety timer fired — dropping voicemail (beep event never arrived)")
+                        update_call_state(ccid, status_description="Dropping voicemail (safety timer — no beep detected)", status_color="blue")
                         _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
                     else:
                         logger.info(f"[LAYER3] {ccid} | Safety timer fired but call already handled (status={st.get('status') if st else 'gone'}), skipping")
@@ -4900,12 +4944,12 @@ def _handle_webhook():
                 _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
                 if _prev_safe:
                     _prev_safe.cancel()
-                vm_safety_t = threading.Timer(3.0, _vm_safety_fallback,
+                vm_safety_t = threading.Timer(18.0, _vm_safety_fallback,
                                               args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
                 vm_safety_t.daemon = True
                 _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
                 vm_safety_t.start()
-                logger.info(f"[LAYER3] {call_control_id} | 3s safety fallback timer started (Kixie/PhoneBurner standard)")
+                logger.info(f"[LAYER3] {call_control_id} | 18s last-resort safety timer started (Layer 1/2 are primary triggers)")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -5237,8 +5281,14 @@ def _handle_webhook():
 
                 if (is_high_confidence or is_medium_confidence) and state.get("vm_pending_audio_url") and not state.get("voicemail_confirmed"):
                     confidence = "HIGH" if is_high_confidence else "MEDIUM"
-                    delay = 0.5 if is_high_confidence else 1.5
-                    logger.info(f"[LAYER2] {call_control_id} | VM keywords [{confidence}] heard: '{transcript_text[:100]}' — dropping in {delay}s if no beep fires")
+                    # High-confidence = end-of-greeting phrase (e.g. "at the tone").
+                    # The actual beep arrives 2–4s AFTER these words are spoken, so we
+                    # wait 3s before falling back to a forced drop. This ensures we never
+                    # start the voicemail before the beep even when Layer 1 (beep event)
+                    # doesn't fire. Medium-confidence = mid-greeting phrase; beep is
+                    # further away, so we give 5s.
+                    delay = 3.0 if is_high_confidence else 5.0
+                    logger.info(f"[LAYER2] {call_control_id} | VM keywords [{confidence}] heard: '{transcript_text[:100]}' — dropping in {delay:.0f}s if no beep fires")
                     update_call_state(call_control_id, voicemail_confirmed=True,
                                       status_description=f"Voicemail keywords heard [{confidence}] — dropping in {delay:.0f}s", status_color="blue")
 
@@ -5277,6 +5327,58 @@ def _handle_webhook():
                     vm_kw_t.daemon = True
                     _amd_timers[f"vm_kw_{call_control_id}"] = vm_kw_t
                     vm_kw_t.start()
+
+            # ── Human Verification Window: IVR/fax/AI pattern detection ─────────────
+            # When AMD returned "human", we open a 4-second verification window before
+            # bridging the live agent. If transcription picks up IVR or fax signatures
+            # during that window, we cancel the pending transfer and hang up cleanly.
+            # This prevents fax tones, auto-attendants, and AI assistants from consuming
+            # a live-transfer slot.
+            _ivr_check_lower = transcript_text.lower()
+            if (state and state.get("human_verification")
+                    and not state.get("voicemail_dropped")
+                    and not state.get("transferred")
+                    and not state.get("ivr_rejected")):
+                _IVR_REJECT_PATTERNS = [
+                    # Key-press prompts — definitive IVR signature
+                    "press 1", "press 2", "press 3", "press 4", "press 5",
+                    "press 6", "press 7", "press 8", "press 9", "press 0",
+                    "press one", "press two", "press three", "press four", "press five",
+                    "press six", "press seven", "press eight", "press nine", "press zero",
+                    "press pound", "press star",
+                    "dial 1", "dial 2", "dial 3",
+                    # Language-selection prompts
+                    "for english", "para español", "para espanol", "for spanish",
+                    # Hold / queue announcements
+                    "all representatives are", "all agents are", "all of our agents",
+                    "estimated wait time", "your wait time", "approximate wait",
+                    "please continue to hold", "please hold while",
+                    "your call will be answered",
+                    # Menu navigation phrases
+                    "select from the following", "make a selection",
+                    "please make a selection",
+                    "our menu has changed", "menu options have changed",
+                    "if you know your party", "if you know your party's",
+                    "to repeat this menu", "to hear these options again",
+                    "please listen carefully as our",
+                    "to speak to a representative",
+                    "to speak with a representative",
+                    # Fax/modem tones transcribed as text
+                    "beep beep beep", "beep beep",
+                ]
+                _ivr_match = next((p for p in _IVR_REJECT_PATTERNS if p in _ivr_check_lower), None)
+                if _ivr_match:
+                    logger.warning(f"[HV] {call_control_id} | IVR/fax pattern '{_ivr_match}' detected in transcript '{transcript_text[:80]}' — cancelling transfer")
+                    update_call_state(call_control_id,
+                                      human_verification=False,
+                                      ivr_rejected=True,
+                                      status="ivr_rejected",
+                                      status_description=f"IVR/fax detected ('{_ivr_match}') — not transferred",
+                                      status_color="yellow")
+                    _hv_cancel = _amd_timers.pop(f"hv_{call_control_id}", None)
+                    if _hv_cancel:
+                        _hv_cancel.cancel()
+                    hangup_call(call_control_id)
 
             # ── Ambiguous window intelligence (silence / not_sure AMD results) ──────
             # When AMD returned silence or not_sure we opened a 5s listening window.
@@ -5476,7 +5578,7 @@ def _handle_webhook():
 
     # ---- call.hangup ----
     elif event_type == "call.hangup":
-        for prefix in ["", "beep_", "nobeep_", "safety_", "vm_safety_", "vm_kw_", "ambig_", "ambig_drop_"]:
+        for prefix in ["", "beep_", "nobeep_", "safety_", "vm_safety_", "vm_kw_", "ambig_", "ambig_drop_", "hv_"]:
             t = _amd_timers.pop(f"{prefix}{call_control_id}", None)
             if t:
                 t.cancel()
