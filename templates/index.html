@@ -9090,8 +9090,10 @@
 
   var PHONE_FIELDS_NORM = ['phone','phone_number','phonenumber','mobile','cell','telephone','tel','number'];
   var NAME_PRIORITY = ['first_name','full_name','name','contact_name','company'];
+  var COMPANY_FIELDS_NORM = ['company','company_name','organization','org','employer','business','business_name'];
+  var CITY_FIELDS_NORM    = ['city','city_name','city_town','town','municipality','locality'];
 
-  function normKey(k) { return k.toLowerCase().replace(/[\s_-]+/g,'_'); }
+  function normKey(k) { return k.toLowerCase().replace(/[\s_\-\/]+/g,'_').replace(/_+$/,''); }
 
   function esc(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -9180,18 +9182,24 @@
     var initials = primaryName ? getInitials(primaryName) : fmtPhone(phone).slice(0,2);
     var gradient = avatarGradient(phone);
 
-    var otherTags = [];
-    Object.keys(contact).forEach(function(k) {
-      var nk = normKey(k);
-      if (PHONE_FIELDS_NORM.indexOf(nk) !== -1) return;
-      if (primaryName) {
-        var nkFlat = nk.replace(/_/g,'');
-        if (['firstname','lastname','fullname','name','contactname'].indexOf(nkFlat) !== -1) return;
-        if (nk === 'company' && primaryName === contact[k]) return;
+    // Specifically extract company and city to match history detail table style.
+    // Build a normalized key map so common header variants (e.g. "Company Name",
+    // "Organization", "City/Town", "Town") are all detected via alias lists.
+    var norm = {};
+    Object.keys(contact).forEach(function(k) { norm[normKey(k)] = k; });
+    function pickField(aliases) {
+      for (var i = 0; i < aliases.length; i++) {
+        if (norm[aliases[i]]) return (contact[norm[aliases[i]]] || '').trim();
       }
-      var v = (contact[k] || '').trim();
-      if (v) otherTags.push(v);
-    });
+      return '';
+    }
+    var companyVal = pickField(COMPANY_FIELDS_NORM);
+    var cityVal    = pickField(CITY_FIELDS_NORM);
+    // Skip company if it was used as the primary name fallback
+    if (companyVal && primaryName === companyVal) companyVal = '';
+    var otherTags = [];
+    if (companyVal) otherTags.push(companyVal);
+    if (cityVal)    otherTags.push(cityVal);
 
     var tagsHtml = '';
     if (primaryName) {
