@@ -98,6 +98,7 @@ from storage import (
     store_recording_url,
     get_user_for_call,
     claim_call_action,
+    claim_recording_start,
     set_quick_call_status,
     get_quick_call_statuses,
     get_quick_call_status,
@@ -105,7 +106,7 @@ from storage import (
 )
 from telnyx_client import (
     transfer_call, play_audio, stop_playback, hangup_call, make_call, validate_connection_id,
-    set_webhook_base_url, start_transcription, start_recording, start_gather,
+    set_webhook_base_url, start_transcription, start_recording, stop_recording, start_gather,
     search_available_numbers, purchase_number, create_call_control_app,
     assign_number_to_app, list_owned_numbers, release_number,
     list_call_control_apps, get_number_order_status,
@@ -4645,9 +4646,25 @@ def pvm_clear_all():
 
 def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_number, user_id):
     """Play voicemail audio and append transcript. Called after beep or timeout."""
+    # SAFEGUARD: never drop a voicemail into a detected IVR menu.
+    pre_state = get_call_state(call_control_id)
+    if pre_state and pre_state.get("ivr_detected"):
+        logger.warning(f"[VM DROP BLOCKED] {call_control_id} | IVR menu was detected on this call — refusing to drop voicemail")
+        return
     if not mark_voicemail_dropped(call_control_id):
         return
     state = get_call_state(call_control_id)
+    # Recording is started earlier (at beep detection or VM keyword confirmation)
+    # so the captured MP3 includes the carrier beep tone before Alex's message.
+    # Fallback: if no recording was started yet, start one now so we never lose
+    # the voicemail audio entirely. claim_recording_start() is atomic so racing
+    # triggers (beep + Layer 2 + this fallback) can never start a duplicate.
+    if claim_recording_start(call_control_id):
+        try:
+            start_recording(call_control_id)
+            logger.info(f"[VM RECORDING] {call_control_id} | Recording started (fallback at drop time, no earlier trigger fired)")
+        except Exception as e:
+            logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording (fallback): {e}")
     if state and state.get("silence_playing"):
         try:
             stop_playback(call_control_id)
@@ -4668,11 +4685,6 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
     if is_personalized:
         logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
-    try:
-        start_recording(call_control_id)
-        logger.info(f"[VM RECORDING] {call_control_id} | Recording started for voicemail drop")
-    except Exception as e:
-        logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording: {e}")
     play_audio(call_control_id, audio_url, client_state="voicemail_drop")
     vm_script_text = None
     if is_personalized and customer_number:
@@ -4830,15 +4842,19 @@ def _handle_webhook():
         timer.start()
 
         def _safety_timeout(ccid):
-            """Rule 4: If call lasts 120s with no action, hang up gracefully."""
+            """Rule 4: If call lasts 240s with no action, hang up gracefully.
+            Extended from 120s → 240s to accommodate Layer 3's 180s wait for toll-free
+            IVR-equipped lines that may take 1–3 minutes to reach a real voicemail beep
+            (Task #78). Active campaigns can still claim the channel for new calls
+            because hangup_cleanup releases the channel slot."""
             st = get_call_state(ccid)
-            if st and not st.get("transferred") and not st.get("voicemail_dropped") and st.get("status") not in ("hangup", "voicemail_complete", "transferred"):
-                logger.warning(f"[SAFETY TIMEOUT] {ccid} | 120s with no action taken, hanging up")
-                update_call_state(ccid, status_description="Safety timeout - no action taken in 120s", status_color="yellow")
+            if st and not st.get("transferred") and not st.get("voicemail_dropped") and st.get("status") not in ("hangup", "voicemail_complete", "transferred", "ivr_rejected"):
+                logger.warning(f"[SAFETY TIMEOUT] {ccid} | 240s with no action taken, hanging up")
+                update_call_state(ccid, status_description="Safety timeout - no action taken in 240s", status_color="yellow")
                 hangup_call(ccid)
             _amd_timers.pop(f"safety_{ccid}", None)
 
-        safety_timer = threading.Timer(120.0, _safety_timeout, args=[call_control_id])
+        safety_timer = threading.Timer(240.0, _safety_timeout, args=[call_control_id])
         safety_timer.daemon = True
         _amd_timers[f"safety_{call_control_id}"] = safety_timer
         safety_timer.start()
@@ -5023,27 +5039,38 @@ def _handle_webhook():
                 def _vm_safety_fallback(ccid, aurl, ispvm, custnum, uid):
                     _amd_timers.pop(f"vm_safety_{ccid}", None)
                     st = get_call_state(ccid)
-                    if (st
-                            and not st.get("voicemail_dropped")
-                            and not st.get("transferred")
-                            and st.get("machine_detected")
-                            and st.get("status") not in _TERMINAL_STATUSES):
-                        logger.info(f"[LAYER3] {ccid} | 18s safety timer fired — dropping voicemail (beep event never arrived)")
-                        update_call_state(ccid, status_description="Dropping voicemail (safety timer — no beep detected)", status_color="blue")
-                        _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
-                    else:
+                    if not st or st.get("voicemail_dropped") or st.get("transferred") or st.get("status") in _TERMINAL_STATUSES:
                         logger.info(f"[LAYER3] {ccid} | Safety timer fired but call already handled (status={st.get('status') if st else 'gone'}), skipping")
+                        return
+                    # NEVER drop into a detected IVR menu — hang up cleanly instead.
+                    if st.get("ivr_detected"):
+                        logger.warning(f"[LAYER3] {ccid} | 180s safety timer fired on IVR-detected line — hanging up without dropping voicemail")
+                        update_call_state(ccid, status="ivr_rejected",
+                                          status_description="IVR menu — no voicemail dropped (timed out)",
+                                          status_color="yellow")
+                        hangup_call(ccid)
+                        return
+                    if not st.get("machine_detected"):
+                        logger.info(f"[LAYER3] {ccid} | Safety timer fired but no longer machine_detected, skipping")
+                        return
+                    logger.info(f"[LAYER3] {ccid} | 180s safety timer fired — dropping voicemail (beep event never arrived, no IVR detected)")
+                    update_call_state(ccid, status_description="Dropping voicemail (safety timer — no beep detected)", status_color="blue")
+                    _drop_voicemail_now(ccid, aurl, ispvm, custnum, uid)
 
                 # Cancel any prior safety timer for this call before registering new one
                 _prev_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
                 if _prev_safe:
                     _prev_safe.cancel()
-                vm_safety_t = threading.Timer(18.0, _vm_safety_fallback,
+                # Extended from 18s → 180s so toll-free / IVR-equipped lines have time
+                # to actually reach a real beep (1–3 minutes is realistic for menus).
+                # The IVR detector running on transcripts will mark ivr_detected=True
+                # and short-circuit this drop if a menu pattern is heard. (Task #78)
+                vm_safety_t = threading.Timer(180.0, _vm_safety_fallback,
                                               args=[_vm_safe_cid, _vm_safe_url, _vm_safe_pvm, _vm_safe_cust, _vm_safe_uid])
                 vm_safety_t.daemon = True
                 _amd_timers[f"vm_safety_{call_control_id}"] = vm_safety_t
                 vm_safety_t.start()
-                logger.info(f"[LAYER3] {call_control_id} | 18s last-resort safety timer started (Layer 1/2 are primary triggers)")
+                logger.info(f"[LAYER3] {call_control_id} | 180s last-resort safety timer started (Layer 1 beep / Layer 2 keywords are primary triggers)")
             else:
                 logger.error(f"[NO AUDIO] {call_control_id} | No voicemail audio URL configured")
                 update_call_state(call_control_id, status_description="Voicemail failed - no audio", status_color="red")
@@ -5083,10 +5110,10 @@ def _handle_webhook():
                 start_transcription(call_control_id)
             except Exception as e:
                 logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start transcription: {e}")
-            try:
-                start_recording(call_control_id)
-            except Exception as e:
-                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
+            # Recording is intentionally NOT started here — beep event, Layer 2
+            # keyword trigger, or the drop-time fallback will start it via
+            # claim_recording_start so the MP3 begins at the beep, not 15s of
+            # ambiguous silence (Task #78).
 
             _amb_sil_url = f"{_get_app_base_url()}/static/silence_60s.wav"
             try:
@@ -5172,10 +5199,8 @@ def _handle_webhook():
                 start_transcription(call_control_id)
             except Exception as e:
                 logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start transcription: {e}")
-            try:
-                start_recording(call_control_id)
-            except Exception as e:
-                logger.error(f"[AMBIG WINDOW] {call_control_id} | Failed to start recording: {e}")
+            # Recording NOT started here — see comment in `silence`/`not_sure`
+            # branch above. Recording starts at beep / Layer 2 / drop fallback.
             _unk_sil_url = f"{_get_app_base_url()}/static/silence_60s.wav"
             try:
                 import time as _tu
@@ -5244,12 +5269,27 @@ def _handle_webhook():
 
         if state.get("voicemail_dropped") or state.get("transferred"):
             logger.info(f"[GREETING ENDED] {call_control_id} | Already handled (vm={state.get('voicemail_dropped')}, transfer={state.get('transferred')}), ignoring")
+        elif state.get("ivr_detected") and beep_result == "beep_detected":
+            logger.warning(f"[BEEP IGNORED] {call_control_id} | Beep detected but IVR menu was previously identified — not dropping voicemail (likely menu beep)")
+            update_call_state(call_control_id, beep_detected=True,
+                              status_description="Beep detected on IVR line — voicemail suppressed",
+                              status_color="yellow")
         elif state.get("vm_pending_audio_url") and beep_result == "beep_detected":
             audio_url = state.get("vm_pending_audio_url")
             is_pvm = state.get("vm_pending_personalized", False)
             cust_num = state.get("vm_pending_customer_number", "")
             uid = state.get("vm_pending_user_id") or get_user_for_call(call_control_id)
-            logger.info(f"[BEEP DETECTED] {call_control_id} | Confirmed voicemail, dropping immediately")
+            logger.info(f"[BEEP DETECTED] {call_control_id} | Confirmed voicemail, starting recording then dropping")
+            # Start recording AT the beep so the captured MP3 begins with the beep tone
+            # followed by Alex's full message — gives auditable proof the drop landed
+            # after the beep (issue #1 in task #78). claim_recording_start() is atomic
+            # so this never duplicates a recording started by Layer 2.
+            if claim_recording_start(call_control_id):
+                try:
+                    start_recording(call_control_id)
+                    logger.info(f"[VM RECORDING] {call_control_id} | Recording started at beep event")
+                except Exception as e:
+                    logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording at beep: {e}")
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
         else:
@@ -5279,7 +5319,7 @@ def _handle_webhook():
         state = get_call_state(call_control_id)
 
         if client_state_str == "voicemail_drop":
-            # Voicemail audio finished playing — hang up immediately
+            # Voicemail audio finished playing — stop recording then hang up immediately
             vm_duration = None
             vm_start = state.get("vm_playback_start") if state else None
             if vm_start:
@@ -5289,7 +5329,14 @@ def _handle_webhook():
             update_call_state(call_control_id, status="voicemail_complete",
                               status_description=desc, status_color="green",
                               vm_duration=vm_duration)
-            logger.info(f"[VM COMPLETE] {call_control_id} | Voicemail playback finished ({vm_duration}s), hanging up")
+            logger.info(f"[VM COMPLETE] {call_control_id} | Voicemail playback finished ({vm_duration}s), stopping recording and hanging up")
+            # Stop recording AFTER playback ends so the MP3 is bounded to
+            # beep + Alex's message + a short tail (Task #78).
+            if state and state.get("vm_recording_started"):
+                try:
+                    stop_recording(call_control_id)
+                except Exception as _e_stop:
+                    logger.warning(f"[VM RECORDING] {call_control_id} | stop_recording failed: {_e_stop}")
             hangup_call(call_control_id)
 
         elif client_state_str == "silence_keepalive":
@@ -5297,7 +5344,11 @@ def _handle_webhook():
                 import time as _time_mod2
                 silence_start = state.get("silence_start_time", 0)
                 elapsed = _time_mod2.time() - silence_start if silence_start else 0
-                if elapsed < 110:
+                # Keep replaying silence for up to 230s so the Layer 3 (180s) safety
+                # timer is the sole authority that decides when to give up on a
+                # missing beep. Outer call-level safety timer (240s) bounds total
+                # call length. (Task #78)
+                if elapsed < 230:
                     logger.info(f"[SILENCE REPLAY] {call_control_id} | Silence ended early ({elapsed:.1f}s), replaying to keep line alive while waiting for beep")
                     silence_url = f"{_get_app_base_url()}/static/silence_60s.wav"
                     try:
@@ -5307,7 +5358,7 @@ def _handle_webhook():
                 else:
                     logger.info(f"[SILENCE END] {call_control_id} | Full silence wait completed ({elapsed:.1f}s), no beep detected — hanging up")
                     update_call_state(call_control_id, silence_playing=False, status="no_voicemail",
-                                      status_description="120s wait — no beep detected, hanging up", status_color="yellow")
+                                      status_description="230s wait — no beep detected, hanging up", status_color="yellow")
                     hangup_call(call_control_id)
             else:
                 update_call_state(call_control_id, silence_playing=False)
@@ -5324,7 +5375,13 @@ def _handle_webhook():
             update_call_state(call_control_id, status="voicemail_complete",
                               status_description=desc, status_color="green",
                               vm_duration=vm_duration)
-            logger.info(f"[VM COMPLETE fallback] {call_control_id} | Voicemail playback finished ({vm_duration}s), hanging up")
+            logger.info(f"[VM COMPLETE fallback] {call_control_id} | Voicemail playback finished ({vm_duration}s), stopping recording and hanging up")
+            # Bound the recording at the end of voicemail playback (Task #78)
+            if state.get("vm_recording_started"):
+                try:
+                    stop_recording(call_control_id)
+                except Exception as _e_stop2:
+                    logger.warning(f"[VM RECORDING fallback] {call_control_id} | stop_recording failed: {_e_stop2}")
             hangup_call(call_control_id)
 
     # ---- call.transcription ----
@@ -5348,7 +5405,68 @@ def _handle_webhook():
             logger.info(f"Transcript stored [{track}] for {call_control_id}: {transcript_text[:100]}")
 
             state = get_call_state(call_control_id)
-            if state and state.get("machine_detected") and not state.get("voicemail_dropped") and not state.get("transferred"):
+
+            # ── IVR-menu detection on machine-answered calls (Task #78) ─────────────
+            # Telnyx AMD classifies toll-free / business voice menus as "machine".
+            # If we hear key-press prompts or directory navigation phrases on the
+            # transcript, this is NOT a real voicemail box — refuse to drop and
+            # cancel any pending drop timers. We stay silently on the line; the
+            # 180s safety timer will hang up cleanly if no real beep ever arrives.
+            if (state and state.get("machine_detected")
+                    and not state.get("voicemail_dropped")
+                    and not state.get("transferred")
+                    and not state.get("ivr_detected")):
+                _ivr_machine_lower = transcript_text.lower()
+                _IVR_MACHINE_PATTERNS = [
+                    # Definitive key-press / menu prompts
+                    "press 1", "press 2", "press 3", "press 4", "press 5",
+                    "press 6", "press 7", "press 8", "press 9", "press 0",
+                    "press one", "press two", "press three", "press four", "press five",
+                    "press six", "press seven", "press eight", "press nine", "press zero",
+                    "press pound", "press star",
+                    "dial 1", "dial 2", "dial 3",
+                    # Directory / extension navigation
+                    "if you know your party", "if you know your party's",
+                    "your party's extension", "dial the extension",
+                    # Language selection
+                    "for english", "para español", "para espanol", "for spanish",
+                    # Menu navigation
+                    "select from the following", "make a selection",
+                    "please make a selection",
+                    "our menu has changed", "menu options have changed",
+                    "to repeat this menu", "to hear these options again",
+                    "please listen carefully as our",
+                    # Hold / queue
+                    "all representatives are", "all agents are", "all of our agents",
+                    "estimated wait time", "your wait time", "approximate wait",
+                    "please continue to hold", "please hold while",
+                ]
+                _ivr_hit = next((p for p in _IVR_MACHINE_PATTERNS if p in _ivr_machine_lower), None)
+                if _ivr_hit:
+                    logger.warning(f"[IVR DETECTED] {call_control_id} | Pattern '{_ivr_hit}' in '{transcript_text[:80]}' — suppressing voicemail drop")
+                    update_call_state(call_control_id,
+                                      ivr_detected=True,
+                                      ivr_pattern=_ivr_hit,
+                                      voicemail_confirmed=False,
+                                      status="ivr_detected",
+                                      status_description=f"IVR menu detected ('{_ivr_hit}') — no voicemail dropped",
+                                      status_color="yellow")
+                    # Cancel pending voicemail-drop timers EXCEPT vm_safety_:
+                    # the safety timer's IVR-aware branch will hang up cleanly with
+                    # an "ivr_rejected" status if no real beep ever arrives. Keeping
+                    # it alive guarantees the call always terminates with a clear
+                    # IVR status rather than leaking into the outer 240s hangup.
+                    for _p in ("vm_kw_", "ambig_", "ambig_drop_"):
+                        _ct = _amd_timers.pop(f"{_p}{call_control_id}", None)
+                        if _ct:
+                            _ct.cancel()
+                    # Refresh state for the keyword-block below so it sees ivr_detected
+                    state = get_call_state(call_control_id)
+
+            if (state and state.get("machine_detected")
+                    and not state.get("voicemail_dropped")
+                    and not state.get("transferred")
+                    and not state.get("ivr_detected")):
                 text_lower = transcript_text.lower()
 
                 # High-confidence phrases spoken at the END of a voicemail greeting
@@ -5383,13 +5501,26 @@ def _handle_webhook():
                     # further away, so we give 5s.
                     delay = 3.0 if is_high_confidence else 5.0
                     logger.info(f"[LAYER2] {call_control_id} | VM keywords [{confidence}] heard: '{transcript_text[:100]}' — dropping in {delay:.0f}s if no beep fires")
+                    # Start recording NOW so the beep that arrives in 2–5s is captured
+                    # at the head of the MP3 along with Alex's full message (Task #78).
+                    # claim_recording_start() is atomic — safe under concurrent triggers.
+                    if claim_recording_start(call_control_id):
+                        try:
+                            start_recording(call_control_id)
+                            logger.info(f"[VM RECORDING] {call_control_id} | Recording started at Layer 2 keyword trigger ({confidence})")
+                        except Exception as _e_rec:
+                            logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording at Layer 2: {_e_rec}")
                     update_call_state(call_control_id, voicemail_confirmed=True,
                                       status_description=f"Voicemail keywords heard [{confidence}] — dropping in {delay:.0f}s", status_color="blue")
 
-                    # Cancel the slower Layer 3 safety timer — Layer 2 has a better signal
-                    existing_safe = _amd_timers.pop(f"vm_safety_{call_control_id}", None)
-                    if existing_safe:
-                        existing_safe.cancel()
+                    # IMPORTANT (Task #78): we deliberately do NOT cancel the
+                    # Layer 3 vm_safety_ timer here. If an IVR is detected after
+                    # this Layer 2 hit (e.g. menu prompt arrives mid-greeting),
+                    # the IVR detector cancels this keyword timer — leaving
+                    # vm_safety_ running so it can hang up cleanly as
+                    # ivr_rejected at 180s. vm_safety_'s own callback already
+                    # short-circuits if voicemail_dropped is True, so there is
+                    # no double-drop risk on the success path.
 
                     # Cancel any existing keyword timer to avoid double-drop
                     existing_kw = _amd_timers.pop(f"vm_kw_{call_control_id}", None)
@@ -5703,6 +5834,11 @@ def _handle_webhook():
                 updates["status"] = "transfer_complete"
                 updates["status_description"] = "Answered by human — transferred (campaign resumed)"
                 updates["status_color"] = "green"
+            elif current_status in ("ivr_rejected", "ivr_detected"):
+                # Preserve explicit IVR-safeguard outcomes from Task #78 so analytics
+                # and the daily report can distinguish "hung up because IVR menu"
+                # from a generic disconnect. Don't touch status / status_description.
+                pass
             elif current_status not in ("transferred", "voicemail_complete"):
                 updates["status"] = "hangup"
                 ring_dur = ""

@@ -364,6 +364,23 @@ def start_recording(call_control_id):
         return False
 
 
+def stop_recording(call_control_id):
+    """Stop the active recording on a call. Safe to call even if no recording is active."""
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/calls/{call_control_id}/actions/record_stop",
+            json={},
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Recording stopped on call {call_control_id}")
+        return True
+    except Exception as e:
+        logger.warning(f"stop_recording on {call_control_id} returned: {e}")
+        return False
+
+
 def fork_start(call_control_id, target_ws_url):
     """Start forking call audio to a WebSocket URL for real-time monitoring."""
     try:

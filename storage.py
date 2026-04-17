@@ -775,6 +775,20 @@ def claim_call_action(call_control_id, action):
         return True
 
 
+def claim_recording_start(call_control_id):
+    """Atomically claim the right to start the voicemail recording on a call.
+    Returns True exactly once per call so concurrent triggers (beep event,
+    Layer 2 keyword timer, drop-time fallback) cannot start duplicate recordings."""
+    with lock:
+        state = call_states.get(call_control_id)
+        if not state:
+            return False
+        if state.get("vm_recording_started"):
+            return False
+        state["vm_recording_started"] = True
+        return True
+
+
 def call_states_snapshot():
     with lock:
         return dict(call_states)
