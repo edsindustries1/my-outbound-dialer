@@ -526,24 +526,60 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 @media(max-width:768px){.numbers-grid{grid-template-columns:1fr 1fr;gap:0}.numbers-cell:nth-child(2){border-right:none}.numbers-cell:nth-child(1),.numbers-cell:nth-child(2){border-bottom:1px solid rgba(255,255,255,0.06)}}
 
 /* ---- INTEGRATIONS: brand colors + 6-up grid ---- */
-.integrations-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px;max-width:1080px;margin-left:auto;margin-right:auto}
-.integ-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;text-align:left;transition:all .3s;display:flex;flex-direction:column;min-height:200px}
-.integ-card:hover{border-color:rgba(26,26,26,0.3);box-shadow:0 8px 28px var(--accent-glow);transform:translateY(-4px)}
-.integ-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#fff;flex-shrink:0}
+/* ---- Integrations grid (curated 20-tile, 3 tiers) ---- */
+.integ-tier-head{display:flex;align-items:center;gap:10px;max-width:1200px;margin:48px auto 16px;padding:0 8px}
+.integ-tier-head:first-of-type{margin-top:48px}
+.integ-tier-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.integ-tier-dot-native{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+.integ-tier-dot-zapier{background:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+.integ-tier-dot-soon{background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.12)}
+.integ-tier-label{font-size:.78rem;font-weight:700;color:var(--text);letter-spacing:.02em}
+.integ-tier-meta{font-size:.78rem;color:var(--text-muted);margin-left:auto}
+
+.integ-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1200px;margin:0 auto}
+
+.integ-tile{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;text-align:left;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;display:flex;flex-direction:column;gap:8px;min-height:148px}
+.integ-tile:hover{border-color:rgba(26,26,26,0.25);box-shadow:0 8px 22px var(--accent-glow);transform:translateY(-3px)}
+.integ-tile-soon{opacity:.85}
+.integ-tile-soon:hover{opacity:1}
+.integ-tile-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.integ-tile h3{font-size:.95rem;font-weight:700;color:var(--text);margin:0;letter-spacing:-.01em}
+.integ-tile p{font-size:.78rem;color:var(--text-secondary);line-height:1.5;margin:0}
+
+.integ-logo{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;overflow:hidden}
+.integ-logo svg{width:24px;height:24px;display:block}
+.integ-logo-ghl,.integ-logo-mailchimp,.integ-logo-monday,.integ-logo-zoho{background:transparent}
+.integ-logo-ghl svg,.integ-logo-mailchimp svg,.integ-logo-monday svg,.integ-logo-zoho svg{width:40px;height:40px}
 .integ-logo-hubspot{background:#ff7a59}
-.integ-logo-ghl{background:transparent;padding:0;width:48px;height:48px}
-.integ-logo-ghl svg{display:block}
-.integ-logo-pipedrive{background:#1b1b1b;color:#fff}
+.integ-logo-salesforce{background:#fff;border:1px solid var(--border)}
+.integ-logo-salesforce svg{width:32px;height:auto}
+.integ-logo-pipedrive{background:#1b1b1b}
+.integ-logo-close{background:#06b6d4}
 .integ-logo-sheets{background:#0f9d58}
+.integ-logo-slack{background:#fff;border:1px solid var(--border)}
+.integ-logo-salesloft{background:#fff;border:1px solid var(--border)}
+.integ-logo-outreach{background:#fff;border:1px solid var(--border)}
 .integ-logo-webhooks{background:linear-gradient(135deg,#7c3aed,#4f46e5)}
 .integ-logo-zapier{background:#ff4f00}
-.integ-card h3{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:-.01em}
-.integ-card p{font-size:.85rem;color:var(--text-secondary);line-height:1.6;flex:1}
-.integ-all-link{text-align:center;margin-top:32px;font-size:.92rem;font-weight:600;color:var(--accent)}
+.integ-logo-make{background:#fff;border:1px solid var(--border)}
+.integ-logo-dynamics{background:#fff;border:1px solid var(--border)}
+.integ-logo-teams{background:#fff;border:1px solid var(--border)}
+.integ-logo-activecampaign{background:#356ae6}
+.integ-logo-bullhorn{background:#ff5f1f}
+.integ-logo-gong{background:#fff;border:1px solid var(--border)}
+
+.integ-badge{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:4px 8px;border-radius:6px;flex-shrink:0;line-height:1;white-space:nowrap}
+.integ-badge-native{background:rgba(34,197,94,.12);color:#15803d;border:1px solid rgba(34,197,94,.22)}
+.integ-badge-zapier{background:rgba(59,130,246,.1);color:#1d4ed8;border:1px solid rgba(59,130,246,.22)}
+.integ-badge-soon{background:rgba(245,158,11,.12);color:#b45309;border:1px solid rgba(245,158,11,.25)}
+
+.integ-all-link{text-align:center;margin-top:40px;font-size:.92rem;font-weight:600;color:var(--accent)}
 .integ-all-link a{display:inline-flex;align-items:center;gap:6px;border-bottom:1px solid var(--accent);padding-bottom:2px;transition:gap .2s}
 .integ-all-link a:hover{gap:10px}
-@media(max-width:900px){.integrations-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.integrations-grid{grid-template-columns:1fr}}
+
+@media(max-width:1100px){.integ-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.integ-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.integ-grid{grid-template-columns:1fr}.integ-tier-meta{display:none}}
 
 /* ---- HORIZONTAL STEPPER (How It Works) ---- */
 .stepper{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px;counter-reset:stp}
