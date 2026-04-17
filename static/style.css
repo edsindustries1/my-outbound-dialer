@@ -1132,6 +1132,18 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .cd-status-fail { color: var(--gads-error); font-weight: 500; }
 .cd-link { color: var(--gads-primary); text-decoration: none; font-size: 12px; }
 .cd-link:hover { text-decoration: underline; }
+.cd-contact-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gads-text-secondary);
+    background: var(--gads-surface-alt, #f3f4f6);
+    border: 1px solid var(--gads-border, #e5e7eb);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-right: 3px;
+    line-height: 1.4;
+}
 .cd-transcript-preview {
     cursor: help;
     font-size: 11px;

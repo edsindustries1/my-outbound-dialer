@@ -3591,9 +3591,28 @@
                             } else {
                                 transcript = "-";
                             }
+                            var cd = c.contact_data || {};
+                            var contactName = ((cd.first_name || "") + " " + (cd.last_name || "")).trim();
+                            var numberCell = "";
+                            if (contactName) {
+                                numberCell += '<div style="font-weight:600;font-size:13px">' + contactName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+                                numberCell += '<div style="font-size:11px;color:#6b7280">' + (c.number || "") + '</div>';
+                            } else {
+                                numberCell += '<div>' + (c.number || "") + '</div>';
+                            }
+                            var contactTags = "";
+                            if (cd.company) {
+                                contactTags += '<span class="cd-contact-tag">' + cd.company.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+                            }
+                            if (cd.city) {
+                                contactTags += '<span class="cd-contact-tag">' + cd.city.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+                            }
+                            if (contactTags) {
+                                numberCell += '<div style="margin-top:3px">' + contactTags + '</div>';
+                            }
                             html += '<tr>';
                             html += '<td style="white-space:nowrap">' + time + '</td>';
-                            html += '<td>' + (c.number || "") + '</td>';
+                            html += '<td style="min-width:140px">' + numberCell + '</td>';
                             html += '<td style="font-size:11px">' + (c.from_number || "") + '</td>';
                             html += '<td><span class="' + statusClass + '">' + statusText + '</span></td>';
                             html += '<td>' + amd + '</td>';

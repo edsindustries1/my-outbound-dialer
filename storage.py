@@ -716,6 +716,9 @@ def update_call_state(call_control_id, **kwargs):
             transcript = snapshot.get("transcript", [])
             if transcript:
                 rec.transcript = json.dumps(transcript)
+            snap_contact = snapshot.get("contact_data")
+            if snap_contact and hasattr(rec, 'contact_data'):
+                rec.contact_data = snap_contact
             ring_start = snapshot.get("ring_start")
             ring_end = snapshot.get("ring_end")
             if ring_start and ring_end:
