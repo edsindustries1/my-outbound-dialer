@@ -99,6 +99,7 @@ from storage import (
     get_user_for_call,
     claim_call_action,
     claim_recording_start,
+    release_recording_claim,
     set_quick_call_status,
     get_quick_call_statuses,
     get_quick_call_status,
@@ -4664,6 +4665,7 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
             start_recording(call_control_id)
             logger.info(f"[VM RECORDING] {call_control_id} | Recording started (fallback at drop time, no earlier trigger fired)")
         except Exception as e:
+            release_recording_claim(call_control_id)
             logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording (fallback): {e}")
     if state and state.get("silence_playing"):
         try:
@@ -5297,6 +5299,7 @@ def _handle_webhook():
                     start_recording(call_control_id)
                     logger.info(f"[VM RECORDING] {call_control_id} | Recording started at beep event")
                 except Exception as e:
+                    release_recording_claim(call_control_id)
                     logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording at beep: {e}")
             update_call_state(call_control_id, beep_detected=True, voicemail_confirmed=True)
             _drop_voicemail_now(call_control_id, audio_url, is_pvm, cust_num, uid)
@@ -5519,6 +5522,7 @@ def _handle_webhook():
                             start_recording(call_control_id)
                             logger.info(f"[VM RECORDING] {call_control_id} | Recording started at Layer 2 keyword trigger ({confidence})")
                         except Exception as _e_rec:
+                            release_recording_claim(call_control_id)
                             logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording at Layer 2: {_e_rec}")
                     update_call_state(call_control_id, voicemail_confirmed=True,
                                       status_description=f"Voicemail keywords heard [{confidence}] — dropping in {delay:.0f}s", status_color="blue")

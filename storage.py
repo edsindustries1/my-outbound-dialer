@@ -789,6 +789,16 @@ def claim_recording_start(call_control_id):
         return True
 
 
+def release_recording_claim(call_control_id):
+    """Release a previously-claimed recording start. Use only when the actual
+    Telnyx record_start API call failed, so a later fallback trigger can retry."""
+    with lock:
+        state = call_states.get(call_control_id)
+        if not state:
+            return
+        state["vm_recording_started"] = False
+
+
 def call_states_snapshot():
     with lock:
         return dict(call_states)
