@@ -34,9 +34,7 @@
     .pricing-card[data-plan-card]{cursor:pointer;transition:box-shadow .2s,outline .2s}
     .pricing-card[data-plan-card].plan-card-selected{outline:2.5px solid #111;outline-offset:2px}
     .pricing-card-featured[data-plan-card].plan-card-selected{outline:2.5px solid #fff;outline-offset:2px}
-    .plan-card-select-badge{display:none;font-size:.72rem;font-weight:700;letter-spacing:.05em;color:#16a34a;text-transform:uppercase;margin-bottom:6px}
-    .plan-card-selected .plan-card-select-badge{display:block}
-    .pricing-card-featured.plan-card-selected .plan-card-select-badge{color:#86efac}
+    .plan-card-select-badge{display:none}
   </style>
 </head>
 <body>
@@ -96,7 +94,6 @@
       <!-- ── Auto Dialer ── -->
       <div class="pricing-card" data-plan-card="autodialer">
         <div class="pricing-card-top">
-          <div class="plan-card-select-badge">&#10003; Selected for Calculator</div>
           <p style="font-size:.74rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin:0 0 6px;">Solo &amp; Small Teams</p>
           <h2 class="plan-name">Open Humana Starter</h2>
           <div class="plan-price">
@@ -181,7 +178,6 @@
       <div class="pricing-card pricing-card-featured" data-plan-card="business">
         <div class="pricing-badge">Most Popular</div>
         <div class="pricing-card-top">
-          <div class="plan-card-select-badge">&#10003; Selected for Calculator</div>
           <p style="font-size:.74rem;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.07em;margin:0 0 6px;">Growing Sales Teams</p>
           <h2 class="plan-name">Open Humana Sales Floor</h2>
           <div class="plan-price">
@@ -720,35 +716,85 @@
       </div>
     </div>
 
+    <section class="compare-section" id="compare">
+      <div class="compare-toggle">
+        <button class="compare-toggle-btn" id="compareToggleBtn" type="button" aria-expanded="false" aria-controls="compareTable">
+          <span>Compare all features</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="compare-table-wrap" id="compareTable">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Starter</th>
+              <th class="compare-col-featured">Sales Floor</th>
+              <th>Build Your Plan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th>Monthly base price</th><td>$69</td><td class="compare-col-featured">$169</td><td>From $69</td></tr>
+            <tr><th>Dials per day</th><td>150</td><td class="compare-col-featured">500</td><td>Custom</td></tr>
+            <tr><th>Phone numbers included</th><td>3</td><td class="compare-col-featured">10</td><td>Custom</td></tr>
+            <tr><th>Per-dial usage rate</th><td>$0.03</td><td class="compare-col-featured">$0.05</td><td>From $0.03</td></tr>
+            <tr><th>Live-transfer fee</th><td>$0.15</td><td class="compare-col-featured">$0.20</td><td>From $0.15</td></tr>
+            <tr><th>Answering machine detection</th><td><span class="compare-check">✓</span></td><td class="compare-col-featured"><span class="compare-check">✓</span></td><td><span class="compare-check">✓</span></td></tr>
+            <tr><th>Voicemail drop</th><td>Standard</td><td class="compare-col-featured">AI personalized</td><td>Optional</td></tr>
+            <tr><th>Live call transfer</th><td><span class="compare-check">✓</span></td><td class="compare-col-featured"><span class="compare-check">✓</span></td><td><span class="compare-check">✓</span></td></tr>
+            <tr><th>Multiple simultaneous campaigns</th><td><span class="compare-dash">—</span></td><td class="compare-col-featured"><span class="compare-check">✓</span></td><td>Optional</td></tr>
+            <tr><th>CRM integrations</th><td><span class="compare-dash">—</span></td><td class="compare-col-featured"><span class="compare-check">✓</span></td><td>Optional</td></tr>
+            <tr><th>Gatekeeper &amp; IVR navigation</th><td><span class="compare-dash">—</span></td><td class="compare-col-featured">Add-on</td><td>Optional</td></tr>
+            <tr><th>Recording &amp; transcription</th><td><span class="compare-dash">—</span></td><td class="compare-col-featured">Add-on</td><td>Optional</td></tr>
+            <tr><th>Priority support</th><td><span class="compare-dash">—</span></td><td class="compare-col-featured"><span class="compare-check">✓</span></td><td><span class="compare-check">✓</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <div class="pricing-faq">
       <h2 class="faq-title">Frequently asked questions</h2>
-      <div class="faq-grid">
-        <div class="faq-item">
-          <h3>What will my total monthly bill actually be?</h3>
-          <p>Your bill has two parts: the flat platform fee ($69 Open Humana Starter or $169 Open Humana Sales Floor) plus pay-as-you-go usage. Base dial usage is $0.03/dial (Open Humana Starter) or $0.05/dial (Open Humana Sales Floor). Live transfers are billed per connection event — $0.15 (Open Humana Starter) or $0.20 (Open Humana Sales Floor) — not per dial, so you only pay when a real human picks up and gets bridged to your phone. Optional add-ons: Personalized AI Voicemails (+$0.02/dial), Gatekeeper Navigator (+$0.03/dial), Recording &amp; Transcription (+$0.03/dial), Voice Cloning (+$19/mo), Extra Phone Numbers (+$5/number/mo). Use the calculator above to build your exact line-by-line estimate. No surprise charges — ever.</p>
-        </div>
-        <div class="faq-item">
-          <h3>What is the difference between Open Humana Starter and Open Humana Sales Floor?</h3>
-          <p>Open Humana Starter ($69/mo) is built for solo operators and small teams. Alex dials from a single pool of 3 numbers, drops the same pre-recorded voicemail each time, and transfers live answers to your phone. Open Humana Sales Floor ($169/mo) is a full outbound engine: 10 included numbers, 500 dials per day, and AI-generated voicemails that are uniquely crafted for each contact — their name, their company, their context. If voicemail quality matters to your conversion rate, the Open Humana Sales Floor is the right choice.</p>
-        </div>
-        <div class="faq-item">
-          <h3>How does live transfer billing work?</h3>
-          <p>Live transfers are charged per connection event — meaning you are only billed when a real human answers and Alex successfully bridges the call to your phone. You are never charged for dials that go to voicemail, busy signals, or hang-ups. The calculator estimates transfers at a 20% connect rate, but you only pay for what actually connects.</p>
-        </div>
-        <div class="faq-item">
-          <h3>Can I switch plans later?</h3>
-          <p>Yes. Upgrade or downgrade at any time. Changes take effect on your next billing cycle. Usage from the current cycle is billed at your original plan's rates.</p>
-        </div>
-        <div class="faq-item">
-          <h3>How does annual billing work?</h3>
-          <p>Annual plans are billed as a single upfront payment — $690/year for Open Humana Starter or $1,690/year for Open Humana Sales Floor. That works out to $57.50/mo or $140.83/mo respectively — two months free compared to monthly billing. Your account stays active for the full 365 days from the date of payment.</p>
-        </div>
-        <div class="faq-item">
-          <h3>Is there a contract or refund policy?</h3>
-          <p>No contracts on monthly plans — cancel anytime with no penalties. Annual plans are billed upfront for the year. We offer a 7-day money-back guarantee on all plans, no questions asked.</p>
-        </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>What will my total monthly bill actually be?</summary>
+          <div class="faq-item-body">Your bill has two parts: the flat platform fee ($69 Open Humana Starter or $169 Open Humana Sales Floor) plus pay-as-you-go usage. Base dial usage is $0.03/dial (Starter) or $0.05/dial (Sales Floor). Live transfers are billed per connection event — $0.15 (Starter) or $0.20 (Sales Floor) — so you only pay when a real human picks up and gets bridged to your phone. Optional add-ons: Personalized AI Voicemails (+$0.02/dial), Gatekeeper Navigator (+$0.03/dial), Recording &amp; Transcription (+$0.03/dial), Voice Cloning (+$19/mo), Extra Phone Numbers (+$5/number/mo). Use the calculator above to build your exact line-by-line estimate. No surprise charges — ever.</div>
+        </details>
+        <details class="faq-item">
+          <summary>What is the difference between Starter and Sales Floor?</summary>
+          <div class="faq-item-body">Open Humana Starter ($69/mo) is built for solo operators and small teams. Alex dials from a pool of 3 numbers, drops the same pre-recorded voicemail each time, and transfers live answers to your phone. Open Humana Sales Floor ($169/mo) is a full outbound engine: 10 included numbers, 500 dials per day, and AI-generated voicemails uniquely crafted for each contact — their name, their company, their context.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How does live transfer billing work?</summary>
+          <div class="faq-item-body">Live transfers are charged per connection event — you are only billed when a real human answers and Alex successfully bridges the call to your phone. You are never charged for dials that go to voicemail, busy signals, or hang-ups. The calculator estimates transfers at a 20% connect rate, but you only pay for what actually connects.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Can I switch plans later?</summary>
+          <div class="faq-item-body">Yes. Upgrade or downgrade at any time. Changes take effect on your next billing cycle. Usage from the current cycle is billed at your original plan's rates.</div>
+        </details>
+        <details class="faq-item">
+          <summary>How does annual billing work?</summary>
+          <div class="faq-item-body">Annual plans are billed as a single upfront payment — $690/year for Starter or $1,690/year for Sales Floor. That works out to $57.50/mo or $140.83/mo respectively — two months free compared to monthly billing. Your account stays active for the full 365 days from the date of payment.</div>
+        </details>
+        <details class="faq-item">
+          <summary>Is there a contract or refund policy?</summary>
+          <div class="faq-item-body">No contracts on monthly plans — cancel anytime with no penalties. Annual plans are billed upfront for the year. We offer a 7-day money-back guarantee on all plans, no questions asked.</div>
+        </details>
       </div>
     </div>
+
+    <script>
+      (function(){
+        var btn = document.getElementById('compareToggleBtn');
+        var wrap = document.getElementById('compareTable');
+        if(!btn||!wrap) return;
+        btn.addEventListener('click', function(){
+          var open = wrap.classList.toggle('open');
+          btn.classList.toggle('open', open);
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          btn.querySelector('span').textContent = open ? 'Hide full comparison' : 'Compare all features';
+        });
+      })();
+    </script>
   </main>
 
   <div class="contact-overlay" id="contactOverlay">
