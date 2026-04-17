@@ -302,6 +302,12 @@ def _call_record_to_entry(rec):
             transcript = json.loads(rec.transcript)
         except Exception:
             pass
+    contact_data = {}
+    if rec.contact_data:
+        try:
+            contact_data = json.loads(rec.contact_data)
+        except Exception:
+            pass
     return {
         "call_id": rec.call_control_id,
         "timestamp": rec.created_at.strftime("%Y-%m-%dT%H:%M:%S") if rec.created_at else "",
@@ -319,6 +325,7 @@ def _call_record_to_entry(rec):
         "transcript": transcript,
         "recording_url": rec.recording_url,
         "vm_duration": rec.vm_duration,
+        "contact_data": contact_data,
     }
 
 
@@ -636,6 +643,7 @@ def create_call_state(call_control_id, number, user_id=None, contact_data=None):
     _num = number
     _uid = user_id
     _from = from_number
+    _contact_json = json.dumps(contact_data) if contact_data else None
     key = _campaign_key(user_id)
     _camp_db_id = _campaign_db_ids.get(key)
     def _persist():
@@ -653,6 +661,7 @@ def create_call_state(call_control_id, number, user_id=None, contact_data=None):
             status='initiated',
             status_description='Call initiated',
             status_color='blue',
+            contact_data=_contact_json,
         )
         db.session.add(rec)
         try:
@@ -923,6 +932,7 @@ def get_all_statuses(user_id=None):
             "transcript": entry.get("transcript", []),
             "recording_url": entry.get("recording_url"),
             "vm_duration": entry.get("vm_duration"),
+            "contact_data": entry.get("contact_data", {}),
         })
 
     combined = live_results + history_results

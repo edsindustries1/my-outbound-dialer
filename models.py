@@ -284,6 +284,7 @@ class CallRecord(db.Model):
     status_color = db.Column(db.String(20), default='blue', nullable=False)
     vm_duration = db.Column(db.Integer, nullable=True)
     source = db.Column(db.String(50), default='telnyx', nullable=False)
+    contact_data = db.Column(Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -401,6 +402,10 @@ def _ensure_schema():
             if "source" not in cr_cols:
                 logger.warning("DB schema missing call_records.source; applying ALTER TABLE")
                 db.session.execute(text("ALTER TABLE call_records ADD COLUMN source VARCHAR(50) DEFAULT 'telnyx' NOT NULL"))
+                db.session.commit()
+            if "contact_data" not in cr_cols:
+                logger.warning("DB schema missing call_records.contact_data; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE call_records ADD COLUMN contact_data TEXT"))
                 db.session.commit()
 
         _seed_max_concurrent_lines()
