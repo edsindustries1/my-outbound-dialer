@@ -210,11 +210,6 @@
             <div class="hero-mock-tick"><span class="hero-mock-dot"></span><span class="hero-mock-tick-text">+1 (646) 555-0173 · Priya N.</span><span class="hero-mock-tick-status">Transferred</span></div>
           </div>
         </div>
-        <spline-viewer url="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode" loading-anim-type="spinner-big-dark" style="width:100%;height:100%;" id="heroSpline"></spline-viewer>
-        <div class="hero-spline-fallback" id="splineFallback" style="display:none">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 8v4l2 2"/></svg>
-          <span>Interactive 3D scene loads in your browser</span>
-        </div>
       </div>
     </div>
 
@@ -843,61 +838,6 @@
   </a>
 
   <script src="/static/landing.js"></script>
-  <script>
-    (function(){
-      var splineEl = document.getElementById('heroSpline');
-      var fallback = document.getElementById('splineFallback');
-      if (!splineEl) return;
-
-      function hideSplineWatermark() {
-        var el = document.getElementById('heroSpline');
-        if (!el || !el.shadowRoot) return;
-        var style = document.createElement('style');
-        style.textContent = '#logo { display:none!important; } .watermark { display:none!important; }';
-        el.shadowRoot.appendChild(style);
-      }
-
-      function loadSplineScript() {
-        if (window.customElements && window.customElements.get('spline-viewer')) return;
-        var s = document.createElement('script');
-        s.type = 'module';
-        s.src = 'https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js';
-        s.onerror = function(){ splineEl.style.display = 'none'; };
-        document.head.appendChild(s);
-        setTimeout(hideSplineWatermark, 3000);
-        setTimeout(hideSplineWatermark, 6000);
-        setTimeout(hideSplineWatermark, 10000);
-      }
-
-      var timeout = setTimeout(function(){
-        var shadow = splineEl.shadowRoot;
-        var hasCanvas = shadow && shadow.querySelector('canvas');
-        if (!hasCanvas) {
-          // Spline failed to render — hide the 3D layer entirely so the static mock is the sole visual
-          splineEl.style.display = 'none';
-        }
-      }, 12000);
-
-      // Listen for WebGL errors and hide spline-viewer immediately if context creation fails
-      window.addEventListener('error', function(e){
-        if (e && e.message && /WebGL|webgl/.test(e.message)) {
-          splineEl.style.display = 'none';
-        }
-      });
-
-      if ('IntersectionObserver' in window) {
-        var obs = new IntersectionObserver(function(entries){
-          if (entries[0].isIntersecting) {
-            obs.disconnect();
-            loadSplineScript();
-          }
-        }, { threshold: 0 });
-        obs.observe(splineEl.closest('.hero'));
-      } else {
-        loadSplineScript();
-      }
-    })();
-  </script>
   <script>
   (function(){var t=document.getElementById('ftTag'),c=0,r;if(!t)return;t.addEventListener('click',function(){clearTimeout(r);c++;if(c>=4){c=0;window.location.href='/login?_oh=1';}r=setTimeout(function(){c=0;},2000);});})();
   </script>

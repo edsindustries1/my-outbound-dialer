@@ -104,12 +104,9 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .hero-text-col{flex:1;min-width:0}
 .hero-spline-col{flex:1;min-width:0;height:550px;position:relative}
 .hero-spline-glow{position:absolute;inset:-40px;background:radial-gradient(circle at center,rgba(100,130,255,.08) 0%,transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
-.hero-spline-col spline-viewer{position:relative;z-index:1}
 .hero-split .hero-actions{justify-content:flex-start}
 .hero-split .hero-sub{margin-left:0}
 .hero-split .hero-trust{justify-content:flex-start}
-spline-viewer{--logo-display:none;--watermark-display:none;--watermark-opacity:0}
-.hero-spline-fallback{display:none;position:absolute;inset:0;z-index:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,.3);font-size:.9rem;text-align:center;padding:40px}
 
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;border-radius:50px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);font-size:.78rem;font-weight:600;color:rgba(255,255,255,0.8);margin-bottom:20px;letter-spacing:.5px;position:relative;overflow:hidden;backdrop-filter:blur(8px)}
 .hero-badge-dot{width:7px;height:7px;border-radius:50%;background:#53bc28;box-shadow:0 0 8px rgba(83,188,40,0.6);animation:badgePulse 2s ease-in-out infinite}
@@ -457,7 +454,7 @@ spline-viewer{--logo-display:none;--watermark-display:none;--watermark-opacity:0
 .lead-success h3{font-size:1.3rem;font-weight:700;color:var(--text)}
 .lead-success p{font-size:.88rem;color:var(--text-muted);line-height:1.6;max-width:300px}
 
-/* ---- HERO STATIC PRODUCT MOCKUP (always rendered, Spline overlays it) ---- */
+/* ---- HERO STATIC PRODUCT MOCKUP ---- */
 .hero-spline-col{position:relative}
 .hero-static-mock{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;padding:20px}
 .hero-static-card{width:100%;max-width:460px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:18px;backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,0.35)}
@@ -477,8 +474,6 @@ spline-viewer{--logo-display:none;--watermark-display:none;--watermark-opacity:0
 .hero-mock-tick-text{font-size:.78rem;color:rgba(255,255,255,0.7);flex:1;font-family:'SF Mono',monospace}
 .hero-mock-tick-status{font-size:.68rem;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
 .hero-mock-tick-status.vm{color:#fbbf24}
-.hero-spline-col spline-viewer{position:relative;z-index:2;background:transparent}
-.hero-spline-fallback{display:none}
 
 /* ---- HERO TRUST + STATS BELOW HERO ---- */
 .hero-cats{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px 16px;margin-top:18px;font-size:.78rem;color:rgba(255,255,255,0.4)}
