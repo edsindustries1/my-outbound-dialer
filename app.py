@@ -4611,6 +4611,11 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
     if is_personalized:
         logger.info(f"Using PERSONALIZED voicemail for {customer_number} on {call_control_id}")
     logger.info(f"Dropping voicemail NOW on {call_control_id}: {audio_url}")
+    try:
+        start_recording(call_control_id)
+        logger.info(f"[VM RECORDING] {call_control_id} | Recording started for voicemail drop")
+    except Exception as e:
+        logger.error(f"[VM RECORDING] {call_control_id} | Failed to start recording: {e}")
     play_audio(call_control_id, audio_url, client_state="voicemail_drop")
     vm_script_text = None
     if is_personalized and customer_number:
