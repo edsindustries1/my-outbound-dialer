@@ -99,10 +99,11 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 .hero-orb-2{width:500px;height:500px;background:radial-gradient(circle,rgba(51,51,51,0.1) 0%,transparent 70%);bottom:10%;right:-5%}
 .hero-orb-3{width:400px;height:400px;background:radial-gradient(circle,rgba(26,26,26,0.08) 0%,transparent 70%);top:40%;left:50%;transform:translateX(-50%)}
 
-.hero-inner{max-width:880px;margin:0 auto;padding:0 32px;position:relative;z-index:3}
-.hero-split{max-width:1200px;display:flex;align-items:center;gap:40px;text-align:left}
-.hero-text-col{flex:1;min-width:0}
-.hero-spline-col{flex:1;min-width:0;height:550px;position:relative}
+.hero-inner{max-width:880px;margin:0 auto;padding:0 32px;position:relative;z-index:3;width:100%}
+.hero-inner.hero-split{max-width:1400px}
+.hero-split{display:flex;align-items:center;gap:60px;text-align:left}
+.hero-text-col{flex:1 1 50%;min-width:0}
+.hero-spline-col{flex:1 1 50%;min-width:0;height:560px;position:relative}
 .hero-spline-glow{position:absolute;inset:-40px;background:radial-gradient(circle at center,rgba(100,130,255,.08) 0%,transparent 65%);border-radius:50%;pointer-events:none;z-index:0}
 .hero-split .hero-actions{justify-content:flex-start}
 .hero-split .hero-sub{margin-left:0}
@@ -457,7 +458,7 @@ a{text-decoration:none;color:inherit;transition:color .2s}
 /* ---- HERO STATIC PRODUCT MOCKUP ---- */
 .hero-spline-col{position:relative}
 .hero-static-mock{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;padding:20px}
-.hero-static-card{width:100%;max-width:460px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:18px;backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+.hero-static-card{width:100%;max-width:560px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:22px;backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,0.35)}
 .hero-mock-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px}
 .hero-mock-bar i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,0.2)}
 .hero-mock-bar i:nth-child(1){background:#ff5f57}
