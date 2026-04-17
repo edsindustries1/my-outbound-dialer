@@ -27,6 +27,7 @@
     "@type": "Article",
     "headline": "{{ post.title }}",
     "description": "{{ post.excerpt }}",
+    "image": "https://openhumana.com/static/images/dashboard-preview.png",
     "datePublished": "{{ post.date }}",
     "dateModified": "{{ post.date }}",
     "author": {"@type": "Person", "name": "Shushant Bangar"},
@@ -36,6 +37,17 @@
       "logo": {"@type": "ImageObject", "url": "https://openhumana.com/static/images/logo.png"}
     },
     "mainEntityOfPage": {"@type": "WebPage", "@id": "https://openhumana.com/blog/{{ post.slug }}"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Open Humana",
+    "url": "https://openhumana.com",
+    "logo": "https://openhumana.com/static/images/logo.png",
+    "founder": {"@type": "Person", "name": "Shushant Bangar"},
+    "parentOrganization": {"@type": "Organization", "name": "Everyday Digital Solutions", "url": "https://everydaydigitalsolutions.com"}
   }
   </script>
 </head>

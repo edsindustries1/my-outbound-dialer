@@ -316,7 +316,7 @@
   updatePriceCards();
 
   if (dialSlider && daysSlider) {
-    selectPlan('business'); // Default to Digital Sales Floor
+    selectPlan('autodialer'); // Default to Open Humana Starter
 
     calcCtaBtn.addEventListener('click', function () {
       var plan = calcCtaBtn.getAttribute('data-plan') || 'business';
