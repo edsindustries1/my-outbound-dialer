@@ -198,16 +198,53 @@
       <div class="hero-spline-col anim-fade">
         <div class="hero-spline-glow"></div>
         <div class="hero-static-mock" id="heroStaticMock" aria-hidden="true">
-          <div class="hero-static-card">
-            <div class="hero-mock-bar"><i></i><i></i><i></i><span>alex.openhumana.com — live campaign</span></div>
-            <div class="hero-mock-kpis">
-              <div class="hero-mock-kpi"><div class="hero-mock-kpi-label">Dials today</div><div class="hero-mock-kpi-val">412</div></div>
-              <div class="hero-mock-kpi"><div class="hero-mock-kpi-label">Live transfers</div><div class="hero-mock-kpi-val">38</div></div>
-              <div class="hero-mock-kpi"><div class="hero-mock-kpi-label">Voicemails</div><div class="hero-mock-kpi-val">217</div></div>
+          <div class="oh-feed-card">
+            <div class="oh-feed-head">
+              <div class="oh-feed-title-wrap">
+                <div class="oh-feed-brand">
+                  <span class="oh-feed-brand-dot"></span>
+                  <span class="oh-feed-brand-text">Open Humana</span>
+                </div>
+                <div class="oh-feed-title">Call History Overview</div>
+              </div>
+              <div class="oh-feed-tabs">
+                <button class="oh-feed-tab is-active" type="button">Today</button>
+                <button class="oh-feed-tab" type="button">Week</button>
+                <button class="oh-feed-tab" type="button">Month</button>
+              </div>
             </div>
-            <div class="hero-mock-tick"><span class="hero-mock-dot"></span><span class="hero-mock-tick-text">+1 (415) 555-0192 · Sarah K.</span><span class="hero-mock-tick-status">Transferred</span></div>
-            <div class="hero-mock-tick"><span class="hero-mock-dot" style="background:#fbbf24;box-shadow:0 0 8px rgba(251,191,36,.6)"></span><span class="hero-mock-tick-text">+1 (212) 555-0144 · Marcus L.</span><span class="hero-mock-tick-status vm">Voicemail</span></div>
-            <div class="hero-mock-tick"><span class="hero-mock-dot"></span><span class="hero-mock-tick-text">+1 (646) 555-0173 · Priya N.</span><span class="hero-mock-tick-status">Transferred</span></div>
+
+            <div class="oh-feed-kpis">
+              <div class="oh-feed-kpi">
+                <div class="oh-feed-kpi-label">Total Dials</div>
+                <div class="oh-feed-kpi-val" id="ohKpiTotal">1,284</div>
+                <div class="oh-feed-kpi-delta up">↑ 12.5%</div>
+              </div>
+              <div class="oh-feed-kpi">
+                <div class="oh-feed-kpi-label">Transfers</div>
+                <div class="oh-feed-kpi-val" id="ohKpiTransfers">187</div>
+                <div class="oh-feed-kpi-delta up">↑ 8.3%</div>
+              </div>
+              <div class="oh-feed-kpi">
+                <div class="oh-feed-kpi-label">Voicemails</div>
+                <div class="oh-feed-kpi-val" id="ohKpiVoicemails">512</div>
+                <div class="oh-feed-kpi-delta up">↑ 5.2%</div>
+              </div>
+              <div class="oh-feed-kpi">
+                <div class="oh-feed-kpi-label">Avg Duration</div>
+                <div class="oh-feed-kpi-val" id="ohKpiAvg">3:42</div>
+                <div class="oh-feed-kpi-delta down">↓ 0.8%</div>
+              </div>
+            </div>
+
+            <div class="oh-feed-list-head">
+              <span class="oh-live-dot"></span>
+              <span class="oh-feed-list-title">Live Activity</span>
+              <span class="oh-feed-list-spacer"></span>
+              <span class="oh-feed-list-meta">Updating in real time</span>
+            </div>
+
+            <div class="oh-feed-list" id="ohFeedList"></div>
           </div>
         </div>
       </div>
@@ -838,6 +875,140 @@
   </a>
 
   <script src="/static/landing.js"></script>
+  <script>
+  /* ---- Live Call Feed (landing hero) ---- */
+  (function(){
+    var listEl = document.getElementById('ohFeedList');
+    if (!listEl) return;
+
+    var FIRST_NAMES = ['Sarah','Marcus','Priya','David','Emily','James','Lisa','Carlos','Aisha','Ryan','Nicole','Daniel','Olivia','Kevin','Sophia','Brandon','Maya','Tyler','Jessica','Andre','Hannah','Jordan','Chloe','Ethan','Isabella','Noah','Mia','Lucas','Ava','Liam','Zara','Diego','Naomi','Owen','Layla'];
+    var LAST_INITIALS = ['K.','L.','N.','M.','S.','R.','T.','B.','C.','D.','H.','P.','W.','A.','G.'];
+    var AREA_CODES = ['415','212','646','310','312','305','617','206','512','480','718','347','408','602','323','404','503','619','702','713','781','914','949','972','303'];
+    var STATUSES = [
+      {key:'transferred', weight:22, label:'Transferred', tag:'transferred', durMin:45, durMax:240},
+      {key:'voicemail',   weight:35, label:'Voicemail',   tag:'voicemail',   durMin:18, durMax:42},
+      {key:'connected',   weight:18, label:'Connected',   tag:'connected',   durMin:25, durMax:180},
+      {key:'no-answer',   weight:18, label:'No Answer',   tag:'no-answer',   durMin:12, durMax:28},
+      {key:'dialing',     weight:7,  label:'Dialing',     tag:'dialing',     durMin:0,  durMax:0}
+    ];
+    var AVATAR_GRADIENTS = [
+      'linear-gradient(135deg,#6366f1,#8b5cf6)',
+      'linear-gradient(135deg,#22c55e,#10b981)',
+      'linear-gradient(135deg,#f59e0b,#f97316)',
+      'linear-gradient(135deg,#06b6d4,#3b82f6)',
+      'linear-gradient(135deg,#ec4899,#f43f5e)',
+      'linear-gradient(135deg,#a855f7,#d946ef)',
+      'linear-gradient(135deg,#14b8a6,#22c55e)',
+      'linear-gradient(135deg,#f472b6,#a78bfa)'
+    ];
+
+    function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function pickWeighted(arr){
+      var total=0; for (var i=0;i<arr.length;i++) total+=arr[i].weight;
+      var r=Math.random()*total, c=0;
+      for (var j=0;j<arr.length;j++){ c+=arr[j].weight; if (r<=c) return arr[j]; }
+      return arr[arr.length-1];
+    }
+    function pad(n){ return n<10 ? '0'+n : ''+n; }
+    function randPhone(){
+      var area=pick(AREA_CODES);
+      var mid=String(Math.floor(Math.random()*900)+100);
+      var end=String(Math.floor(Math.random()*9000)+1000);
+      return '+1 ('+area+') '+mid+'-'+end;
+    }
+    function fmtDuration(s){
+      if (!s) return '—';
+      var m=Math.floor(s/60), sec=s%60;
+      return m+':'+pad(sec);
+    }
+    function makeCall(){
+      var first=pick(FIRST_NAMES);
+      var last=pick(LAST_INITIALS);
+      var status=pickWeighted(STATUSES);
+      var dur = status.durMax > 0 ? Math.floor(Math.random()*(status.durMax-status.durMin+1))+status.durMin : 0;
+      return {
+        name: first+' '+last,
+        initials: (first[0]+last[0]).toUpperCase(),
+        phone: randPhone(),
+        status: status,
+        duration: dur,
+        avatar: pick(AVATAR_GRADIENTS)
+      };
+    }
+    function renderRow(call){
+      var row=document.createElement('div');
+      row.className='oh-feed-row';
+      row.innerHTML =
+        '<div class="oh-feed-avatar" style="background:'+call.avatar+'">'+call.initials+'</div>'+
+        '<div class="oh-feed-info">'+
+          '<div class="oh-feed-name">'+call.name+'</div>'+
+          '<div class="oh-feed-phone">'+call.phone+'</div>'+
+        '</div>'+
+        '<span class="oh-feed-tag '+call.status.tag+'">'+call.status.label+'</span>'+
+        '<span class="oh-feed-duration">'+fmtDuration(call.duration)+'</span>';
+      return row;
+    }
+
+    var MAX_ROWS = 5;
+    function pushCall(){
+      var row = renderRow(makeCall());
+      listEl.insertBefore(row, listEl.firstChild);
+      while (listEl.children.length > MAX_ROWS) {
+        var last = listEl.lastChild;
+        last.style.transition='opacity .35s ease, transform .35s ease';
+        last.style.opacity='0';
+        last.style.transform='translateY(8px)';
+        setTimeout(function(el){ return function(){ if (el.parentNode) el.parentNode.removeChild(el); }; }(last), 350);
+        break;
+      }
+      bumpKpis();
+    }
+
+    var kpiTotal = document.getElementById('ohKpiTotal');
+    var kpiTransfers = document.getElementById('ohKpiTransfers');
+    var kpiVoicemails = document.getElementById('ohKpiVoicemails');
+    var counts = { total: 1284, transfers: 187, voicemails: 512 };
+    function flash(el){
+      if (!el) return;
+      el.classList.add('flash');
+      setTimeout(function(){ el.classList.remove('flash'); }, 400);
+    }
+    function fmtNum(n){ return n.toLocaleString('en-US'); }
+    function bumpKpis(){
+      counts.total += 1;
+      kpiTotal.textContent = fmtNum(counts.total);
+      flash(kpiTotal);
+      var r = Math.random();
+      if (r < 0.18) { counts.transfers += 1; kpiTransfers.textContent = fmtNum(counts.transfers); flash(kpiTransfers); }
+      else if (r < 0.55) { counts.voicemails += 1; kpiVoicemails.textContent = fmtNum(counts.voicemails); flash(kpiVoicemails); }
+    }
+
+    /* Seed initial rows */
+    for (var s=0; s<MAX_ROWS; s++){
+      listEl.appendChild(renderRow(makeCall()));
+    }
+
+    /* Live updates: only run when card is visible to save CPU */
+    var ticking = false;
+    function tick(){
+      if (!ticking) return;
+      pushCall();
+      var next = 1500 + Math.random()*2200; // 1.5s – 3.7s
+      setTimeout(tick, next);
+    }
+    if ('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting && !ticking){ ticking = true; setTimeout(tick, 1200); }
+          else if (!e.isIntersecting){ ticking = false; }
+        });
+      }, { threshold: 0.15 });
+      io.observe(listEl.closest('.oh-feed-card'));
+    } else {
+      ticking = true; setTimeout(tick, 1200);
+    }
+  })();
+  </script>
   <script>
   (function(){var t=document.getElementById('ftTag'),c=0,r;if(!t)return;t.addEventListener('click',function(){clearTimeout(r);c++;if(c>=4){c=0;window.location.href='/login?_oh=1';}r=setTimeout(function(){c=0;},2000);});})();
   </script>
