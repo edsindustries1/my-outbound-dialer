@@ -7521,6 +7521,27 @@
 .lv-status-no_answer,.lv-status-human_no_transfer,.lv-status-hangup,.lv-status-completed { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); }
 .lv-status-machine_detected,.lv-status-machine_no_vm { background:rgba(148,163,184,.12); color:#94a3b8; }
 .lv-duration { font-size:.68rem; color:rgba(255,255,255,.5); font-family:'SF Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; min-width:36px; text-align:right; flex-shrink:0; }
+/* ═══ LIVE VIEW – MOBILE RESPONSIVE ═══ */
+@media (max-width: 639px) {
+    .lv-panel { padding: 14px 12px; border-radius: 12px; }
+    .lv-panel-head { margin-bottom: 12px; gap: 8px; }
+    .lv-panel-title-wrap { min-width: 0; overflow: hidden; }
+    .lv-panel-title { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lv-panel-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* KPI grid: 4-col → 2×2 */
+    .lv-kpis { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .lv-kpi-val { font-size: 1rem; }
+
+    /* Feed rows: avatar + info on first line; status + duration wrap to second */
+    .lv-row { flex-wrap: wrap; gap: 6px 12px; padding: 10px 11px; }
+    .lv-avatar { align-self: flex-start; }
+    /* info fills first line alongside avatar (34px avatar + 12px gap = 46px) */
+    .lv-info { flex: 1 1 calc(100% - 46px); min-width: 0; }
+    /* status + duration wrap onto second line, indented past avatar */
+    .lv-status { flex: 0 0 auto; margin-left: 46px; }
+    .lv-duration { flex: 0 0 auto; min-width: unset; }
+}
 /* ═══ END LIVE VIEW PANEL ═══ */
 </style>
 
