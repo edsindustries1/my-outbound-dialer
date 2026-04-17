@@ -20,6 +20,28 @@
   <meta name="twitter:description" content="{{ comp.meta_description }}">
   <link rel="icon" type="image/png" href="/static/images/logo.png">
   <link rel="apple-touch-icon" href="/static/images/logo.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://openhumana.com"},
+      {"@type": "ListItem", "position": 2, "name": "Compare", "item": "https://openhumana.com/compare"},
+      {"@type": "ListItem", "position": 3, "name": "Open Humana vs {{ comp.competitor }}", "item": "https://openhumana.com/compare/{{ comp.slug }}"}
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Open Humana",
+    "url": "https://openhumana.com",
+    "logo": "https://openhumana.com/static/images/logo.png",
+    "founder": {"@type": "Person", "name": "Shushant Bangar"},
+    "parentOrganization": {"@type": "Organization", "name": "Everyday Digital Solutions", "url": "https://everydaydigitalsolutions.com"}
+  }
+  </script>
 </head>
 <body class="cmp-body">
 
