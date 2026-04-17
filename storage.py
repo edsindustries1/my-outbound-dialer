@@ -75,6 +75,7 @@ def _default_campaign():
         "prospect_company": "",
         "navigator_voice_id": None,
         "navigator_knowledge_base": "",
+        "contact_map": {},
     }
 
 
@@ -380,7 +381,8 @@ def reset_campaign(user_id=None):
 
 
 def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", batch_size=5, dial_delay=2, from_number=None, user_id=None, is_test=False,
-                 gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None, navigator_knowledge_base=""):
+                 gatekeeper_navigator_enabled=False, prospect_name="", prospect_company="", navigator_voice_id=None, navigator_knowledge_base="",
+                 contact_map=None):
     key = _campaign_key(user_id)
     _get_pause_event(user_id).set()
     nums_list = list(numbers)
@@ -405,6 +407,7 @@ def set_campaign(audio_url, transfer_number, numbers, dial_mode="sequential", ba
         camp["prospect_company"] = prospect_company or ""
         camp["navigator_voice_id"] = navigator_voice_id or None
         camp["navigator_knowledge_base"] = navigator_knowledge_base or ""
+        camp["contact_map"] = contact_map if contact_map is not None else {}
         _campaigns[key] = camp
         if user_id is None:
             call_states.clear()
@@ -596,7 +599,7 @@ def get_campaign(user_id=None):
         return dict(_default_campaign())
 
 
-def create_call_state(call_control_id, number, user_id=None):
+def create_call_state(call_control_id, number, user_id=None, contact_data=None):
     from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
     with lock:
         call_states[call_control_id] = {
@@ -625,6 +628,7 @@ def create_call_state(call_control_id, number, user_id=None):
             "gatekeeper_turn_count": 0,
             "gatekeeper_resolved": False,
             "navigator_voice_id": None,
+            "contact_data": contact_data or {},
         }
         if user_id is not None:
             _cid_to_user[call_control_id] = user_id
@@ -879,6 +883,8 @@ def get_all_statuses(user_id=None):
                 "transferred": state["transferred"],
                 "voicemail_dropped": state["voicemail_dropped"],
                 "ring_duration": ring_duration,
+                "ring_start": state.get("ring_start"),
+                "ring_end": state.get("ring_end"),
                 "timestamp": state.get("created_at", ""),
                 "is_live": True,
                 "status_description": state.get("status_description", ""),
@@ -888,6 +894,7 @@ def get_all_statuses(user_id=None):
                 "transcript": state.get("transcript", []),
                 "recording_url": state.get("recording_url"),
                 "vm_duration": state.get("vm_duration"),
+                "contact_data": state.get("contact_data", {}),
             })
             live_cids.add(cid)
 

@@ -273,7 +273,9 @@ def _dial_sequential(numbers, dial_delay=2, from_number=None, user_id=None):
 
             if call_control_id:
                 complete_event = register_call_complete_event(call_control_id)
-                create_call_state(call_control_id, number, user_id=user_id)
+                camp = get_campaign(user_id=user_id)
+                contact_data = camp.get("contact_map", {}).get(number, {})
+                create_call_state(call_control_id, number, user_id=user_id, contact_data=contact_data)
                 logger.info(f"Call state created for {number}, waiting for call to complete...")
                 complete_event.wait(timeout=120)
                 logger.info(f"Call to {number} completed, moving to next")
@@ -395,7 +397,9 @@ def _place_single_call(number, from_number=None, user_id=None):
 
         call_control_id, call_error = make_call(number, from_number_override=effective_from)
         if call_control_id:
-            create_call_state(call_control_id, number, user_id=user_id)
+            camp = get_campaign(user_id=user_id)
+            contact_data = camp.get("contact_map", {}).get(number, {})
+            create_call_state(call_control_id, number, user_id=user_id, contact_data=contact_data)
             logger.info(f"Call state created for {number}")
             _release_slot(user_id)
             return True

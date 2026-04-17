@@ -495,7 +495,7 @@
                                 <div class="gads-campaign-stat-label">Success Rate</div>
                             </div>
                         </div>
-                        <div class="gads-campaign-actions" style="display:flex;gap:8px;">
+                        <div class="gads-campaign-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
                             <button type="button" class="gads-btn gads-btn-outline" id="monitorPauseBtn" onclick="doPauseCampaign()">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                 Pause
@@ -505,8 +505,46 @@
                                 Resume
                             </button>
                             <button type="button" class="gads-btn gads-btn-danger" id="monitorStopBtn" onclick="doStopCampaign()">Stop Campaign</button>
+                            <button type="button" class="gads-btn lv-open-btn" id="liveViewBtn" onclick="openLiveView()" style="display:none;">
+                                <span class="lv-btn-dot"></span>
+                                Live View
+                            </button>
                         </div>
                     </div>
+
+                    <!-- ═══ LIVE VIEW PANEL ═══ -->
+                    <div id="liveViewPanel" class="lv-panel" style="display:none;">
+                        <div class="lv-panel-head">
+                            <div class="lv-panel-title-wrap">
+                                <span class="lv-live-dot"></span>
+                                <span class="lv-panel-title">Live Campaign Feed</span>
+                                <span class="lv-panel-subtitle">Updating in real time</span>
+                            </div>
+                            <button type="button" class="lv-close-btn" onclick="closeLiveView()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                        <div class="lv-kpis">
+                            <div class="lv-kpi">
+                                <div class="lv-kpi-label">Total Dials</div>
+                                <div class="lv-kpi-val" id="lvKpiTotal">0</div>
+                            </div>
+                            <div class="lv-kpi">
+                                <div class="lv-kpi-label">Transfers</div>
+                                <div class="lv-kpi-val" id="lvKpiTransfers">0</div>
+                            </div>
+                            <div class="lv-kpi">
+                                <div class="lv-kpi-label">Voicemails</div>
+                                <div class="lv-kpi-val" id="lvKpiVoicemails">0</div>
+                            </div>
+                            <div class="lv-kpi">
+                                <div class="lv-kpi-label">Success Rate</div>
+                                <div class="lv-kpi-val" id="lvKpiRate">0%</div>
+                            </div>
+                        </div>
+                        <div class="lv-feed" id="lvFeed"></div>
+                    </div>
+                    <!-- ═══ END LIVE VIEW PANEL ═══ -->
 
                     <div class="wiz-campaign-complete" id="wizCampaignComplete" style="display:none;">
                         <div class="wiz-complete-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1e8e3e" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
@@ -5144,6 +5182,8 @@
                             stopBtn.disabled = true;
                         }
 
+                        if (window._lvShowHideBtn) window._lvShowHideBtn(data.active);
+
                         // Update dashboard campaign status
                         var dashStatus = document.getElementById("dashCampaignStatus");
                         if (dashStatus) {
@@ -5397,12 +5437,21 @@
                             iphoneUpdateDialer(data.calls || [], data.active);
                         }
 
+                        if (window._lvOnStatusData) window._lvOnStatusData(data);
+
                         adjustPollSpeed(data.active || hasLiveCalls);
                     })
                     .catch(function(e) {
                         if (e.message === "auth") return;
                     });
             }
+
+            window._lvSetPollInterval = function(ms) {
+                if (ms === pollInterval) return;
+                pollInterval = ms;
+                clearInterval(pollTimer);
+                pollTimer = setInterval(pollStatus, pollInterval);
+            };
 
             window.toggleTranscript = function(id, trKey) {
                 var row = document.getElementById(id);
@@ -5421,6 +5470,7 @@
 
             function adjustPollSpeed(fast) {
                 var newInterval = fast ? 2000 : 5000;
+                if (window._lvIsOpen) newInterval = Math.min(newInterval, 1500);
                 if (newInterval !== pollInterval) {
                     pollInterval = newInterval;
                     clearInterval(pollTimer);
@@ -7427,6 +7477,51 @@
 .crm-status-voicemail_left { background: rgba(147,197,253,0.12); color:#93c5fd; border:1px solid rgba(147,197,253,0.3); }
 .crm-status-no_answer    { background: rgba(148,163,184,0.10); color:#94a3b8; border:1px solid rgba(148,163,184,0.2); }
 .crm-status-failed       { background: rgba(248,113,113,0.12); color:#f87171; border:1px solid rgba(248,113,113,0.3); }
+
+/* ═══ LIVE VIEW PANEL ═══ */
+.lv-open-btn { background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; display:inline-flex; align-items:center; gap:7px; font-weight:600; }
+.lv-open-btn:hover { opacity:.88; }
+.lv-btn-dot { width:7px; height:7px; border-radius:50%; background:#ef4444; box-shadow:0 0 0 0 rgba(239,68,68,.6); animation:lvBtnPulse 1.4s ease-in-out infinite; flex-shrink:0; }
+@keyframes lvBtnPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 50%{box-shadow:0 0 0 5px rgba(239,68,68,0)} }
+
+.lv-panel { background:linear-gradient(180deg,rgba(18,18,30,0.97),rgba(10,10,20,0.98)); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:20px; margin-top:16px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.lv-panel-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.lv-panel-title-wrap { display:flex; align-items:center; gap:10px; }
+.lv-live-dot { width:9px; height:9px; border-radius:50%; background:#ef4444; box-shadow:0 0 0 0 rgba(239,68,68,.6); animation:lvBtnPulse 1.4s ease-in-out infinite; flex-shrink:0; }
+.lv-panel-title { font-size:1rem; font-weight:700; color:#fff; letter-spacing:-.01em; }
+.lv-panel-subtitle { font-size:.68rem; color:rgba(255,255,255,.45); font-weight:500; }
+.lv-close-btn { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:rgba(255,255,255,.7); width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s; flex-shrink:0; }
+.lv-close-btn:hover { background:rgba(255,255,255,.14); }
+
+.lv-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.lv-kpi { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:11px 12px; min-width:0; }
+.lv-kpi-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,.4); font-weight:600; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lv-kpi-val { font-size:1.2rem; font-weight:800; color:#fff; line-height:1; font-variant-numeric:tabular-nums; transition:color .25s; }
+.lv-kpi-val.lv-flash { color:#22c55e; }
+
+.lv-feed { display:flex; flex-direction:column; gap:8px; max-height:380px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.12) transparent; }
+.lv-feed::-webkit-scrollbar { width:4px; }
+.lv-feed::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:2px; }
+
+.lv-row { display:flex; align-items:center; gap:12px; padding:11px 13px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07); border-radius:12px; animation:lvRowIn .42s cubic-bezier(.22,1,.36,1); transition:background .4s, border-color .4s; }
+.lv-row.lv-transfer-flash { background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.35); }
+@keyframes lvRowIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+.lv-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700; color:#fff; flex-shrink:0; letter-spacing:.5px; }
+.lv-info { flex:1; min-width:0; }
+.lv-name { font-size:.8rem; font-weight:600; color:#fff; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+.lv-tags { display:flex; flex-wrap:wrap; gap:4px; }
+.lv-tag-pill { font-size:.58rem; color:rgba(255,255,255,.55); background:rgba(255,255,255,.06); border-radius:4px; padding:2px 6px; white-space:nowrap; max-width:120px; overflow:hidden; text-overflow:ellipsis; }
+.lv-phone { font-size:.68rem; color:rgba(255,255,255,.45); font-family:'SF Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; flex-shrink:0; white-space:nowrap; }
+.lv-status { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:3px 8px; border-radius:5px; flex-shrink:0; white-space:nowrap; }
+.lv-status-initiated,.lv-status-dialing,.lv-status-test_call_ringing { background:rgba(168,85,247,.15); color:#c084fc; }
+.lv-status-ringing,.lv-status-gatekeeper_active { background:rgba(96,165,250,.15); color:#60a5fa; }
+.lv-status-human_detected,.lv-status-transferred,.lv-status-transfer_in_progress,.lv-status-human_transfer_queued { background:rgba(34,197,94,.15); color:#4ade80; }
+.lv-status-voicemail_detected,.lv-status-voicemail_dropping,.lv-status-voicemail_complete,.lv-status-voicemail_dropped { background:rgba(251,191,36,.14); color:#fbbf24; }
+.lv-status-no_answer,.lv-status-human_no_transfer,.lv-status-hangup,.lv-status-completed { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); }
+.lv-status-machine_detected,.lv-status-machine_no_vm { background:rgba(148,163,184,.12); color:#94a3b8; }
+.lv-duration { font-size:.68rem; color:rgba(255,255,255,.5); font-family:'SF Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; min-width:36px; text-align:right; flex-shrink:0; }
+/* ═══ END LIVE VIEW PANEL ═══ */
 </style>
 
 <!-- ═══════════ INTEGRATIONS JS ═══════════ -->
@@ -8921,6 +9016,295 @@
   }
 })();
 </script>
+
+<!-- ═══ LIVE VIEW SCRIPT ═══ -->
+<script>
+(function(){
+  var lvOpen = false;
+  var lvSeenIds = {};
+  var lvTransferSeen = {};
+  var lvAudioCtx = null;
+
+  var AVATAR_GRADIENTS = [
+    'linear-gradient(135deg,#6366f1,#8b5cf6)',
+    'linear-gradient(135deg,#22c55e,#10b981)',
+    'linear-gradient(135deg,#f59e0b,#f97316)',
+    'linear-gradient(135deg,#06b6d4,#3b82f6)',
+    'linear-gradient(135deg,#ec4899,#f43f5e)',
+    'linear-gradient(135deg,#a855f7,#d946ef)',
+    'linear-gradient(135deg,#14b8a6,#22c55e)',
+    'linear-gradient(135deg,#f472b6,#a78bfa)'
+  ];
+
+  function hashPhone(phone) {
+    var h = 0;
+    for (var i = 0; i < phone.length; i++) {
+      h = (h * 31 + phone.charCodeAt(i)) & 0xffffffff;
+    }
+    return Math.abs(h);
+  }
+
+  function avatarGradient(phone) {
+    return AVATAR_GRADIENTS[hashPhone(phone) % AVATAR_GRADIENTS.length];
+  }
+
+  var PHONE_FIELDS_NORM = ['phone','phone_number','phonenumber','mobile','cell','telephone','tel','number'];
+  var NAME_PRIORITY = ['first_name','full_name','name','contact_name','company'];
+
+  function normKey(k) { return k.toLowerCase().replace(/[\s_-]+/g,'_'); }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function detectPrimaryName(contact) {
+    if (!contact || !Object.keys(contact).length) return null;
+    var norm = {};
+    Object.keys(contact).forEach(function(k){ norm[normKey(k)] = k; });
+    if (norm['first_name'] && norm['last_name']) {
+      return (contact[norm['first_name']] + ' ' + contact[norm['last_name']]).trim();
+    }
+    for (var i = 0; i < NAME_PRIORITY.length; i++) {
+      if (norm[NAME_PRIORITY[i]]) return contact[norm[NAME_PRIORITY[i]]];
+    }
+    return null;
+  }
+
+  function getInitials(name) {
+    if (!name) return '??';
+    var parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0].slice(0,2).toUpperCase();
+  }
+
+  function fmtPhone(phone) {
+    var d = phone.replace(/\D/g,'');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    if (d.length === 10) return '(' + d.slice(0,3) + ') ' + d.slice(3,6) + '-' + d.slice(6);
+    return phone;
+  }
+
+  function fmtDuration(secs) {
+    if (!secs && secs !== 0) return '';
+    var m = Math.floor(secs / 60), s = secs % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function statusLabel(call) {
+    if (call.transferred) return 'Transferred';
+    if (call.voicemail_dropped) return 'Voicemail Dropped';
+    var s = call.status || '';
+    var map = {
+      'initiated':'Dialing','test_call_ringing':'Ringing','ringing':'Ringing',
+      'human_detected':'Connected','gatekeeper_active':'Gatekeeper',
+      'voicemail_detected':'Voicemail','voicemail_dropping':'VM Dropping',
+      'voicemail_complete':'VM Complete','voicemail_dropped':'Voicemail Dropped',
+      'transferred':'Transferred','transfer_in_progress':'Transferring',
+      'human_transfer_queued':'Transferring','no_answer':'No Answer',
+      'human_no_transfer':'No Transfer','hangup':'Ended','completed':'Completed',
+      'machine_detected':'Machine','machine_no_vm':'Machine'
+    };
+    return map[s] || (s.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }));
+  }
+
+  function statusClass(call) {
+    if (call.transferred) return 'lv-status-transferred';
+    if (call.voicemail_dropped) return 'lv-status-voicemail_dropped';
+    return 'lv-status-' + (call.status || 'initiated');
+  }
+
+  function playTransferTone() {
+    try {
+      if (!lvAudioCtx) lvAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var ctx = lvAudioCtx;
+      [523.25, 659.25, 783.99].forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + i * 0.12 + 0.04);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.12 + 0.18);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.2);
+      });
+    } catch(e) {}
+  }
+
+  function buildRow(call, nowTs) {
+    var contact = call.contact_data || {};
+    var phone = call.number || '';
+    var primaryName = detectPrimaryName(contact);
+    var displayName = primaryName || fmtPhone(phone);
+    var initials = primaryName ? getInitials(primaryName) : fmtPhone(phone).slice(0,2);
+    var gradient = avatarGradient(phone);
+
+    var otherTags = [];
+    Object.keys(contact).forEach(function(k) {
+      var nk = normKey(k);
+      if (PHONE_FIELDS_NORM.indexOf(nk) !== -1) return;
+      if (primaryName) {
+        var nkFlat = nk.replace(/_/g,'');
+        if (['firstname','lastname','fullname','name','contactname'].indexOf(nkFlat) !== -1) return;
+        if (nk === 'company' && primaryName === contact[k]) return;
+      }
+      var v = (contact[k] || '').trim();
+      if (v) otherTags.push(v);
+    });
+
+    var tagsHtml = '';
+    if (primaryName) {
+      tagsHtml += '<div class="lv-phone">' + esc(fmtPhone(phone)) + '</div>';
+    }
+    if (otherTags.length) {
+      tagsHtml += '<div class="lv-tags">' + otherTags.map(function(t){
+        return '<span class="lv-tag-pill">' + esc(t) + '</span>';
+      }).join('') + '</div>';
+    }
+
+    var durSecs = null;
+    if (call.ring_start) {
+      var endTs = call.ring_end || nowTs;
+      durSecs = Math.round(endTs - call.ring_start);
+    } else if (call.ring_duration != null) {
+      durSecs = call.ring_duration;
+    }
+
+    var row = document.createElement('div');
+    row.className = 'lv-row';
+    row.setAttribute('data-call-id', call.call_id || '');
+    row.innerHTML =
+      '<div class="lv-avatar" style="background:' + esc(gradient) + '">' + esc(initials) + '</div>' +
+      '<div class="lv-info">' +
+        '<div class="lv-name">' + esc(displayName) + '</div>' +
+        tagsHtml +
+      '</div>' +
+      '<span class="lv-status ' + statusClass(call) + '">' + esc(statusLabel(call)) + '</span>' +
+      '<span class="lv-duration">' + (durSecs != null ? esc(fmtDuration(durSecs)) : '—') + '</span>';
+    return row;
+  }
+
+  function lvFlash(el) {
+    if (!el) return;
+    el.classList.add('lv-flash');
+    setTimeout(function(){ el.classList.remove('lv-flash'); }, 500);
+  }
+
+  function updateKpis(calls) {
+    var total = calls.length, transfers = 0, vms = 0;
+    calls.forEach(function(c) {
+      if (c.transferred) transfers++;
+      if (c.voicemail_dropped) vms++;
+    });
+    var rate = total > 0 ? Math.round((transfers + vms) / total * 100) : 0;
+    function setKpi(id, val) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (el.textContent !== String(val)) { el.textContent = val; lvFlash(el); }
+    }
+    setKpi('lvKpiTotal', total);
+    setKpi('lvKpiTransfers', transfers);
+    setKpi('lvKpiVoicemails', vms);
+    setKpi('lvKpiRate', rate + '%');
+  }
+
+  function renderFeed(data) {
+    if (!lvOpen) return;
+    var feed = document.getElementById('lvFeed');
+    if (!feed) return;
+    var calls = (data.calls || []).filter(function(c){ return c.is_live; });
+    var nowTs = Date.now() / 1000;
+
+    updateKpis(calls);
+
+    calls.forEach(function(call) {
+      var id = call.call_id + '|' + call.number;
+      var existing = feed.querySelector('[data-call-id="' + call.call_id + '"]');
+      if (existing) {
+        var statusEl = existing.querySelector('.lv-status');
+        if (statusEl) {
+          statusEl.className = 'lv-status ' + statusClass(call);
+          statusEl.textContent = statusLabel(call);
+        }
+        var durEl = existing.querySelector('.lv-duration');
+        if (durEl && call.ring_start) {
+          var endTs = call.ring_end || nowTs;
+          durEl.textContent = fmtDuration(Math.round(endTs - call.ring_start));
+        }
+        if (call.transferred && !lvTransferSeen[id]) {
+          lvTransferSeen[id] = true;
+          existing.classList.add('lv-transfer-flash');
+          playTransferTone();
+          setTimeout(function(){ if (existing) existing.classList.remove('lv-transfer-flash'); }, 2000);
+        }
+        return;
+      }
+      if (lvSeenIds[id]) return;
+      lvSeenIds[id] = true;
+      var row = buildRow(call, nowTs);
+      feed.insertBefore(row, feed.firstChild);
+      if (call.transferred && !lvTransferSeen[id]) {
+        lvTransferSeen[id] = true;
+        row.classList.add('lv-transfer-flash');
+        playTransferTone();
+        setTimeout(function(){ if (row.parentNode) row.classList.remove('lv-transfer-flash'); }, 2000);
+      }
+      var activeRows = feed.querySelectorAll('.lv-row:not([data-removing])');
+      var excess = activeRows.length - 10;
+      for (var r = 0; r < excess; r++) {
+        var toRemove = activeRows[activeRows.length - 1 - r];
+        toRemove.setAttribute('data-removing', '1');
+        toRemove.style.transition = 'opacity .3s';
+        toRemove.style.opacity = '0';
+        setTimeout(function(el){ return function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }; }(toRemove), 300);
+      }
+    });
+  }
+
+  window.openLiveView = function() {
+    var panel = document.getElementById('liveViewPanel');
+    if (!panel) return;
+    lvOpen = true;
+    window._lvIsOpen = true;
+    lvSeenIds = {};
+    lvTransferSeen = {};
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (window._lvSetPollInterval) window._lvSetPollInterval(1500);
+    var btn = document.getElementById('liveViewBtn');
+    if (btn) btn.style.display = 'none';
+    window._lvOnStatusData = renderFeed;
+  };
+
+  window.closeLiveView = function() {
+    lvOpen = false;
+    window._lvIsOpen = false;
+    window._lvOnStatusData = null;
+    if (window._lvSetPollInterval) window._lvSetPollInterval(2000);
+    var panel = document.getElementById('liveViewPanel');
+    if (panel) panel.style.display = 'none';
+    var btn = document.getElementById('liveViewBtn');
+    if (btn) {
+      var bar = document.getElementById('campaignStatus');
+      if (bar && bar.classList.contains('active')) btn.style.display = '';
+    }
+  };
+
+  window._lvShowHideBtn = function(isActive) {
+    var btn = document.getElementById('liveViewBtn');
+    if (!btn) return;
+    if (isActive && !lvOpen) {
+      btn.style.display = '';
+    } else if (!isActive) {
+      btn.style.display = 'none';
+      if (lvOpen) window.closeLiveView();
+    }
+  };
+
+})();
+</script>
+<!-- ═══ END LIVE VIEW SCRIPT ═══ -->
 
 </body>
 </html>

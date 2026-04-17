@@ -2076,6 +2076,7 @@ def start():
     # ---- Parse phone numbers ----
     numbers = []
     csv_content_for_pvm = ""
+    contact_map = {}
 
     csv_file = request.files.get("csv_file")
     if csv_file and csv_file.filename:
@@ -2106,6 +2107,9 @@ def start():
                             else:
                                 digits = "+" + digits
                         numbers.append(digits)
+                        contact_fields = {k: v for k, v in row.items() if k != phone_col and (v or "").strip()}
+                        if contact_fields:
+                            contact_map[digits] = contact_fields
         else:
             reader2 = csv.reader(io.StringIO(content))
             header = next(reader2, None)
@@ -2253,7 +2257,7 @@ def start():
     set_campaign(audio_url, transfer_number, numbers, dial_mode=dial_mode, batch_size=batch_size, dial_delay=dial_delay, from_number=campaign_from_number, user_id=current_user.id,
                  gatekeeper_navigator_enabled=gk_enabled, prospect_name=gk_prospect_name,
                  prospect_company=gk_prospect_company, navigator_voice_id=gk_voice_id,
-                 navigator_knowledge_base=gk_knowledge_base)
+                 navigator_knowledge_base=gk_knowledge_base, contact_map=contact_map)
 
     if voicemail_type == "personalized":
         pvm_template_id = request.form.get("pvm_template_id", "").strip()
