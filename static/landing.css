@@ -501,7 +501,8 @@ spline-viewer{--logo-display:none;--watermark-display:none;--watermark-opacity:0
 .integ-card:hover{border-color:rgba(26,26,26,0.3);box-shadow:0 8px 28px var(--accent-glow);transform:translateY(-4px)}
 .integ-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:#fff;flex-shrink:0}
 .integ-logo-hubspot{background:#ff7a59}
-.integ-logo-ghl{background:linear-gradient(135deg,#0e3247 0%,#1f6f8b 100%)}
+.integ-logo-ghl{background:transparent;padding:0;width:48px;height:48px}
+.integ-logo-ghl svg{display:block}
 .integ-logo-pipedrive{background:#1b1b1b;color:#fff}
 .integ-logo-sheets{background:#0f9d58}
 .integ-logo-webhooks{background:linear-gradient(135deg,#7c3aed,#4f46e5)}
