@@ -5269,12 +5269,20 @@ def _handle_webhook():
 
         if state.get("voicemail_dropped") or state.get("transferred"):
             logger.info(f"[GREETING ENDED] {call_control_id} | Already handled (vm={state.get('voicemail_dropped')}, transfer={state.get('transferred')}), ignoring")
-        elif state.get("ivr_detected") and beep_result == "beep_detected":
-            logger.warning(f"[BEEP IGNORED] {call_control_id} | Beep detected but IVR menu was previously identified — not dropping voicemail (likely menu beep)")
-            update_call_state(call_control_id, beep_detected=True,
-                              status_description="Beep detected on IVR line — voicemail suppressed",
-                              status_color="yellow")
         elif state.get("vm_pending_audio_url") and beep_result == "beep_detected":
+            # NOTE (Task #78): A real `call.machine.greeting.ended` with
+            # `beep_detected` is Telnyx's premium-AMD confirmation that a
+            # voicemail GREETING just ended — not a generic DTMF tone. If we
+            # previously flagged the call as `ivr_detected` (menu prompts heard)
+            # but the carrier still funneled us into a real voicemail beep
+            # afterward (common when menus end in "leave a message"), we should
+            # honor it and drop. We clear the IVR flag so `_drop_voicemail_now`
+            # doesn't refuse and we log the override for auditability.
+            if state.get("ivr_detected"):
+                logger.warning(f"[BEEP OVERRIDE IVR] {call_control_id} | Real voicemail beep arrived after IVR navigation — clearing ivr_detected and dropping")
+                update_call_state(call_control_id, ivr_detected=False,
+                                  status_description="Voicemail beep after IVR — dropping",
+                                  status_color="blue")
             audio_url = state.get("vm_pending_audio_url")
             is_pvm = state.get("vm_pending_personalized", False)
             cust_num = state.get("vm_pending_customer_number", "")
@@ -5332,9 +5340,10 @@ def _handle_webhook():
             logger.info(f"[VM COMPLETE] {call_control_id} | Voicemail playback finished ({vm_duration}s), stopping recording and hanging up")
             # Stop recording AFTER playback ends so the MP3 is bounded to
             # beep + Alex's message + a short tail (Task #78).
-            if state and state.get("vm_recording_started"):
+            if state and state.get("vm_recording_started") and not state.get("vm_recording_stopped"):
                 try:
                     stop_recording(call_control_id)
+                    update_call_state(call_control_id, vm_recording_stopped=True)
                 except Exception as _e_stop:
                     logger.warning(f"[VM RECORDING] {call_control_id} | stop_recording failed: {_e_stop}")
             hangup_call(call_control_id)
@@ -5377,9 +5386,10 @@ def _handle_webhook():
                               vm_duration=vm_duration)
             logger.info(f"[VM COMPLETE fallback] {call_control_id} | Voicemail playback finished ({vm_duration}s), stopping recording and hanging up")
             # Bound the recording at the end of voicemail playback (Task #78)
-            if state.get("vm_recording_started"):
+            if state.get("vm_recording_started") and not state.get("vm_recording_stopped"):
                 try:
                     stop_recording(call_control_id)
+                    update_call_state(call_control_id, vm_recording_stopped=True)
                 except Exception as _e_stop2:
                     logger.warning(f"[VM RECORDING fallback] {call_control_id} | stop_recording failed: {_e_stop2}")
             hangup_call(call_control_id)
@@ -5829,6 +5839,17 @@ def _handle_webhook():
         if state:
             current_status = state.get("status", "")
             updates = {"hangup_cause": hangup_cause}
+
+            # Best-effort: bound any voicemail recording at hangup so non-standard
+            # termination paths (carrier disconnects mid-message, network drops,
+            # IVR-rejected hangups) still produce a closed MP3 instead of relying
+            # on Telnyx's automatic stop-on-hangup (Task #78).
+            if state.get("vm_recording_started") and not state.get("vm_recording_stopped"):
+                try:
+                    stop_recording(call_control_id)
+                    updates["vm_recording_stopped"] = True
+                except Exception as _e_stop_hu:
+                    logger.warning(f"[VM RECORDING hangup] {call_control_id} | stop_recording failed (non-fatal): {_e_stop_hu}")
 
             if current_status == "transferred" and _was_active_transfer:
                 updates["status"] = "transfer_complete"
