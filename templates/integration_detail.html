@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ item.name }} integration — Open Humana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/pages.css">
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <meta name="description" content="Step-by-step instructions to connect {{ item.name }} with Open Humana — auto-log calls, sync contacts, and trigger downstream workflows.">
+  <style>
+    body.subpage { background:#fff; color:#0a0a0a; }
+
+    .id-hero { background:#000; color:#fff; padding:88px 0 60px; border-bottom:1px solid #1a1a1a; }
+    .id-hero-inner { max-width:880px; margin:0 auto; padding:0 24px; }
+
+    .id-crumb { font-size:12px; color:rgba(255,255,255,0.45); margin-bottom:24px; }
+    .id-crumb a { color:rgba(255,255,255,0.7); text-decoration:none; }
+    .id-crumb a:hover { color:#fff; }
+
+    .id-hero-row { display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .id-hero-logo { width:88px; height:88px; border-radius:20px; background:#fff; display:flex; align-items:center; justify-content:center; flex:none; padding:14px; }
+    .id-hero-logo img, .id-hero-logo svg { width:100%; height:100%; object-fit:contain; }
+    .id-hero-logo-ghl { background:#FFD000; }
+    .id-hero-logo-webhooks { background:#0a0a0a; }
+    .id-hero-logo-webhooks svg { stroke:#fff; }
+
+    .id-hero-text { flex:1; min-width:260px; }
+    .id-tier-badge { display:inline-flex; align-items:center; gap:8px; font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; padding:5px 12px; border-radius:999px; margin-bottom:14px; }
+    .id-tier-badge.native { background:rgba(34,197,94,0.18); color:#86efac; }
+    .id-tier-badge.zapier { background:rgba(59,130,246,0.18); color:#93c5fd; }
+    .id-tier-badge.soon   { background:rgba(245,158,11,0.18); color:#fcd34d; }
+    .id-hero h1 { font-family:'DM Serif Display', Georgia, serif; font-size:clamp(34px, 4.5vw, 48px); font-weight:400; font-style:italic; line-height:1.08; letter-spacing:-0.01em; margin:0 0 12px; color:#fff; }
+    .id-hero .id-tag { font-size:16px; color:rgba(255,255,255,0.65); margin:0; line-height:1.6; }
+
+    .id-wrap { max-width:880px; margin:0 auto; padding:56px 24px 80px; }
+
+    .id-summary { font-size:17px; color:#1a1a1a; line-height:1.75; margin:0 0 48px; padding:24px 28px; background:#f8f8f8; border-radius:14px; border-left:4px solid #0a0a0a; }
+
+    .id-section { margin-bottom:48px; }
+    .id-section-label { font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#888; margin-bottom:14px; }
+    .id-section h2 { font-family:'DM Serif Display', Georgia, serif; font-size:28px; font-weight:400; color:#0a0a0a; margin:0 0 20px; line-height:1.2; }
+
+    .id-need { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:12px; }
+    .id-need li { display:flex; gap:12px; align-items:flex-start; font-size:15px; color:#222; line-height:1.65; padding:14px 16px; background:#fafafa; border:1px solid #ececec; border-radius:10px; }
+    .id-need li::before { content:""; flex:none; width:20px; height:20px; border-radius:50%; background:#0a0a0a url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><polyline points='20 6 9 17 4 12'/></svg>") center/12px no-repeat; margin-top:2px; }
+    .id-need li code { background:#fff; border:1px solid #e3e3e3; padding:1px 6px; border-radius:4px; font-size:13px; }
+    .id-need li a { color:#0a0a0a; text-decoration:underline; }
+
+    .id-steps { list-style:none; padding:0; margin:0; counter-reset:step; }
+    .id-step { display:flex; gap:20px; padding:24px 0; border-bottom:1px solid #ececec; }
+    .id-step:last-child { border-bottom:0; }
+    .id-step-num { flex:none; width:38px; height:38px; border-radius:50%; background:#0a0a0a; color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; }
+    .id-step-body { flex:1; }
+    .id-step-body h3 { font-size:17px; font-weight:700; margin:0 0 8px; color:#0a0a0a; line-height:1.4; }
+    .id-step-body p { font-size:15px; color:#444; line-height:1.7; margin:0; }
+    .id-step-body p code { background:#f4f4f4; border:1px solid #e3e3e3; padding:1px 6px; border-radius:4px; font-size:13.5px; }
+    .id-step-body p strong { color:#0a0a0a; font-weight:700; }
+    .id-step-body p a { color:#0a0a0a; text-decoration:underline; }
+
+    .id-cta-box { margin-top:48px; padding:36px 32px; background:#0a0a0a; color:#fff; border-radius:18px; display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+    .id-cta-box-text { flex:1; min-width:240px; }
+    .id-cta-box h3 { font-family:'DM Serif Display', Georgia, serif; font-size:22px; font-weight:400; margin:0 0 6px; color:#fff; }
+    .id-cta-box p { font-size:14px; color:rgba(255,255,255,0.7); margin:0; }
+    .id-cta-btn { display:inline-flex; align-items:center; gap:8px; padding:13px 24px; background:#fff; color:#0a0a0a; border-radius:999px; text-decoration:none; font-weight:700; font-size:14px; }
+
+    .id-others { margin-top:64px; }
+    .id-others-head { font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#888; margin-bottom:18px; }
+    .id-others-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+    @media (max-width:760px) { .id-others-grid { grid-template-columns:repeat(2, 1fr); } }
+    .id-other { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid #ececec; border-radius:10px; text-decoration:none; color:#0a0a0a; transition:border-color .18s ease, transform .18s ease; }
+    .id-other:hover { border-color:#0a0a0a; transform:translateY(-2px); }
+    .id-other-logo { width:32px; height:32px; border-radius:8px; background:#fff; border:1px solid #ececec; display:flex; align-items:center; justify-content:center; flex:none; overflow:hidden; padding:4px; }
+    .id-other-logo img, .id-other-logo svg { width:100%; height:100%; object-fit:contain; }
+    .id-other-logo-ghl { background:#FFD000; border-color:#FFD000; }
+    .id-other-logo-webhooks { background:#0a0a0a; border-color:#0a0a0a; }
+    .id-other-logo-webhooks svg { stroke:#fff; }
+    .id-other-name { font-size:13px; font-weight:600; }
+  </style>
+</head>
+<body class="subpage">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:32px;">
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/pricing" class="nav-link">Pricing</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/integrations" class="nav-link" style="color:#0a0a0a;font-weight:700;">Integrations</a>
+      </div>
+      <div class="nav-cta">
+        <a href="/login" class="nav-link">Sign in</a>
+        <a href="#" data-open-lead class="btn-cta">Book Alex</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="id-hero">
+    <div class="id-hero-inner">
+      <p class="id-crumb"><a href="/">Open Humana</a> &nbsp;/&nbsp; <a href="/integrations">Integrations</a> &nbsp;/&nbsp; {{ item.name }}</p>
+      <div class="id-hero-row">
+        {% if item.slug == 'gohighlevel' %}
+          <div class="id-hero-logo id-hero-logo-ghl"><svg viewBox="0 0 50 50" fill="none"><path d="M34.011 19.7427c-.111-.2556-.2943-.473-.5275-.6253-.2333-.1522-.5061-.2325-.7846-.2309H16.8868c-.2782.0005-.5503.0818-.7832.234-.233.1521-.4167.3686-.5291.6231-.1123.2545-.1484.5362-.1038.8108.0446.2746.168.5304.3551.7363l.0071.0081 6.0852 6.4975v6.9027c-.0001.2602.0705.5155.2041.7387.1336.2232.3253.406.5547.5288s.4878.181.7477.1686c.2598-.0125.5115-.0953.728-.2395l2.875-1.9173c.1971-.1312.3587-.3092.4704-.5179.1118-.2088.1702-.442.1702-.6788v-4.9854l6.086-6.4975.0072-.0081c.189-.205.3136-.4611.358-.7364.0444-.2753.0068-.5576-.1083-.8116z" fill="#07223D"/></svg></div>
+        {% elif item.slug == 'outbound-webhooks' %}
+          <div class="id-hero-logo id-hero-logo-webhooks"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+        {% else %}
+          <div class="id-hero-logo"><img src="{{ url_for('static', filename=item.logo) }}" alt="{{ item.name }} logo"></div>
+        {% endif %}
+        <div class="id-hero-text">
+          <span class="id-tier-badge {{ item.tier }}">
+            {% if item.tier == 'native' %}Native integration
+            {% elif item.tier == 'zapier' %}Zapier &amp; Make
+            {% else %}Coming soon{% endif %}
+          </span>
+          <h1>Connect {{ item.name }} with Open Humana</h1>
+          <p class="id-tag">{{ item.tagline }}</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="id-wrap">
+
+    <p class="id-summary">{{ item.summary }}</p>
+
+    <section class="id-section">
+      <p class="id-section-label">Before you start</p>
+      <h2>What you'll need</h2>
+      <ul class="id-need">
+        {% for need in item.what_youll_need %}
+          <li>{{ need|safe }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="id-section">
+      <p class="id-section-label">Setup guide</p>
+      <h2>Step-by-step instructions</h2>
+      <ol class="id-steps">
+        {% for title, body in item.steps %}
+          <li class="id-step">
+            <div class="id-step-num">{{ loop.index }}</div>
+            <div class="id-step-body">
+              <h3>{{ title }}</h3>
+              <p>{{ body|safe }}</p>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    </section>
+
+    <div class="id-cta-box">
+      <div class="id-cta-box-text">
+        <h3>Ready to get this live?</h3>
+        <p>Open the {{ item.name }} integration inside your Open Humana dashboard and follow the steps above.</p>
+      </div>
+      <a href="/login" class="id-cta-btn">Open the integration <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+
+    <section class="id-others">
+      <p class="id-others-head">Other integrations</p>
+      <div class="id-others-grid">
+        {% for o in others %}
+          <a href="/integrations/{{ o.slug }}" class="id-other">
+            {% if o.slug == 'gohighlevel' %}
+              <div class="id-other-logo id-other-logo-ghl"><svg viewBox="0 0 50 50" fill="none"><path d="M34.011 19.7427c-.111-.2556-.2943-.473-.5275-.6253-.2333-.1522-.5061-.2325-.7846-.2309H16.8868c-.2782.0005-.5503.0818-.7832.234-.233.1521-.4167.3686-.5291.6231-.1123.2545-.1484.5362-.1038.8108.0446.2746.168.5304.3551.7363l.0071.0081 6.0852 6.4975v6.9027c-.0001.2602.0705.5155.2041.7387.1336.2232.3253.406.5547.5288s.4878.181.7477.1686c.2598-.0125.5115-.0953.728-.2395l2.875-1.9173c.1971-.1312.3587-.3092.4704-.5179.1118-.2088.1702-.442.1702-.6788v-4.9854l6.086-6.4975.0072-.0081c.189-.205.3136-.4611.358-.7364.0444-.2753.0068-.5576-.1083-.8116z" fill="#07223D"/></svg></div>
+            {% elif o.slug == 'outbound-webhooks' %}
+              <div class="id-other-logo id-other-logo-webhooks"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+            {% else %}
+              <div class="id-other-logo"><img src="{{ url_for('static', filename=o.logo) }}" alt="{{ o.name }} logo" loading="lazy"></div>
+            {% endif %}
+            <span class="id-other-name">{{ o.name }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" style="margin-top:0;">
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p class="footer-copy">&copy; 2026 <a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;opacity:0.8;">Everyday Digital Solutions</a>. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="/integrations">Integrations</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/privacy">Privacy</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/terms">Terms</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/compliance">Compliance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

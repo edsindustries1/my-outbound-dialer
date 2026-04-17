@@ -1332,6 +1332,34 @@ def compliance_page():
 def privacy_page():
     return render_template("privacy.html")
 
+@app.route("/integrations")
+def integrations_index():
+    from integrations_catalog import by_tier, TIER_LABELS, NATIVE, ZAPIER, SOON
+    groups = by_tier()
+    return render_template(
+        "integrations_index.html",
+        native=groups[NATIVE],
+        zapier=groups[ZAPIER],
+        soon=groups[SOON],
+        tier_labels=TIER_LABELS,
+    )
+
+@app.route("/integrations/<slug>")
+def integration_detail(slug):
+    from integrations_catalog import by_slug, TIER_LABELS, INTEGRATIONS
+    item = by_slug(slug)
+    if not item:
+        from flask import abort
+        abort(404)
+    # neighbours for "Other integrations" footer strip
+    others = [i for i in INTEGRATIONS if i["slug"] != slug][:8]
+    return render_template(
+        "integration_detail.html",
+        item=item,
+        tier_label=TIER_LABELS[item["tier"]],
+        others=others,
+    )
+
 @app.route("/terms")
 def terms_page():
     return render_template("terms.html")

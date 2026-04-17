@@ -52,10 +52,10 @@
                 <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
                 <div><strong>Real-Time Transcription</strong><span>Every call transcribed live for instant review</span></div>
               </div>
-              <div class="mega-item" data-target="integrations">
+              <a class="mega-item" href="/integrations" style="text-decoration:none;color:inherit;">
                 <div class="mega-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
                 <div><strong>CRM &amp; Data Integrations</strong><span>HubSpot, GoHighLevel, Pipedrive, Google Sheets &amp; webhooks</span></div>
-              </div>
+              </a>
             </div>
           </div>
         </div>
@@ -665,217 +665,6 @@
     </div>
   </section>
 
-  <section class="superpowers" id="integrations">
-    <div class="section-inner">
-      <p class="section-eyebrow anim-up">CRM &amp; Data Sync</p>
-      <h2 class="section-title anim-up">Works With The Tools You Already Use</h2>
-      <p class="section-sub anim-up">Every completed call is automatically logged to your CRM or spreadsheet. No manual entry, no tab-switching, no data loss — it just happens in the background.</p>
-
-      <div class="integ-tier-head anim-up">
-        <span class="integ-tier-dot integ-tier-dot-native"></span>
-        <span class="integ-tier-label">Native integrations</span>
-        <span class="integ-tier-meta">Built and shipping today</span>
-      </div>
-      <div class="integ-grid">
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/hubspot.svg') }}" alt="HubSpot logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>HubSpot</h3>
-          <p>Auto-log every call as a HubSpot activity with full transcript and outcome.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/salesforce.svg') }}" alt="Salesforce logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Salesforce</h3>
-          <p>Bi-directional sync of contacts, leads, and call activities to your Salesforce org.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-ghl" aria-hidden="true"><svg viewBox="0 0 50 50" fill="none"><rect x="3" y="3" width="44" height="44" rx="22" fill="#FFD000"/><path d="M34.011 19.7427c-.111-.2556-.2943-.473-.5275-.6253-.2333-.1522-.5061-.2325-.7846-.2309H16.8868c-.2782.0005-.5503.0818-.7832.234-.233.1521-.4167.3686-.5291.6231-.1123.2545-.1484.5362-.1038.8108.0446.2746.168.5304.3551.7363l.0071.0081 6.0852 6.4975v6.9027c-.0001.2602.0705.5155.2041.7387.1336.2232.3253.406.5547.5288s.4878.181.7477.1686c.2598-.0125.5115-.0953.728-.2395l2.875-1.9173c.1971-.1312.3587-.3092.4704-.5179.1118-.2088.1702-.442.1702-.6788v-4.9854l6.086-6.4975.0072-.0081c.189-.205.3136-.4611.358-.7364.0444-.2753.0068-.5576-.1083-.8116zM26.4264 27.0245c-.1243.1319-.1943.3058-.1958.487v5.2702l-2.875 1.9173v-7.1875c0-.1825-.0694-.3582-.1941-.4914L16.8868 20.324H32.6993l-6.2729 6.7005z" fill="#07223D"/></svg></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>GoHighLevel</h3>
-          <p>Plug into GHL Locations and sync calls, transfers, and voicemail drops to pipelines.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/pipedrive.svg') }}" alt="Pipedrive logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Pipedrive</h3>
-          <p>Log calls against existing Pipedrive deals and contacts the moment a call completes.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/zoho.svg') }}" alt="Zoho CRM logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Zoho CRM</h3>
-          <p>Push every dial, transfer, and voicemail drop straight into your Zoho deals.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/close.svg') }}" alt="Close.com logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Close.com</h3>
-          <p>Built for outbound sales — Alex slots into your Close workflow without rework.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/googlesheets.svg') }}" alt="Google Sheets logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Google Sheets</h3>
-          <p>Write every call to a sheet in real time — pivot, dashboard, or export instantly.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/slack.svg') }}" alt="Slack logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Slack</h3>
-          <p>Live transfer pings, daily campaign digests, and voicemail alerts in any channel.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/salesloft.svg') }}" alt="Salesloft logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Salesloft</h3>
-          <p>Plug Alex into existing Salesloft cadences — let humans close, AI does the dialing.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/outreach.svg') }}" alt="Outreach logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Outreach</h3>
-          <p>Sync prospect activity, sequence steps, and call dispositions both ways.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-webhooks" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Outbound Webhooks</h3>
-          <p>Fire a signed POST to any URL on call-end — pipe data into anything custom.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/zapier.svg') }}" alt="Zapier logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-native">Native</span>
-          </div>
-          <h3>Zapier</h3>
-          <p>Open Humana ships as a Zapier trigger — wire calls into 6,000+ apps in minutes.</p>
-        </div>
-      </div>
-
-      <div class="integ-tier-head anim-up">
-        <span class="integ-tier-dot integ-tier-dot-zapier"></span>
-        <span class="integ-tier-label">Available via Zapier &amp; Make</span>
-        <span class="integ-tier-meta">Works today through our automation connectors</span>
-      </div>
-      <div class="integ-grid">
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/make.svg') }}" alt="Make.com logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-zapier">Zapier / Make</span>
-          </div>
-          <h3>Make.com</h3>
-          <p>Build powerful visual scenarios that fire on any Open Humana call event.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/dynamics365.svg') }}" alt="Microsoft Dynamics 365 logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-zapier">Zapier / Make</span>
-          </div>
-          <h3>Dynamics 365</h3>
-          <p>Push call activities and contact updates into Microsoft Dynamics CRM.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/microsoftteams.svg') }}" alt="Microsoft Teams logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-zapier">Zapier / Make</span>
-          </div>
-          <h3>Microsoft Teams</h3>
-          <p>Drop call summaries, transcripts, and transfer alerts straight into a Teams channel.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/activecampaign.svg') }}" alt="ActiveCampaign logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-zapier">Zapier / Make</span>
-          </div>
-          <h3>ActiveCampaign</h3>
-          <p>Trigger automations the moment a call is transferred or a voicemail is dropped.</p>
-        </div>
-
-        <div class="integ-tile anim-up">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/mailchimp.svg') }}" alt="Mailchimp logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-zapier">Zapier / Make</span>
-          </div>
-          <h3>Mailchimp</h3>
-          <p>Add or tag subscribers based on call outcome — perfect for nurture follow-up.</p>
-        </div>
-      </div>
-
-      <div class="integ-tier-head anim-up">
-        <span class="integ-tier-dot integ-tier-dot-soon"></span>
-        <span class="integ-tier-label">Coming soon</span>
-        <span class="integ-tier-meta">On the near-term roadmap</span>
-      </div>
-      <div class="integ-grid">
-        <div class="integ-tile anim-up integ-tile-soon">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/bullhorn.svg') }}" alt="Bullhorn logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-soon">Coming Soon</span>
-          </div>
-          <h3>Bullhorn</h3>
-          <p>Native sync for staffing &amp; recruiting agencies — candidates, jobs, placements.</p>
-        </div>
-
-        <div class="integ-tile anim-up integ-tile-soon">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/gong.svg') }}" alt="Gong logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-soon">Coming Soon</span>
-          </div>
-          <h3>Gong</h3>
-          <p>Stream call recordings and transcripts to Gong for conversation intelligence.</p>
-        </div>
-
-        <div class="integ-tile anim-up integ-tile-soon">
-          <div class="integ-tile-head">
-            <div class="integ-logo integ-logo-img"><img src="{{ url_for('static', filename='integrations/monday.svg') }}" alt="monday.com logo" loading="lazy"></div>
-            <span class="integ-badge integ-badge-soon">Coming Soon</span>
-          </div>
-          <h3>monday.com</h3>
-          <p>Create or update items on any board the moment a call lands or transfers.</p>
-        </div>
-      </div>
-
-      <p class="integ-all-link anim-up"><a href="/integrations">See all integrations <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></p>
-    </div>
-  </section>
-
   <section class="compliance-strip">
     <div class="section-inner">
       <div class="compliance-card anim-up">
@@ -1014,6 +803,8 @@
       <div class="footer-bottom-inner">
         <p class="footer-copy">&copy; 2026 <a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;opacity:0.8;">Everyday Digital Solutions</a>. All rights reserved.</p>
         <div class="footer-bottom-links">
+          <a href="/integrations">Integrations</a>
+          <span class="footer-dot">&middot;</span>
           <a href="/privacy">Privacy</a>
           <span class="footer-dot">&middot;</span>
           <a href="/terms">Terms</a>

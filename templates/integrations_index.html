@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrations — Open Humana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <link rel="stylesheet" href="/static/pages.css">
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <meta name="description" content="Open Humana plugs into HubSpot, Salesforce, GoHighLevel, Pipedrive, Zoho, Close, Slack, Salesloft, Outreach, Google Sheets, Zapier, Make, and more — click any to see step-by-step setup instructions.">
+  <style>
+    body.subpage { background:#fff; color:#0a0a0a; }
+
+    .ix-hero { background:#000; color:#fff; padding:110px 0 72px; text-align:center; border-bottom:1px solid #1a1a1a; }
+    .ix-hero-inner { max-width:780px; margin:0 auto; padding:0 24px; }
+    .ix-badge { display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(255,255,255,0.2); border-radius:2px; padding:5px 14px; font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:32px; }
+    .ix-hero h1 { font-family:'DM Serif Display', Georgia, serif; font-size:clamp(36px, 5.5vw, 58px); font-weight:400; font-style:italic; line-height:1.08; letter-spacing:-0.01em; margin:0 0 22px; color:#fff; }
+    .ix-hero p { font-size:16px; color:rgba(255,255,255,0.62); line-height:1.75; margin:0 auto; max-width:600px; }
+
+    .ix-wrap { max-width:1180px; margin:0 auto; padding:64px 24px 80px; }
+
+    .ix-tier { margin-bottom:56px; }
+    .ix-tier-head { display:flex; align-items:center; gap:14px; margin-bottom:22px; flex-wrap:wrap; }
+    .ix-tier-dot { width:10px; height:10px; border-radius:999px; flex:none; }
+    .ix-tier-dot-native { background:#22c55e; box-shadow:0 0 0 4px rgba(34,197,94,0.18); }
+    .ix-tier-dot-zapier { background:#3b82f6; box-shadow:0 0 0 4px rgba(59,130,246,0.18); }
+    .ix-tier-dot-soon   { background:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,0.18); }
+    .ix-tier-label { font-size:11px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#0a0a0a; }
+    .ix-tier-meta  { font-size:13px; color:#666; margin-left:auto; }
+
+    .ix-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; }
+    @media (max-width:1100px) { .ix-grid { grid-template-columns:repeat(3, 1fr); } }
+    @media (max-width:760px)  { .ix-grid { grid-template-columns:repeat(2, 1fr); } }
+    @media (max-width:460px)  { .ix-grid { grid-template-columns:1fr; } }
+
+    .ix-card { display:flex; flex-direction:column; gap:14px; padding:22px; border:1px solid #ececec; border-radius:14px; background:#fff; text-decoration:none; color:inherit; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; min-height:170px; }
+    .ix-card:hover { transform:translateY(-3px); border-color:#0a0a0a; box-shadow:0 18px 40px -22px rgba(0,0,0,0.18); }
+    .ix-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .ix-logo { width:46px; height:46px; border-radius:12px; background:#fff; border:1px solid #ececec; display:flex; align-items:center; justify-content:center; flex:none; overflow:hidden; }
+    .ix-logo img, .ix-logo svg { width:30px; height:30px; object-fit:contain; }
+    .ix-logo-ghl { background:#FFD000; border-color:#FFD000; }
+    .ix-logo-webhooks { background:#0a0a0a; border-color:#0a0a0a; }
+    .ix-logo-webhooks svg { stroke:#fff; }
+    .ix-badge { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:4px 8px; border-radius:999px; }
+    .ix-badge-native { background:#dcfce7; color:#166534; }
+    .ix-badge-zapier { background:#dbeafe; color:#1e40af; }
+    .ix-badge-soon   { background:#fef3c7; color:#92400e; }
+    .ix-card h3 { font-size:16px; font-weight:700; margin:0; color:#0a0a0a; line-height:1.3; }
+    .ix-card p { font-size:13px; color:#5a5a5a; line-height:1.55; margin:0; flex:1; }
+    .ix-card-foot { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:#0a0a0a; }
+    .ix-card-foot svg { transition:transform .18s ease; }
+    .ix-card:hover .ix-card-foot svg { transform:translateX(3px); }
+
+    .ix-cta { margin-top:48px; padding:48px 24px; background:#f7f7f7; border-radius:18px; text-align:center; }
+    .ix-cta h2 { font-family:'DM Serif Display', Georgia, serif; font-size:28px; font-weight:400; margin:0 0 10px; color:#0a0a0a; }
+    .ix-cta p { font-size:14px; color:#555; margin:0 0 22px; }
+    .ix-cta-btn { display:inline-flex; align-items:center; gap:8px; padding:13px 26px; background:#0a0a0a; color:#fff; border-radius:999px; text-decoration:none; font-weight:600; font-size:14px; }
+    .ix-cta-btn:hover { background:#1a1a1a; }
+  </style>
+</head>
+<body class="subpage">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/static/images/logo.png" alt="Open Humana" style="height:32px;">
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/pricing" class="nav-link">Pricing</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/integrations" class="nav-link" style="color:#0a0a0a;font-weight:700;">Integrations</a>
+      </div>
+      <div class="nav-cta">
+        <a href="/login" class="nav-link">Sign in</a>
+        <a href="#" data-open-lead class="btn-cta">Book Alex</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="ix-hero">
+    <div class="ix-hero-inner">
+      <span class="ix-badge">Integrations Directory</span>
+      <h1>Plug Open Humana into the tools your team already runs on.</h1>
+      <p>Twenty integrations across CRMs, dialers, automation platforms, and team chat — every call, transcript, and outcome flows wherever you need it. Click any tile for the step-by-step setup guide.</p>
+    </div>
+  </header>
+
+  <main class="ix-wrap">
+
+    <section class="ix-tier">
+      <div class="ix-tier-head">
+        <span class="ix-tier-dot ix-tier-dot-native"></span>
+        <span class="ix-tier-label">Native integrations</span>
+        <span class="ix-tier-meta">Built and shipping today — no third-party connector required.</span>
+      </div>
+      <div class="ix-grid">
+        {% for it in native %}
+        <a href="/integrations/{{ it.slug }}" class="ix-card">
+          <div class="ix-card-head">
+            {% if it.slug == 'gohighlevel' %}
+              <div class="ix-logo ix-logo-ghl"><svg viewBox="0 0 50 50" fill="none" width="30" height="30"><path d="M34.011 19.7427c-.111-.2556-.2943-.473-.5275-.6253-.2333-.1522-.5061-.2325-.7846-.2309H16.8868c-.2782.0005-.5503.0818-.7832.234-.233.1521-.4167.3686-.5291.6231-.1123.2545-.1484.5362-.1038.8108.0446.2746.168.5304.3551.7363l.0071.0081 6.0852 6.4975v6.9027c-.0001.2602.0705.5155.2041.7387.1336.2232.3253.406.5547.5288s.4878.181.7477.1686c.2598-.0125.5115-.0953.728-.2395l2.875-1.9173c.1971-.1312.3587-.3092.4704-.5179.1118-.2088.1702-.442.1702-.6788v-4.9854l6.086-6.4975.0072-.0081c.189-.205.3136-.4611.358-.7364.0444-.2753.0068-.5576-.1083-.8116z" fill="#07223D"/></svg></div>
+            {% elif it.slug == 'outbound-webhooks' %}
+              <div class="ix-logo ix-logo-webhooks"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" width="30" height="30"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div>
+            {% else %}
+              <div class="ix-logo"><img src="{{ url_for('static', filename=it.logo) }}" alt="{{ it.name }} logo" loading="lazy"></div>
+            {% endif %}
+            <span class="ix-badge ix-badge-native">Native</span>
+          </div>
+          <h3>{{ it.name }}</h3>
+          <p>{{ it.tagline }}</p>
+          <span class="ix-card-foot">View setup guide <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="ix-tier">
+      <div class="ix-tier-head">
+        <span class="ix-tier-dot ix-tier-dot-zapier"></span>
+        <span class="ix-tier-label">Available via Zapier &amp; Make</span>
+        <span class="ix-tier-meta">Wire up in minutes through our automation connectors.</span>
+      </div>
+      <div class="ix-grid">
+        {% for it in zapier %}
+        <a href="/integrations/{{ it.slug }}" class="ix-card">
+          <div class="ix-card-head">
+            <div class="ix-logo"><img src="{{ url_for('static', filename=it.logo) }}" alt="{{ it.name }} logo" loading="lazy"></div>
+            <span class="ix-badge ix-badge-zapier">Zapier / Make</span>
+          </div>
+          <h3>{{ it.name }}</h3>
+          <p>{{ it.tagline }}</p>
+          <span class="ix-card-foot">View setup guide <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="ix-tier">
+      <div class="ix-tier-head">
+        <span class="ix-tier-dot ix-tier-dot-soon"></span>
+        <span class="ix-tier-label">Coming soon</span>
+        <span class="ix-tier-meta">In active development — join the beta waitlist.</span>
+      </div>
+      <div class="ix-grid">
+        {% for it in soon %}
+        <a href="/integrations/{{ it.slug }}" class="ix-card">
+          <div class="ix-card-head">
+            <div class="ix-logo"><img src="{{ url_for('static', filename=it.logo) }}" alt="{{ it.name }} logo" loading="lazy"></div>
+            <span class="ix-badge ix-badge-soon">Coming Soon</span>
+          </div>
+          <h3>{{ it.name }}</h3>
+          <p>{{ it.tagline }}</p>
+          <span class="ix-card-foot">View setup guide <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="ix-cta">
+      <h2>Don't see your tool?</h2>
+      <p>Use Outbound Webhooks to fire signed JSON to any URL, or email us — we ship custom connectors fast.</p>
+      <a href="mailto:integrations@openhumana.com" class="ix-cta-btn">Email integrations@openhumana.com <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+
+  </main>
+
+  <footer class="footer" style="margin-top:0;">
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p class="footer-copy">&copy; 2026 <a href="https://everydaydigitalsolutions.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;opacity:0.8;">Everyday Digital Solutions</a>. All rights reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="/integrations">Integrations</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/privacy">Privacy</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/terms">Terms</a>
+          <span class="footer-dot">&middot;</span>
+          <a href="/compliance">Compliance</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
