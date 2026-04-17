@@ -1833,10 +1833,28 @@ def get_quick_call_status(user_id, crm_contact_id, crm_source=None):
 # ── Call Recording URLs ──────────────────────────────────────────────────
 
 def store_recording_url(call_control_id, recording_url):
+    # Update in-memory state if the call is still live
     with lock:
         state = call_states.get(call_control_id)
         if state:
             state["recording_url"] = recording_url
+
+    # Always write directly to the DB — call.recording.saved fires AFTER
+    # call.hangup, so the in-memory state is often already evicted by this point.
+    def _persist():
+        try:
+            from models import CallRecord, db
+            rec = CallRecord.query.filter_by(call_control_id=call_control_id).first()
+            if not rec:
+                _db_logger.warning(f"store_recording_url: no CallRecord for {call_control_id}")
+                return
+            rec.recording_url = recording_url
+            rec.updated_at = datetime.utcnow()
+            db.session.commit()
+            _db_logger.info(f"store_recording_url: saved to DB for {call_control_id}")
+        except Exception as e:
+            _db_logger.error(f"store_recording_url DB error: {e}")
+    _db_write_async(_persist)
 
 def get_recording_urls():
     history = get_call_history()
