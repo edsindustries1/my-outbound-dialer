@@ -1412,7 +1412,56 @@
                             <input type="text" id="testNumber" class="gads-input" placeholder="Number to call: +15551234567" maxlength="16">
                             <input type="text" id="testTransferNumber" class="gads-input" placeholder="Transfer to: +15559876543" maxlength="16">
                         </div>
-                        <div class="gads-input-row" style="margin-top:8px;align-items:center;">
+
+                        <!-- Voicemail mode toggle -->
+                        <div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <span style="font-size:13px;font-weight:500;color:var(--gads-text-secondary);white-space:nowrap;">Voicemail Mode:</span>
+                            <div style="display:flex;gap:0;background:var(--gads-bg-secondary,#f3f4f6);border:1px solid var(--gads-border);border-radius:8px;padding:2px;overflow:hidden;">
+                                <button type="button" id="testVmStdBtn" onclick="testSetVmMode('standard')" style="border:none;background:var(--gads-primary);color:#fff;border-radius:6px;font-size:12px;font-weight:600;padding:5px 16px;cursor:pointer;transition:all 0.15s;">Standard</button>
+                                <button type="button" id="testVmPvmBtn" onclick="testSetVmMode('pvm')" style="border:none;background:transparent;color:var(--gads-text-secondary);border-radius:6px;font-size:12px;font-weight:600;padding:5px 16px;cursor:pointer;transition:all 0.15s;">Personalized AI</button>
+                            </div>
+                        </div>
+
+                        <!-- PVM test section (hidden by default) -->
+                        <div id="testPvmSection" style="display:none;margin-top:12px;padding:14px;border:1px solid var(--gads-border);border-radius:10px;background:var(--gads-bg-secondary,#f8f9fa);">
+                            <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;color:var(--gads-text-tertiary,#9ca3af);text-transform:uppercase;margin-bottom:10px;">Personalized Voicemail Settings</div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:12px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Script Template</label>
+                                <select id="testPvmTemplate" class="gads-select" style="width:100%;">
+                                    <option value="">Loading script templates…</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:12px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Test Contact Details <span style="font-weight:400;">(fills placeholders in your script)</span></label>
+                                <div class="gads-input-row" style="flex-wrap:wrap;gap:6px;">
+                                    <input type="text" id="testPvmFirstName" class="gads-input" placeholder="First name" style="flex:1;min-width:100px;" maxlength="40">
+                                    <input type="text" id="testPvmLastName" class="gads-input" placeholder="Last name" style="flex:1;min-width:100px;" maxlength="40">
+                                    <input type="text" id="testPvmCompany" class="gads-input" placeholder="Company" style="flex:1;min-width:120px;" maxlength="60">
+                                </div>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <label style="font-size:12px;color:var(--gads-text-secondary);display:block;margin-bottom:4px;">Voice</label>
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <select id="testPvmVoice" class="gads-select" style="flex:1;" onchange="testPvmVoiceChanged()">
+                                        <option value="">Select a voice…</option>
+                                    </select>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="testPvmRefreshVoices()" title="Refresh voices">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                                    </button>
+                                    <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" id="testPvmSampleBtn" onclick="testPvmPlaySample()" style="display:none;white-space:nowrap;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                        Sample
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="testPvmAudioPreview" style="display:none;margin-top:8px;">
+                                <audio id="testPvmPreviewPlayer" controls style="width:100%;border-radius:6px;"></audio>
+                                <div style="font-size:11px;color:var(--gads-text-secondary);margin-top:4px;">Generated voicemail — this is exactly what your contact will hear.</div>
+                            </div>
+                            <div id="testPvmStatus" style="margin-top:6px;font-size:12px;color:var(--gads-text-secondary);min-height:18px;"></div>
+                        </div>
+
+                        <div class="gads-input-row" style="margin-top:10px;align-items:center;">
                             <label style="margin:0;font-size:13px;white-space:nowrap;">Call from:</label>
                             <select id="testFromNumber" class="gads-select" style="max-width:240px;">
                                 <option value="">Default ({{ secure_from }})</option>
@@ -2842,12 +2891,20 @@
                                             <span style="font-size:11px;color:var(--gads-text-tertiary);white-space:nowrap;">{address}</span>
                                         </div>
                                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
-                                            <select id="vmtPreviewVoiceSelect" class="gads-select" style="flex:1;min-width:180px;">
+                                            <select id="vmtPreviewVoiceSelect" class="gads-select" style="flex:1;min-width:180px;" onchange="vmtVoiceSampleChanged()">
                                                 <option value="">Loading voices...</option>
                                             </select>
                                             <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" onclick="vmtLoadPreviewVoices()" title="Refresh voices">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                                             </button>
+                                            <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" id="vmtSampleVoiceBtn" onclick="vmtPlayVoiceSample()" title="Listen to a voice sample" style="display:none;white-space:nowrap;">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+                                                Listen
+                                            </button>
+                                        </div>
+                                        <div id="vmtVoiceSampleBox" style="display:none;margin-bottom:8px;">
+                                            <audio id="vmtVoiceSamplePlayer" controls style="width:100%;border-radius:6px;"></audio>
+                                            <div style="font-size:11px;color:var(--gads-text-secondary);margin-top:3px;" id="vmtVoiceSampleLabel"></div>
                                         </div>
                                         <div style="margin-bottom:8px;">
                                             <select id="vmtPreviewModel" class="gads-select">
@@ -4346,18 +4403,25 @@
                 }
             }
 
+            var _vmtVoicePreviewUrls = {};
+
             function vmtLoadPreviewVoices() {
                 var sel = document.getElementById("vmtPreviewVoiceSelect");
                 if (!sel) return;
                 sel.innerHTML = '<option value="">Loading voices...</option>';
+                _vmtVoicePreviewUrls = {};
                 apiFetch("/humana-voice/api/my-voices").then(function(r) { return r.json(); }).then(function(voices) {
                     _vmtFishVoiceIds = new Set();
                     if (!Array.isArray(voices) || voices.length === 0) {
                         sel.innerHTML = '<option value="">No voices saved — add voices in Humana Voice</option>';
                         vmtUpdateProviderUI("");
+                        document.getElementById("vmtSampleVoiceBtn").style.display = "none";
                         return;
                     }
-                    voices.forEach(function(v) { _vmtFishVoiceIds.add(v.voice_id); });
+                    voices.forEach(function(v) {
+                        _vmtFishVoiceIds.add(v.voice_id);
+                        if (v.preview_url) _vmtVoicePreviewUrls[v.voice_id] = v.preview_url;
+                    });
                     var cloned = voices.filter(function(v) { return v.voice_type === "cloned"; });
                     var library = voices.filter(function(v) { return v.voice_type !== "cloned"; });
                     var html = '<option value="">-- Select a voice --</option>';
@@ -4377,7 +4441,30 @@
                     }
                     sel.innerHTML = html;
                     vmtUpdateProviderUI(sel.value);
+                    vmtVoiceSampleChanged();
                 }).catch(function(e) { if (e.message === "auth") return; sel.innerHTML = '<option value="">-- Select a voice --</option>'; });
+            }
+
+            function vmtVoiceSampleChanged() {
+                var sel = document.getElementById("vmtPreviewVoiceSelect");
+                var btn = document.getElementById("vmtSampleVoiceBtn");
+                if (!sel || !btn) return;
+                btn.style.display = (sel.value && _vmtVoicePreviewUrls[sel.value]) ? "inline-flex" : "none";
+                var sampleBox = document.getElementById("vmtVoiceSampleBox");
+                if (sampleBox) sampleBox.style.display = "none";
+            }
+
+            function vmtPlayVoiceSample() {
+                var voiceId = document.getElementById("vmtPreviewVoiceSelect").value;
+                var url = _vmtVoicePreviewUrls[voiceId];
+                if (!url) { showToast("No sample available for this voice", "warning"); return; }
+                var box = document.getElementById("vmtVoiceSampleBox");
+                var player = document.getElementById("vmtVoiceSamplePlayer");
+                var label = document.getElementById("vmtVoiceSampleLabel");
+                player.src = url;
+                box.style.display = "";
+                player.play();
+                if (label) label.textContent = "Voice sample — this is how your agent will sound when leaving voicemails.";
             }
 
             document.addEventListener("DOMContentLoaded", function() {
@@ -4806,11 +4893,89 @@
                     .catch(function() { if (_testCallActive) setTimeout(trackTestCallStatus, 2000); });
             }
 
-            testCallBtn.addEventListener("click", function() {
-                var number = testNumber.value.trim();
-                if (!number) { alert("Enter a phone number"); return; }
-                var transferNum = document.getElementById("testTransferNumber").value.trim();
-                if (!transferNum) { alert("Enter a transfer number for human-answered calls"); return; }
+            // ---- Test Dialer: VM Mode (Standard vs Personalized) ----
+            var _testVmMode = "standard";
+            var _testPvmVoicePreviewUrls = {};
+
+            function testSetVmMode(mode) {
+                _testVmMode = mode;
+                var stdBtn = document.getElementById("testVmStdBtn");
+                var pvmBtn = document.getElementById("testVmPvmBtn");
+                var pvmSec = document.getElementById("testPvmSection");
+                var primary = "var(--gads-primary)", primaryTxt = "#fff";
+                var none = "transparent", noneTxt = "var(--gads-text-secondary)";
+                if (mode === "pvm") {
+                    stdBtn.style.background = none; stdBtn.style.color = noneTxt;
+                    pvmBtn.style.background = primary; pvmBtn.style.color = primaryTxt;
+                    pvmSec.style.display = "";
+                    testPvmLoadTemplates();
+                    testPvmRefreshVoices();
+                } else {
+                    stdBtn.style.background = primary; stdBtn.style.color = primaryTxt;
+                    pvmBtn.style.background = none; pvmBtn.style.color = noneTxt;
+                    pvmSec.style.display = "none";
+                }
+            }
+
+            function testPvmLoadTemplates() {
+                var sel = document.getElementById("testPvmTemplate");
+                if (!sel) return;
+                apiFetch("/api/vm-templates").then(function(r){return r.json();}).then(function(data){
+                    var templates = (data.templates || []).filter(function(t){ return t.type === "script"; });
+                    if (templates.length === 0) {
+                        sel.innerHTML = '<option value="">No script templates found — create one in Humana Voice</option>';
+                        return;
+                    }
+                    var html = '<option value="">-- Select a script template --</option>';
+                    templates.forEach(function(t){
+                        html += '<option value="' + t.id + '">' + (t.name || "Untitled").replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</option>';
+                    });
+                    sel.innerHTML = html;
+                }).catch(function(){});
+            }
+
+            function testPvmRefreshVoices() {
+                var sel = document.getElementById("testPvmVoice");
+                if (!sel) return;
+                sel.innerHTML = '<option value="">Loading voices…</option>';
+                _testPvmVoicePreviewUrls = {};
+                apiFetch("/humana-voice/api/my-voices").then(function(r){return r.json();}).then(function(voices){
+                    if (!Array.isArray(voices) || voices.length === 0) {
+                        sel.innerHTML = '<option value="">No voices — add voices in Humana Voice</option>';
+                        return;
+                    }
+                    voices.forEach(function(v){ if (v.preview_url) _testPvmVoicePreviewUrls[v.voice_id] = v.preview_url; });
+                    var cloned = voices.filter(function(v){ return v.voice_type === "cloned"; });
+                    var library = voices.filter(function(v){ return v.voice_type !== "cloned"; });
+                    var html = '<option value="">-- Select a voice --</option>';
+                    if (cloned.length) { html += '<optgroup label="My Cloned Voices">'; cloned.forEach(function(v){ html += '<option value="' + v.voice_id + '">' + (v.voice_name || v.voice_id) + '</option>'; }); html += '</optgroup>'; }
+                    if (library.length) { html += '<optgroup label="Library Voices">'; library.forEach(function(v){ html += '<option value="' + v.voice_id + '">' + (v.voice_name || v.voice_id) + '</option>'; }); html += '</optgroup>'; }
+                    sel.innerHTML = html;
+                    testPvmVoiceChanged();
+                }).catch(function(){});
+            }
+
+            function testPvmVoiceChanged() {
+                var sel = document.getElementById("testPvmVoice");
+                var btn = document.getElementById("testPvmSampleBtn");
+                if (!sel || !btn) return;
+                btn.style.display = (sel.value && _testPvmVoicePreviewUrls[sel.value]) ? "inline-flex" : "none";
+            }
+
+            function testPvmPlaySample() {
+                var voiceId = document.getElementById("testPvmVoice").value;
+                var url = _testPvmVoicePreviewUrls[voiceId];
+                if (!url) return;
+                var previewBox = document.getElementById("testPvmAudioPreview");
+                var player = document.getElementById("testPvmPreviewPlayer");
+                player.src = url;
+                previewBox.style.display = "";
+                player.play();
+                document.getElementById("testPvmStatus").textContent = "Playing voice sample…";
+                player.onended = function(){ document.getElementById("testPvmStatus").textContent = ""; };
+            }
+
+            function _doPlaceTestCall(number, transferNum) {
                 testCallBtn.disabled = true;
                 testCallBtn.textContent = "Calling...";
                 endTestCallBtn.style.display = "inline-block";
@@ -4850,6 +5015,64 @@
                         endTestCallBtn.style.display = "none";
                         showToast("Request failed", "error");
                     });
+            }
+
+            testCallBtn.addEventListener("click", function() {
+                var number = testNumber.value.trim();
+                if (!number) { alert("Enter a phone number"); return; }
+                var transferNum = document.getElementById("testTransferNumber").value.trim();
+                if (!transferNum) { alert("Enter a transfer number for human-answered calls"); return; }
+
+                if (_testVmMode === "pvm") {
+                    var templateId = document.getElementById("testPvmTemplate").value;
+                    var voiceId = document.getElementById("testPvmVoice").value;
+                    var firstName = document.getElementById("testPvmFirstName").value.trim();
+                    var lastName = document.getElementById("testPvmLastName").value.trim();
+                    var company = document.getElementById("testPvmCompany").value.trim();
+                    if (!templateId) { showToast("Select a script template for personalized voicemail", "warning"); return; }
+                    if (!voiceId) { showToast("Select a voice for personalized voicemail", "warning"); return; }
+                    var statusEl = document.getElementById("testPvmStatus");
+                    statusEl.textContent = "Generating personalized voicemail audio…";
+                    testCallBtn.disabled = true;
+                    testCallBtn.textContent = "Generating…";
+                    apiFetch("/api/test_pvm_prep", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({
+                            phone_number: number,
+                            template_id: templateId,
+                            voice_id: voiceId,
+                            contact: { first_name: firstName, last_name: lastName, company: company, phone: number }
+                        })
+                    })
+                    .then(function(r){ return r.json(); })
+                    .then(function(data){
+                        if (data.error) {
+                            testCallBtn.disabled = false;
+                            testCallBtn.textContent = "Start Test Call";
+                            statusEl.textContent = "";
+                            showToast(data.error, "error");
+                            return;
+                        }
+                        var previewBox = document.getElementById("testPvmAudioPreview");
+                        var player = document.getElementById("testPvmPreviewPlayer");
+                        player.src = data.audio_url;
+                        previewBox.style.display = "";
+                        statusEl.textContent = "Audio ready — placing call now…";
+                        testCallBtn.disabled = false;
+                        _doPlaceTestCall(number, transferNum);
+                        statusEl.textContent = "Call placed! When the call hits voicemail, your personalized message will play.";
+                    })
+                    .catch(function(e){
+                        if (e.message === "auth") return;
+                        testCallBtn.disabled = false;
+                        testCallBtn.textContent = "Start Test Call";
+                        document.getElementById("testPvmStatus").textContent = "";
+                        showToast("Audio generation failed", "error");
+                    });
+                } else {
+                    _doPlaceTestCall(number, transferNum);
+                }
             });
 
             function doHangup() {

@@ -2415,6 +2415,63 @@ def test_call():
         return jsonify({"error": f"Failed to place call: {call_error}"}), 500
 
 
+@app.route("/api/test_pvm_prep", methods=["POST"])
+@login_required
+@require_credit
+def test_pvm_prep():
+    """Pre-generate personalized voicemail audio for a single test call and register it in the audio map."""
+    _detect_and_set_base_url()
+    data = request.get_json() or {}
+    phone_number = data.get("phone_number", "").strip()
+    template_id = data.get("template_id", "").strip()
+    script_text = data.get("script", "").strip()
+    voice_id = data.get("voice_id", "").strip()
+    contact = data.get("contact", {})
+    model_id = data.get("model_id", "eleven_turbo_v2_5").strip()
+
+    if not phone_number:
+        return jsonify({"error": "Phone number is required"}), 400
+    if not voice_id:
+        return jsonify({"error": "A voice must be selected"}), 400
+
+    if not script_text and template_id:
+        from storage import get_vm_templates as _gvt
+        for t in _gvt(user_id=current_user.id):
+            if t.get("id") == template_id and t.get("type") == "script":
+                script_text = t.get("content", "")
+                break
+
+    if not script_text:
+        return jsonify({"error": "A script template is required"}), 400
+
+    provider, fish_speed, fish_emotion = _detect_pvm_provider(voice_id, current_user.id, model_id)
+    base_url = _get_app_base_url()
+
+    filename, result = pvm_preview_audio(
+        contact, script_text, voice_id,
+        voice_settings=None, humanize=True,
+        model_id=model_id, provider=provider,
+        fish_speed=fish_speed, fish_emotion=fish_emotion,
+    )
+    if not filename:
+        return jsonify({"error": f"Audio generation failed: {result}"}), 500
+
+    audio_url = f"{base_url}/audio/personalized/{filename}"
+    digits = re.sub(r'[^\d+]', '', phone_number)
+    audio_map = pvm_get_audio_map()
+    audio_map[digits] = {
+        "audio_url": audio_url,
+        "script": result if isinstance(result, str) else script_text,
+        "phone": digits,
+        "from_cache": False,
+        "is_test": True,
+    }
+    from personalized_vm import _save_audio_map as _pvm_save_map
+    _pvm_save_map(audio_map)
+    logger.info(f"[TEST PVM PREP] Registered test PVM audio for {digits}: {audio_url}")
+    return jsonify({"audio_url": audio_url, "script": result if isinstance(result, str) else script_text})
+
+
 @app.route("/api/hangup_call", methods=["POST"])
 @login_required
 def api_hangup_call():
