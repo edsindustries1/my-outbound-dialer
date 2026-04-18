@@ -5306,7 +5306,12 @@
                     html += "<td>-</td>";
                 }
                 if (c.recording_url) {
-                    html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';
+                    var recUrlAttr = c.recording_url.replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+                    if (c.status === "voicemail_complete") {
+                        html += '<td class="td-vm-audio"><audio class="vm-inline-audio" controls preload="none" src="' + recUrlAttr + '"></audio></td>';
+                    } else {
+                        html += '<td><button type="button" class="btn-transcript" onclick="playRecording(\'' + c.recording_url.replace(/'/g, "\\'") + '\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> Play</button></td>';
+                    }
                 } else if (isLive) {
                     html += '<td><span style="font-size:11px;color:var(--gads-text-secondary);">Recording...</span></td>';
                 } else {
@@ -7760,6 +7765,12 @@
 .lv-status-ringing,.lv-status-gatekeeper_active { background:rgba(96,165,250,.15); color:#60a5fa; }
 .lv-status-human_detected,.lv-status-transferred,.lv-status-transfer_in_progress,.lv-status-human_transfer_queued { background:rgba(34,197,94,.15); color:#4ade80; }
 .lv-status-voicemail_detected,.lv-status-voicemail_dropping,.lv-status-voicemail_complete,.lv-status-voicemail_dropped { background:rgba(251,191,36,.14); color:#fbbf24; }
+.td-vm-audio { min-width:240px; padding:6px 8px !important; }
+.vm-inline-audio { width:240px; max-width:100%; height:32px; vertical-align:middle; display:inline-block; }
+@media (max-width: 639px) {
+    .td-vm-audio { min-width:0; width:100%; display:block; }
+    .vm-inline-audio { width:100%; height:36px; }
+}
 .lv-status-no_answer,.lv-status-human_no_transfer,.lv-status-hangup,.lv-status-completed { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); }
 .lv-status-machine_detected,.lv-status-machine_no_vm { background:rgba(148,163,184,.12); color:#94a3b8; }
 .lv-duration { font-size:.68rem; color:rgba(255,255,255,.5); font-family:'SF Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; min-width:36px; text-align:right; flex-shrink:0; }
