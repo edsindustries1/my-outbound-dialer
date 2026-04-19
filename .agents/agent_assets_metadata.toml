@@ -6,3 +6,9 @@ id = "KMoWXG2DC86BY7o8EfMH4"
 uri = "file://knowledge_base_open_humana.md"
 type = "text"
 title = "Open Humana — Master Knowledge Base"
+
+[[outputs]]
+id = "cW7UdsfJwyBOzN7V6YmRl"
+uri = "file://attached_assets/openhumana-brand-fonts.zip"
+type = "unspecified"
+title = "Open Humana Brand Fonts Kit (ZIP)"
