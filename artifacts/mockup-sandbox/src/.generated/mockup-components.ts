@@ -5,8 +5,6 @@ export const modules: ModuleMap = {
   "./components/mockups/contacts-variants/IntelligenceHub.tsx": () => import("../components/mockups/contacts-variants/IntelligenceHub.tsx"),
   "./components/mockups/contacts-variants/PowerDataTable.tsx": () => import("../components/mockups/contacts-variants/PowerDataTable.tsx"),
   "./components/mockups/contacts-variants/TwoPanelWorkspace.tsx": () => import("../components/mockups/contacts-variants/TwoPanelWorkspace.tsx"),
-  "./components/mockups/landing-variants/Authority.tsx": () => import("../components/mockups/landing-variants/Authority.tsx"),
-  "./components/mockups/landing-variants/Signal.tsx": () => import("../components/mockups/landing-variants/Signal.tsx"),
   "./components/mockups/dashboard-variants/ActionFirst.tsx": () => import("../components/mockups/dashboard-variants/ActionFirst.tsx"),
   "./components/mockups/dashboard-variants/ActionFirstFocused.tsx": () => import("../components/mockups/dashboard-variants/ActionFirstFocused.tsx"),
   "./components/mockups/dashboard-variants/ActionFirstStreamlined.tsx": () => import("../components/mockups/dashboard-variants/ActionFirstStreamlined.tsx"),
@@ -15,5 +13,7 @@ export const modules: ModuleMap = {
   "./components/mockups/dashboard-variants/DailyBriefingEditorial.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingEditorial.tsx"),
   "./components/mockups/dashboard-variants/DailyBriefingPolished.tsx": () => import("../components/mockups/dashboard-variants/DailyBriefingPolished.tsx"),
   "./components/mockups/dashboard-variants/PipelineFunnel.tsx": () => import("../components/mockups/dashboard-variants/PipelineFunnel.tsx"),
-  "./components/mockups/dashboard-variants/SaaSMainDashboard.tsx": () => import("../components/mockups/dashboard-variants/SaaSMainDashboard.tsx")
+  "./components/mockups/dashboard-variants/SaaSMainDashboard.tsx": () => import("../components/mockups/dashboard-variants/SaaSMainDashboard.tsx"),
+  "./components/mockups/landing-variants/Authority.tsx": () => import("../components/mockups/landing-variants/Authority.tsx"),
+  "./components/mockups/landing-variants/Signal.tsx": () => import("../components/mockups/landing-variants/Signal.tsx")
 };
