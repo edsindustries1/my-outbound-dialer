@@ -1076,11 +1076,15 @@ def _send_sms_compliance_reply(user_id, from_number, to_number, body, keyword=No
     if err:
         logger.error(f"Compliance reply failed to {to_e164}: {err}")
         return None
-    bill = _bill_sms(user_id, segments)
+    # Compliance auto-replies (STOP/HELP/START) are mandated by carriers and
+    # are absorbed at the platform level — they MUST NOT consume the customer's
+    # SMS bundle or credit balance. We persist segments + a $0 charge for
+    # observability and let internal cost reporting derive Telnyx-side spend
+    # from the row's segment count and is_compliance_reply flag.
     rec = SmsMessage(
         user_id=user_id, from_number=from_e164, to_number=to_e164, body=body,
         direction="out", status="sent", segments=segments,
-        cost_charged=bill["cost_charged"], bundle_used=bill["bundle_used"],
+        cost_charged=0, bundle_used=0,
         telnyx_id=msg_id, is_compliance_reply=True,
         status_reason=f"compliance:{keyword}" if keyword else "compliance",
     )
