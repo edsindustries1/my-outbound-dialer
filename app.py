@@ -7799,7 +7799,10 @@ def super_admin():
             "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "N/A",
             "last_activity": last_call_time[:16].replace("T", " ") if last_call_time else "Never",
             "messaging_profile_id": u.telnyx_messaging_profile_id or "",
-            "sms_ready": bool((u.telnyx_messaging_profile_id or "").strip()) and len(numbers) > 0,
+            "sms_ready": (
+                bool((u.telnyx_messaging_profile_id or "").strip())
+                and any(n.messaging_attached_at is not None for n in numbers)
+            ),
         })
 
     platform_calls_today = sum(1 for c in all_calls if c.get("timestamp", "").startswith(today_str))
@@ -8547,7 +8550,9 @@ def numbers_marketplace_page():
             "status": p.status,
             "is_included": p.is_included,
             "created_at": p.created_at.isoformat() + "Z" if p.created_at else None,
-            "messaging_attached": has_messaging_profile and p.status == 'active',
+            # Truth-aligned with the SMS gate: only show "Live" once Telnyx
+            # confirmed the attach (messaging_attached_at populated).
+            "messaging_attached": p.messaging_attached_at is not None and p.status == 'active',
         })
     plan = _get_user_plan(user_id) or "starter"
     return render_template(
