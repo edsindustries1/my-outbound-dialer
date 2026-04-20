@@ -350,8 +350,27 @@ document.getElementById('threadSearch').addEventListener('input', (e) => {
 
 loadAnalytics();
 loadThreads();
-// Light polling so new inbound replies show up without a refresh
-setInterval(() => { loadThreads(); if(!CURRENT) return; }, 30000);
+// Light polling so new inbound replies show up without a refresh.
+// Also re-fetch the currently open conversation so live replies appear.
+setInterval(() => {
+  loadThreads();
+  if (CURRENT) {
+    // Silent refresh of the open thread; preserves user's draft in textarea.
+    fetch('/api/sms/messages?contact=' + encodeURIComponent(CURRENT), {credentials:'same-origin'})
+      .then(r => r.json())
+      .then(j => {
+        if (!j || !j.success || j.contact_number !== CURRENT) return;
+        const draft = (document.getElementById('replyBody') || {}).value;
+        renderConvo(j);
+        const ta = document.getElementById('replyBody');
+        if (ta && draft) {
+          ta.value = draft;
+          ta.dispatchEvent(new Event('input'));
+        }
+      })
+      .catch(() => {});
+  }
+}, 30000);
 </script>
 </body>
 </html>
