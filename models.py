@@ -10,7 +10,7 @@ from datetime import datetime
 import logging
 import uuid
 
-from sqlalchemy import Numeric, Text
+from sqlalchemy import Numeric, Text, text
 
 db = SQLAlchemy()
 logger = logging.getLogger("voicemail_app")
@@ -438,8 +438,30 @@ def _ensure_schema():
             logger.info("Creating sms_templates table")
             db.create_all()
 
+        # SMS campaigns (Task #90)
+        if "sms_campaigns" not in inspector.get_table_names():
+            logger.info("Creating sms_campaigns table")
+            db.create_all()
+        if "sms_campaign_recipients" not in inspector.get_table_names():
+            logger.info("Creating sms_campaign_recipients table")
+            db.create_all()
+
+        # Tag outbound SmsMessage rows with their owning SMS campaign so the
+        # inbox, daily report and per-campaign analytics can all share the same
+        # source of truth. Nullable FK — most SMS rows (voicemail follow-ups,
+        # manual sends, inbound replies) won't have this set.
+        sm_cols = {col["name"] for col in inspector.get_columns("sms_messages")}
+        if "sms_campaign_id" not in sm_cols:
+            db.session.execute(text("ALTER TABLE sms_messages ADD COLUMN sms_campaign_id INTEGER"))
+            db.session.execute(text(
+                "CREATE INDEX IF NOT EXISTS ix_sms_messages_sms_campaign_id "
+                "ON sms_messages (sms_campaign_id)"
+            ))
+            db.session.commit()
+
         _seed_max_concurrent_lines()
         _recover_interrupted_campaigns()
+        _recover_interrupted_sms_campaigns()
 
     except Exception as e:
         logger.exception(f"Schema ensure failed: {e}")
@@ -479,6 +501,39 @@ def _seed_max_concurrent_lines():
     except Exception as e:
         db.session.rollback()
         logger.warning(f"Could not seed max_concurrent_lines: {e}")
+
+
+def _recover_interrupted_sms_campaigns():
+    """On startup, any SmsCampaign in 'running' or 'paused' state was killed
+    by the restart. Mark them 'interrupted' so the UI shows them clearly
+    and the user can resume or cancel. Also release any recipients the
+    former worker had claimed ('sending') back to 'pending' so the resumed
+    worker will retry them — we can't know whether the send actually made
+    it to Telnyx, but that branch is guarded by idempotent claims in
+    send_compliant_sms (duplicate telnyx_id unique constraint)."""
+    try:
+        # Release half-claimed recipients regardless of campaign status so we
+        # never strand a row in 'sending'.
+        db.session.execute(text(
+            "UPDATE sms_campaign_recipients SET status='pending', updated_at=NOW() "
+            "WHERE status='sending'"
+        ))
+        rows = SmsCampaign.query.filter(SmsCampaign.status.in_(['running', 'paused'])).all()
+        if not rows:
+            db.session.commit()
+            return
+        for camp in rows:
+            old = camp.status
+            camp.status = 'interrupted'
+            camp.updated_at = datetime.utcnow()
+            logger.warning(
+                f"SmsCampaign {camp.id} user={camp.user_id} was '{old}' at shutdown — "
+                f"marked 'interrupted' ({camp.sent_count}/{camp.total_count} sent)"
+            )
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Could not recover interrupted SMS campaigns: {e}")
 
 
 def _recover_interrupted_campaigns():
@@ -532,6 +587,7 @@ class SmsMessage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     call_record_id = db.Column(db.Integer, db.ForeignKey('call_records.id'), nullable=True, index=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=True, index=True)
+    sms_campaign_id = db.Column(db.Integer, db.ForeignKey('sms_campaigns.id'), nullable=True, index=True)
     from_number = db.Column(db.String(30), nullable=False)
     to_number = db.Column(db.String(30), nullable=False, index=True)
     body = db.Column(Text, nullable=False, default='')
@@ -599,6 +655,106 @@ class SmsOptOut(db.Model):
             'keyword': self.keyword,
             'created_at': self.opted_out_at.isoformat() + 'Z' if self.opted_out_at else None,
             'opted_out_at': self.opted_out_at.isoformat() + 'Z' if self.opted_out_at else None,
+        }
+
+
+class SmsCampaign(db.Model):
+    """SMS-only campaign (blast). Distinct from voicemail Campaign; recipients
+    live in sms_campaign_recipients. Progress counters are denormalized for
+    fast dashboard queries and kept in sync by the worker."""
+    __tablename__ = 'sms_campaigns'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    name = db.Column(db.String(255), default='Untitled SMS Campaign', nullable=False)
+    status = db.Column(db.String(20), default='draft', nullable=False, index=True)
+    # draft | queued | running | paused | completed | cancelled | interrupted | failed
+    from_number = db.Column(db.String(30), nullable=False, default='')
+    body_template = db.Column(Text, nullable=False, default='')
+    agent_name = db.Column(db.String(120), default='', nullable=False)
+    custom_link = db.Column(db.String(500), default='', nullable=False)
+    total_count = db.Column(db.Integer, default=0, nullable=False)
+    sent_count = db.Column(db.Integer, default=0, nullable=False)
+    delivered_count = db.Column(db.Integer, default=0, nullable=False)
+    failed_count = db.Column(db.Integer, default=0, nullable=False)
+    skipped_count = db.Column(db.Integer, default=0, nullable=False)
+    opt_out_count = db.Column(db.Integer, default=0, nullable=False)
+    segments_sent = db.Column(db.Integer, default=0, nullable=False)
+    cost_charged = db.Column(Numeric(10, 4), default=0, nullable=False)
+    dedupe_audience = db.Column(db.Boolean, default=True, nullable=False)
+    respect_quiet_hours = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    recipients = db.relationship('SmsCampaignRecipient', backref='campaign',
+                                 lazy=True, cascade='all, delete-orphan')
+
+    def to_dict(self):
+        def _pct(n, d):
+            return round((n / d) * 100, 1) if d else 0.0
+        processed = (self.sent_count + self.failed_count + self.skipped_count + self.opt_out_count)
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'name': self.name,
+            'status': self.status,
+            'from_number': self.from_number,
+            'body_template': self.body_template,
+            'agent_name': self.agent_name,
+            'custom_link': self.custom_link,
+            'total_count': self.total_count,
+            'sent_count': self.sent_count,
+            'delivered_count': self.delivered_count,
+            'failed_count': self.failed_count,
+            'skipped_count': self.skipped_count,
+            'opt_out_count': self.opt_out_count,
+            'segments_sent': self.segments_sent,
+            'cost_charged': float(self.cost_charged or 0),
+            'processed_count': processed,
+            'progress_pct': _pct(processed, self.total_count),
+            'delivery_rate': _pct(self.delivered_count, self.sent_count),
+            'dedupe_audience': self.dedupe_audience,
+            'respect_quiet_hours': self.respect_quiet_hours,
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
+            'started_at': self.started_at.isoformat() + 'Z' if self.started_at else None,
+            'completed_at': self.completed_at.isoformat() + 'Z' if self.completed_at else None,
+            'updated_at': self.updated_at.isoformat() + 'Z' if self.updated_at else None,
+        }
+
+
+class SmsCampaignRecipient(db.Model):
+    """One row per recipient in an SmsCampaign. The worker walks this table,
+    updates status in-place, and links to the resulting SmsMessage row."""
+    __tablename__ = 'sms_campaign_recipients'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    sms_campaign_id = db.Column(db.Integer, db.ForeignKey('sms_campaigns.id'),
+                                nullable=False, index=True)
+    to_number = db.Column(db.String(30), nullable=False, index=True)
+    contact_data = db.Column(db.JSON, nullable=True)
+    status = db.Column(db.String(20), default='pending', nullable=False, index=True)
+    # pending | sent | delivered | failed | opted_out | skipped | rate_limited | payment_required
+    sms_message_id = db.Column(db.Integer, db.ForeignKey('sms_messages.id'), nullable=True)
+    segments = db.Column(db.Integer, default=0, nullable=False)
+    error = db.Column(db.String(500), nullable=True)
+    attempted_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sms_campaign_id': self.sms_campaign_id,
+            'to_number': self.to_number,
+            'contact_data': self.contact_data or {},
+            'status': self.status,
+            'sms_message_id': self.sms_message_id,
+            'segments': self.segments,
+            'error': self.error,
+            'attempted_at': self.attempted_at.isoformat() + 'Z' if self.attempted_at else None,
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None,
         }
 
 

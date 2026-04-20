@@ -8109,12 +8109,29 @@ def telnyx_sms_webhook():
                 if to_list and isinstance(to_list, list):
                     new_status = (to_list[0].get("status") or "").lower()
                     if new_status:
+                        prev_status = rec.status
                         rec.status = new_status
                         # `updated_at` is auto-maintained via onupdate=. If the
                         # status reflects a delivery terminal, also stamp delivered_at
                         # so dashboards can compute deliverability accurately.
                         if new_status == "delivered" and not rec.delivered_at:
                             rec.delivered_at = datetime.utcnow()
+
+                        # Campaign linkage: propagate delivery terminal state
+                        # to the SmsCampaignRecipient row and increment the
+                        # owning campaign's delivered_count idempotently.
+                        if rec.sms_campaign_id and new_status in ("delivered", "failed", "undelivered"):
+                            from models import SmsCampaignRecipient, SmsCampaign
+                            crec = (SmsCampaignRecipient.query
+                                    .filter_by(sms_message_id=rec.id).first())
+                            if crec and crec.status != new_status and crec.status not in ("delivered", "failed"):
+                                crec.status = new_status if new_status != "undelivered" else "failed"
+                                crec.updated_at = datetime.utcnow()
+                                if new_status == "delivered":
+                                    camp = SmsCampaign.query.get(rec.sms_campaign_id)
+                                    if camp:
+                                        camp.delivered_count = (camp.delivered_count or 0) + 1
+                                        camp.updated_at = datetime.utcnow()
                         db.session.commit()
         except Exception as e:
             logger.warning(f"[SMS WEBHOOK] status update failed: {e}")
@@ -8615,6 +8632,353 @@ def api_sms_opt_outs():
         return jsonify({"success": True})
     _remove_sms_opt_out(current_user.id, contact)
     return jsonify({"success": True})
+
+
+# --------------------------------------------------------------------------
+# SMS Campaigns (Task #90) — standalone SMS blast builder
+# --------------------------------------------------------------------------
+
+def _sms_campaigns_feature_available():
+    """Convenience wrapper — matches /sms-inbox and /sms-companion behaviour."""
+    return _sms_feature_enabled()
+
+
+def _parse_sms_audience(raw_text: str, csv_storage=None, dedupe: bool = True):
+    """Accepts pasted numbers (comma/newline separated) and/or an uploaded CSV
+    and produces a list of {to_number, contact_data} dicts for the recipient
+    table.
+
+    CSV handling: first row is treated as headers. Columns matched
+    case-insensitively: phone/number/mobile/cell → phone; first_name/first →
+    first_name; last_name/last/surname → last_name; company/organization →
+    company; email → email. Extra columns are preserved in contact_data.
+    """
+    import csv as _csv
+    import io as _io
+    rows = []
+    seen = set()
+
+    def _emit(num, extra):
+        norm = _normalize_sms_number(num)
+        if not norm:
+            return
+        if dedupe and norm in seen:
+            return
+        seen.add(norm)
+        rows.append({"to_number": norm, "contact_data": extra or {}})
+
+    if raw_text:
+        for line in raw_text.replace(";", ",").replace("|", ",").splitlines():
+            for chunk in line.split(","):
+                chunk = chunk.strip()
+                if chunk:
+                    _emit(chunk, {})
+
+    if csv_storage is not None:
+        try:
+            raw = csv_storage.read()
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8", errors="replace")
+            reader = _csv.reader(_io.StringIO(raw))
+            header = None
+            for i, r in enumerate(reader):
+                if not r:
+                    continue
+                if i == 0 and any(not c.replace("+", "").replace("-", "").replace("(", "").replace(")", "").replace(" ", "").isdigit() for c in r if c):
+                    header = [h.strip().lower() for h in r]
+                    continue
+                if header:
+                    record = {header[k]: (r[k].strip() if k < len(r) else "") for k in range(len(header))}
+                    phone = (record.get("phone") or record.get("number") or record.get("mobile")
+                             or record.get("cell") or record.get("phone_number") or "")
+                    extra = {
+                        "first_name": record.get("first_name") or record.get("first") or "",
+                        "last_name": record.get("last_name") or record.get("last") or record.get("surname") or "",
+                        "company": record.get("company") or record.get("organization") or "",
+                        "email": record.get("email") or "",
+                    }
+                    for k, v in record.items():
+                        if k not in extra and k not in ("phone", "number", "mobile", "cell", "phone_number"):
+                            extra[k] = v
+                    _emit(phone, {k: v for k, v in extra.items() if v})
+                else:
+                    # No header — assume first column is the phone number
+                    _emit(r[0], {})
+        except Exception as e:
+            logger.warning(f"SMS campaign CSV parse failed: {e}")
+
+    return rows
+
+
+@app.route("/sms-campaigns", methods=["GET"])
+@login_required
+def sms_campaigns_page():
+    """List + launch page for SMS-only campaigns."""
+    from models import SmsCampaign, ProvisionedNumber
+    user_pn = ProvisionedNumber.query.filter_by(user_id=current_user.id, status="active").first()
+    from_number = user_pn.phone_number if user_pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+    used, cap, reset_at = _ensure_sms_bundle(current_user.id)
+    return render_template(
+        "sms_campaigns.html",
+        feature_enabled=_sms_feature_enabled(),
+        active_page="sms-campaigns",
+        from_number=from_number,
+        bundle_used=used,
+        bundle_cap=cap,
+        bundle_remaining=max(0, cap - used),
+        overage_cost=float(SMS_OVERAGE_COST),
+    )
+
+
+@app.route("/sms-campaigns/<int:campaign_id>", methods=["GET"])
+@login_required
+def sms_campaign_detail_page(campaign_id):
+    from models import SmsCampaign
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        abort(404)
+    return render_template(
+        "sms_campaign_detail.html",
+        feature_enabled=_sms_feature_enabled(),
+        active_page="sms-campaigns",
+        campaign=camp.to_dict(),
+    )
+
+
+@app.route("/api/sms-campaigns", methods=["GET"])
+@login_required
+def api_sms_campaigns_list():
+    from models import SmsCampaign
+    rows = (SmsCampaign.query.filter_by(user_id=current_user.id)
+            .order_by(SmsCampaign.created_at.desc()).limit(200).all())
+    return jsonify({"success": True, "campaigns": [r.to_dict() for r in rows]})
+
+
+@app.route("/api/sms-campaigns/preflight", methods=["POST"])
+@login_required
+def api_sms_campaigns_preflight():
+    """Dry-run: parse the audience, segment-count the body, and report what
+    would happen if the campaign were launched right now. Does not send."""
+    if not _sms_feature_enabled():
+        return jsonify({"success": False, "error": "Messaging is disabled on this environment"}), 400
+    from telnyx_client import count_sms_segments
+    from models import SmsOptOut
+    raw = request.form.get("audience_text") or (request.get_json(silent=True) or {}).get("audience_text") or ""
+    body = (request.form.get("body") or (request.get_json(silent=True) or {}).get("body") or "").strip()
+    dedupe = (request.form.get("dedupe", "1") != "0")
+    csv_storage = request.files.get("csv_file") if request.files else None
+    recipients = _parse_sms_audience(raw, csv_storage=csv_storage, dedupe=dedupe)
+    total = len(recipients)
+    numbers = [r["to_number"] for r in recipients]
+    # Opt-out pre-check
+    opted = set()
+    if numbers:
+        rows = SmsOptOut.query.filter(SmsOptOut.user_id == current_user.id,
+                                      SmsOptOut.contact_number.in_(numbers)).all()
+        opted = {r.contact_number for r in rows}
+    quiet_now = 0
+    if recipients:
+        for r in recipients[:500]:  # cap the check so huge lists stay snappy
+            if _is_quiet_hours(r["to_number"]):
+                quiet_now += 1
+    segments_per_msg = count_sms_segments(body) if body else 0
+    est_segments = segments_per_msg * max(0, total - len(opted))
+    used, cap, _ = _ensure_sms_bundle(current_user.id)
+    remaining = max(0, cap - used)
+    overage = max(0, est_segments - remaining)
+    est_cost = float((Decimal(str(overage)) * SMS_OVERAGE_COST).quantize(Decimal("0.01")))
+    return jsonify({
+        "success": True,
+        "audience_size": total,
+        "opt_outs_blocked": len(opted),
+        "deliverable": max(0, total - len(opted)),
+        "quiet_hours_now": quiet_now,
+        "segments_per_message": segments_per_msg,
+        "estimated_total_segments": est_segments,
+        "bundle_used": used,
+        "bundle_cap": cap,
+        "bundle_remaining": remaining,
+        "estimated_overage_segments": overage,
+        "estimated_overage_cost": est_cost,
+        "body_length": len(body),
+    })
+
+
+@app.route("/api/sms-campaigns", methods=["POST"])
+@login_required
+def api_sms_campaigns_create():
+    """Create (and optionally immediately launch) an SMS campaign."""
+    if not _sms_feature_enabled():
+        return jsonify({"success": False, "error": "Messaging is disabled on this environment"}), 400
+    from models import SmsCampaign, SmsCampaignRecipient, ProvisionedNumber
+    import sms_campaign_manager
+
+    name = (request.form.get("name") or "").strip()[:255] or f"SMS Campaign {datetime.utcnow().strftime('%b %d %H:%M')}"
+    body = (request.form.get("body") or "").strip()
+    raw_audience = request.form.get("audience_text") or ""
+    agent_name = (request.form.get("agent_name") or "").strip()[:120]
+    custom_link = (request.form.get("custom_link") or "").strip()[:500]
+    dedupe = (request.form.get("dedupe", "1") != "0")
+    respect_quiet_hours = (request.form.get("respect_quiet_hours", "1") != "0")
+    launch_now = (request.form.get("launch_now", "1") != "0")
+    from_number = (request.form.get("from_number") or "").strip()
+
+    if not from_number:
+        pn = ProvisionedNumber.query.filter_by(user_id=current_user.id, status="active").first()
+        from_number = pn.phone_number if pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+    from_number = _normalize_sms_number(from_number)
+
+    if not body:
+        return jsonify({"success": False, "error": "Message body is required"}), 400
+    if not from_number:
+        return jsonify({"success": False, "error": "No sending number configured for this account"}), 400
+
+    # Sender ownership: only let the current user send from a number they own.
+    # Fallback to TELNYX_FROM_NUMBER env value (the shared default sender) is
+    # allowed — everything else must be a ProvisionedNumber they hold.
+    env_default = _normalize_sms_number(os.environ.get("TELNYX_FROM_NUMBER", "") or "")
+    owned = ProvisionedNumber.query.filter_by(
+        user_id=current_user.id, phone_number=from_number, status="active"
+    ).first()
+    if not owned and from_number != env_default:
+        return jsonify({"success": False,
+                        "error": "You can only send from a phone number provisioned to your account"}), 403
+
+    csv_storage = request.files.get("csv_file") if request.files else None
+    recipients = _parse_sms_audience(raw_audience, csv_storage=csv_storage, dedupe=dedupe)
+    if not recipients:
+        return jsonify({"success": False, "error": "Add at least one valid phone number"}), 400
+
+    # Affordability pre-flight using segment count of the template.
+    from telnyx_client import count_sms_segments
+    seg_per_msg = count_sms_segments(body)
+    est_segs = seg_per_msg * len(recipients)
+    afford_ok, afford_err = _check_sms_affordable(current_user.id, max(1, est_segs))
+    if not afford_ok:
+        return jsonify({"success": False, "error": afford_err or "Insufficient credits for this campaign"}), 402
+
+    camp = SmsCampaign(
+        user_id=current_user.id,
+        name=name,
+        status="queued",
+        from_number=from_number,
+        body_template=body,
+        agent_name=agent_name,
+        custom_link=custom_link,
+        total_count=len(recipients),
+        dedupe_audience=dedupe,
+        respect_quiet_hours=respect_quiet_hours,
+    )
+    db.session.add(camp)
+    db.session.flush()  # assign id
+    for r in recipients:
+        db.session.add(SmsCampaignRecipient(
+            sms_campaign_id=camp.id,
+            to_number=r["to_number"],
+            contact_data=r.get("contact_data") or {},
+            status="pending",
+        ))
+    db.session.commit()
+
+    if launch_now:
+        sms_campaign_manager.start(camp.id)
+
+    return jsonify({"success": True, "campaign": camp.to_dict(), "launched": launch_now})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/start", methods=["POST"])
+@login_required
+def api_sms_campaign_start(campaign_id):
+    from models import SmsCampaign
+    import sms_campaign_manager
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    if camp.status == "completed":
+        return jsonify({"success": False, "error": "Campaign is already complete"}), 400
+    if camp.status == "cancelled":
+        return jsonify({"success": False, "error": "Cancelled campaigns cannot be restarted"}), 400
+    sms_campaign_manager.start(campaign_id)
+    return jsonify({"success": True, "campaign": camp.to_dict()})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/pause", methods=["POST"])
+@login_required
+def api_sms_campaign_pause(campaign_id):
+    from models import SmsCampaign
+    import sms_campaign_manager
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    sms_campaign_manager.pause(campaign_id)
+    camp.status = "paused"
+    camp.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True, "campaign": camp.to_dict()})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/resume", methods=["POST"])
+@login_required
+def api_sms_campaign_resume(campaign_id):
+    from models import SmsCampaign
+    import sms_campaign_manager
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    # If the worker died (e.g. after restart) start a fresh one.
+    if not sms_campaign_manager.is_running(campaign_id):
+        sms_campaign_manager.start(campaign_id)
+    else:
+        sms_campaign_manager.resume(campaign_id)
+    return jsonify({"success": True, "campaign": camp.to_dict()})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/cancel", methods=["POST"])
+@login_required
+def api_sms_campaign_cancel(campaign_id):
+    from models import SmsCampaign
+    import sms_campaign_manager
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    sms_campaign_manager.cancel(campaign_id)
+    camp.status = "cancelled"
+    camp.completed_at = datetime.utcnow()
+    camp.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"success": True, "campaign": camp.to_dict()})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/status", methods=["GET"])
+@login_required
+def api_sms_campaign_status(campaign_id):
+    from models import SmsCampaign, SmsCampaignRecipient
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    # Break down by status for the detail chart
+    from sqlalchemy import func
+    breakdown = dict(
+        db.session.query(SmsCampaignRecipient.status, func.count(SmsCampaignRecipient.id))
+        .filter(SmsCampaignRecipient.sms_campaign_id == campaign_id)
+        .group_by(SmsCampaignRecipient.status).all()
+    )
+    return jsonify({"success": True, "campaign": camp.to_dict(), "breakdown": breakdown})
+
+
+@app.route("/api/sms-campaigns/<int:campaign_id>/recipients", methods=["GET"])
+@login_required
+def api_sms_campaign_recipients(campaign_id):
+    from models import SmsCampaign, SmsCampaignRecipient
+    camp = SmsCampaign.query.filter_by(id=campaign_id, user_id=current_user.id).first()
+    if not camp:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    status_filter = request.args.get("status")
+    q = SmsCampaignRecipient.query.filter_by(sms_campaign_id=campaign_id)
+    if status_filter:
+        q = q.filter_by(status=status_filter)
+    rows = q.order_by(SmsCampaignRecipient.id.asc()).limit(500).all()
+    return jsonify({"success": True, "recipients": [r.to_dict() for r in rows]})
 
 
 # ---- Startup initialization (runs for both direct and gunicorn) ----

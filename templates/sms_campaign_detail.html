@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ campaign.name }} · SMS Campaigns · Open Humana</title>
+  <script>!function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);}();</script>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .smscd-wrap { padding: 24px; }
+    .smscd-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap: wrap; margin-bottom: 18px; }
+    .smscd-head h2 { font-size: 22px; font-weight: 700; margin:0 0 4px; color: var(--gads-text-primary); letter-spacing: -.3px; }
+    .smscd-head .sub { font-size: 13px; color: var(--gads-text-secondary); }
+    .smscd-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .smscd-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .smscd-kpi { background: var(--gads-surface); border: 1px solid var(--gads-border); border-radius: 10px; padding: 14px; box-shadow: var(--gads-shadow-sm); }
+    .smscd-kpi .lbl { font-size: 11px; color: var(--gads-text-tertiary); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .smscd-kpi .val { font-size: 22px; font-weight: 700; color: var(--gads-text-primary); margin-top: 4px; }
+
+    .smscd-panel { background: var(--gads-surface); border: 1px solid var(--gads-border); border-radius: var(--gads-radius-lg); padding: 16px 18px; margin-bottom: 18px; box-shadow: var(--gads-shadow-sm); }
+    .smscd-panel h3 { font-size: 13.5px; color: var(--gads-text-primary); margin: 0 0 10px; font-weight: 600; }
+    .smscd-body { background: var(--gads-bg-secondary); border-radius: 10px; padding: 12px 14px; font-size: 13.5px; color: var(--gads-text-primary); white-space: pre-wrap; line-height: 1.5; border: 1px solid var(--gads-border); }
+
+    .smscd-progress-bar { width: 100%; height: 10px; background: var(--gads-bg-secondary); border-radius: 5px; overflow: hidden; margin: 8px 0; }
+    .smscd-progress-bar > span { display: block; height: 100%; background: var(--gads-primary); transition: width .3s ease; }
+
+    .smscd-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .smscd-table th, .smscd-table td { padding: 10px 12px; border-bottom: 1px solid var(--gads-border); text-align: left; }
+    .smscd-table th { background: var(--gads-bg-secondary); color: var(--gads-text-tertiary); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .smscd-table td { color: var(--gads-text-primary); }
+    .smscd-tablewrap { max-height: 520px; overflow-y: auto; border: 1px solid var(--gads-border); border-radius: 10px; background: var(--gads-surface); }
+
+    .smscd-badge { display:inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+    .smscd-b-sent { background: #DBEAFE; color: #1D4ED8; }
+    .smscd-b-delivered { background: var(--gads-success-light); color: var(--gads-success); }
+    .smscd-b-failed { background: var(--gads-error-light); color: var(--gads-error); }
+    .smscd-b-skipped, .smscd-b-rate_limited, .smscd-b-payment_required { background: var(--gads-warning-light); color: var(--gads-warning); }
+    .smscd-b-opted_out { background: #FEF2F2; color: #B91C1C; }
+    .smscd-b-pending { background: var(--gads-bg-secondary); color: var(--gads-text-tertiary); }
+    .smscd-b-sending { background: #DBEAFE; color: #1D4ED8; }
+    [data-theme="dark"] .smscd-b-sending { background: rgba(59,130,246,.18); color: #93C5FD; }
+
+    .smscd-filter { display:flex; gap:6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .smscd-filter button { background: var(--gads-surface); border: 1px solid var(--gads-border); color: var(--gads-text-secondary); padding: 6px 12px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+    .smscd-filter button.active { background: var(--gads-primary); color: var(--gads-surface); border-color: var(--gads-primary); }
+    [data-theme="dark"] .smscd-filter button.active { color: #0f0f17; }
+  </style>
+</head>
+<body>
+  {% include "_dashboard_sidebar.html" with context %}
+
+  <div class="gads-main" id="gadsMain">
+    <div class="gads-topbar">
+      <div class="gads-topbar-left">
+        <div class="gads-breadcrumb">
+          <a class="gads-breadcrumb-item" href="/dashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </a>
+          <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <a class="gads-breadcrumb-item" href="/sms-campaigns">SMS Campaigns</a>
+          <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="gads-breadcrumb-item gads-breadcrumb-current">{{ campaign.name }}</span>
+        </div>
+        <h1 class="gads-page-title">{{ campaign.name }}</h1>
+      </div>
+      <div class="gads-topbar-right">
+        <button type="button" class="gads-topbar-btn" id="themeToggle" title="Toggle theme">
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+        </button>
+        {% include "_dashboard_avatar.html" with context %}
+      </div>
+    </div>
+
+    <div class="smscd-wrap">
+      <div class="smscd-head">
+        <div>
+          <h2>
+            <span id="campName">{{ campaign.name }}</span>
+            <span class="smscd-badge" id="campStatus">{{ campaign.status }}</span>
+          </h2>
+          <div class="sub">
+            Sending from <b>{{ campaign.from_number }}</b> · Created {{ campaign.created_at }}
+          </div>
+        </div>
+        <div class="smscd-actions" id="campActions">
+          <!-- Buttons injected based on status -->
+        </div>
+      </div>
+
+      <div class="smscd-kpis">
+        <div class="smscd-kpi"><div class="lbl">Audience</div><div class="val" id="kpiTotal">{{ campaign.total_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Sent</div><div class="val" id="kpiSent">{{ campaign.sent_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Delivered</div><div class="val" id="kpiDelivered" style="color:var(--gads-success);">{{ campaign.delivered_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Failed</div><div class="val" id="kpiFailed" style="color:var(--gads-error);">{{ campaign.failed_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Skipped</div><div class="val" id="kpiSkipped" style="color:var(--gads-warning);">{{ campaign.skipped_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Opt-outs</div><div class="val" id="kpiOptOuts" style="color:#B91C1C;">{{ campaign.opt_out_count }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Segments</div><div class="val" id="kpiSegs">{{ campaign.segments_sent }}</div></div>
+        <div class="smscd-kpi"><div class="lbl">Cost</div><div class="val" id="kpiCost">${{ "%.2f"|format(campaign.cost_charged) }}</div></div>
+      </div>
+
+      <div class="smscd-panel">
+        <h3>Progress</h3>
+        <div class="smscd-progress-bar"><span id="progBar" style="width:{{ campaign.progress_pct }}%"></span></div>
+        <div style="font-size:12px;color:var(--gads-text-tertiary);"><span id="progText">{{ campaign.processed_count }} / {{ campaign.total_count }} processed · {{ campaign.progress_pct }}%</span></div>
+      </div>
+
+      <div class="smscd-panel">
+        <h3>Message template</h3>
+        <div class="smscd-body">{{ campaign.body_template }}</div>
+      </div>
+
+      <div class="smscd-panel">
+        <h3>Recipients</h3>
+        <div class="smscd-filter" id="filterBar">
+          <button class="active" data-f="">All</button>
+          <button data-f="pending">Pending</button>
+          <button data-f="sent">Sent</button>
+          <button data-f="delivered">Delivered</button>
+          <button data-f="failed">Failed</button>
+          <button data-f="skipped">Skipped</button>
+          <button data-f="opted_out">Opt-outs</button>
+        </div>
+        <div class="smscd-tablewrap">
+          <table class="smscd-table">
+            <thead><tr>
+              <th>Number</th><th>Name</th><th>Status</th><th>Segments</th><th>Attempted</th><th>Note</th>
+            </tr></thead>
+            <tbody id="recipBody"><tr><td colspan="6" style="text-align:center;color:var(--gads-text-tertiary);padding:30px;">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){ try { if(localStorage.getItem('gads_sidebar_collapsed')==='1'){ var s=document.getElementById('gadsSidebar'),m=document.getElementById('gadsMain'); s&&s.classList.add('gads-sidebar-collapsed'); m&&m.classList.add('gads-main-expanded'); } } catch(e){} })();
+(function(){
+  var btn = document.getElementById('themeToggle');
+  function syncIcons(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var moon = document.querySelector('#themeToggle .icon-moon');
+    var sun = document.querySelector('#themeToggle .icon-sun');
+    if(moon) moon.style.display = dark ? 'none' : 'block';
+    if(sun) sun.style.display = dark ? 'block' : 'none';
+  }
+  syncIcons();
+  if(btn) btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('vb_theme', next); } catch(e) {}
+    syncIcons();
+  });
+})();
+
+const CAMPAIGN_ID = {{ campaign.id }};
+let CURRENT_FILTER = '';
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtPhone(n){
+  if(!n) return '';
+  const d = String(n).replace(/\D/g,'');
+  if(d.length === 11 && d[0] === '1') return `+1 (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return n;
+}
+function fmtTs(iso){ if(!iso) return '—'; try { return new Date(iso).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); } catch(e){ return iso; } }
+
+function setBadge(status){
+  const el = document.getElementById('campStatus');
+  el.className = 'smscd-badge smscd-b-' + status;
+  el.textContent = status;
+}
+setBadge('{{ campaign.status }}');
+
+function renderActions(status){
+  const host = document.getElementById('campActions');
+  host.innerHTML = '';
+  function btn(label, action, cls){
+    const b = document.createElement('button');
+    b.className = 'gads-btn ' + (cls || 'gads-btn-outline') + ' gads-btn-sm';
+    b.textContent = label;
+    b.onclick = () => doAction(action, b);
+    host.appendChild(b);
+  }
+  if(['running','queued'].includes(status)) btn('Pause', 'pause');
+  if(['paused','interrupted'].includes(status)) btn('Resume', 'resume', 'gads-btn-primary');
+  if(!['completed','cancelled'].includes(status)) btn('Cancel', 'cancel');
+}
+renderActions('{{ campaign.status }}');
+
+async function doAction(action, btnEl){
+  if(action === 'cancel' && !confirm('Cancel this campaign? Unsent recipients will be skipped.')) return;
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = '…'; }
+  try{
+    const r = await fetch(`/api/sms-campaigns/${CAMPAIGN_ID}/${action}`, { method:'POST', credentials:'same-origin' });
+    const j = await r.json();
+    if(!j.success){ alert(j.error || 'Action failed'); }
+    await refresh();
+  } catch(e){ alert('Network error'); }
+}
+
+async function refresh(){
+  try{
+    const r = await fetch(`/api/sms-campaigns/${CAMPAIGN_ID}/status`, {credentials:'same-origin'});
+    const j = await r.json();
+    if(!j.success) return;
+    const c = j.campaign;
+    document.getElementById('kpiTotal').textContent = c.total_count;
+    document.getElementById('kpiSent').textContent = c.sent_count;
+    document.getElementById('kpiDelivered').textContent = c.delivered_count;
+    document.getElementById('kpiFailed').textContent = c.failed_count;
+    document.getElementById('kpiSkipped').textContent = c.skipped_count;
+    document.getElementById('kpiOptOuts').textContent = c.opt_out_count;
+    document.getElementById('kpiSegs').textContent = c.segments_sent;
+    document.getElementById('kpiCost').textContent = '$' + (c.cost_charged || 0).toFixed(2);
+    document.getElementById('progBar').style.width = c.progress_pct + '%';
+    document.getElementById('progText').textContent = `${c.processed_count} / ${c.total_count} processed · ${c.progress_pct}%`;
+    setBadge(c.status);
+    renderActions(c.status);
+  } catch(e){}
+  await loadRecipients();
+}
+
+async function loadRecipients(){
+  try{
+    const qs = CURRENT_FILTER ? `?status=${encodeURIComponent(CURRENT_FILTER)}` : '';
+    const r = await fetch(`/api/sms-campaigns/${CAMPAIGN_ID}/recipients${qs}`, {credentials:'same-origin'});
+    const j = await r.json();
+    const tbody = document.getElementById('recipBody');
+    if(!j.success || !j.recipients.length){
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gads-text-tertiary);padding:30px;">No recipients in this view.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = j.recipients.map(r => {
+      const cd = r.contact_data || {};
+      const name = [cd.first_name, cd.last_name].filter(Boolean).join(' ') || (cd.company || '—');
+      return `<tr>
+        <td>${escapeHtml(fmtPhone(r.to_number))}</td>
+        <td>${escapeHtml(name)}</td>
+        <td><span class="smscd-badge smscd-b-${r.status}">${escapeHtml(r.status.replace('_',' '))}</span></td>
+        <td>${r.segments || 0}</td>
+        <td style="color:var(--gads-text-tertiary);font-size:12px;">${fmtTs(r.attempted_at)}</td>
+        <td style="color:var(--gads-text-tertiary);font-size:12px;">${escapeHtml(r.error || '')}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){}
+}
+
+document.getElementById('filterBar').addEventListener('click', e => {
+  if(e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('#filterBar button').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  CURRENT_FILTER = e.target.dataset.f || '';
+  loadRecipients();
+});
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

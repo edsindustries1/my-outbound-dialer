@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Campaigns · Open Humana</title>
+  <script>!function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);}();</script>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .smsc-wrap { padding: 24px; }
+    .smsc-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .smsc-head .titles h2 { font-size: 22px; font-weight: 700; color: var(--gads-text-primary); margin:0 0 4px; letter-spacing:-.3px; }
+    .smsc-head .titles p { font-size: 13.5px; color: var(--gads-text-secondary); margin:0; max-width: 720px; line-height: 1.55; }
+
+    .smsc-grid { background: var(--gads-surface); border: 1px solid var(--gads-border); border-radius: var(--gads-radius-lg); overflow: hidden; box-shadow: var(--gads-shadow-sm); }
+    .smsc-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr auto; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--gads-border); align-items: center; }
+    .smsc-row.head { background: var(--gads-bg-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--gads-text-tertiary); font-weight: 600; }
+    .smsc-row:last-child { border-bottom: none; }
+    .smsc-row .name { font-weight: 600; color: var(--gads-text-primary); }
+    .smsc-row .name a { color: inherit; text-decoration: none; }
+    .smsc-row .name a:hover { color: var(--gads-primary); }
+    .smsc-row .sub { font-size: 12px; color: var(--gads-text-tertiary); }
+    .smsc-badge { display:inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; text-transform: capitalize; }
+    .smsc-b-running { background: #DBEAFE; color: #1D4ED8; }
+    [data-theme="dark"] .smsc-b-running { background: rgba(59,130,246,.18); color: #93C5FD; }
+    .smsc-b-queued { background: var(--gads-warning-light); color: var(--gads-warning); }
+    .smsc-b-paused { background: #FEF3C7; color: #92400E; }
+    [data-theme="dark"] .smsc-b-paused { background: rgba(245,158,11,.18); color: #FBBF24; }
+    .smsc-b-completed { background: var(--gads-success-light); color: var(--gads-success); }
+    .smsc-b-cancelled, .smsc-b-failed, .smsc-b-interrupted { background: var(--gads-error-light); color: var(--gads-error); }
+    .smsc-b-draft { background: var(--gads-bg-secondary); color: var(--gads-text-tertiary); }
+
+    .smsc-progress { width: 100%; height: 6px; background: var(--gads-bg-secondary); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .smsc-progress > span { display: block; height: 100%; background: var(--gads-primary); transition: width .25s ease; }
+
+    .smsc-empty { padding: 70px 24px; text-align: center; color: var(--gads-text-tertiary); }
+    .smsc-empty svg { display: block; margin: 0 auto 14px; opacity: .35; }
+
+    /* Modal / wizard */
+    .smsc-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; z-index: 600; align-items: center; justify-content: center; padding: 24px; }
+    .smsc-overlay.open { display: flex; }
+    .smsc-modal { width: 100%; max-width: 680px; background: var(--gads-surface); border-radius: var(--gads-radius-lg); border: 1px solid var(--gads-border); box-shadow: 0 20px 50px rgba(0,0,0,.25); max-height: 92vh; overflow-y: auto; }
+    .smsc-modal header { padding: 18px 22px; border-bottom: 1px solid var(--gads-border); display:flex; align-items:center; justify-content:space-between; }
+    .smsc-modal header h3 { margin: 0; font-size: 17px; color: var(--gads-text-primary); }
+    .smsc-modal .close { background: none; border: none; cursor: pointer; color: var(--gads-text-tertiary); font-size: 20px; line-height: 1; padding: 4px 8px; }
+    .smsc-modal .body { padding: 20px 22px; }
+    .smsc-modal .foot { padding: 14px 22px; border-top: 1px solid var(--gads-border); display:flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--gads-bg-secondary); }
+
+    .smsc-field { display: block; margin-bottom: 14px; }
+    .smsc-field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--gads-text-primary); margin-bottom: 6px; }
+    .smsc-field .hint { font-size: 11.5px; color: var(--gads-text-tertiary); margin-top: 4px; }
+    .smsc-field input[type=text], .smsc-field input[type=tel], .smsc-field textarea, .smsc-field input[type=file] {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--gads-border); border-radius: 8px; font: inherit; font-size: 13.5px;
+      background: var(--gads-surface); color: var(--gads-text-primary); outline: none;
+    }
+    .smsc-field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .smsc-field input:focus, .smsc-field textarea:focus { border-color: var(--gads-primary); }
+    .smsc-field .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .smsc-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--gads-text-secondary); }
+
+    .smsc-preflight { background: var(--gads-bg-secondary); border: 1px solid var(--gads-border); border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 12.5px; color: var(--gads-text-secondary); line-height: 1.6; }
+    .smsc-preflight b { color: var(--gads-text-primary); }
+    .smsc-alert { padding: 10px 14px; border-radius: 10px; font-size: 12.5px; margin-bottom: 14px; line-height: 1.5; }
+    .smsc-alert-warn { background: var(--gads-warning-light); border: 1px solid var(--gads-warning); color: var(--gads-warning); }
+    .smsc-alert-err { background: var(--gads-error-light); border: 1px solid var(--gads-error); color: var(--gads-error); }
+
+    @media (max-width: 800px) {
+      .smsc-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .smsc-row.head { display: none; }
+      .smsc-row > div:nth-child(3), .smsc-row > div:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  {% include "_dashboard_sidebar.html" with context %}
+
+  <div class="gads-main" id="gadsMain">
+    <div class="gads-topbar">
+      <div class="gads-topbar-left">
+        <div class="gads-breadcrumb">
+          <a class="gads-breadcrumb-item" href="/dashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </a>
+          <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="gads-breadcrumb-item gads-breadcrumb-current">SMS Campaigns</span>
+        </div>
+        <h1 class="gads-page-title">SMS Campaigns</h1>
+      </div>
+      <div class="gads-topbar-right">
+        <a class="gads-btn gads-btn-outline gads-btn-sm" href="/sms-inbox" style="text-decoration:none;">Inbox</a>
+        <a class="gads-btn gads-btn-outline gads-btn-sm" href="/sms-companion" style="text-decoration:none;">Settings</a>
+        <button type="button" class="gads-topbar-btn" id="themeToggle" title="Toggle theme">
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+        </button>
+        {% include "_dashboard_avatar.html" with context %}
+      </div>
+    </div>
+
+    <div class="smsc-wrap">
+      <div class="smsc-head">
+        <div class="titles">
+          <h2>SMS Campaigns</h2>
+          <p>Send personalised text blasts to lists of contacts. Every send goes through the same compliance guardrails Alex uses — STOP keywords, quiet hours, and segment billing — so your list stays healthy.</p>
+        </div>
+        <button class="gads-btn gads-btn-primary" id="newCampaignBtn" {% if not feature_enabled %}disabled title="Messaging is disabled on this environment"{% endif %}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:-3px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New SMS Campaign
+        </button>
+      </div>
+
+      {% if not feature_enabled %}
+      <div class="smsc-alert smsc-alert-warn">
+        <strong>Messaging is currently disabled on this environment.</strong> Existing campaigns are still visible but new blasts cannot be launched until the operator re-enables SMS.
+      </div>
+      {% endif %}
+
+      <div class="smsc-grid" id="campaignsGrid">
+        <div class="smsc-row head">
+          <div>Campaign</div>
+          <div>Status</div>
+          <div>Audience</div>
+          <div>Delivered</div>
+          <div>Progress</div>
+          <div></div>
+        </div>
+        <div class="smsc-empty" id="campaignsEmpty">Loading campaigns…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New campaign modal -->
+  <div class="smsc-overlay" id="smsCreateOverlay">
+    <div class="smsc-modal">
+      <header>
+        <h3>Launch SMS Campaign</h3>
+        <button type="button" class="close" id="smsCloseBtn" aria-label="Close">&times;</button>
+      </header>
+      <div class="body">
+        <form id="smsCampaignForm" enctype="multipart/form-data">
+          <div id="smsFormAlert"></div>
+
+          <label class="smsc-field">
+            <label>Campaign name</label>
+            <input type="text" name="name" maxlength="120" placeholder="e.g. October promo blast" autocomplete="off">
+          </label>
+
+          <label class="smsc-field">
+            <label>Sending number</label>
+            <input type="tel" name="from_number" value="{{ from_number or '' }}" placeholder="+15551234567">
+            <div class="hint">Defaults to your provisioned Telnyx number. Carrier throughput is capped at ~75 segments per minute per number.</div>
+          </label>
+
+          <label class="smsc-field">
+            <label>Message body</label>
+            <textarea name="body" id="smsBody" maxlength="1000" placeholder="Hi {first_name}, this is {agent_name} following up on our earlier call. Reply YES to continue or STOP to opt out."></textarea>
+            <div class="hint" id="smsSegCounter">Supports merge fields: {first_name} {last_name} {company} {agent_name} {custom_link}. STOP / HELP auto-reply compliance footer is appended on the first message of every new thread.</div>
+          </label>
+
+          <div class="smsc-field">
+            <label>Agent name / custom link (optional merge values)</label>
+            <div class="row2">
+              <input type="text" name="agent_name" placeholder="Alex" autocomplete="off">
+              <input type="text" name="custom_link" placeholder="https://…">
+            </div>
+          </div>
+
+          <label class="smsc-field">
+            <label>Audience</label>
+            <textarea name="audience_text" id="smsAudience" placeholder="Paste numbers here, one per line or comma separated. e.g. +15551230001, +15551230002"></textarea>
+            <div class="hint">Or upload a CSV with headers <code>phone,first_name,last_name,company</code>:</div>
+            <input type="file" name="csv_file" accept=".csv,text/csv" style="margin-top:8px;">
+          </label>
+
+          <div class="smsc-field">
+            <label class="smsc-toggle"><input type="checkbox" name="dedupe" value="1" checked> Remove duplicate numbers automatically</label><br>
+            <div class="hint" style="margin-top:4px;">Quiet hours (9pm–8am local), STOP/HELP handling, and 10DLC throughput limits are enforced automatically on every send — this is required for compliance and cannot be disabled.</div>
+          </div>
+
+          <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" id="smsPreflightBtn">Run pre-flight check</button>
+          <div class="smsc-preflight" id="smsPreflightOut" style="display:none;"></div>
+        </form>
+      </div>
+      <div class="foot">
+        <div style="font-size:12px;color:var(--gads-text-tertiary);">
+          Bundle remaining: <b>{{ bundle_remaining }}</b> / {{ bundle_cap }} segments · overage ${{ "%.3f"|format(overage_cost) }}/segment
+        </div>
+        <div>
+          <button type="button" class="gads-btn gads-btn-outline gads-btn-sm" id="smsCancelBtn">Cancel</button>
+          <button type="button" class="gads-btn gads-btn-primary gads-btn-sm" id="smsLaunchBtn">Launch campaign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){ try { if(localStorage.getItem('gads_sidebar_collapsed')==='1'){ var s=document.getElementById('gadsSidebar'),m=document.getElementById('gadsMain'); s&&s.classList.add('gads-sidebar-collapsed'); m&&m.classList.add('gads-main-expanded'); } } catch(e){} })();
+(function(){
+  var btn = document.getElementById('themeToggle');
+  function syncIcons(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var moon = document.querySelector('#themeToggle .icon-moon');
+    var sun = document.querySelector('#themeToggle .icon-sun');
+    if(moon) moon.style.display = dark ? 'none' : 'block';
+    if(sun) sun.style.display = dark ? 'block' : 'none';
+  }
+  syncIcons();
+  if(btn) btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('vb_theme', next); } catch(e) {}
+    syncIcons();
+  });
+})();
+
+const FEATURE_ENABLED = {{ 'true' if feature_enabled else 'false' }};
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtTs(iso){ if(!iso) return ''; try { const d = new Date(iso); return d.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); } catch(e){ return iso; } }
+
+async function loadCampaigns(){
+  try{
+    const r = await fetch('/api/sms-campaigns', {credentials:'same-origin'});
+    const j = await r.json();
+    renderCampaigns(j.campaigns || []);
+  } catch(e){
+    renderCampaigns([]);
+  }
+}
+
+function renderCampaigns(list){
+  const grid = document.getElementById('campaignsGrid');
+  const empty = document.getElementById('campaignsEmpty');
+  // Clear all rows except header
+  Array.from(grid.querySelectorAll('.smsc-row:not(.head), .smsc-empty')).forEach(el => el.remove());
+  if(!list.length){
+    const e = document.createElement('div');
+    e.className = 'smsc-empty';
+    e.innerHTML = '<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg><div>No SMS campaigns yet. Launch your first blast to reach your list with a compliant one-to-many text.</div>';
+    grid.appendChild(e);
+    return;
+  }
+  list.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'smsc-row';
+    const sent = c.sent_count || 0;
+    const delivered = c.delivered_count || 0;
+    const pct = c.progress_pct || 0;
+    row.innerHTML = `
+      <div>
+        <div class="name"><a href="/sms-campaigns/${c.id}">${escapeHtml(c.name)}</a></div>
+        <div class="sub">${fmtTs(c.created_at)} · ${escapeHtml(c.from_number || '')}</div>
+      </div>
+      <div><span class="smsc-badge smsc-b-${c.status}">${escapeHtml(c.status)}</span></div>
+      <div>
+        <div>${c.total_count} contacts</div>
+        <div class="sub">${c.segments_sent} segs sent</div>
+      </div>
+      <div>
+        <div>${delivered} / ${sent}</div>
+        <div class="sub">${c.delivery_rate}% delivered</div>
+      </div>
+      <div>
+        <div>${c.processed_count} / ${c.total_count}</div>
+        <div class="smsc-progress"><span style="width:${pct}%"></span></div>
+      </div>
+      <div><a class="gads-btn gads-btn-outline gads-btn-sm" href="/sms-campaigns/${c.id}" style="text-decoration:none;">Open</a></div>`;
+    grid.appendChild(row);
+  });
+}
+
+// Modal wiring
+const overlay = document.getElementById('smsCreateOverlay');
+const closeModal = () => overlay.classList.remove('open');
+document.getElementById('newCampaignBtn').addEventListener('click', () => { if(FEATURE_ENABLED) overlay.classList.add('open'); });
+document.getElementById('smsCloseBtn').addEventListener('click', closeModal);
+document.getElementById('smsCancelBtn').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if(e.target === overlay) closeModal(); });
+
+// Segment counter
+const bodyEl = document.getElementById('smsBody');
+const segEl = document.getElementById('smsSegCounter');
+let segTimer = null;
+bodyEl.addEventListener('input', () => {
+  clearTimeout(segTimer);
+  segTimer = setTimeout(async () => {
+    try{
+      const r = await fetch('/api/sms/segment-count', {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({body: bodyEl.value})
+      });
+      const j = await r.json();
+      segEl.innerHTML = `<b>${j.characters}</b> characters · <b>${j.segments}</b> segment${j.segments===1?'':'s'} per message. Merge fields: {first_name} {last_name} {company} {agent_name} {custom_link}.`;
+    } catch(e){}
+  }, 250);
+});
+
+function formData(){
+  return new FormData(document.getElementById('smsCampaignForm'));
+}
+
+document.getElementById('smsPreflightBtn').addEventListener('click', async () => {
+  const out = document.getElementById('smsPreflightOut');
+  out.style.display = 'block';
+  out.innerHTML = 'Running pre-flight…';
+  try{
+    const r = await fetch('/api/sms-campaigns/preflight', { method:'POST', credentials:'same-origin', body: formData() });
+    const j = await r.json();
+    if(!j.success){ out.innerHTML = `<span style="color:var(--gads-error);">${escapeHtml(j.error||'Pre-flight failed')}</span>`; return; }
+    out.innerHTML = `
+      Audience: <b>${j.audience_size}</b> · Deliverable: <b>${j.deliverable}</b> · Blocked by opt-outs: <b>${j.opt_outs_blocked}</b><br>
+      Message: <b>${j.segments_per_message}</b> segment${j.segments_per_message===1?'':'s'} per send · Total segments: <b>${j.estimated_total_segments}</b><br>
+      Bundle: <b>${j.bundle_used}</b>/${j.bundle_cap} used · Remaining: <b>${j.bundle_remaining}</b><br>
+      Est. overage: <b>${j.estimated_overage_segments}</b> segments at <b>$${j.estimated_overage_cost.toFixed(2)}</b><br>
+      In quiet hours right now: <b>${j.quiet_hours_now}</b> (will auto-skip; safe to launch)
+    `;
+  } catch(e){ out.innerHTML = `<span style="color:var(--gads-error);">Pre-flight request failed</span>`; }
+});
+
+document.getElementById('smsLaunchBtn').addEventListener('click', async () => {
+  const alertBox = document.getElementById('smsFormAlert');
+  alertBox.innerHTML = '';
+  const btn = document.getElementById('smsLaunchBtn');
+  btn.disabled = true; btn.textContent = 'Launching…';
+  try{
+    const r = await fetch('/api/sms-campaigns', { method:'POST', credentials:'same-origin', body: formData() });
+    const j = await r.json();
+    if(!j.success){
+      alertBox.innerHTML = `<div class="smsc-alert smsc-alert-err">${escapeHtml(j.error||'Could not launch campaign')}</div>`;
+      btn.disabled = false; btn.textContent = 'Launch campaign';
+      return;
+    }
+    closeModal();
+    window.location.href = `/sms-campaigns/${j.campaign.id}`;
+  } catch(e){
+    alertBox.innerHTML = `<div class="smsc-alert smsc-alert-err">Network error — please try again.</div>`;
+    btn.disabled = false; btn.textContent = 'Launch campaign';
+  }
+});
+
+loadCampaigns();
+setInterval(loadCampaigns, 8000);
+</script>
+</body>
+</html>

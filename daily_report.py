@@ -134,6 +134,21 @@ def _get_sms_summary_last_24h():
         inbound = sum(1 for r in rows if r.direction == "in")
         opt_outs = SmsOptOut.query.filter(SmsOptOut.opted_out_at >= cutoff).count()
         recipients = len({r.to_number for r in billable})
+
+        # Campaign volume (Task #90): count how many of the billable sends came
+        # from SMS blast campaigns vs. voicemail follow-ups / manual sends.
+        campaign_sends = sum(1 for r in billable if getattr(r, "sms_campaign_id", None))
+        try:
+            from models import SmsCampaign
+            active_campaigns = SmsCampaign.query.filter(
+                SmsCampaign.status.in_(["running", "paused", "queued"])
+            ).count()
+            launched_campaigns = SmsCampaign.query.filter(
+                SmsCampaign.created_at >= cutoff
+            ).count()
+        except Exception:
+            active_campaigns = 0
+            launched_campaigns = 0
         by_user = {}
         for r in billable:
             slot = by_user.setdefault(r.user_id, {"sent": 0, "delivered": 0, "failed": 0, "segments": 0})
@@ -152,6 +167,9 @@ def _get_sms_summary_last_24h():
             "opt_outs": opt_outs,
             "delivery_rate": round((delivered / sent) * 100, 1) if sent else 0.0,
             "opt_out_rate": round((opt_outs / recipients) * 100, 1) if recipients else 0.0,
+            "campaign_sends": campaign_sends,
+            "active_campaigns": active_campaigns,
+            "launched_campaigns": launched_campaigns,
             "by_user": [{"user_id": uid, **v} for uid, v in by_user.items()],
         }
     except Exception as e:
@@ -175,7 +193,7 @@ def _build_sms_section_html(sms):
         <div style="background:#8B5CF6;width:4px;height:24px;border-radius:2px;display:inline-block;vertical-align:middle;"></div>
         <h2 style="margin:0 0 0 12px;font-size:18px;color:#1E293B;display:inline-block;vertical-align:middle;">&#128241; SMS Companion (Last 24h)</h2>
     </div>
-    <p style="margin:6px 0 0 16px;font-size:12px;color:#64748B;">Follow-up texts sent automatically after voicemail drops, plus inbound replies and opt-outs.</p>
+    <p style="margin:6px 0 0 16px;font-size:12px;color:#64748B;">Follow-up texts sent automatically after voicemail drops, plus inbound replies and opt-outs.{(" <b>" + str(sms.get("campaign_sends", 0)) + "</b> of those came from <b>" + str(sms.get("launched_campaigns", 0)) + "</b> SMS campaign(s) launched in this window (" + str(sms.get("active_campaigns", 0)) + " still active).") if sms.get("campaign_sends") or sms.get("active_campaigns") else ""}</p>
 </td></tr>
 <tr><td style="padding:0 32px 20px;">
     <table width="100%" cellpadding="0" cellspacing="0">
