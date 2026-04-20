@@ -9313,32 +9313,41 @@
     if (inFlight) return;
     const chips = document.querySelectorAll('.sms-row-chip[data-sms-pending="1"]');
     if (!chips.length) return;
+    // The dashboard knows calls by Telnyx call-control ID (a string).
+    // The /api/sms/by-calls endpoint resolves these to CallRecord IDs
+    // server-side and returns a map keyed by the value we send.
     const ids = [];
     const seen = new Set();
-    chips.forEach(chip => {
+    for (let i = 0; i < chips.length; i++) {
+      const chip = chips[i];
       const tr = chip.closest('tr[data-callid]');
-      if (!tr) { chip.removeAttribute('data-sms-pending'); return; }
-      const cid = parseInt(tr.dataset.callid, 10);
-      if (!cid || seen.has(cid)) return;
+      if (!tr) { chip.removeAttribute('data-sms-pending'); continue; }
+      const cid = (tr.dataset.callid || '').trim();
+      // Permanently skip placeholders / empty IDs that can never join.
+      if (!cid || cid.toLowerCase() === 'hist') {
+        chip.removeAttribute('data-sms-pending');
+        continue;
+      }
+      if (seen.has(cid)) continue;
+      if (ids.length >= 200) break;  // hard batch cap
       seen.add(cid);
       ids.push(cid);
-      if (ids.length >= 200) return;
-    });
+    }
     if (!ids.length) return;
     inFlight = true;
     try {
       const r = await fetch('/api/sms/by-calls', {
         method: 'POST', credentials: 'same-origin',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({call_record_ids: ids})
+        body: JSON.stringify({call_control_ids: ids})
       });
       const j = await r.json();
       const map = (j && j.success) ? (j.by_id || {}) : {};
       chips.forEach(chip => {
         const tr = chip.closest('tr[data-callid]');
         if (!tr) return;
-        const cid = parseInt(tr.dataset.callid, 10);
-        if (!ids.includes(cid)) return;
+        const cid = (tr.dataset.callid || '').trim();
+        if (!seen.has(cid)) return;
         chip.removeAttribute('data-sms-pending');
         const info = map[cid];
         if (!info) return;

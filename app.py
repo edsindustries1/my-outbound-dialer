@@ -8525,35 +8525,72 @@ def api_sms_analytics():
 @app.route("/api/sms/by-calls", methods=["POST"])
 @login_required
 def api_sms_by_calls():
-    """Bulk lookup: given a list of call_record_ids, return the latest SMS
-    sent for each one. Used by the Live View / Call History row badges."""
-    from models import SmsMessage
+    """Bulk lookup of latest SMS per call. Accepts EITHER:
+       - call_control_ids: list of Telnyx call-control ID strings
+         (what the dashboard JS has on the page), OR
+       - call_record_ids:  list of integer CallRecord.id values
+         (legacy contract, kept for backwards compatibility).
+    Returns {by_id: {<id-as-passed-in>: {...sms info}}} so the
+    frontend can key directly off the value it sent."""
+    from models import SmsMessage, CallRecord
     data = request.get_json(silent=True) or {}
-    ids = data.get("call_record_ids") or []
+
+    raw_control_ids = data.get("call_control_ids") or []
+    raw_record_ids = data.get("call_record_ids") or []
+    if not isinstance(raw_control_ids, list) or not isinstance(raw_record_ids, list):
+        return jsonify({"success": False, "error": "ids must be a list"}), 400
+
+    control_ids = [str(x) for x in raw_control_ids if x is not None and str(x).strip() and str(x).strip().lower() != "hist"][:500]
     try:
-        ids = [int(i) for i in ids if i is not None][:500]
+        record_ids = [int(i) for i in raw_record_ids if i is not None][:500]
     except (TypeError, ValueError):
-        return jsonify({"success": False, "error": "call_record_ids must be a list of ints"}), 400
-    if not ids:
+        return jsonify({"success": False, "error": "call_record_ids must be ints"}), 400
+
+    # Resolve call_control_id -> CallRecord.id for the current user only.
+    control_to_record = {}
+    if control_ids:
+        recs = (
+            CallRecord.query
+            .filter(CallRecord.user_id == current_user.id)
+            .filter(CallRecord.call_control_id.in_(control_ids))
+            .all()
+        )
+        for rec in recs:
+            control_to_record[rec.call_control_id] = rec.id
+
+    # Combined set of CallRecord.id values to look up.
+    all_record_ids = set(record_ids) | set(control_to_record.values())
+    if not all_record_ids:
         return jsonify({"success": True, "by_id": {}})
+
     rows = (
         SmsMessage.query
         .filter(SmsMessage.user_id == current_user.id)
-        .filter(SmsMessage.call_record_id.in_(ids))
+        .filter(SmsMessage.call_record_id.in_(list(all_record_ids)))
         .order_by(SmsMessage.created_at.desc())
         .all()
     )
-    result = {}
+    by_record = {}
     for r in rows:
-        cid = r.call_record_id
-        if cid in result:
+        if r.call_record_id in by_record:
             continue
-        result[cid] = {
+        by_record[r.call_record_id] = {
             "status": r.status,
             "segments": r.segments,
             "created_at": r.created_at.isoformat() + "Z" if r.created_at else None,
             "is_compliance_reply": bool(r.is_compliance_reply),
         }
+
+    # Build the response keyed by whatever the caller sent.
+    result = {}
+    for ccid in control_ids:
+        rec_id = control_to_record.get(ccid)
+        if rec_id is not None and rec_id in by_record:
+            result[ccid] = by_record[rec_id]
+    for rid in record_ids:
+        if rid in by_record:
+            # JSON object keys must be strings.
+            result[str(rid)] = by_record[rid]
     return jsonify({"success": True, "by_id": result})
 
 
