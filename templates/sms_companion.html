@@ -18,6 +18,9 @@
     .sms-grid .full { grid-column: 1 / -1; }
     @media (max-width: 880px) { .sms-grid { grid-template-columns: 1fr; } }
 
+    .sms-settings-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) { .sms-settings-3col { grid-template-columns: 1fr; } }
+
     .sms-card-desc { color: var(--gads-text-secondary); font-size: 12.5px; margin: 0 0 14px; line-height: 1.5; }
 
     .sms-stat { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
@@ -167,7 +170,7 @@
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+          <div class="sms-settings-3col">
             <div>
               <label class="sms-label">Delay after drop (seconds)</label>
               <input type="number" class="sms-input" id="settingsDelay" min="0" max="600" step="5" value="{{ settings.delay_seconds }}">
