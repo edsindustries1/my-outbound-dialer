@@ -8179,17 +8179,39 @@ def api_sms_send():
     data = request.get_json(silent=True) or {}
     to_number = (data.get("to_number") or "").strip()
     body = (data.get("body") or "").strip()
-    from_number = (data.get("from_number") or "").strip()
+    requested_from = (data.get("from_number") or "").strip()
     contact = data.get("contact") or {}
     if not to_number or not body:
         return jsonify({"success": False, "error": "to_number and body are required"}), 400
-    if not from_number:
+
+    # SECURITY: only allow sending from a Telnyx DID that this user actually
+    # provisioned. Without this check, a tenant on a shared Telnyx account
+    # could spoof another customer's number — a serious access-control flaw
+    # with regulatory + sender-reputation consequences.
+    owned_numbers = {
+        _normalize_sms_number(p.phone_number)
+        for p in ProvisionedNumber.query.filter_by(user_id=current_user.id).all()
+        if p.phone_number
+    }
+    owned_numbers.discard(None)
+    owned_numbers.discard("")
+
+    if requested_from:
+        normalized_request = _normalize_sms_number(requested_from)
+        if not normalized_request or normalized_request not in owned_numbers:
+            logger.warning(
+                f"[SMS] user={current_user.id} attempted to send from unowned number "
+                f"{requested_from!r}; rejecting"
+            )
+            return jsonify({"success": False, "error": "You are not authorized to send from that number"}), 403
+        from_number = normalized_request
+    elif owned_numbers:
         # Fall back to the user's first provisioned number
         pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
-        if pn:
-            from_number = pn.phone_number
-        else:
-            from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
+        from_number = _normalize_sms_number(pn.phone_number) if pn else ""
+    else:
+        return jsonify({"success": False, "error": "No SMS-enabled number provisioned for this account"}), 400
+
     result = send_compliant_sms(
         user_id=current_user.id, from_number=from_number, to_number=to_number,
         body=body, contact=contact,
