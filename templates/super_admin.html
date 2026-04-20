@@ -734,6 +734,14 @@
               addInfoRow('Number (' + esc(data.numbers[i].status) + ')', data.numbers[i].phone);
             }
           }
+          var smsBadge = el('span', 'badge ' + (u.sms_ready ? 'admin' : 'user'), u.sms_ready ? 'SMS Live' : 'No SMS');
+          addInfoRow('SMS Ready', smsBadge);
+          var profileText = u.messaging_profile_id ? u.messaging_profile_id : '— (auto-creates on 1st number)';
+          var profileSpan = el('span', '', profileText);
+          profileSpan.style.color = u.messaging_profile_id ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.45)';
+          profileSpan.style.fontFamily = 'monospace';
+          profileSpan.style.fontSize = '11px';
+          addInfoRow('Messaging Profile', profileSpan);
           body.appendChild(info);
 
           if (data.recent_calls && data.recent_calls.length > 0) {

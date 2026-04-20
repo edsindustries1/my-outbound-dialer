@@ -522,6 +522,51 @@ def send_sms(from_number: str, to_number: str, body: str, media_urls=None,
         return None, segments, str(e)
 
 
+def create_messaging_profile(name: str, webhook_url: str = ""):
+    """Create a per-tenant Telnyx Messaging Profile.
+
+    Each customer gets their own Messaging Profile so we can:
+      - register STOP/HELP and inbound webhook independently per tenant
+      - attach only their owned numbers to that profile
+      - bill / report on usage per profile id
+
+    Returns dict {success: bool, profile_id: str, error: str|None}.
+    """
+    if not name:
+        return {"success": False, "error": "Messaging profile name is required"}
+    payload: dict = {
+        "name": name[:240],
+        # Built-in keyword + opt-out compliance — Telnyx auto-replies to STOP/HELP
+        "v1_secret": "",
+    }
+    if webhook_url:
+        payload["webhook_url"] = webhook_url
+        payload["webhook_api_version"] = "2"
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/messaging_profiles",
+            json=payload,
+            headers=_headers(),
+            timeout=20,
+        )
+        resp.raise_for_status()
+        data = (resp.json() or {}).get("data") or {}
+        prof_id = data.get("id", "")
+        logger.info(f"Messaging profile created: id={prof_id} name={name!r}")
+        return {"success": True, "profile_id": prof_id, "error": None}
+    except requests.exceptions.HTTPError as e:
+        body = ""
+        try:
+            body = e.response.text[:300]
+        except Exception:
+            pass
+        logger.error(f"create_messaging_profile failed: {e} body={body}")
+        return {"success": False, "error": f"Telnyx error creating messaging profile: {body or str(e)}"}
+    except Exception as e:
+        logger.error(f"create_messaging_profile failed: {e}")
+        return {"success": False, "error": str(e)}
+
+
 def attach_number_to_messaging_profile(phone_number_or_id: str, messaging_profile_id: str):
     """Move an owned number into a Messaging Profile so it can send/receive SMS.
 

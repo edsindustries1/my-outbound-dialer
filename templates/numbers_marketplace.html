@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Marketplace · Open Humana</title>
+  <script>!function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);}();</script>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .nm-wrap { padding: 24px; }
+    .nm-head { margin-bottom: 18px; }
+    .nm-head h2 { font-size: 22px; font-weight: 700; color: var(--gads-text-primary); margin: 0 0 4px; letter-spacing: -.3px; }
+    .nm-head p { font-size: 13.5px; color: var(--gads-text-secondary); margin: 0; max-width: 760px; line-height: 1.55; }
+
+    .nm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 880px) { .nm-grid { grid-template-columns: 1fr; } }
+
+    .nm-card { background: var(--gads-surface); border: 1px solid var(--gads-border); border-radius: var(--gads-radius-lg); padding: 18px 20px; box-shadow: var(--gads-shadow-sm); }
+    .nm-card h3 { font-size: 15px; font-weight: 700; color: var(--gads-text-primary); margin: 0 0 10px; letter-spacing: -.2px; }
+    .nm-card .desc { font-size: 12.5px; color: var(--gads-text-secondary); margin: 0 0 14px; line-height: 1.55; }
+    .nm-card.full { grid-column: 1 / -1; }
+
+    .nm-meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--gads-text-tertiary); margin-top: 8px; }
+    .nm-meta b { color: var(--gads-text-primary); font-variant-numeric: tabular-nums; }
+
+    label.nm-label { font-size: 12.5px; font-weight: 600; color: var(--gads-text-primary); display: block; margin-bottom: 6px; }
+    .nm-input, .nm-select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--gads-border);
+      border-radius: 8px; font: inherit; font-size: 13.5px;
+      background: var(--gads-surface); color: var(--gads-text-primary); outline: none;
+    }
+    .nm-input:focus, .nm-select:focus { border-color: var(--gads-primary); }
+    .nm-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 720px) { .nm-row3 { grid-template-columns: 1fr; } }
+
+    .nm-results { margin-top: 14px; max-height: 360px; overflow-y: auto; border: 1px solid var(--gads-border); border-radius: 10px; background: var(--gads-bg-secondary); }
+    .nm-result { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--gads-border); background: var(--gads-surface); gap: 10px; flex-wrap: wrap; }
+    .nm-result:last-child { border-bottom: none; }
+    .nm-result .num { font-weight: 600; color: var(--gads-text-primary); font-size: 14px; font-variant-numeric: tabular-nums; }
+    .nm-result .reg { font-size: 11.5px; color: var(--gads-text-tertiary); margin-top: 2px; }
+    .nm-result .cost { font-size: 11.5px; color: var(--gads-text-secondary); }
+    .nm-result button { white-space: nowrap; }
+
+    .nm-empty { padding: 30px 20px; text-align: center; color: var(--gads-text-tertiary); font-size: 13px; }
+
+    .nm-owned { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .nm-owned th, .nm-owned td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--gads-border); color: var(--gads-text-primary); vertical-align: top; }
+    .nm-owned th { font-weight: 600; color: var(--gads-text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .nm-owned tr:last-child td { border-bottom: none; }
+    .nm-pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .nm-pill-active { background: var(--gads-success-light); color: var(--gads-success); }
+    .nm-pill-released { background: var(--gads-bg-secondary); color: var(--gads-text-tertiary); }
+    .nm-pill-included { background: rgba(59,130,246,.15); color: #1D4ED8; }
+    .nm-pill-extra { background: rgba(245,158,11,.15); color: #92400E; }
+    .nm-pill-sms-on { background: rgba(34,197,94,.15); color: #15803D; }
+    .nm-pill-sms-off { background: var(--gads-bg-secondary); color: var(--gads-text-tertiary); }
+
+    .nm-alert { padding: 10px 14px; border-radius: 10px; font-size: 12.5px; margin-bottom: 14px; line-height: 1.5; }
+    .nm-alert-warn { background: var(--gads-warning-light); border: 1px solid var(--gads-warning); color: var(--gads-warning); }
+    .nm-alert-info { background: var(--gads-primary-light); border: 1px solid var(--gads-border); color: var(--gads-text-primary); }
+    .nm-alert-err { background: var(--gads-error-light); border: 1px solid var(--gads-error); color: var(--gads-error); }
+    .nm-alert-success { background: var(--gads-success-light); border: 1px solid var(--gads-success); color: var(--gads-success); }
+  </style>
+</head>
+<body>
+  {% include "_dashboard_sidebar.html" with context %}
+
+  <div class="gads-main" id="gadsMain">
+    <div class="gads-topbar">
+      <div class="gads-topbar-left">
+        <div class="gads-breadcrumb">
+          <a class="gads-breadcrumb-item" href="/dashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </a>
+          <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="gads-breadcrumb-item gads-breadcrumb-current">Number Marketplace</span>
+        </div>
+        <h1 class="gads-page-title">Number Marketplace</h1>
+      </div>
+      <div class="gads-topbar-right">
+        <a class="gads-btn gads-btn-outline gads-btn-sm" href="/sms-campaigns" style="text-decoration:none;">SMS Campaigns</a>
+        <button type="button" class="gads-topbar-btn" id="themeToggle" title="Toggle theme">
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+        </button>
+        {% include "_dashboard_avatar.html" with context %}
+      </div>
+    </div>
+
+    <div class="nm-wrap">
+      <div class="nm-head">
+        <h2>Buy a phone number</h2>
+        <p>Pick any U.S. area code. Open Humana provisions the line, registers it for voice + SMS, and attaches it to your private messaging profile — usually in under a minute. No carrier paperwork required.</p>
+        <div class="nm-meta">
+          <span>Plan: <b>{{ plan|capitalize }}</b></span>
+          <span>Active numbers: <b>{{ active_count }}</b> / {{ plan_limits.max }} (incl. {{ plan_limits.included }})</span>
+          <span>Extra-line cost: <b>${{ "%.2f"|format(extra_monthly_cost) }}</b>/month</span>
+          <span>Balance: <b>${{ "%.2f"|format(balance) }}</b></span>
+        </div>
+      </div>
+
+      {% if active_count == 0 %}
+      <div class="nm-alert nm-alert-info">
+        You don't have any phone numbers yet. Buy your first one below to start dialing and texting — your first number is included in every plan.
+      </div>
+      {% endif %}
+
+      <div class="nm-grid">
+        <div class="nm-card">
+          <h3>Search by area code</h3>
+          <p class="desc">We only show numbers that support both voice and SMS so every line you buy can run dialer + texts the moment it's live.</p>
+          <div class="nm-row3">
+            <div>
+              <label class="nm-label" for="nmAreaCode">Area code</label>
+              <input class="nm-input" id="nmAreaCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="e.g. 415">
+            </div>
+            <div>
+              <label class="nm-label" for="nmState">State (optional)</label>
+              <select class="nm-select" id="nmState">
+                <option value="">Any</option>
+                <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option>
+                <option>CO</option><option>CT</option><option>DE</option><option>FL</option><option>GA</option>
+                <option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+                <option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+                <option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option>
+                <option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option>
+                <option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+                <option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+                <option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option>
+                <option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button class="gads-btn gads-btn-primary" id="nmSearchBtn" style="width:100%;">Search</button>
+            </div>
+          </div>
+          <div id="nmSearchAlert" style="margin-top:12px;"></div>
+          <div class="nm-results" id="nmResults" style="display:none;"></div>
+        </div>
+
+        <div class="nm-card">
+          <h3>Test your line</h3>
+          <p class="desc">Send a quick text from one of your numbers to your own phone to confirm it's live. Tests count toward your SMS bundle just like normal sends.</p>
+          {% if owned_numbers and feature_enabled %}
+          <label class="nm-label" for="nmTestFrom">Send from</label>
+          <select class="nm-select" id="nmTestFrom">
+            {% for n in owned_numbers if n.status == 'active' %}
+            <option value="{{ n.phone_number }}">{{ n.phone_number }}{% if n.is_included %} · included{% endif %}</option>
+            {% endfor %}
+          </select>
+          <label class="nm-label" for="nmTestTo" style="margin-top:10px;">Send to</label>
+          <input class="nm-input" id="nmTestTo" type="tel" placeholder="+15551234567">
+          <label class="nm-label" for="nmTestBody" style="margin-top:10px;">Message</label>
+          <textarea class="nm-input" id="nmTestBody" rows="2" maxlength="500" placeholder="Test message from your new Open Humana line. Reply STOP to opt out.">Test message from your new Open Humana line. Reply STOP to opt out.</textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;">
+            <div id="nmTestStatus" style="font-size:12px;color:var(--gads-text-tertiary);">Compliance footer is added automatically on first send.</div>
+            <button class="gads-btn gads-btn-primary gads-btn-sm" id="nmTestSendBtn">Send test SMS</button>
+          </div>
+          {% else %}
+          <div class="nm-empty">
+            Once you buy a number, the test sender will appear here.
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="nm-card full">
+          <h3>Your numbers</h3>
+          <p class="desc">All lines on your account, with their billing tier and SMS readiness. Numbers attached to your messaging profile can send and receive texts immediately.</p>
+          {% if owned_numbers %}
+          <table class="nm-owned">
+            <thead>
+              <tr>
+                <th>Number</th>
+                <th>Status</th>
+                <th>Billing</th>
+                <th>SMS</th>
+                <th>Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for n in owned_numbers %}
+              <tr>
+                <td><b>{{ n.phone_number }}</b></td>
+                <td><span class="nm-pill nm-pill-{{ 'active' if n.status == 'active' else 'released' }}">{{ n.status }}</span></td>
+                <td>
+                  {% if n.is_included %}
+                    <span class="nm-pill nm-pill-included">Included</span>
+                  {% else %}
+                    <span class="nm-pill nm-pill-extra">+${{ "%.2f"|format(extra_monthly_cost) }}/mo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if n.messaging_attached %}
+                    <span class="nm-pill nm-pill-sms-on">Live</span>
+                  {% else %}
+                    <span class="nm-pill nm-pill-sms-off">Voice-only</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:12px;color:var(--gads-text-tertiary);">{{ n.created_at[:10] if n.created_at else '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="nm-empty">No numbers yet. Use the search panel above to buy your first.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){ try { if(localStorage.getItem('gads_sidebar_collapsed')==='1'){ var s=document.getElementById('gadsSidebar'),m=document.getElementById('gadsMain'); s&&s.classList.add('gads-sidebar-collapsed'); m&&m.classList.add('gads-main-expanded'); } } catch(e){} })();
+(function(){
+  var btn = document.getElementById('themeToggle');
+  function syncIcons(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var moon = document.querySelector('#themeToggle .icon-moon');
+    var sun = document.querySelector('#themeToggle .icon-sun');
+    if(moon) moon.style.display = dark ? 'none' : 'block';
+    if(sun) sun.style.display = dark ? 'block' : 'none';
+  }
+  syncIcons();
+  if(btn) btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('vb_theme', next); } catch(e) {}
+    syncIcons();
+  });
+})();
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const EXTRA_COST = {{ extra_monthly_cost }};
+const ACTIVE_COUNT = {{ active_count }};
+const INCLUDED = {{ plan_limits.included }};
+
+document.getElementById('nmSearchBtn').addEventListener('click', async () => {
+  const ac = document.getElementById('nmAreaCode').value.trim();
+  const st = document.getElementById('nmState').value.trim();
+  const alertBox = document.getElementById('nmSearchAlert');
+  const resultsEl = document.getElementById('nmResults');
+  alertBox.innerHTML = '';
+  resultsEl.style.display = 'none';
+  resultsEl.innerHTML = '';
+  if(!ac && !st){ alertBox.innerHTML = '<div class="nm-alert nm-alert-warn">Enter an area code or pick a state to search.</div>'; return; }
+  const btn = document.getElementById('nmSearchBtn');
+  btn.disabled = true; btn.textContent = 'Searching…';
+  try{
+    const params = new URLSearchParams({ limit: 20 });
+    if(ac) params.set('area_code', ac);
+    if(st) params.set('state', st);
+    const r = await fetch('/api/numbers/search?' + params.toString(), { credentials:'same-origin' });
+    const j = await r.json();
+    if(!j.success){ alertBox.innerHTML = `<div class="nm-alert nm-alert-warn">${escapeHtml(j.error || 'No numbers available.')}</div>`; return; }
+    renderResults(j.numbers || []);
+  } catch(e){ alertBox.innerHTML = '<div class="nm-alert nm-alert-err">Search failed. Please try again.</div>'; }
+  btn.disabled = false; btn.textContent = 'Search';
+});
+
+function renderResults(nums){
+  const el = document.getElementById('nmResults');
+  el.style.display = 'block';
+  if(!nums.length){ el.innerHTML = '<div class="nm-empty">No numbers available for that area. Try a different code or state.</div>'; return; }
+  el.innerHTML = nums.map(n => {
+    const willBeExtra = ACTIVE_COUNT >= INCLUDED;
+    const billingNote = willBeExtra
+      ? `<span class="nm-pill nm-pill-extra">+$${EXTRA_COST.toFixed(2)}/mo</span>`
+      : `<span class="nm-pill nm-pill-included">Included</span>`;
+    return `<div class="nm-result">
+      <div>
+        <div class="num">${escapeHtml(n.phone_number)}</div>
+        <div class="reg">${escapeHtml(n.region || '')}${n.rate_center ? ' · '+escapeHtml(n.rate_center) : ''}</div>
+        <div class="cost">${billingNote} · ${escapeHtml((n.features||[]).join(', ') || 'voice, sms')}</div>
+      </div>
+      <button class="gads-btn gads-btn-primary gads-btn-sm nm-buy" data-num="${escapeHtml(n.phone_number)}">Buy</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.nm-buy').forEach(btn => btn.addEventListener('click', () => buyNumber(btn.dataset.num, btn)));
+}
+
+async function buyNumber(num, btn){
+  if(!confirm(`Buy ${num}? It will be ready for calls and SMS in ~30 seconds.`)) return;
+  btn.disabled = true; btn.textContent = 'Provisioning…';
+  try{
+    const r = await fetch('/api/numbers/buy', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ phone_number: num })
+    });
+    const j = await r.json();
+    if(!j.success){
+      alert(j.error || 'Could not purchase number.');
+      btn.disabled = false; btn.textContent = 'Buy';
+      return;
+    }
+    alert(`${num} is live! ${j.messaging_warning ? 'Voice is ready, SMS attach will retry shortly: '+j.messaging_warning : 'Both voice and SMS are ready.'}`);
+    location.reload();
+  } catch(e){
+    alert('Network error.');
+    btn.disabled = false; btn.textContent = 'Buy';
+  }
+}
+
+const testBtn = document.getElementById('nmTestSendBtn');
+if(testBtn){
+  testBtn.addEventListener('click', async () => {
+    const from = document.getElementById('nmTestFrom').value;
+    const to = document.getElementById('nmTestTo').value.trim();
+    const body = document.getElementById('nmTestBody').value.trim();
+    const status = document.getElementById('nmTestStatus');
+    if(!to){ status.textContent = 'Enter a destination number.'; status.style.color = 'var(--gads-error)'; return; }
+    testBtn.disabled = true; testBtn.textContent = 'Sending…';
+    status.textContent = 'Sending…'; status.style.color = 'var(--gads-text-secondary)';
+    try{
+      const r = await fetch('/api/numbers/test-sms', {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ from_number: from, to_number: to, body })
+      });
+      const j = await r.json();
+      if(j.success){
+        status.textContent = `Sent · ${j.segments || 1} segment${(j.segments||1)===1?'':'s'}. Check the inbox for delivery.`;
+        status.style.color = 'var(--gads-success)';
+      } else {
+        status.textContent = j.error || 'Send failed.';
+        status.style.color = 'var(--gads-error)';
+      }
+    } catch(e){
+      status.textContent = 'Network error.';
+      status.style.color = 'var(--gads-error)';
+    }
+    testBtn.disabled = false; testBtn.textContent = 'Send test SMS';
+  });
+}
+</script>
+</body>
+</html>

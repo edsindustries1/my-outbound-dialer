@@ -180,6 +180,10 @@ _SUBDOMAIN_APP_ONLY_PATHS = frozenset({
     "/reset-password",
     "/admin",
     "/super-admin",
+    "/numbers/marketplace",
+    "/sms-companion",
+    "/sms-inbox",
+    "/sms-campaigns",
 })
 
 # ---- Logging Setup ----
@@ -678,9 +682,59 @@ _AREA_CODE_TZ = {
 }
 
 
-def _sms_feature_enabled() -> bool:
-    """Kill switch — set SMS_FEATURE_ENABLED=true in env to enable the feature."""
-    return os.getenv("SMS_FEATURE_ENABLED", "false").lower() in ("1", "true", "yes", "on")
+def _sms_globally_disabled() -> bool:
+    """Operator kill switch. Returns True ONLY when the operator has explicitly
+    set SMS_FEATURE_ENABLED to a falsy value (false/0/off/no). When unset we
+    default to "enabled globally" and rely on the per-user gate below."""
+    val = os.getenv("SMS_FEATURE_ENABLED", "").strip().lower()
+    return val in ("0", "false", "no", "off")
+
+
+def _user_has_sms_enabled(user_id) -> bool:
+    """Per-user feature gate. A user can send SMS only when:
+      - the global kill switch is off, AND
+      - they own at least one active provisioned number, AND
+      - their account has a Telnyx Messaging Profile id assigned.
+
+    No env-var wiring is required — every customer is auto-provisioned the
+    first time they buy a number from the marketplace.
+    """
+    if _sms_globally_disabled():
+        return False
+    if not user_id:
+        return False
+    try:
+        user = User.query.get(user_id)
+        if not user or not (user.telnyx_messaging_profile_id or "").strip():
+            return False
+        has_number = ProvisionedNumber.query.filter_by(
+            user_id=user_id, status='active'
+        ).first() is not None
+        return has_number
+    except Exception as e:
+        logger.warning(f"_user_has_sms_enabled({user_id}) failed: {e}")
+        return False
+
+
+def _sms_feature_enabled(user_id=None) -> bool:
+    """Backwards-compatible wrapper.
+
+    - When called with a user_id (or implicitly — see below) returns the
+      per-user gate result.
+    - When called without a user_id falls back to the global kill switch only,
+      which is the right answer for unauthenticated webhooks.
+
+    Most call sites are inside login_required routes; if no user_id was passed
+    we automatically use ``current_user`` when it's authenticated so existing
+    callers keep working without code changes."""
+    if user_id is None:
+        try:
+            if current_user.is_authenticated:
+                return _user_has_sms_enabled(current_user.id)
+        except Exception:
+            pass
+        return not _sms_globally_disabled()
+    return _user_has_sms_enabled(user_id)
 
 
 def _normalize_sms_number(num: str) -> str:
@@ -930,8 +984,8 @@ def send_compliant_sms(user_id, from_number: str, to_number: str, body: str,
     Returns dict with keys {ok, status, message_id, segments, sms_message_id, error}.
     """
     from models import SmsMessage
-    if not _sms_feature_enabled():
-        return {"ok": False, "status": "blocked", "error": "Messaging is currently disabled"}
+    if not _sms_feature_enabled(user_id):
+        return {"ok": False, "status": "blocked", "error": "Messaging is not enabled on your account. Buy a number from the marketplace to start texting."}
 
     to_e164 = _normalize_sms_number(to_number)
     from_e164 = _normalize_sms_number(from_number)
@@ -5187,9 +5241,9 @@ def _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id)
     SMS enabled and SMS_FEATURE_ENABLED is on, schedules a delayed SMS send
     using the campaign's template and the same Telnyx number we just called from.
     """
-    if not _sms_feature_enabled():
-        return
     if not user_id or not customer_number:
+        return
+    if not _sms_feature_enabled(user_id):
         return
     state = get_call_state(call_control_id) or {}
     contact_data = state.get("contact_data") or {}
@@ -6620,86 +6674,196 @@ def api_numbers_search():
     return jsonify(result), 400
 
 
+def _ensure_user_messaging_profile(user_id):
+    """Ensure the user has a per-tenant Telnyx Messaging Profile. Creates one
+    on first use and stores the id on User.telnyx_messaging_profile_id.
+
+    Returns (profile_id, error). On success error is None."""
+    user = User.query.get(user_id)
+    if not user:
+        return None, "User not found"
+    existing = (user.telnyx_messaging_profile_id or "").strip()
+    if existing:
+        return existing, None
+    from telnyx_client import create_messaging_profile
+    webhook_url = _get_current_webhook_url() + "/sms" if _get_current_webhook_url() else ""
+    name = f"Open Humana - user {user_id} ({(user.email or '').split('@')[0][:40]})"
+    res = create_messaging_profile(name, webhook_url=webhook_url)
+    if not res.get("success") or not res.get("profile_id"):
+        return None, res.get("error") or "Failed to create messaging profile"
+    user.telnyx_messaging_profile_id = res["profile_id"]
+    db.session.commit()
+    logger.info(f"[SMS] Created messaging profile {res['profile_id']} for user {user_id}")
+    return res["profile_id"], None
+
+
+def provision_number(user_id, phone_number, *, app_name=None, charge_extra=True):
+    """Single chokepoint for adding a Telnyx number to a user's account.
+
+    Steps:
+      1. Enforce plan number-cap.
+      2. Ensure the user has a Call Control App (creates "Alex-{user_id}" if not).
+      3. Purchase the phone number against that app.
+      4. Ensure the user has a Telnyx Messaging Profile (creates if missing).
+      5. Attach the new number to that messaging profile (so SMS works
+         immediately, with no per-account env-var wiring).
+      6. Persist the ProvisionedNumber row, charging the upfront monthly cost
+         to the user's credit balance when the number is over their plan's
+         included quota.
+
+    Returns dict {success, phone_number, connection_id, messaging_profile_id,
+    is_included, charge, error}. The route layer converts this into JSON.
+    """
+    if not phone_number:
+        return {"success": False, "error": "Phone number is required"}
+
+    # Serialize per-user provisioning to prevent two concurrent buys from
+    # mis-classifying their billing tier or both being granted past the cap.
+    user = User.query.filter_by(id=user_id).with_for_update().first()
+    if not user:
+        return {"success": False, "error": "User not found"}
+
+    limits = _get_number_limits(user_id)
+    # Re-count under the row lock so another concurrent buy can't race us.
+    current_count = ProvisionedNumber.query.filter(
+        ProvisionedNumber.user_id == user_id,
+        ProvisionedNumber.status.in_(['active', 'provisioning'])
+    ).count()
+    if current_count >= limits["max"]:
+        db.session.rollback()
+        plan = _get_user_plan(user_id) or "starter"
+        msg = (f"You've reached your Starter plan limit of {limits['max']} numbers. "
+               f"Upgrade to Business for up to 20 numbers.") if plan == "starter" \
+              else f"You've reached your plan limit of {limits['max']} numbers. Contact support to increase your limit."
+        return {"success": False, "error": msg, "code": "plan_limit"}
+
+    is_included = (current_count < limits["included"])
+    upfront_charge = Decimal("0.00")
+    if not is_included and charge_extra:
+        upfront_charge = EXTRA_NUMBER_MONTHLY_COST
+        balance = Decimal(str(user.credit_balance or 0))
+        if balance < upfront_charge:
+            db.session.rollback()
+            return {
+                "success": False,
+                "error": (f"This number is outside your included quota and costs "
+                          f"${float(upfront_charge):.2f}/month. Your balance is "
+                          f"${float(balance):.2f} — please add credits to continue."),
+                "code": "payment_required",
+            }
+
+    # Reserve the slot under the lock so concurrent calls can see it (we'll
+    # update status='active' once Telnyx confirms purchase). Locking the User
+    # row gives us serialization; this row is the visible "in-progress" marker.
+    pending_pn = ProvisionedNumber(
+        user_id=user_id,
+        phone_number=phone_number,
+        status='provisioning',
+        is_included=is_included,
+    )
+    db.session.add(pending_pn)
+    db.session.flush()
+    db.session.commit()  # release the User row lock
+
+    # 2. Call control app
+    webhook_url = _get_current_webhook_url()
+    desired_app_name = app_name or f"Alex-{user_id}"
+    connection_id = None
+    apps_result = list_call_control_apps()
+    if apps_result.get("success"):
+        for a in apps_result.get("apps", []):
+            if a.get("name") == desired_app_name or a.get("app_name") == desired_app_name:
+                connection_id = a.get("id")
+                break
+    if not connection_id:
+        app_result = create_call_control_app(desired_app_name, webhook_url)
+        if not app_result.get("success"):
+            pending_pn.status = 'failed'
+            db.session.commit()
+            return {"success": False, "error": f"Failed to create call control app: {app_result.get('error')}"}
+        connection_id = app_result.get("app_id")
+
+    # 3. Purchase
+    order_result = purchase_number(phone_number, connection_id)
+    if not order_result.get("success"):
+        pending_pn.status = 'failed'
+        db.session.commit()
+        return {"success": False, "error": order_result.get("error") or "Failed to purchase number"}
+
+    # 4-5. Messaging profile + attach. Profile creation is required (per task
+    # spec — every customer is auto-provisioned a messaging profile on first
+    # buy). Number→profile attach is retried twice with backoff; if it still
+    # fails Telnyx will usually finish attachment async, so we surface a
+    # warning instead of failing the whole purchase.
+    msg_profile_id, mp_err = _ensure_user_messaging_profile(user_id)
+    sms_ready = False
+    attach_err = None
+    if msg_profile_id:
+        from telnyx_client import attach_number_to_messaging_profile
+        import time as _time
+        for attempt in range(2):
+            _time.sleep(2 + attempt * 3)  # 2s, then 5s
+            try:
+                mp_res = attach_number_to_messaging_profile(phone_number, msg_profile_id)
+                if mp_res.get("success"):
+                    sms_ready = True
+                    attach_err = None
+                    break
+                attach_err = mp_res.get("error")
+            except Exception as e:
+                attach_err = str(e)
+        if not sms_ready:
+            logger.warning(f"[SMS] attach {phone_number} to profile {msg_profile_id} failed after retries: {attach_err}")
+
+    # 6. Persist + charge (atomic — either both happen or neither does).
+    pending_pn.status = 'active'
+    pending_pn.telnyx_order_id = order_result.get("order_id")
+    pending_pn.telnyx_connection_id = connection_id
+
+    if upfront_charge > 0:
+        # Re-lock the user row so the charge is consistent with whatever the
+        # current credit balance is right now (it may have changed since the
+        # earlier balance check during the same provisioning).
+        u = User.query.filter_by(id=user_id).with_for_update().first()
+        u.credit_balance = (Decimal(str(u.credit_balance or 0)) - upfront_charge).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        if u.credit_balance < 0:
+            u.credit_balance = Decimal("0.00")
+
+    instance = ensure_user_instance(user_id)
+    if not instance.telnyx_connection_id:
+        instance.telnyx_connection_id = connection_id
+
+    db.session.commit()
+
+    return {
+        "success": True,
+        "phone_number": phone_number,
+        "connection_id": connection_id,
+        "messaging_profile_id": msg_profile_id,
+        "is_included": is_included,
+        "charge": float(upfront_charge),
+        "sms_ready": sms_ready,
+        "messaging_warning": mp_err or attach_err,
+        "order_id": order_result.get("order_id"),
+    }
+
+
 @app.route("/api/numbers/buy", methods=["POST"])
 @login_required
 def api_numbers_buy():
-    """Purchase a phone number for the current user. Enforces plan-based limits."""
-    user_id = current_user.id
-
+    """Purchase a phone number for the current user. Enforces plan-based limits
+    and auto-provisions the user's Telnyx messaging profile."""
     data = request.get_json() or {}
-    phone_number = data.get("phone_number", "").strip()
-    if not phone_number:
-        return jsonify({"error": "Phone number is required"}), 400
-
-    limits = _get_number_limits(user_id)
-    current_count = ProvisionedNumber.query.filter_by(user_id=user_id, status='active').count()
-    if current_count >= limits["max"]:
-        plan = _get_user_plan(user_id) or "starter"
-        if plan == "starter":
-            return jsonify({"error": f"You've reached your Starter plan limit of {limits['max']} numbers. Upgrade to Business for up to 20 numbers."}), 400
-        return jsonify({"error": f"You've reached your plan limit of {limits['max']} numbers. Contact support to increase your limit."}), 400
-
-    auto_setup = data.get("auto_setup", True)
-    app_name = data.get("app_name", "Humana Dialer")
-
-    webhook_url = _get_current_webhook_url()
-
-    connection_id = None
-    created_app = None
-    if auto_setup:
-        apps_result = list_call_control_apps()
-        if apps_result.get("success") and apps_result.get("apps"):
-            connection_id = apps_result["apps"][0]["id"]
-            created_app = apps_result["apps"][0]
-        else:
-            app_result = create_call_control_app(app_name, webhook_url)
-            if not app_result.get("success"):
-                return jsonify({"error": f"Failed to create voice app: {app_result.get('error')}"}), 400
-            connection_id = app_result["app_id"]
-            created_app = app_result
-
-    order_result = purchase_number(phone_number, connection_id)
-    if not order_result.get("success"):
-        return jsonify({"error": f"Failed to purchase number: {order_result.get('error')}"}), 400
-
-    # Record the provisioned number for this user
-    pn = ProvisionedNumber(user_id=user_id, phone_number=phone_number, status='active')
-    pn.telnyx_order_id = order_result.get("order_id")
-    pn.telnyx_connection_id = connection_id
-    limits = _get_number_limits(user_id)
-    pn.is_included = (current_count < limits["included"])
-    db.session.add(pn)
-    db.session.commit()
-
-    if auto_setup and connection_id and not data.get("skip_assign"):
-        import time
-        time.sleep(2)
-        assign_result = assign_number_to_app(phone_number, connection_id)
-        if not assign_result.get("success"):
-            logger.warning(f"Number purchased but assignment failed: {assign_result.get('error')}")
-
-    # Attach to Telnyx Messaging Profile so the new number is fully SMS-enabled.
-    # Best-effort: voice provisioning succeeded above, so we don't fail the
-    # purchase if the messaging-profile assignment errors out (e.g. when no
-    # profile is configured in the environment).
-    try:
-        msg_profile_id = os.getenv("TELNYX_MESSAGING_PROFILE_ID", "").strip()
-        if msg_profile_id and _sms_feature_enabled():
-            from telnyx_client import attach_number_to_messaging_profile
-            mp_res = attach_number_to_messaging_profile(phone_number, msg_profile_id)
-            if mp_res.get("success"):
-                logger.info(f"[SMS] Attached {phone_number} to messaging profile {msg_profile_id}")
-            else:
-                logger.warning(f"[SMS] Failed to attach {phone_number} to messaging profile: {mp_res.get('error')}")
-    except Exception as e:
-        logger.warning(f"[SMS] Messaging-profile attach raised: {e}")
-
-    return jsonify({
-        "success": True,
-        "order": order_result,
-        "voice_app": created_app,
-        "message": f"Number {phone_number} purchased and configured successfully",
-    })
+    phone_number = (data.get("phone_number") or "").strip()
+    app_name = (data.get("app_name") or "").strip() or None
+    result = provision_number(current_user.id, phone_number, app_name=app_name)
+    if not result.get("success"):
+        status = 402 if result.get("code") == "payment_required" else 400
+        return jsonify(result), status
+    result["message"] = f"Number {phone_number} purchased and configured successfully"
+    return jsonify(result)
 
 
 @app.route("/api/numbers/owned", methods=["GET"])
@@ -7222,41 +7386,12 @@ def api_provision_line():
         chosen = search_result["numbers"][0]
         phone_number = chosen["phone_number"]
 
-        pn = ProvisionedNumber(user_id=user_id, phone_number=phone_number, status='provisioning', is_included=True)
-        db.session.add(pn)
-        db.session.commit()
-
-        webhook_url = _get_current_webhook_url()
-        app_name = f"Alex-{user_id}"
-        existing_apps = list_call_control_apps()
-        connection_id = None
-        if existing_apps.get("success"):
-            for a in existing_apps.get("apps", []):
-                if a.get("app_name") == app_name:
-                    connection_id = a.get("id")
-                    break
-        if not connection_id:
-            app_result = create_call_control_app(app_name, webhook_url)
-            if not app_result.get("success"):
-                pn.status = 'failed'
-                db.session.commit()
-                return jsonify({"success": False, "error": "Failed to create call control app."}), 500
-            connection_id = app_result["app_id"]
-
-        purchase_result = purchase_number(phone_number, connection_id=connection_id)
-        if not purchase_result.get("success"):
-            pn.status = 'failed'
-            db.session.commit()
-            return jsonify({"success": False, "error": purchase_result.get("error", "Failed to purchase number.")}), 500
-
-        pn.telnyx_order_id = purchase_result.get("order_id")
-        pn.telnyx_connection_id = connection_id
-        pn.status = 'active'
-        db.session.commit()
-
-        instance = ensure_user_instance(user_id)
-        instance.telnyx_connection_id = connection_id
-        db.session.commit()
+        result = provision_number(user_id, phone_number, app_name=f"Alex-{user_id}")
+        if not result.get("success"):
+            logger.error(f"Auto-provision failed for user {user_id}: {result.get('error')}")
+            code = result.get("code")
+            status = 402 if code == "payment_required" else (400 if code in ("plan_limit",) else 500)
+            return jsonify({"success": False, "error": result.get("error", "Failed to provision number.")}), status
 
         logger.info(f"Line provisioned for user {user_id}: {phone_number}")
         return jsonify({"success": True, "status": "ready", "phone_number": phone_number,
@@ -7628,6 +7763,8 @@ def super_admin():
             "active": getattr(u, 'is_active_account', True),
             "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "N/A",
             "last_activity": last_call_time[:16].replace("T", " ") if last_call_time else "Never",
+            "messaging_profile_id": u.telnyx_messaging_profile_id or "",
+            "sms_ready": bool((u.telnyx_messaging_profile_id or "").strip()) and len(numbers) > 0,
         })
 
     platform_calls_today = sum(1 for c in all_calls if c.get("timestamp", "").startswith(today_str))
@@ -8333,11 +8470,15 @@ def sms_companion_page():
     """Dedicated management UI for the SMS Voicemail Companion feature."""
     used, cap, reset_at = _ensure_sms_bundle(current_user.id)
     settings = _get_campaign_sms_settings(current_user.id)
-    pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
-    from_number = pn.phone_number if pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+    pn = ProvisionedNumber.query.filter_by(user_id=current_user.id, status='active').first()
+    from_number = pn.phone_number if pn else ""
+    has_number = pn is not None
+    has_messaging_profile = bool((current_user.telnyx_messaging_profile_id or "").strip())
     return render_template(
         "sms_companion.html",
-        feature_enabled=_sms_feature_enabled(),
+        feature_enabled=_sms_feature_enabled(current_user.id),
+        has_number=has_number,
+        has_messaging_profile=has_messaging_profile,
         bundle_used=used,
         bundle_cap=cap,
         bundle_remaining=max(0, cap - used),
@@ -8347,6 +8488,81 @@ def sms_companion_page():
         from_number=from_number,
         active_page="sms-companion",
     )
+
+
+# ---- Number Marketplace ----
+@app.route("/numbers/marketplace", methods=["GET"])
+@login_required
+def numbers_marketplace_page():
+    """Self-serve marketplace: search area codes, buy numbers, and auto-provision
+    Telnyx voice + SMS for the current user with no env-var wiring required."""
+    user_id = current_user.id
+    pn_rows = ProvisionedNumber.query.filter_by(user_id=user_id).order_by(
+        ProvisionedNumber.created_at.desc()
+    ).all()
+    limits = _get_number_limits(user_id)
+    active_count = sum(1 for p in pn_rows if p.status == 'active')
+    has_messaging_profile = bool((current_user.telnyx_messaging_profile_id or "").strip())
+    owned = []
+    for p in pn_rows:
+        owned.append({
+            "id": p.id,
+            "phone_number": p.phone_number,
+            "status": p.status,
+            "is_included": p.is_included,
+            "created_at": p.created_at.isoformat() + "Z" if p.created_at else None,
+            "messaging_attached": has_messaging_profile and p.status == 'active',
+        })
+    plan = _get_user_plan(user_id) or "starter"
+    return render_template(
+        "numbers_marketplace.html",
+        active_page="numbers-marketplace",
+        owned_numbers=owned,
+        active_count=active_count,
+        plan=plan,
+        plan_limits=limits,
+        extra_monthly_cost=float(EXTRA_NUMBER_MONTHLY_COST),
+        feature_enabled=_sms_feature_enabled(current_user.id),
+        has_messaging_profile=has_messaging_profile,
+        balance=float(getattr(current_user, "credit_balance", 0) or 0),
+    )
+
+
+@app.route("/api/numbers/test-sms", methods=["POST"])
+@login_required
+@require_credit
+def api_numbers_test_sms():
+    """Send a self-test SMS from one of the user's provisioned numbers to the
+    operator's own phone (or any number they specify) so they can verify the
+    new number actually delivers before launching a real campaign."""
+    if not _sms_feature_enabled(current_user.id):
+        return jsonify({
+            "success": False,
+            "error": "SMS isn't enabled on your account yet. Buy a number from the marketplace first.",
+        }), 400
+    data = request.get_json(silent=True) or {}
+    from_number = (data.get("from_number") or "").strip()
+    to_number = (data.get("to_number") or "").strip()
+    body = (data.get("body") or "").strip() or "Test message from your new Open Humana line. Reply STOP to opt out."
+    if not from_number or not to_number:
+        return jsonify({"success": False, "error": "from_number and to_number are required"}), 400
+    owned = {
+        _normalize_sms_number(p.phone_number)
+        for p in ProvisionedNumber.query.filter_by(user_id=current_user.id, status='active').all()
+        if p.phone_number
+    }
+    if _normalize_sms_number(from_number) not in owned:
+        return jsonify({"success": False, "error": "You don't own that sending number."}), 403
+    result = send_compliant_sms(
+        user_id=current_user.id,
+        from_number=from_number,
+        to_number=to_number,
+        body=body,
+        contact={"first_name": "there"},
+    )
+    if result.get("ok"):
+        return jsonify({"success": True, **result})
+    return jsonify({"success": False, **result}), 400
 
 
 # --------------------------------------------------------------------------

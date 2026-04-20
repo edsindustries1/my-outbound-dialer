@@ -38,6 +38,9 @@ class User(UserMixin, db.Model):
     sms_bundle_used = db.Column(db.Integer, default=0, nullable=False)
     sms_bundle_cap = db.Column(db.Integer, default=0, nullable=False)
     sms_bundle_reset_at = db.Column(db.DateTime, nullable=True)
+    # Per-tenant Telnyx Messaging Profile id. Auto-provisioned on the user's
+    # first number purchase so every customer has their own SMS sender profile.
+    telnyx_messaging_profile_id = db.Column(db.String(255), nullable=True)
 
     app_data = db.relationship('UserAppData', backref='user', lazy=True, cascade='all, delete-orphan')
     instance = db.relationship('UserInstance', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
@@ -355,6 +358,11 @@ def _ensure_schema():
             db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_used INTEGER DEFAULT 0 NOT NULL"))
             db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_cap INTEGER DEFAULT 0 NOT NULL"))
             db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_reset_at TIMESTAMP"))
+            db.session.commit()
+
+        if "telnyx_messaging_profile_id" not in existing_cols:
+            logger.warning("DB schema missing users.telnyx_messaging_profile_id; applying ALTER TABLE")
+            db.session.execute(text("ALTER TABLE users ADD COLUMN telnyx_messaging_profile_id VARCHAR(255)"))
             db.session.commit()
 
         if "invitations" in inspector.get_table_names():

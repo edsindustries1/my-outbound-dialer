@@ -104,7 +104,7 @@
           <h2>SMS Campaigns</h2>
           <p>Send personalised text blasts to lists of contacts. Every send goes through the same compliance guardrails Alex uses — STOP keywords, quiet hours, and segment billing — so your list stays healthy.</p>
         </div>
-        <button class="gads-btn gads-btn-primary" id="newCampaignBtn" {% if not feature_enabled %}disabled title="Messaging is disabled on this environment"{% endif %}>
+        <button class="gads-btn gads-btn-primary" id="newCampaignBtn" {% if not feature_enabled %}disabled title="Buy a number from the marketplace to enable SMS"{% endif %}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;vertical-align:-3px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New SMS Campaign
         </button>
@@ -112,7 +112,8 @@
 
       {% if not feature_enabled %}
       <div class="smsc-alert smsc-alert-warn">
-        <strong>Messaging is currently disabled on this environment.</strong> Existing campaigns are still visible but new blasts cannot be launched until the operator re-enables SMS.
+        <strong>SMS isn't ready on your account yet.</strong>
+        <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Buy a number from the marketplace</a> to auto-provision your messaging profile, then come back to launch campaigns.
       </div>
       {% endif %}
 
