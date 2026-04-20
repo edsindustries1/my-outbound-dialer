@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Inbox · Open Humana</title>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:1px solid #e2e8f0}
+    .topbar-left{display:flex;align-items:center;gap:14px}
+    .topbar-left img{height:30px}
+    .topbar-left a{color:#475569;text-decoration:none;font-size:.88rem;font-weight:600}
+    .topbar-left a:hover{color:#0f172a}
+    .topbar-right{font-size:.85rem;color:#64748b}
+    .container{max-width:1280px;margin:24px auto;padding:0 24px}
+    h1{font-size:1.55rem;margin:0 0 4px}
+    .sub{color:#64748b;font-size:.92rem;margin:0 0 20px}
+    .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+    .tile{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+    .tile .lbl{font-size:.74rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+    .tile .num{font-size:1.7rem;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;margin-top:4px}
+    .tile .delta{font-size:.78rem;color:#64748b;margin-top:2px}
+    .tile.ok .num{color:#16a34a}
+    .tile.warn .num{color:#f59e0b}
+    .tile.bad .num{color:#dc2626}
+
+    .layout{display:grid;grid-template-columns:340px 1fr;gap:18px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;min-height:560px}
+    .threads{border-right:1px solid #e2e8f0;display:flex;flex-direction:column;background:#fafbfc}
+    .threads-search{padding:12px;border-bottom:1px solid #e2e8f0;background:#fff}
+    .threads-search input{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+    .threads-list{flex:1;overflow-y:auto;max-height:640px}
+    .thread{padding:14px 16px;border-bottom:1px solid #eef2f7;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+    .thread:hover{background:#eef4ff}
+    .thread.active{background:#dbeafe}
+    .thread .top{display:flex;justify-content:space-between;align-items:baseline}
+    .thread .num{font-weight:600;font-size:.92rem}
+    .thread .ts{font-size:.72rem;color:#94a3b8}
+    .thread .preview{font-size:.82rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px}
+    .thread .badges{display:flex;gap:6px;align-items:center;margin-top:2px}
+    .badge{font-size:.68rem;padding:2px 7px;border-radius:10px;font-weight:600}
+    .badge-unread{background:#2563eb;color:#fff}
+    .badge-optout{background:#fee2e2;color:#b91c1c}
+
+    .convo{display:flex;flex-direction:column;min-height:560px}
+    .convo-header{padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#fff}
+    .convo-header .ttl{font-weight:600}
+    .convo-header .meta{font-size:.78rem;color:#64748b}
+    .convo-header .actions a{font-size:.78rem;color:#dc2626;text-decoration:none;font-weight:600}
+    .convo-header .actions a:hover{text-decoration:underline}
+    .convo-body{flex:1;padding:18px;overflow-y:auto;max-height:520px;background:#f8fafc}
+    .msg{max-width:75%;padding:10px 14px;border-radius:14px;margin-bottom:10px;font-size:.9rem;line-height:1.4;word-wrap:break-word}
+    .msg.out{margin-left:auto;background:#2563eb;color:#fff;border-bottom-right-radius:4px}
+    .msg.in{margin-right:auto;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
+    .msg.compliance{opacity:.78;font-style:italic}
+    .msg .meta{font-size:.7rem;opacity:.75;margin-top:4px;display:flex;gap:8px;justify-content:flex-end}
+    .msg.in .meta{justify-content:flex-start;color:#94a3b8}
+    .msg .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle}
+    .status-delivered{background:#16a34a}
+    .status-sent,.status-queued{background:#cbd5e1}
+    .status-failed{background:#dc2626}
+
+    .composer{border-top:1px solid #e2e8f0;padding:12px 16px;background:#fff;display:flex;gap:10px;align-items:flex-end}
+    .composer textarea{flex:1;min-height:46px;max-height:140px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;resize:vertical;font:inherit}
+    .composer .seg{font-size:.72rem;color:#64748b;margin-right:8px}
+    .btn{padding:9px 16px;border:none;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+    .btn-primary{background:#0f172a;color:#fff}
+    .btn-primary:hover{background:#1e293b}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+
+    .empty-state{padding:60px 30px;text-align:center;color:#94a3b8;font-size:.92rem}
+    .empty-state svg{display:block;margin:0 auto 14px;opacity:.4}
+    .alert{padding:10px 14px;border-radius:8px;font-size:.86rem;margin-bottom:14px}
+    .alert-warn{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
+    .alert-info{background:#e0f2fe;border:1px solid #bae6fd;color:#075985}
+    .alert.opted-out{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr}
+      .threads{border-right:none;border-bottom:1px solid #e2e8f0;max-height:240px}
+      .threads-list{max-height:200px}
+      .tiles{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="/dashboard"><img src="/static/images/logo.png" alt="Open Humana"></a>
+      <a href="/dashboard">← Dashboard</a>
+      <a href="/sms-companion">SMS Companion</a>
+    </div>
+    <div class="topbar-right">{{ current_user.email }}</div>
+  </header>
+
+  <div class="container">
+    <h1>SMS Inbox</h1>
+    <p class="sub">Two-way conversations from every text Alex has sent or received. Reply directly, watch deliverability, and spot opt-outs early.</p>
+
+    {% if not feature_enabled %}
+    <div class="alert alert-warn">
+      <strong>Messaging is currently disabled on this environment.</strong> The inbox is read-only until the operator re-enables SMS.
+    </div>
+    {% endif %}
+
+    <div class="tiles" id="analyticsTiles">
+      <div class="tile"><div class="lbl">Sent (7d)</div><div class="num" id="aSent">–</div><div class="delta" id="aSentMeta">segments</div></div>
+      <div class="tile ok"><div class="lbl">Delivered</div><div class="num" id="aDelivered">–</div><div class="delta" id="aDeliveredMeta">delivery rate</div></div>
+      <div class="tile bad"><div class="lbl">Failed</div><div class="num" id="aFailed">–</div><div class="delta" id="aFailedMeta">failure rate</div></div>
+      <div class="tile"><div class="lbl">Inbound replies</div><div class="num" id="aReplies">–</div><div class="delta">last 7 days</div></div>
+      <div class="tile warn"><div class="lbl">Opt-outs</div><div class="num" id="aOptOuts">–</div><div class="delta" id="aOptOutsMeta">opt-out rate</div></div>
+    </div>
+
+    <div class="layout">
+      <aside class="threads">
+        <div class="threads-search">
+          <input type="search" id="threadSearch" placeholder="Search by phone number…">
+        </div>
+        <div class="threads-list" id="threadsList">
+          <div class="empty-state">Loading conversations…</div>
+        </div>
+      </aside>
+
+      <section class="convo" id="convoPane">
+        <div class="empty-state" style="margin:auto">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <div>Select a conversation to start replying.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+const FEATURE_ENABLED = {{ 'true' if feature_enabled else 'false' }};
+let THREADS = [];
+let CURRENT = null;
+
+function fmtPhone(n){
+  if(!n) return '';
+  const d = String(n).replace(/\D/g,'');
+  if(d.length === 11 && d[0] === '1') return `+1 (${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  if(d.length === 10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  return n;
+}
+function fmtTs(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '';
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  if(sameDay) return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const diffDays = (now - d) / 86400000;
+  if(diffDays < 7) return d.toLocaleDateString([], {weekday:'short'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleDateString([], {month:'short', day:'numeric'});
+}
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function statusDotClass(s){
+  if(s === 'delivered') return 'status-delivered';
+  if(s === 'failed' || s === 'undelivered') return 'status-failed';
+  return 'status-sent';
+}
+
+async function loadAnalytics(){
+  try{
+    const r = await fetch('/api/sms/analytics?days=7', {credentials:'same-origin'});
+    const j = await r.json();
+    if(!j.success) return;
+    document.getElementById('aSent').textContent = j.sent_segments;
+    document.getElementById('aSentMeta').textContent = `${j.sent_messages} messages`;
+    document.getElementById('aDelivered').textContent = j.delivered;
+    document.getElementById('aDeliveredMeta').textContent = `${j.delivery_rate}% delivery rate`;
+    document.getElementById('aFailed').textContent = j.failed;
+    document.getElementById('aFailedMeta').textContent = `${j.failure_rate}% failure rate`;
+    document.getElementById('aReplies').textContent = j.inbound;
+    document.getElementById('aOptOuts').textContent = j.opt_outs;
+    document.getElementById('aOptOutsMeta').textContent = `${j.opt_out_rate}% of recipients`;
+  }catch(e){ /* swallow */ }
+}
+
+async function loadThreads(){
+  try{
+    const r = await fetch('/api/sms/threads', {credentials:'same-origin'});
+    const j = await r.json();
+    if(!j.success){ renderThreads([]); return; }
+    THREADS = j.threads || [];
+    renderThreads(THREADS);
+  }catch(e){ renderThreads([]); }
+}
+
+function renderThreads(list){
+  const el = document.getElementById('threadsList');
+  if(!list.length){
+    el.innerHTML = '<div class="empty-state">No SMS conversations yet. They\'ll appear here as soon as Alex starts texting after voicemails.</div>';
+    return;
+  }
+  el.innerHTML = list.map(t => {
+    const active = (CURRENT === t.contact_number) ? 'active' : '';
+    const badges = [];
+    if(t.unread_count > 0) badges.push(`<span class="badge badge-unread">${t.unread_count} new</span>`);
+    if(t.opted_out) badges.push('<span class="badge badge-optout">Opted out</span>');
+    return `<div class="thread ${active}" data-num="${escapeHtml(t.contact_number)}">
+      <div class="top"><span class="num">${escapeHtml(fmtPhone(t.contact_number))}</span><span class="ts">${fmtTs(t.last_at)}</span></div>
+      <div class="preview">${escapeHtml(t.last_preview || '')}</div>
+      <div class="badges">${badges.join('')}</div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.thread').forEach(div => {
+    div.addEventListener('click', () => openThread(div.dataset.num));
+  });
+}
+
+async function openThread(number){
+  CURRENT = number;
+  renderThreads(THREADS);
+  const pane = document.getElementById('convoPane');
+  pane.innerHTML = '<div class="empty-state" style="margin:auto">Loading conversation…</div>';
+  try{
+    const r = await fetch('/api/sms/messages?contact=' + encodeURIComponent(number), {credentials:'same-origin'});
+    const j = await r.json();
+    if(!j.success){ pane.innerHTML = '<div class="empty-state">Could not load conversation.</div>'; return; }
+    renderConvo(j);
+    // Mark thread read in the background; refresh thread list to clear badge
+    fetch('/api/sms/threads/mark-read', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contact_number: number})
+    }).then(() => loadThreads());
+  }catch(e){
+    pane.innerHTML = '<div class="empty-state">Error loading conversation.</div>';
+  }
+}
+
+function renderConvo(data){
+  const pane = document.getElementById('convoPane');
+  const msgs = data.messages || [];
+  const optedOut = data.opted_out;
+  const fromNumber = data.from_number || '';
+  const optBanner = optedOut
+    ? '<div class="alert opted-out"><strong>This contact has opted out.</strong> No further outbound texts will be delivered until they reply START. You can still see their messages here.</div>'
+    : '';
+  const composerHtml = (FEATURE_ENABLED && !optedOut) ? `
+    <div class="composer">
+      <textarea id="replyBody" placeholder="Type your reply…" maxlength="1000"></textarea>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span class="seg" id="replySeg">0 chars · 0 segs</span>
+        <button class="btn btn-primary" id="replySend">Send</button>
+      </div>
+    </div>` : '';
+  pane.innerHTML = `
+    <div class="convo-header">
+      <div>
+        <div class="ttl">${escapeHtml(fmtPhone(data.contact_number))}</div>
+        <div class="meta">${msgs.length} message${msgs.length===1?'':'s'} · From your number ${escapeHtml(fmtPhone(fromNumber))}</div>
+      </div>
+      <div class="actions">
+        ${optedOut
+          ? '<a href="#" id="reopenLink">Re-open conversation</a>'
+          : '<a href="#" id="optoutLink">Mark as opted out</a>'}
+      </div>
+    </div>
+    <div class="convo-body" id="convoBody">
+      ${optBanner}
+      ${msgs.map(renderMsg).join('') || '<div class="empty-state">No messages.</div>'}
+    </div>
+    ${composerHtml}`;
+  const body = document.getElementById('convoBody');
+  if(body) body.scrollTop = body.scrollHeight;
+
+  const optoutLink = document.getElementById('optoutLink');
+  if(optoutLink) optoutLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if(!confirm('Add this number to your opt-out list? They will not receive any further texts.')) return;
+    await fetch('/api/sms/opt-outs', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contact_number: data.contact_number, reason: 'manual_inbox'})
+    });
+    openThread(data.contact_number);
+    loadAnalytics();
+  });
+  const reopenLink = document.getElementById('reopenLink');
+  if(reopenLink) reopenLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    if(!confirm('Re-open this conversation? They will receive texts again — only do this if they\'ve asked you to.')) return;
+    await fetch('/api/sms/opt-outs', {
+      method:'DELETE', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contact_number: data.contact_number})
+    });
+    openThread(data.contact_number);
+  });
+
+  const ta = document.getElementById('replyBody');
+  const segEl = document.getElementById('replySeg');
+  const sendBtn = document.getElementById('replySend');
+  if(ta){
+    ta.addEventListener('input', () => {
+      const len = ta.value.length;
+      const segs = len === 0 ? 0 : Math.ceil(len / 160);
+      segEl.textContent = `${len} chars · ${segs} seg${segs===1?'':'s'}`;
+    });
+    sendBtn.addEventListener('click', async () => {
+      const body = ta.value.trim();
+      if(!body) return;
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending…';
+      try{
+        const r = await fetch('/api/sms/send', {
+          method:'POST', credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({to_number: data.contact_number, body})
+        });
+        const j = await r.json();
+        if(!j.success){
+          alert(j.error || 'Failed to send');
+        }else{
+          ta.value = '';
+          openThread(data.contact_number);
+          loadAnalytics();
+          loadThreads();
+        }
+      }catch(e){ alert('Network error'); }
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send';
+    });
+  }
+}
+
+function renderMsg(m){
+  const cls = m.direction === 'out' ? 'out' : 'in';
+  const compliance = m.is_compliance_reply ? ' compliance' : '';
+  const dot = m.direction === 'out'
+    ? `<span class="status-dot ${statusDotClass(m.status)}"></span>${escapeHtml(m.status||'')}`
+    : '';
+  const segMeta = m.segments ? `· ${m.segments} seg` : '';
+  return `<div class="msg ${cls}${compliance}">
+    <div>${escapeHtml(m.body)}</div>
+    <div class="meta">${dot} ${fmtTs(m.created_at)} ${segMeta}</div>
+  </div>`;
+}
+
+document.getElementById('threadSearch').addEventListener('input', (e) => {
+  const q = e.target.value.trim().replace(/\D/g,'');
+  if(!q){ renderThreads(THREADS); return; }
+  renderThreads(THREADS.filter(t => String(t.contact_number).replace(/\D/g,'').includes(q)));
+});
+
+loadAnalytics();
+loadThreads();
+// Light polling so new inbound replies show up without a refresh
+setInterval(() => { loadThreads(); if(!CURRENT) return; }, 30000);
+</script>
+</body>
+</html>

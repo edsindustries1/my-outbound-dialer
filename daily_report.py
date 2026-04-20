@@ -100,6 +100,121 @@ def _format_phone(number):
     return number
 
 
+def _get_sms_summary_last_24h():
+    """Aggregate SMS counts from the SmsMessage table for the trailing 24h.
+    Runs inside the existing Flask app context (daily report is invoked from
+    within the running app). Returns zeroed counters if the model is not
+    available (e.g. SMS feature never initialized). Compliance auto-replies
+    are excluded from the customer-facing 'sent' count so the report matches
+    what they actually paid for."""
+    blank = {
+        "sent": 0, "sent_segments": 0, "delivered": 0, "failed": 0,
+        "inbound": 0, "opt_outs": 0, "delivery_rate": 0.0, "opt_out_rate": 0.0,
+        "by_user": [],
+    }
+    try:
+        from models import SmsMessage, SmsOptOut
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        rows = SmsMessage.query.filter(SmsMessage.created_at >= cutoff).all()
+        # Single shared "billable outbound" predicate so sent / delivered /
+        # failed / rates all share the same denominator. Compliance replies,
+        # opted_out blocks, and skipped rows are platform-absorbed and never
+        # billed, so they are excluded from every customer-facing metric.
+        def _billable(r):
+            return (
+                r.direction == "out"
+                and not getattr(r, "is_compliance_reply", False)
+                and r.status not in ("opted_out", "skipped")
+            )
+        billable = [r for r in rows if _billable(r)]
+        sent = len(billable)
+        sent_segs = sum((r.segments or 0) for r in billable)
+        delivered = sum(1 for r in billable if r.status == "delivered")
+        failed = sum(1 for r in billable if r.status in ("failed", "undelivered"))
+        inbound = sum(1 for r in rows if r.direction == "in")
+        opt_outs = SmsOptOut.query.filter(SmsOptOut.opted_out_at >= cutoff).count()
+        recipients = len({r.to_number for r in billable})
+        by_user = {}
+        for r in billable:
+            slot = by_user.setdefault(r.user_id, {"sent": 0, "delivered": 0, "failed": 0, "segments": 0})
+            slot["sent"] += 1
+            slot["segments"] += (r.segments or 0)
+            if r.status == "delivered":
+                slot["delivered"] += 1
+            elif r.status in ("failed", "undelivered"):
+                slot["failed"] += 1
+        return {
+            "sent": sent,
+            "sent_segments": sent_segs,
+            "delivered": delivered,
+            "failed": failed,
+            "inbound": inbound,
+            "opt_outs": opt_outs,
+            "delivery_rate": round((delivered / sent) * 100, 1) if sent else 0.0,
+            "opt_out_rate": round((opt_outs / recipients) * 100, 1) if recipients else 0.0,
+            "by_user": [{"user_id": uid, **v} for uid, v in by_user.items()],
+        }
+    except Exception as e:
+        logger.warning(f"Daily report: SMS summary unavailable ({e})")
+        return blank
+
+
+def _build_sms_section_html(sms):
+    if sms.get("sent", 0) == 0 and sms.get("inbound", 0) == 0 and sms.get("opt_outs", 0) == 0:
+        return """
+<tr><td style="padding:16px 32px 8px;">
+    <div style="display:flex;align-items:center;">
+        <div style="background:#8B5CF6;width:4px;height:24px;border-radius:2px;display:inline-block;vertical-align:middle;"></div>
+        <h2 style="margin:0 0 0 12px;font-size:18px;color:#1E293B;display:inline-block;vertical-align:middle;">&#128241; SMS Companion</h2>
+    </div>
+    <p style="margin:6px 0 0 16px;font-size:12px;color:#64748B;">No SMS activity in the last 24 hours.</p>
+</td></tr>"""
+    return f"""
+<tr><td style="padding:16px 32px 8px;">
+    <div style="display:flex;align-items:center;">
+        <div style="background:#8B5CF6;width:4px;height:24px;border-radius:2px;display:inline-block;vertical-align:middle;"></div>
+        <h2 style="margin:0 0 0 12px;font-size:18px;color:#1E293B;display:inline-block;vertical-align:middle;">&#128241; SMS Companion (Last 24h)</h2>
+    </div>
+    <p style="margin:6px 0 0 16px;font-size:12px;color:#64748B;">Follow-up texts sent automatically after voicemail drops, plus inbound replies and opt-outs.</p>
+</td></tr>
+<tr><td style="padding:0 32px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td width="20%" style="text-align:center;padding:6px 4px;">
+            <div style="background:#F5F3FF;border-radius:10px;padding:14px 8px;border:1px solid #DDD6FE;">
+                <div style="font-size:24px;font-weight:700;color:#7C3AED;">{sms['sent']}</div>
+                <div style="font-size:11px;color:#7C3AED;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Sent ({sms['sent_segments']} segs)</div>
+            </div>
+        </td>
+        <td width="20%" style="text-align:center;padding:6px 4px;">
+            <div style="background:#F0FDF4;border-radius:10px;padding:14px 8px;border:1px solid #BBF7D0;">
+                <div style="font-size:24px;font-weight:700;color:#16A34A;">{sms['delivered']}</div>
+                <div style="font-size:11px;color:#16A34A;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Delivered ({sms['delivery_rate']}%)</div>
+            </div>
+        </td>
+        <td width="20%" style="text-align:center;padding:6px 4px;">
+            <div style="background:#FEF2F2;border-radius:10px;padding:14px 8px;border:1px solid #FECACA;">
+                <div style="font-size:24px;font-weight:700;color:#EF4444;">{sms['failed']}</div>
+                <div style="font-size:11px;color:#EF4444;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Failed</div>
+            </div>
+        </td>
+        <td width="20%" style="text-align:center;padding:6px 4px;">
+            <div style="background:#EFF6FF;border-radius:10px;padding:14px 8px;border:1px solid #BFDBFE;">
+                <div style="font-size:24px;font-weight:700;color:#2563EB;">{sms['inbound']}</div>
+                <div style="font-size:11px;color:#2563EB;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Replies In</div>
+            </div>
+        </td>
+        <td width="20%" style="text-align:center;padding:6px 4px;">
+            <div style="background:#FFFBEB;border-radius:10px;padding:14px 8px;border:1px solid #FDE68A;">
+                <div style="font-size:24px;font-weight:700;color:#F59E0B;">{sms['opt_outs']}</div>
+                <div style="font-size:11px;color:#F59E0B;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;">Opt-outs ({sms['opt_out_rate']}%)</div>
+            </div>
+        </td>
+    </tr>
+    </table>
+</td></tr>"""
+
+
 def _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers=None, unreachable_numbers=None):
     total = len(history)
     success = len(hot_leads) + len(voicemails)
@@ -135,7 +250,7 @@ def _generate_csv_attachment(history):
     return output.getvalue()
 
 
-def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers=None, unreachable_numbers=None):
+def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers=None, unreachable_numbers=None, sms=None):
     now_str = datetime.utcnow().strftime("%B %d, %Y")
     if invalid_numbers is None:
         invalid_numbers = []
@@ -293,6 +408,8 @@ def _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_num
     {"<table width='100%' cellpadding='0' cellspacing='0' style='border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;font-size:13px;'><tr style='background:#F8FAFC;'><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>#</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Phone Number</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Time</th><th style='padding:10px 14px;text-align:left;color:#64748B;font-weight:600;font-size:11px;text-transform:uppercase;'>Reason</th></tr>" + ''.join([f"<tr><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{i}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;font-weight:600;'>{_format_phone(unr.get('number', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'>{_format_time(unr.get('timestamp', ''))}</td><td style='padding:10px 14px;border-bottom:1px solid #E2E8F0;'><span style='background:#EF4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;'>{unr.get('invalid_reason', unr.get('status_description', 'Unreachable'))}</span></td></tr>" for i, unr in enumerate(unreachable_numbers, 1)]) + "</table>" if unreachable_numbers else "<div style='background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:20px;text-align:center;color:#94A3B8;font-size:13px;'>No unreachable numbers detected in the last 24 hours</div>"}
 </td></tr>
 
+{_build_sms_section_html(sms or {})}
+
 <!-- Footer -->
 <tr><td style="background:#F8FAFC;padding:24px 32px;border-top:1px solid #E2E8F0;text-align:center;">
     <p style="margin:0;font-size:12px;color:#94A3B8;">This is an automated report from <strong>Open Human</strong></p>
@@ -322,11 +439,12 @@ def generate_and_send_report():
     history = _get_last_24h_history()
     hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers = _classify_calls(history)
     summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
+    sms = _get_sms_summary_last_24h()
 
     now_str = datetime.utcnow().strftime("%B %d, %Y")
     subject = f"Open Human Daily Report - {now_str} | {summary['hot_leads']} Hot Leads, {summary['failed_calls']} Failed, {summary['voicemails_left']} VMs"
 
-    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
+    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers, sms=sms)
 
     text_body = f"""Open Human Daily Report - {now_str}
 
@@ -338,6 +456,13 @@ Summary:
 - Invalid Numbers: {summary['invalid_numbers']}
 - Unreachable Numbers: {summary['unreachable_numbers']}
 - Success Rate: {summary['success_rate']}%
+
+SMS Companion (Last 24h):
+- Texts Sent: {sms['sent']} ({sms['sent_segments']} segments)
+- Delivered: {sms['delivered']} ({sms['delivery_rate']}%)
+- Failed: {sms['failed']}
+- Inbound Replies: {sms['inbound']}
+- Opt-outs: {sms['opt_outs']} ({sms['opt_out_rate']}%)
 
 See the HTML version for detailed tables and the attached CSV for raw data."""
 
@@ -370,11 +495,12 @@ def send_test_report(recipient_email=None):
     history = _get_last_24h_history()
     hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers = _classify_calls(history)
     summary = _build_summary(history, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
+    sms = _get_sms_summary_last_24h()
 
     now_str = datetime.utcnow().strftime("%B %d, %Y")
     subject = f"[TEST] Open Human Daily Report - {now_str}"
 
-    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers)
+    html_body = _build_html_report(summary, hot_leads, failed_calls, voicemails, invalid_numbers, unreachable_numbers, sms=sms)
     csv_data = _generate_csv_attachment(history)
     csv_filename = f"open_human_test_report_{datetime.utcnow().strftime('%Y%m%d')}.csv"
 

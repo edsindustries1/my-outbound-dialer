@@ -8331,6 +8331,232 @@ def sms_companion_page():
     )
 
 
+# --------------------------------------------------------------------------
+# SMS Inbox + analytics (Task #85 / Phase 3)
+# --------------------------------------------------------------------------
+
+def _inbox_read_state(user_id) -> dict:
+    """Returns {contact_number: iso_ts} of when the user last opened each thread.
+    Stored as a JSON blob in UserAppData so we don't need a new table."""
+    try:
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key="sms_inbox_read_state").first()
+        if not rec:
+            return {}
+        data = json.loads(rec.data_value or "{}")
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _inbox_mark_read(user_id, contact_number):
+    n = _normalize_sms_number(contact_number)
+    if not n:
+        return
+    state = _inbox_read_state(user_id)
+    state[n] = datetime.utcnow().isoformat() + "Z"
+    payload = json.dumps(state)
+    rec = UserAppData.query.filter_by(user_id=user_id, data_key="sms_inbox_read_state").first()
+    if rec:
+        rec.data_value = payload
+    else:
+        rec = UserAppData(user_id=user_id, data_key="sms_inbox_read_state", data_value=payload)
+        db.session.add(rec)
+    db.session.commit()
+
+
+@app.route("/sms-inbox", methods=["GET"])
+@login_required
+def sms_inbox_page():
+    return render_template("sms_inbox.html", feature_enabled=_sms_feature_enabled())
+
+
+@app.route("/api/sms/threads", methods=["GET"])
+@login_required
+def api_sms_threads():
+    """List of distinct contact-number conversations for the current user,
+    most-recent first, with unread count and opt-out flag."""
+    from models import SmsMessage, SmsOptOut
+    rows = (
+        SmsMessage.query
+        .filter_by(user_id=current_user.id)
+        .order_by(SmsMessage.created_at.desc())
+        .limit(2000)
+        .all()
+    )
+    threads = {}
+    for r in rows:
+        key = r.to_number if r.direction == "out" else r.from_number
+        key = _normalize_sms_number(key) or key
+        if not key:
+            continue
+        t = threads.get(key)
+        if t is None:
+            t = {
+                "contact_number": key,
+                "last_at": r.created_at.isoformat() + "Z" if r.created_at else None,
+                "last_preview": (r.body or "")[:120],
+                "last_direction": r.direction,
+                "_inbound_times": [],
+                "message_count": 0,
+            }
+            threads[key] = t
+        t["message_count"] += 1
+        if r.direction == "in" and r.created_at:
+            t["_inbound_times"].append(r.created_at)
+
+    read_state = _inbox_read_state(current_user.id)
+    opt_outs = {o.contact_number for o in SmsOptOut.query.filter_by(user_id=current_user.id).all()}
+
+    out = []
+    for key, t in threads.items():
+        last_read_iso = read_state.get(key)
+        last_read_dt = None
+        if last_read_iso:
+            try:
+                last_read_dt = datetime.fromisoformat(last_read_iso.rstrip("Z"))
+            except Exception:
+                last_read_dt = None
+        unread = sum(1 for ts in t["_inbound_times"] if last_read_dt is None or ts > last_read_dt)
+        t["unread_count"] = unread
+        t["opted_out"] = key in opt_outs
+        t.pop("_inbound_times", None)
+        out.append(t)
+
+    out.sort(key=lambda x: x.get("last_at") or "", reverse=True)
+    return jsonify({"success": True, "threads": out})
+
+
+@app.route("/api/sms/messages", methods=["GET"])
+@login_required
+def api_sms_messages():
+    from models import SmsMessage, SmsOptOut
+    contact = (request.args.get("contact") or "").strip()
+    n = _normalize_sms_number(contact)
+    if not n:
+        return jsonify({"success": False, "error": "contact required"}), 400
+    rows = (
+        SmsMessage.query
+        .filter(SmsMessage.user_id == current_user.id)
+        .filter(db.or_(SmsMessage.to_number == n, SmsMessage.from_number == n))
+        .order_by(SmsMessage.created_at.asc())
+        .limit(1000)
+        .all()
+    )
+    opted_out = SmsOptOut.query.filter_by(user_id=current_user.id, contact_number=n).first() is not None
+    pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
+    from_number = pn.phone_number if pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+    return jsonify({
+        "success": True,
+        "contact_number": n,
+        "from_number": from_number,
+        "opted_out": opted_out,
+        "messages": [r.to_dict() for r in rows],
+    })
+
+
+@app.route("/api/sms/threads/mark-read", methods=["POST"])
+@login_required
+def api_sms_threads_mark_read():
+    data = request.get_json(silent=True) or {}
+    contact = (data.get("contact_number") or "").strip()
+    if not contact:
+        return jsonify({"success": False, "error": "contact_number required"}), 400
+    _inbox_mark_read(current_user.id, contact)
+    return jsonify({"success": True})
+
+
+@app.route("/api/sms/analytics", methods=["GET"])
+@login_required
+def api_sms_analytics():
+    """Aggregate SMS counts for the rolling window. Used by inbox tiles and
+    the Live View dashboard."""
+    from models import SmsMessage, SmsOptOut
+    try:
+        days = max(1, min(int(request.args.get("days", 7)), 90))
+    except (TypeError, ValueError):
+        days = 7
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    q = SmsMessage.query.filter(
+        SmsMessage.user_id == current_user.id,
+        SmsMessage.created_at >= cutoff,
+    )
+    rows = q.all()
+    # Single shared predicate for "billable outbound" so sent / delivered /
+    # failed all share the same denominator. Compliance auto-replies, skipped
+    # rows, and opt-out blocks are platform-absorbed and never charged, so we
+    # exclude them from every customer-facing metric.
+    def _is_billable_outbound(r):
+        return (
+            r.direction == "out"
+            and not getattr(r, "is_compliance_reply", False)
+            and r.status not in ("opted_out", "skipped")
+        )
+    billable = [r for r in rows if _is_billable_outbound(r)]
+    sent_messages = len(billable)
+    sent_segments = sum((r.segments or 0) for r in billable)
+    delivered = sum(1 for r in billable if r.status == "delivered")
+    failed = sum(1 for r in billable if r.status in ("failed", "undelivered"))
+    inbound = sum(1 for r in rows if r.direction == "in")
+    # Opt-outs in the same window
+    opt_outs = SmsOptOut.query.filter(
+        SmsOptOut.user_id == current_user.id,
+        SmsOptOut.opted_out_at >= cutoff,
+    ).count()
+    distinct_recipients = len({r.to_number for r in billable})
+    delivery_rate = round((delivered / sent_messages) * 100, 1) if sent_messages else 0.0
+    failure_rate = round((failed / sent_messages) * 100, 1) if sent_messages else 0.0
+    opt_out_rate = round((opt_outs / distinct_recipients) * 100, 1) if distinct_recipients else 0.0
+    return jsonify({
+        "success": True,
+        "window_days": days,
+        "sent_messages": sent_messages,
+        "sent_segments": sent_segments,
+        "delivered": delivered,
+        "failed": failed,
+        "inbound": inbound,
+        "opt_outs": opt_outs,
+        "distinct_recipients": distinct_recipients,
+        "delivery_rate": delivery_rate,
+        "failure_rate": failure_rate,
+        "opt_out_rate": opt_out_rate,
+    })
+
+
+@app.route("/api/sms/by-calls", methods=["POST"])
+@login_required
+def api_sms_by_calls():
+    """Bulk lookup: given a list of call_record_ids, return the latest SMS
+    sent for each one. Used by the Live View / Call History row badges."""
+    from models import SmsMessage
+    data = request.get_json(silent=True) or {}
+    ids = data.get("call_record_ids") or []
+    try:
+        ids = [int(i) for i in ids if i is not None][:500]
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "call_record_ids must be a list of ints"}), 400
+    if not ids:
+        return jsonify({"success": True, "by_id": {}})
+    rows = (
+        SmsMessage.query
+        .filter(SmsMessage.user_id == current_user.id)
+        .filter(SmsMessage.call_record_id.in_(ids))
+        .order_by(SmsMessage.created_at.desc())
+        .all()
+    )
+    result = {}
+    for r in rows:
+        cid = r.call_record_id
+        if cid in result:
+            continue
+        result[cid] = {
+            "status": r.status,
+            "segments": r.segments,
+            "created_at": r.created_at.isoformat() + "Z" if r.created_at else None,
+            "is_compliance_reply": bool(r.is_compliance_reply),
+        }
+    return jsonify({"success": True, "by_id": result})
+
+
 @app.route("/api/sms/opt-outs", methods=["GET", "POST", "DELETE"])
 @login_required
 def api_sms_opt_outs():
