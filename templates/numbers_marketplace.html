@@ -256,8 +256,11 @@ document.getElementById('nmSearchBtn').addEventListener('click', async () => {
     const j = await r.json();
     if(!j.success){ alertBox.innerHTML = `<div class="nm-alert nm-alert-warn">${escapeHtml(j.error || 'No numbers available.')}</div>`; return; }
     renderResults(j.numbers || []);
-  } catch(e){ alertBox.innerHTML = '<div class="nm-alert nm-alert-err">Search failed. Please try again.</div>'; }
-  btn.disabled = false; btn.textContent = 'Search';
+  } catch(e){
+    alertBox.innerHTML = '<div class="nm-alert nm-alert-err">Search failed. Please try again.</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Search';
+  }
 });
 
 function renderResults(nums){

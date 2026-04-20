@@ -693,11 +693,13 @@ def _sms_globally_disabled() -> bool:
 def _user_has_sms_enabled(user_id) -> bool:
     """Per-user feature gate. A user can send SMS only when:
       - the global kill switch is off, AND
-      - they own at least one active provisioned number, AND
-      - their account has a Telnyx Messaging Profile id assigned.
+      - their account has a Telnyx Messaging Profile id assigned, AND
+      - they own at least one *active* number that has actually been attached
+        to that profile (messaging_attached_at IS NOT NULL).
 
-    No env-var wiring is required — every customer is auto-provisioned the
-    first time they buy a number from the marketplace.
+    Just owning a number isn't enough — the gate flips on only after Telnyx
+    confirms the number was attached to the user's messaging profile, so users
+    don't see "SMS ready" while sends are still failing at the carrier.
     """
     if _sms_globally_disabled():
         return False
@@ -707,10 +709,12 @@ def _user_has_sms_enabled(user_id) -> bool:
         user = User.query.get(user_id)
         if not user or not (user.telnyx_messaging_profile_id or "").strip():
             return False
-        has_number = ProvisionedNumber.query.filter_by(
-            user_id=user_id, status='active'
-        ).first() is not None
-        return has_number
+        attached = ProvisionedNumber.query.filter(
+            ProvisionedNumber.user_id == user_id,
+            ProvisionedNumber.status == 'active',
+            ProvisionedNumber.messaging_attached_at.isnot(None),
+        ).first()
+        return attached is not None
     except Exception as e:
         logger.warning(f"_user_has_sms_enabled({user_id}) failed: {e}")
         return False
@@ -6808,6 +6812,7 @@ def provision_number(user_id, phone_number, *, app_name=None, charge_extra=True)
                 if mp_res.get("success"):
                     sms_ready = True
                     attach_err = None
+                    pending_pn.messaging_attached_at = datetime.utcnow()
                     break
                 attach_err = mp_res.get("error")
             except Exception as e:
@@ -7251,6 +7256,7 @@ def api_numbers_quick_swap():
                     swap_sms_ready = True
                     break
                 swap_sms_warning = mp_res.get("error")
+        # Persist on the new ProvisionedNumber row right after we add it.
             if not swap_sms_ready:
                 logger.warning(f"[SMS] quick-swap attach {new_phone} failed: {swap_sms_warning}")
         else:
@@ -7267,6 +7273,7 @@ def api_numbers_quick_swap():
         telnyx_order_id=order_result.get("order_id"),
         telnyx_connection_id=connection_id,
         is_included=pn_old.is_included,
+        messaging_attached_at=datetime.utcnow() if swap_sms_ready else None,
     )
     db.session.add(pn_new)
 
@@ -8505,6 +8512,7 @@ def sms_companion_page():
     return render_template(
         "sms_companion.html",
         feature_enabled=_sms_feature_enabled(current_user.id),
+        global_sms_disabled=_sms_globally_disabled(),
         has_number=has_number,
         has_messaging_profile=has_messaging_profile,
         bundle_used=used,
@@ -8632,6 +8640,7 @@ def sms_inbox_page():
     return render_template(
         "sms_inbox.html",
         feature_enabled=_sms_feature_enabled(),
+        global_sms_disabled=_sms_globally_disabled(),
         active_page="sms-inbox",
     )
 
@@ -8984,6 +8993,7 @@ def sms_campaigns_page():
     return render_template(
         "sms_campaigns.html",
         feature_enabled=_sms_feature_enabled(),
+        global_sms_disabled=_sms_globally_disabled(),
         active_page="sms-campaigns",
         from_number=from_number,
         bundle_used=used,

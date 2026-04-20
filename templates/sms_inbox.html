@@ -120,10 +120,16 @@
       </div>
 
       {% if not feature_enabled %}
-      <div class="sms-alert sms-alert-warn">
-        <strong>Texting isn't set up on your account yet.</strong>
-        Buy a phone number from the <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Number Marketplace</a> — we'll auto-create your messaging profile and have SMS live in under a minute.
-      </div>
+        {% if global_sms_disabled %}
+        <div class="sms-alert sms-alert-warn">
+          <strong>Messaging is temporarily paused for maintenance.</strong> The inbox is read-only until the operator re-enables SMS — your account settings are unchanged.
+        </div>
+        {% else %}
+        <div class="sms-alert sms-alert-warn">
+          <strong>Texting isn't set up on your account yet.</strong>
+          Buy a phone number from the <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Number Marketplace</a> — we'll auto-create your messaging profile and have SMS live in under a minute.
+        </div>
+        {% endif %}
       {% endif %}
 
       <div class="gads-kpi-row" id="analyticsTiles" style="margin-bottom:18px;">

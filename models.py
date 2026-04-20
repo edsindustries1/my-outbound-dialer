@@ -135,6 +135,7 @@ class ProvisionedNumber(db.Model):
     daily_dial_count = db.Column(db.Integer, default=0, nullable=False)
     last_dial_date = db.Column(db.Date, nullable=True)
     is_included = db.Column(db.Boolean, default=False, nullable=False)
+    messaging_attached_at = db.Column(db.DateTime, nullable=True)
 
     __table_args__ = (
         db.UniqueConstraint('phone_number', name='uq_provisioned_phone'),
@@ -388,6 +389,10 @@ def _ensure_schema():
             if "is_included" not in pn_cols:
                 logger.warning("DB schema missing provisioned_numbers.is_included; applying ALTER TABLE")
                 db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN is_included BOOLEAN DEFAULT FALSE NOT NULL"))
+                db.session.commit()
+            if "messaging_attached_at" not in pn_cols:
+                logger.warning("DB schema missing provisioned_numbers.messaging_attached_at; applying ALTER TABLE")
+                db.session.execute(text("ALTER TABLE provisioned_numbers ADD COLUMN messaging_attached_at TIMESTAMP"))
                 db.session.commit()
 
         if "app_config" not in inspector.get_table_names():

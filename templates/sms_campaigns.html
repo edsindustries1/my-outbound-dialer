@@ -111,10 +111,16 @@
       </div>
 
       {% if not feature_enabled %}
-      <div class="smsc-alert smsc-alert-warn">
-        <strong>SMS isn't ready on your account yet.</strong>
-        <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Buy a number from the marketplace</a> to auto-provision your messaging profile, then come back to launch campaigns.
-      </div>
+        {% if global_sms_disabled %}
+        <div class="smsc-alert smsc-alert-warn">
+          <strong>Messaging is temporarily paused for maintenance.</strong> Existing campaigns are still visible but new blasts cannot launch until the operator re-enables SMS.
+        </div>
+        {% else %}
+        <div class="smsc-alert smsc-alert-warn">
+          <strong>SMS isn't ready on your account yet.</strong>
+          <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Buy a number from the marketplace</a> to auto-provision your messaging profile, then come back to launch campaigns.
+        </div>
+        {% endif %}
       {% endif %}
 
       <div class="smsc-grid" id="campaignsGrid">

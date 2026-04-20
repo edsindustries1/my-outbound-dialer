@@ -97,10 +97,16 @@
       </div>
 
       {% if not feature_enabled %}
-      <div class="sms-alert sms-alert-warn">
-        <strong>SMS isn't ready on your account yet.</strong>
-        Buy a number from the <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Number Marketplace</a> — your messaging profile is created automatically the moment your first line goes live.
-      </div>
+        {% if global_sms_disabled %}
+        <div class="sms-alert sms-alert-warn">
+          <strong>Messaging is temporarily paused for maintenance.</strong> Sends are blocked platform-wide until the operator re-enables SMS — no action needed on your end.
+        </div>
+        {% else %}
+        <div class="sms-alert sms-alert-warn">
+          <strong>SMS isn't ready on your account yet.</strong>
+          Buy a number from the <a href="/numbers/marketplace" style="color:inherit;text-decoration:underline;font-weight:600;">Number Marketplace</a> — your messaging profile is created automatically the moment your first line goes live.
+        </div>
+        {% endif %}
       {% endif %}
 
       <div class="sms-alert sms-alert-info">
