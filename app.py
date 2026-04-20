@@ -1748,10 +1748,20 @@ def landing():
 
 
 @app.route("/api/health")
+@app.route("/healthz")
 def api_health():
-    from humana_voice import fish_client as _fc
-    fish_ok = _fc.is_configured()
-    fish_source = _fc.get_key_source()
+    # Bulletproof healthcheck: must NEVER import optional/3rd-party modules,
+    # touch the DB, or call out to external services. Railway's healthcheck
+    # only needs to confirm the gunicorn worker is alive and bound to $PORT.
+    fish_ok = None
+    fish_source = None
+    try:
+        from humana_voice import fish_client as _fc
+        fish_ok = _fc.is_configured()
+        fish_source = _fc.get_key_source()
+    except Exception:
+        # Never let a sub-system failure flip the healthcheck red.
+        pass
     return jsonify({
         "status": "ok",
         "service": "Open Humana — Everyday Digital Solutions",
