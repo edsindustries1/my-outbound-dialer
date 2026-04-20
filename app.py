@@ -8328,6 +8328,7 @@ def sms_companion_page():
         overage_cost=float(SMS_OVERAGE_COST),
         settings=settings,
         from_number=from_number,
+        active_page="sms-companion",
     )
 
 
@@ -8367,7 +8368,11 @@ def _inbox_mark_read(user_id, contact_number):
 @app.route("/sms-inbox", methods=["GET"])
 @login_required
 def sms_inbox_page():
-    return render_template("sms_inbox.html", feature_enabled=_sms_feature_enabled())
+    return render_template(
+        "sms_inbox.html",
+        feature_enabled=_sms_feature_enabled(),
+        active_page="sms-inbox",
+    )
 
 
 @app.route("/api/sms/threads", methods=["GET"])

@@ -3,135 +3,214 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SMS Inbox · Open Humana</title>
+  <title>Text Messages · Open Humana</title>
+  <script>!function(){var t=localStorage.getItem("vb_theme");if(t)document.documentElement.setAttribute("data-theme",t);}();</script>
   <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a}
-    .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:1px solid #e2e8f0}
-    .topbar-left{display:flex;align-items:center;gap:14px}
-    .topbar-left img{height:30px}
-    .topbar-left a{color:#475569;text-decoration:none;font-size:.88rem;font-weight:600}
-    .topbar-left a:hover{color:#0f172a}
-    .topbar-right{font-size:.85rem;color:#64748b}
-    .container{max-width:1280px;margin:24px auto;padding:0 24px}
-    h1{font-size:1.55rem;margin:0 0 4px}
-    .sub{color:#64748b;font-size:.92rem;margin:0 0 20px}
-    .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
-    .tile{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px}
-    .tile .lbl{font-size:.74rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-    .tile .num{font-size:1.7rem;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums;margin-top:4px}
-    .tile .delta{font-size:.78rem;color:#64748b;margin-top:2px}
-    .tile.ok .num{color:#16a34a}
-    .tile.warn .num{color:#f59e0b}
-    .tile.bad .num{color:#dc2626}
+    /* SMS Inbox — page-specific styles built on top of the dashboard tokens. */
+    .sms-page-wrap { padding: 24px; }
+    .sms-page-head { margin-bottom: 18px; }
+    .sms-page-head h2 { font-size: 22px; font-weight: 700; color: var(--gads-text-primary); margin: 0 0 4px; letter-spacing: -.3px; }
+    .sms-page-head p { font-size: 13.5px; color: var(--gads-text-secondary); margin: 0; max-width: 760px; line-height: 1.55; }
 
-    .layout{display:grid;grid-template-columns:340px 1fr;gap:18px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;min-height:560px}
-    .threads{border-right:1px solid #e2e8f0;display:flex;flex-direction:column;background:#fafbfc}
-    .threads-search{padding:12px;border-bottom:1px solid #e2e8f0;background:#fff}
-    .threads-search input{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
-    .threads-list{flex:1;overflow-y:auto;max-height:640px}
-    .thread{padding:14px 16px;border-bottom:1px solid #eef2f7;cursor:pointer;display:flex;flex-direction:column;gap:4px}
-    .thread:hover{background:#eef4ff}
-    .thread.active{background:#dbeafe}
-    .thread .top{display:flex;justify-content:space-between;align-items:baseline}
-    .thread .num{font-weight:600;font-size:.92rem}
-    .thread .ts{font-size:.72rem;color:#94a3b8}
-    .thread .preview{font-size:.82rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px}
-    .thread .badges{display:flex;gap:6px;align-items:center;margin-top:2px}
-    .badge{font-size:.68rem;padding:2px 7px;border-radius:10px;font-weight:600}
-    .badge-unread{background:#2563eb;color:#fff}
-    .badge-optout{background:#fee2e2;color:#b91c1c}
+    .sms-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      background: var(--gads-surface);
+      border: 1px solid var(--gads-border);
+      border-radius: var(--gads-radius-lg);
+      overflow: hidden;
+      min-height: 600px;
+      box-shadow: var(--gads-shadow-sm);
+    }
+    .sms-threads { border-right: 1px solid var(--gads-border); display: flex; flex-direction: column; background: var(--gads-bg-secondary); }
+    .sms-threads-search { padding: 12px; border-bottom: 1px solid var(--gads-border); background: var(--gads-surface); }
+    .sms-threads-search input {
+      width: 100%; height: 36px; padding: 0 12px; border: 1px solid var(--gads-border);
+      border-radius: 8px; font: inherit; font-size: 13px;
+      background: var(--gads-surface); color: var(--gads-text-primary); outline: none;
+    }
+    .sms-threads-search input:focus { border-color: var(--gads-primary); }
+    .sms-threads-list { flex: 1; overflow-y: auto; max-height: 680px; }
+    .sms-thread { padding: 12px 14px; border-bottom: 1px solid var(--gads-border); cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: background .12s; }
+    .sms-thread:hover { background: var(--gads-surface-hover); }
+    .sms-thread.active { background: var(--gads-primary-light); }
+    .sms-thread .top { display: flex; justify-content: space-between; align-items: baseline; }
+    .sms-thread .num { font-weight: 600; font-size: 13.5px; color: var(--gads-text-primary); }
+    .sms-thread .ts { font-size: 11px; color: var(--gads-text-tertiary); }
+    .sms-thread .preview { font-size: 12.5px; color: var(--gads-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; }
+    .sms-thread .badges { display: flex; gap: 6px; align-items: center; margin-top: 2px; }
+    .sms-badge { font-size: 10.5px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .sms-badge-unread { background: var(--gads-primary); color: var(--gads-surface); }
+    [data-theme="dark"] .sms-badge-unread { color: #0f0f17; }
+    .sms-badge-optout { background: var(--gads-error-light); color: var(--gads-error); }
 
-    .convo{display:flex;flex-direction:column;min-height:560px}
-    .convo-header{padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;background:#fff}
-    .convo-header .ttl{font-weight:600}
-    .convo-header .meta{font-size:.78rem;color:#64748b}
-    .convo-header .actions a{font-size:.78rem;color:#dc2626;text-decoration:none;font-weight:600}
-    .convo-header .actions a:hover{text-decoration:underline}
-    .convo-body{flex:1;padding:18px;overflow-y:auto;max-height:520px;background:#f8fafc}
-    .msg{max-width:75%;padding:10px 14px;border-radius:14px;margin-bottom:10px;font-size:.9rem;line-height:1.4;word-wrap:break-word}
-    .msg.out{margin-left:auto;background:#2563eb;color:#fff;border-bottom-right-radius:4px}
-    .msg.in{margin-right:auto;background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
-    .msg.compliance{opacity:.78;font-style:italic}
-    .msg .meta{font-size:.7rem;opacity:.75;margin-top:4px;display:flex;gap:8px;justify-content:flex-end}
-    .msg.in .meta{justify-content:flex-start;color:#94a3b8}
-    .msg .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle}
-    .status-delivered{background:#16a34a}
-    .status-sent,.status-queued{background:#cbd5e1}
-    .status-failed{background:#dc2626}
+    .sms-convo { display: flex; flex-direction: column; min-height: 600px; background: var(--gads-surface); }
+    .sms-convo-header { padding: 14px 18px; border-bottom: 1px solid var(--gads-border); display: flex; justify-content: space-between; align-items: center; background: var(--gads-surface); }
+    .sms-convo-header .ttl { font-weight: 600; color: var(--gads-text-primary); font-size: 14.5px; }
+    .sms-convo-header .meta { font-size: 12px; color: var(--gads-text-secondary); margin-top: 2px; }
+    .sms-convo-header .actions a { font-size: 12px; color: var(--gads-error); text-decoration: none; font-weight: 600; }
+    .sms-convo-header .actions a:hover { text-decoration: underline; }
+    .sms-convo-body { flex: 1; padding: 18px; overflow-y: auto; max-height: 540px; background: var(--gads-bg); }
+    .sms-msg { max-width: 72%; padding: 10px 14px; border-radius: 14px; margin-bottom: 10px; font-size: 13.5px; line-height: 1.45; word-wrap: break-word; }
+    .sms-msg.out { margin-left: auto; background: var(--gads-primary); color: var(--gads-surface); border-bottom-right-radius: 4px; }
+    .sms-msg.in { margin-right: auto; background: var(--gads-surface); border: 1px solid var(--gads-border); color: var(--gads-text-primary); border-bottom-left-radius: 4px; }
+    [data-theme="dark"] .sms-msg.out { color: #0f0f17; }
+    .sms-msg.compliance { opacity: .8; font-style: italic; }
+    .sms-msg .meta { font-size: 10.5px; opacity: .8; margin-top: 4px; display: flex; gap: 8px; justify-content: flex-end; }
+    .sms-msg.in .meta { justify-content: flex-start; color: var(--gads-text-tertiary); }
+    .sms-status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .sms-status-delivered { background: var(--gads-success); }
+    .sms-status-sent, .sms-status-queued { background: var(--gads-text-muted); }
+    .sms-status-failed { background: var(--gads-error); }
 
-    .composer{border-top:1px solid #e2e8f0;padding:12px 16px;background:#fff;display:flex;gap:10px;align-items:flex-end}
-    .composer textarea{flex:1;min-height:46px;max-height:140px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;resize:vertical;font:inherit}
-    .composer .seg{font-size:.72rem;color:#64748b;margin-right:8px}
-    .btn{padding:9px 16px;border:none;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
-    .btn-primary{background:#0f172a;color:#fff}
-    .btn-primary:hover{background:#1e293b}
-    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .sms-composer { border-top: 1px solid var(--gads-border); padding: 12px 16px; background: var(--gads-surface); display: flex; gap: 10px; align-items: flex-end; }
+    .sms-composer textarea {
+      flex: 1; min-height: 48px; max-height: 140px; padding: 10px 12px;
+      border: 1px solid var(--gads-border); border-radius: 8px; resize: vertical;
+      font: inherit; font-size: 13.5px; background: var(--gads-surface); color: var(--gads-text-primary); outline: none;
+    }
+    .sms-composer textarea:focus { border-color: var(--gads-primary); }
+    .sms-composer .seg { font-size: 11px; color: var(--gads-text-tertiary); margin-right: 6px; }
 
-    .empty-state{padding:60px 30px;text-align:center;color:#94a3b8;font-size:.92rem}
-    .empty-state svg{display:block;margin:0 auto 14px;opacity:.4}
-    .alert{padding:10px 14px;border-radius:8px;font-size:.86rem;margin-bottom:14px}
-    .alert-warn{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
-    .alert-info{background:#e0f2fe;border:1px solid #bae6fd;color:#075985}
-    .alert.opted-out{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+    .sms-empty { padding: 60px 30px; text-align: center; color: var(--gads-text-tertiary); font-size: 13px; }
+    .sms-empty svg { display: block; margin: 0 auto 14px; opacity: .35; }
+    .sms-alert { padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
+    .sms-alert-warn { background: var(--gads-warning-light); border: 1px solid var(--gads-warning); color: var(--gads-warning); }
+    .sms-alert.opted-out { background: var(--gads-error-light); border: 1px solid var(--gads-error); color: var(--gads-error); }
 
-    @media(max-width:900px){
-      .layout{grid-template-columns:1fr}
-      .threads{border-right:none;border-bottom:1px solid #e2e8f0;max-height:240px}
-      .threads-list{max-height:200px}
-      .tiles{grid-template-columns:repeat(2,1fr)}
+    @media (max-width: 900px) {
+      .sms-layout { grid-template-columns: 1fr; }
+      .sms-threads { border-right: none; border-bottom: 1px solid var(--gads-border); max-height: 240px; }
+      .sms-threads-list { max-height: 200px; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-left">
-      <a href="/dashboard"><img src="/static/images/logo.png" alt="Open Humana"></a>
-      <a href="/dashboard">← Dashboard</a>
-      <a href="/sms-companion">SMS Companion</a>
-    </div>
-    <div class="topbar-right">{{ current_user.email }}</div>
-  </header>
+  {% include "_dashboard_sidebar.html" with context %}
 
-  <div class="container">
-    <h1>SMS Inbox</h1>
-    <p class="sub">Two-way conversations from every text Alex has sent or received. Reply directly, watch deliverability, and spot opt-outs early.</p>
-
-    {% if not feature_enabled %}
-    <div class="alert alert-warn">
-      <strong>Messaging is currently disabled on this environment.</strong> The inbox is read-only until the operator re-enables SMS.
-    </div>
-    {% endif %}
-
-    <div class="tiles" id="analyticsTiles">
-      <div class="tile"><div class="lbl">Sent (7d)</div><div class="num" id="aSent">–</div><div class="delta" id="aSentMeta">segments</div></div>
-      <div class="tile ok"><div class="lbl">Delivered</div><div class="num" id="aDelivered">–</div><div class="delta" id="aDeliveredMeta">delivery rate</div></div>
-      <div class="tile bad"><div class="lbl">Failed</div><div class="num" id="aFailed">–</div><div class="delta" id="aFailedMeta">failure rate</div></div>
-      <div class="tile"><div class="lbl">Inbound replies</div><div class="num" id="aReplies">–</div><div class="delta">last 7 days</div></div>
-      <div class="tile warn"><div class="lbl">Opt-outs</div><div class="num" id="aOptOuts">–</div><div class="delta" id="aOptOutsMeta">opt-out rate</div></div>
+  <div class="gads-main" id="gadsMain">
+    <div class="gads-topbar">
+      <div class="gads-topbar-left">
+        <div class="gads-breadcrumb">
+          <a class="gads-breadcrumb-item" href="/dashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </a>
+          <svg class="gads-breadcrumb-sep" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="gads-breadcrumb-item gads-breadcrumb-current">Text Messages</span>
+        </div>
+        <h1 class="gads-page-title">Text Messages</h1>
+      </div>
+      <div class="gads-topbar-right">
+        <a class="gads-btn gads-btn-outline gads-btn-sm" href="/sms-companion" style="text-decoration:none;">SMS Settings</a>
+        <button type="button" class="gads-topbar-btn" id="themeToggle" title="Toggle theme">
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <span style="font-size:12.5px;color:var(--gads-text-secondary);">{{ current_user.email }}</span>
+      </div>
     </div>
 
-    <div class="layout">
-      <aside class="threads">
-        <div class="threads-search">
-          <input type="search" id="threadSearch" placeholder="Search by phone number…">
-        </div>
-        <div class="threads-list" id="threadsList">
-          <div class="empty-state">Loading conversations…</div>
-        </div>
-      </aside>
+    <div class="sms-page-wrap">
+      <div class="sms-page-head">
+        <h2>SMS Inbox</h2>
+        <p>Two-way conversations from every text Alex has sent or received. Reply directly, watch deliverability, and spot opt-outs early.</p>
+      </div>
 
-      <section class="convo" id="convoPane">
-        <div class="empty-state" style="margin:auto">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          <div>Select a conversation to start replying.</div>
+      {% if not feature_enabled %}
+      <div class="sms-alert sms-alert-warn">
+        <strong>Messaging is currently disabled on this environment.</strong> The inbox is read-only until the operator re-enables SMS.
+      </div>
+      {% endif %}
+
+      <div class="gads-kpi-row" id="analyticsTiles" style="margin-bottom:18px;">
+        <div class="gads-kpi-card">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="gads-kpi-icon gads-kpi-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+            <div class="gads-kpi-label">Sent (7d)</div>
+          </div>
+          <div class="gads-kpi-value" id="aSent">–</div>
+          <div style="font-size:11.5px;color:var(--gads-text-tertiary);" id="aSentMeta">segments</div>
         </div>
-      </section>
+        <div class="gads-kpi-card">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="gads-kpi-icon gads-kpi-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="gads-kpi-label">Delivered</div>
+          </div>
+          <div class="gads-kpi-value" id="aDelivered" style="color:var(--gads-success);">–</div>
+          <div style="font-size:11.5px;color:var(--gads-text-tertiary);" id="aDeliveredMeta">delivery rate</div>
+        </div>
+        <div class="gads-kpi-card">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="gads-kpi-icon" style="background:var(--gads-error-light);color:var(--gads-error);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="gads-kpi-label">Failed</div>
+          </div>
+          <div class="gads-kpi-value" id="aFailed" style="color:var(--gads-error);">–</div>
+          <div style="font-size:11.5px;color:var(--gads-text-tertiary);" id="aFailedMeta">failure rate</div>
+        </div>
+        <div class="gads-kpi-card">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="gads-kpi-icon gads-kpi-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <div class="gads-kpi-label">Inbound replies</div>
+          </div>
+          <div class="gads-kpi-value" id="aReplies">–</div>
+          <div style="font-size:11.5px;color:var(--gads-text-tertiary);">last 7 days</div>
+        </div>
+        <div class="gads-kpi-card">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="gads-kpi-icon gads-kpi-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
+            <div class="gads-kpi-label">Opt-outs</div>
+          </div>
+          <div class="gads-kpi-value" id="aOptOuts" style="color:var(--gads-warning);">–</div>
+          <div style="font-size:11.5px;color:var(--gads-text-tertiary);" id="aOptOutsMeta">opt-out rate</div>
+        </div>
+      </div>
+
+      <div class="sms-layout">
+        <aside class="sms-threads">
+          <div class="sms-threads-search">
+            <input type="search" id="threadSearch" placeholder="Search by phone number…">
+          </div>
+          <div class="sms-threads-list" id="threadsList">
+            <div class="sms-empty">Loading conversations…</div>
+          </div>
+        </aside>
+
+        <section class="sms-convo" id="convoPane">
+          <div class="sms-empty" style="margin:auto;">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <div>Select a conversation to start replying.</div>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 
 <script>
+// Restore collapsed sidebar preference
+(function(){ try { if(localStorage.getItem('gads_sidebar_collapsed')==='1'){ var s=document.getElementById('gadsSidebar'),m=document.getElementById('gadsMain'); s&&s.classList.add('gads-sidebar-collapsed'); m&&m.classList.add('gads-main-expanded'); } } catch(e){} })();
+// Theme toggle
+(function(){
+  var btn = document.getElementById('themeToggle');
+  function syncIcons(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var moon = document.querySelector('#themeToggle .icon-moon');
+    var sun = document.querySelector('#themeToggle .icon-sun');
+    if(moon) moon.style.display = dark ? 'none' : 'block';
+    if(sun) sun.style.display = dark ? 'block' : 'none';
+  }
+  syncIcons();
+  if(btn) btn.addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('vb_theme', next); } catch(e) {}
+    syncIcons();
+  });
+})();
+
 const FEATURE_ENABLED = {{ 'true' if feature_enabled else 'false' }};
 let THREADS = [];
 let CURRENT = null;
@@ -158,9 +237,9 @@ function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function statusDotClass(s){
-  if(s === 'delivered') return 'status-delivered';
-  if(s === 'failed' || s === 'undelivered') return 'status-failed';
-  return 'status-sent';
+  if(s === 'delivered') return 'sms-status-delivered';
+  if(s === 'failed' || s === 'undelivered') return 'sms-status-failed';
+  return 'sms-status-sent';
 }
 
 async function loadAnalytics(){
@@ -193,21 +272,21 @@ async function loadThreads(){
 function renderThreads(list){
   const el = document.getElementById('threadsList');
   if(!list.length){
-    el.innerHTML = '<div class="empty-state">No SMS conversations yet. They\'ll appear here as soon as Alex starts texting after voicemails.</div>';
+    el.innerHTML = '<div class="sms-empty">No SMS conversations yet. They\'ll appear here as soon as Alex starts texting after voicemails.</div>';
     return;
   }
   el.innerHTML = list.map(t => {
     const active = (CURRENT === t.contact_number) ? 'active' : '';
     const badges = [];
-    if(t.unread_count > 0) badges.push(`<span class="badge badge-unread">${t.unread_count} new</span>`);
-    if(t.opted_out) badges.push('<span class="badge badge-optout">Opted out</span>');
-    return `<div class="thread ${active}" data-num="${escapeHtml(t.contact_number)}">
+    if(t.unread_count > 0) badges.push(`<span class="sms-badge sms-badge-unread">${t.unread_count} new</span>`);
+    if(t.opted_out) badges.push('<span class="sms-badge sms-badge-optout">Opted out</span>');
+    return `<div class="sms-thread ${active}" data-num="${escapeHtml(t.contact_number)}">
       <div class="top"><span class="num">${escapeHtml(fmtPhone(t.contact_number))}</span><span class="ts">${fmtTs(t.last_at)}</span></div>
       <div class="preview">${escapeHtml(t.last_preview || '')}</div>
       <div class="badges">${badges.join('')}</div>
     </div>`;
   }).join('');
-  el.querySelectorAll('.thread').forEach(div => {
+  el.querySelectorAll('.sms-thread').forEach(div => {
     div.addEventListener('click', () => openThread(div.dataset.num));
   });
 }
@@ -216,20 +295,19 @@ async function openThread(number){
   CURRENT = number;
   renderThreads(THREADS);
   const pane = document.getElementById('convoPane');
-  pane.innerHTML = '<div class="empty-state" style="margin:auto">Loading conversation…</div>';
+  pane.innerHTML = '<div class="sms-empty" style="margin:auto;">Loading conversation…</div>';
   try{
     const r = await fetch('/api/sms/messages?contact=' + encodeURIComponent(number), {credentials:'same-origin'});
     const j = await r.json();
-    if(!j.success){ pane.innerHTML = '<div class="empty-state">Could not load conversation.</div>'; return; }
+    if(!j.success){ pane.innerHTML = '<div class="sms-empty">Could not load conversation.</div>'; return; }
     renderConvo(j);
-    // Mark thread read in the background; refresh thread list to clear badge
     fetch('/api/sms/threads/mark-read', {
       method:'POST', credentials:'same-origin',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contact_number: number})
     }).then(() => loadThreads());
   }catch(e){
-    pane.innerHTML = '<div class="empty-state">Error loading conversation.</div>';
+    pane.innerHTML = '<div class="sms-empty">Error loading conversation.</div>';
   }
 }
 
@@ -239,18 +317,18 @@ function renderConvo(data){
   const optedOut = data.opted_out;
   const fromNumber = data.from_number || '';
   const optBanner = optedOut
-    ? '<div class="alert opted-out"><strong>This contact has opted out.</strong> No further outbound texts will be delivered until they reply START. You can still see their messages here.</div>'
+    ? '<div class="sms-alert opted-out"><strong>This contact has opted out.</strong> No further outbound texts will be delivered until they reply START. You can still see their messages here.</div>'
     : '';
   const composerHtml = (FEATURE_ENABLED && !optedOut) ? `
-    <div class="composer">
+    <div class="sms-composer">
       <textarea id="replyBody" placeholder="Type your reply…" maxlength="1000"></textarea>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
         <span class="seg" id="replySeg">0 chars · 0 segs</span>
-        <button class="btn btn-primary" id="replySend">Send</button>
+        <button class="gads-btn gads-btn-primary gads-btn-sm" id="replySend">Send</button>
       </div>
     </div>` : '';
   pane.innerHTML = `
-    <div class="convo-header">
+    <div class="sms-convo-header">
       <div>
         <div class="ttl">${escapeHtml(fmtPhone(data.contact_number))}</div>
         <div class="meta">${msgs.length} message${msgs.length===1?'':'s'} · From your number ${escapeHtml(fmtPhone(fromNumber))}</div>
@@ -261,9 +339,9 @@ function renderConvo(data){
           : '<a href="#" id="optoutLink">Mark as opted out</a>'}
       </div>
     </div>
-    <div class="convo-body" id="convoBody">
+    <div class="sms-convo-body" id="convoBody">
       ${optBanner}
-      ${msgs.map(renderMsg).join('') || '<div class="empty-state">No messages.</div>'}
+      ${msgs.map(renderMsg).join('') || '<div class="sms-empty">No messages.</div>'}
     </div>
     ${composerHtml}`;
   const body = document.getElementById('convoBody');
@@ -333,10 +411,10 @@ function renderMsg(m){
   const cls = m.direction === 'out' ? 'out' : 'in';
   const compliance = m.is_compliance_reply ? ' compliance' : '';
   const dot = m.direction === 'out'
-    ? `<span class="status-dot ${statusDotClass(m.status)}"></span>${escapeHtml(m.status||'')}`
+    ? `<span class="sms-status-dot ${statusDotClass(m.status)}"></span>${escapeHtml(m.status||'')}`
     : '';
   const segMeta = m.segments ? `· ${m.segments} seg` : '';
-  return `<div class="msg ${cls}${compliance}">
+  return `<div class="sms-msg ${cls}${compliance}">
     <div>${escapeHtml(m.body)}</div>
     <div class="meta">${dot} ${fmtTs(m.created_at)} ${segMeta}</div>
   </div>`;
@@ -350,12 +428,9 @@ document.getElementById('threadSearch').addEventListener('input', (e) => {
 
 loadAnalytics();
 loadThreads();
-// Light polling so new inbound replies show up without a refresh.
-// Also re-fetch the currently open conversation so live replies appear.
 setInterval(() => {
   loadThreads();
   if (CURRENT) {
-    // Silent refresh of the open thread; preserves user's draft in textarea.
     fetch('/api/sms/messages?contact=' + encodeURIComponent(CURRENT), {credentials:'same-origin'})
       .then(r => r.json())
       .then(j => {
