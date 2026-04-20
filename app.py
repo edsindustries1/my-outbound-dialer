@@ -509,13 +509,13 @@ PAYPAL_WEBHOOK_ID = os.getenv("WEBHOOK_ID", "")
 
 # Plan definitions for SaaS pricing
 PLAN_MATRIX = {
-    "autodialer":          {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30},
-    "business":            {"amount": Decimal("169.00"),  "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 30},
-    "autodialer_annual":   {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365},
-    "business_annual":     {"amount": Decimal("1690.00"), "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 365},
+    "autodialer":          {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30,  "included_sms": 500},
+    "business":            {"amount": Decimal("169.00"),  "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 30,  "included_sms": 2500},
+    "autodialer_annual":   {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365, "included_sms": 500},
+    "business_annual":     {"amount": Decimal("1690.00"), "instances": 3, "included_numbers": 10, "max_numbers": 30, "billing_days": 365, "included_sms": 2500},
     # Legacy aliases
-    "starter":             {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30},
-    "starter_annual":      {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365},
+    "starter":             {"amount": Decimal("69.00"),   "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 30,  "included_sms": 500},
+    "starter_annual":      {"amount": Decimal("690.00"),  "instances": 1, "included_numbers": 3,  "max_numbers": 10, "billing_days": 365, "included_sms": 500},
 }
 PLAN_NUMBER_LIMITS = {
     "starter":  {"included": 1, "max": 5},
@@ -647,6 +647,429 @@ def _credit_user(user_id, amount):
     user.credit_balance = (bal + Decimal(str(amount))).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     db.session.commit()
     return user.credit_balance
+
+
+# ============================================================================
+# SMS Voicemail Companion — backend helpers, billing, compliance, send pipeline
+# ============================================================================
+SMS_OVERAGE_COST = Decimal("0.04")  # USD per segment when bundle exhausted
+SMS_INBOUND_COST = Decimal("0.0035")  # tracked-only; we eat this, customer is not charged
+SMS_BUNDLE_RESET_DAYS = 30
+SMS_QUIET_HOURS_START = 8   # local hour, inclusive
+SMS_QUIET_HOURS_END = 21    # local hour, exclusive (9pm)
+SMS_THROUGHPUT_PER_NUMBER_PER_MIN = 75  # 10DLC unvetted tier; bump to 4500 once vetted
+SMS_STOP_KEYWORDS = {"stop", "stopall", "unsubscribe", "cancel", "end", "quit", "optout", "opt-out"}
+SMS_HELP_KEYWORDS = {"help", "info", "support"}
+SMS_START_KEYWORDS = {"start", "yes", "unstop"}
+SMS_COMPLIANCE_DISCLOSURE = "Reply STOP to opt out, HELP for help. Msg&data rates may apply."
+SMS_HELP_REPLY = "Open Humana (Everyday Digital Solutions) — for support email support@openhumana.com. Reply STOP to opt out."
+SMS_STOP_REPLY = "You've been opted out and will not receive further messages. Reply START to opt back in."
+SMS_START_REPLY = "You're opted back in. Reply STOP at any time to opt out."
+
+# Rough US area-code → IANA tz mapping for quiet-hours enforcement.
+# Not exhaustive; we default to America/New_York for unknown codes.
+_AREA_CODE_TZ = {
+    # Eastern
+    "201":"America/New_York","202":"America/New_York","203":"America/New_York","207":"America/New_York","212":"America/New_York","215":"America/New_York","216":"America/New_York","217":"America/Chicago","224":"America/Chicago","225":"America/Chicago","228":"America/Chicago","229":"America/New_York","234":"America/New_York","239":"America/New_York","240":"America/New_York","248":"America/New_York","251":"America/Chicago","252":"America/New_York","253":"America/Los_Angeles","254":"America/Chicago","256":"America/Chicago","260":"America/New_York","262":"America/Chicago","267":"America/New_York","269":"America/New_York","270":"America/New_York","272":"America/New_York","276":"America/New_York","281":"America/Chicago",
+    "301":"America/New_York","302":"America/New_York","303":"America/Denver","304":"America/New_York","305":"America/New_York","307":"America/Denver","308":"America/Chicago","309":"America/Chicago","310":"America/Los_Angeles","312":"America/Chicago","313":"America/New_York","314":"America/Chicago","315":"America/New_York","316":"America/Chicago","317":"America/New_York","318":"America/Chicago","319":"America/Chicago","320":"America/Chicago","321":"America/New_York","323":"America/Los_Angeles","325":"America/Chicago","330":"America/New_York","331":"America/Chicago","334":"America/Chicago","336":"America/New_York","337":"America/Chicago","339":"America/New_York","346":"America/Chicago","347":"America/New_York","351":"America/New_York","352":"America/New_York","360":"America/Los_Angeles","361":"America/Chicago","364":"America/New_York","380":"America/New_York","385":"America/Denver","386":"America/New_York",
+    "401":"America/New_York","402":"America/Chicago","404":"America/New_York","405":"America/Chicago","406":"America/Denver","407":"America/New_York","408":"America/Los_Angeles","409":"America/Chicago","410":"America/New_York","412":"America/New_York","413":"America/New_York","414":"America/Chicago","415":"America/Los_Angeles","417":"America/Chicago","419":"America/New_York","423":"America/New_York","424":"America/Los_Angeles","425":"America/Los_Angeles","430":"America/Chicago","432":"America/Chicago","434":"America/New_York","435":"America/Denver","440":"America/New_York","443":"America/New_York","458":"America/Los_Angeles","463":"America/New_York","469":"America/Chicago","470":"America/New_York","475":"America/New_York","478":"America/New_York","479":"America/Chicago","480":"America/Phoenix","484":"America/New_York",
+    "501":"America/Chicago","502":"America/New_York","503":"America/Los_Angeles","504":"America/Chicago","505":"America/Denver","507":"America/Chicago","508":"America/New_York","509":"America/Los_Angeles","510":"America/Los_Angeles","512":"America/Chicago","513":"America/New_York","515":"America/Chicago","516":"America/New_York","517":"America/New_York","518":"America/New_York","520":"America/Phoenix","530":"America/Los_Angeles","540":"America/New_York","541":"America/Los_Angeles","551":"America/New_York","559":"America/Los_Angeles","561":"America/New_York","562":"America/Los_Angeles","563":"America/Chicago","567":"America/New_York","570":"America/New_York","571":"America/New_York","573":"America/Chicago","574":"America/New_York","575":"America/Denver","580":"America/Chicago","585":"America/New_York","586":"America/New_York","601":"America/Chicago","602":"America/Phoenix","603":"America/New_York","605":"America/Chicago","606":"America/New_York","607":"America/New_York","608":"America/Chicago","609":"America/New_York","610":"America/New_York","612":"America/Chicago","614":"America/New_York","615":"America/Chicago","616":"America/New_York","617":"America/New_York","618":"America/Chicago","619":"America/Los_Angeles","620":"America/Chicago","623":"America/Phoenix","626":"America/Los_Angeles","628":"America/Los_Angeles","629":"America/Chicago","630":"America/Chicago","631":"America/New_York","636":"America/Chicago","641":"America/Chicago","646":"America/New_York","650":"America/Los_Angeles","651":"America/Chicago","657":"America/Los_Angeles","660":"America/Chicago","661":"America/Los_Angeles","662":"America/Chicago","667":"America/New_York","669":"America/Los_Angeles","678":"America/New_York","681":"America/New_York","682":"America/Chicago","684":"Pacific/Pago_Pago","689":"America/New_York",
+    "701":"America/Chicago","702":"America/Los_Angeles","703":"America/New_York","704":"America/New_York","706":"America/New_York","707":"America/Los_Angeles","708":"America/Chicago","712":"America/Chicago","713":"America/Chicago","714":"America/Los_Angeles","715":"America/Chicago","716":"America/New_York","717":"America/New_York","718":"America/New_York","719":"America/Denver","720":"America/Denver","724":"America/New_York","725":"America/Los_Angeles","727":"America/New_York","731":"America/Chicago","732":"America/New_York","734":"America/New_York","737":"America/Chicago","740":"America/New_York","743":"America/New_York","747":"America/Los_Angeles","754":"America/New_York","757":"America/New_York","760":"America/Los_Angeles","762":"America/New_York","763":"America/Chicago","765":"America/New_York","769":"America/Chicago","770":"America/New_York","772":"America/New_York","773":"America/Chicago","774":"America/New_York","775":"America/Los_Angeles","779":"America/Chicago","781":"America/New_York","785":"America/Chicago","786":"America/New_York","801":"America/Denver","802":"America/New_York","803":"America/New_York","804":"America/New_York","805":"America/Los_Angeles","806":"America/Chicago","808":"Pacific/Honolulu","810":"America/New_York","812":"America/New_York","813":"America/New_York","814":"America/New_York","815":"America/Chicago","816":"America/Chicago","817":"America/Chicago","818":"America/Los_Angeles","828":"America/New_York","830":"America/Chicago","831":"America/Los_Angeles","832":"America/Chicago","843":"America/New_York","845":"America/New_York","847":"America/Chicago","848":"America/New_York","850":"America/New_York","856":"America/New_York","857":"America/New_York","858":"America/Los_Angeles","859":"America/New_York","860":"America/New_York","862":"America/New_York","863":"America/New_York","864":"America/New_York","865":"America/New_York","870":"America/Chicago","872":"America/Chicago","878":"America/New_York","901":"America/Chicago","903":"America/Chicago","904":"America/New_York","906":"America/New_York","907":"America/Anchorage","908":"America/New_York","909":"America/Los_Angeles","910":"America/New_York","912":"America/New_York","913":"America/Chicago","914":"America/New_York","915":"America/Denver","916":"America/Los_Angeles","917":"America/New_York","918":"America/Chicago","919":"America/New_York","920":"America/Chicago","925":"America/Los_Angeles","928":"America/Phoenix","929":"America/New_York","930":"America/New_York","931":"America/Chicago","936":"America/Chicago","937":"America/New_York","938":"America/Chicago","940":"America/Chicago","941":"America/New_York","947":"America/New_York","949":"America/Los_Angeles","951":"America/Los_Angeles","952":"America/Chicago","954":"America/New_York","956":"America/Chicago","959":"America/New_York","970":"America/Denver","971":"America/Los_Angeles","972":"America/Chicago","973":"America/New_York","978":"America/New_York","979":"America/Chicago","980":"America/New_York","984":"America/New_York","985":"America/Chicago","989":"America/New_York",
+}
+
+
+def _sms_feature_enabled() -> bool:
+    """Kill switch — set SMS_FEATURE_ENABLED=true in env to enable the feature."""
+    return os.getenv("SMS_FEATURE_ENABLED", "false").lower() in ("1", "true", "yes", "on")
+
+
+def _normalize_sms_number(num: str) -> str:
+    if not num:
+        return ""
+    n = str(num).strip()
+    if n.startswith("+"):
+        return "+" + "".join(c for c in n if c.isdigit())
+    digits = "".join(c for c in n if c.isdigit())
+    if len(digits) == 10:
+        digits = "1" + digits
+    return "+" + digits if digits else ""
+
+
+def _sms_bundle_cap_for_plan(user_id) -> int:
+    """Look up included_sms from PLAN_MATRIX based on the user's active_plan."""
+    try:
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key="active_plan").first()
+        if not rec:
+            return 0
+        plan = (json.loads(rec.data_value or "{}").get("plan") or "").lower()
+        if not plan:
+            return 0
+        # Resolve canonical plan key (handles annual variants and legacy aliases)
+        for key in (plan, f"{plan}_monthly"):
+            if key in PLAN_MATRIX:
+                return int(PLAN_MATRIX[key].get("included_sms", 0))
+        return 0
+    except Exception as e:
+        logger.warning(f"Could not resolve sms_bundle_cap for user {user_id}: {e}")
+        return 0
+
+
+def _ensure_sms_bundle(user_id) -> tuple:
+    """Refresh the user's SMS bundle counters if the reset window has passed.
+    Returns (used, cap, reset_at)."""
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return (0, 0, None)
+    cap = _sms_bundle_cap_for_plan(user_id)
+    now = datetime.utcnow()
+    needs_reset = False
+    if user.sms_bundle_reset_at is None:
+        needs_reset = True
+    elif (now - user.sms_bundle_reset_at).days >= SMS_BUNDLE_RESET_DAYS:
+        needs_reset = True
+    if needs_reset or user.sms_bundle_cap != cap:
+        user.sms_bundle_used = 0 if needs_reset else (user.sms_bundle_used or 0)
+        user.sms_bundle_cap = cap
+        user.sms_bundle_reset_at = now if needs_reset else (user.sms_bundle_reset_at or now)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return (user.sms_bundle_used or 0, cap, user.sms_bundle_reset_at)
+
+
+def _check_sms_affordable(user_id, segments: int) -> tuple:
+    """Pre-flight check: returns (ok: bool, reason: str|None). Should be called
+    BEFORE handing off to Telnyx so we don't get stuck in a 'sent but unbillable'
+    state. Allows the send if the bundle has room for the *whole* message OR if
+    the credit balance can cover the projected overage.
+    """
+    if not user_id or not segments:
+        return (False, "Invalid send request")
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return (False, "User not found")
+    used, cap, _reset = _ensure_sms_bundle(user_id)
+    remaining = max(0, cap - used)
+    if segments <= remaining:
+        return (True, None)
+    overage = segments - remaining
+    needed = (Decimal(str(overage)) * SMS_OVERAGE_COST).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    bal = Decimal(str(user.credit_balance or 0))
+    if bal >= needed:
+        return (True, None)
+    return (False, f"Insufficient credits (need ${needed} for {overage} overage segments). Add credits or wait for bundle reset.")
+
+
+def _bill_sms(user_id, segments: int):
+    """Deduct segments first from the monthly bundle, then charge overage at
+    SMS_OVERAGE_COST per segment against credit_balance.
+
+    Uses SELECT FOR UPDATE row-level locking on the User row so concurrent
+    sends from the same account cannot race and double-spend the bundle or
+    miss overage charges. Returns dict with bundle_used / overage_segments /
+    cost_charged.
+    """
+    if not user_id or not segments:
+        return {"bundle_used": 0, "overage_segments": 0, "cost_charged": Decimal("0")}
+    try:
+        user = db.session.query(User).filter_by(id=user_id).with_for_update().one_or_none()
+    except Exception:
+        # Fallback for SQLite or backends without row-locking — risk window only
+        # exists outside Postgres prod.
+        db.session.rollback()
+        user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return {"bundle_used": 0, "overage_segments": 0, "cost_charged": Decimal("0")}
+    cap = _sms_bundle_cap_for_plan(user_id)
+    now = datetime.utcnow()
+    if user.sms_bundle_reset_at is None or (now - user.sms_bundle_reset_at).days >= SMS_BUNDLE_RESET_DAYS:
+        user.sms_bundle_used = 0
+        user.sms_bundle_reset_at = now
+    user.sms_bundle_cap = cap
+    used = user.sms_bundle_used or 0
+    remaining_bundle = max(0, cap - used)
+    from_bundle = min(remaining_bundle, segments)
+    overage = max(0, segments - from_bundle)
+    cost = (Decimal(str(overage)) * SMS_OVERAGE_COST).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+    if from_bundle:
+        user.sms_bundle_used = used + from_bundle
+    if cost > 0:
+        bal = Decimal(str(user.credit_balance or 0))
+        new_bal = (bal - cost).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        # Floor at 0 — pre-flight already gated unaffordable sends; floor protects
+        # against unbilled inbound/compliance replies that we eat ourselves.
+        user.credit_balance = max(Decimal("0.00"), new_bal)
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"[SMS BILL] commit failed for user {user_id}: {e}")
+        db.session.rollback()
+    return {"bundle_used": from_bundle, "overage_segments": overage, "cost_charged": cost}
+
+
+def _is_sms_opted_out(user_id, contact_number: str) -> bool:
+    from models import SmsOptOut
+    n = _normalize_sms_number(contact_number)
+    if not n:
+        return False
+    rec = SmsOptOut.query.filter_by(user_id=user_id, contact_number=n).first()
+    return bool(rec)
+
+
+def _record_sms_opt_out(user_id, contact_number: str, reason: str = "stop_keyword", keyword: str = None):
+    from models import SmsOptOut
+    n = _normalize_sms_number(contact_number)
+    if not n:
+        return
+    existing = SmsOptOut.query.filter_by(user_id=user_id, contact_number=n).first()
+    if existing:
+        return
+    rec = SmsOptOut(user_id=user_id, contact_number=n, reason=reason, keyword=keyword)
+    db.session.add(rec)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _remove_sms_opt_out(user_id, contact_number: str):
+    from models import SmsOptOut
+    n = _normalize_sms_number(contact_number)
+    if not n:
+        return
+    SmsOptOut.query.filter_by(user_id=user_id, contact_number=n).delete()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _is_quiet_hours(contact_number: str) -> bool:
+    """Returns True if it's currently between 9pm and 8am in the recipient's
+    local time. Defaults to America/New_York if we can't resolve the area code.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+    except Exception:
+        return False  # fail-open if zoneinfo unavailable
+    n = _normalize_sms_number(contact_number)
+    if not n.startswith("+1") or len(n) < 5:
+        return False  # only enforce for US/CA numbers
+    area = n[2:5]
+    tz_name = _AREA_CODE_TZ.get(area, "America/New_York")
+    try:
+        local = datetime.now(ZoneInfo(tz_name))
+        return not (SMS_QUIET_HOURS_START <= local.hour < SMS_QUIET_HOURS_END)
+    except Exception:
+        return False
+
+
+def _render_sms_template(body: str, contact: dict, agent_name: str = "", custom_link: str = "") -> str:
+    """Substitute {first_name} {last_name} {company} {agent_name} {custom_link}.
+    Unknown fields collapse to empty string. Whitespace cleanup at the end."""
+    if not body:
+        return ""
+    contact = contact or {}
+    first = (contact.get("first_name") or contact.get("name") or "").strip()
+    if not first and contact.get("name"):
+        first = str(contact.get("name")).split()[0]
+    last = (contact.get("last_name") or "").strip()
+    company = (contact.get("company") or contact.get("organization") or "").strip()
+    fields = {
+        "first_name": first or "there",
+        "last_name": last,
+        "company": company,
+        "agent_name": (agent_name or "Alex").strip(),
+        "custom_link": (custom_link or "").strip(),
+    }
+    out = body
+    for k, v in fields.items():
+        out = out.replace("{" + k + "}", v)
+    # Collapse double spaces created by empty merge fields
+    out = re.sub(r"\s{2,}", " ", out).strip()
+    return out
+
+
+def _ensure_compliance_footer(body: str) -> str:
+    """Append the STOP/HELP disclosure if not already present."""
+    if not body:
+        return SMS_COMPLIANCE_DISCLOSURE
+    lower = body.lower()
+    if "stop" in lower and ("opt out" in lower or "optout" in lower):
+        return body
+    sep = "" if body.endswith((" ", "\n", ".", "!", "?")) else " "
+    return f"{body}{sep}{SMS_COMPLIANCE_DISCLOSURE}"
+
+
+def _has_first_message_to(user_id, to_number: str) -> bool:
+    """Returns True if we've ever sent (and not failed) a message from this user
+    to this recipient — used to decide whether to append the compliance footer."""
+    from models import SmsMessage
+    n = _normalize_sms_number(to_number)
+    rec = SmsMessage.query.filter_by(user_id=user_id, to_number=n, direction="out").filter(
+        SmsMessage.status.in_(["sent", "delivered", "queued"])
+    ).first()
+    return bool(rec)
+
+
+def send_compliant_sms(user_id, from_number: str, to_number: str, body: str,
+                        contact: dict = None, call_record_id: int = None,
+                        campaign_id: int = None, agent_name: str = "",
+                        custom_link: str = "", force_disclosure: bool = False):
+    """The single chokepoint for every outbound SMS we send.
+
+    - Honors the SMS_FEATURE_ENABLED kill switch
+    - Checks SmsOptOut
+    - Enforces quiet hours
+    - Applies template merge fields
+    - Auto-appends compliance footer on the first message of any thread
+    - Bills the user (bundle first, overage to credit_balance)
+    - Persists an SmsMessage row and returns it
+
+    Returns dict with keys {ok, status, message_id, segments, sms_message_id, error}.
+    """
+    from models import SmsMessage
+    if not _sms_feature_enabled():
+        return {"ok": False, "status": "blocked", "error": "Messaging is currently disabled"}
+
+    to_e164 = _normalize_sms_number(to_number)
+    from_e164 = _normalize_sms_number(from_number)
+    if not to_e164 or not from_e164:
+        return {"ok": False, "status": "blocked", "error": "Invalid phone number"}
+
+    # Render template
+    rendered = _render_sms_template(body, contact or {}, agent_name=agent_name, custom_link=custom_link)
+    if not rendered:
+        return {"ok": False, "status": "blocked", "error": "Empty message body"}
+
+    # Compliance footer on first message of any thread
+    is_first = force_disclosure or not _has_first_message_to(user_id, to_e164)
+    if is_first:
+        rendered = _ensure_compliance_footer(rendered)
+
+    # Compliance: opt-out check (block hard)
+    if _is_sms_opted_out(user_id, to_e164):
+        rec = SmsMessage(
+            user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+            from_number=from_e164, to_number=to_e164, body=rendered,
+            direction="out", status="opted_out", status_reason="Recipient previously opted out",
+            segments=0, cost_charged=0, bundle_used=0,
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return {"ok": False, "status": "opted_out", "sms_message_id": rec.id, "error": "Recipient is opted out"}
+
+    # Compliance: quiet hours
+    if _is_quiet_hours(to_e164):
+        rec = SmsMessage(
+            user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+            from_number=from_e164, to_number=to_e164, body=rendered,
+            direction="out", status="skipped", status_reason="Quiet hours (recipient local time)",
+            segments=0, cost_charged=0, bundle_used=0,
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return {"ok": False, "status": "skipped", "sms_message_id": rec.id, "error": "Suppressed by quiet hours"}
+
+    # Dedupe racing send hooks
+    from storage import claim_sms_send
+    if not claim_sms_send(user_id, to_e164, debounce_secs=3):
+        return {"ok": False, "status": "skipped", "error": "Duplicate send suppressed"}
+
+    # Pre-flight affordability check — block before paying Telnyx for a send
+    # we can't bill the customer for.
+    from telnyx_client import send_sms as _telnyx_send_sms, count_sms_segments as _count_segs
+    estimated_segments = _count_segs(rendered)
+    afford_ok, afford_err = _check_sms_affordable(user_id, estimated_segments)
+    if not afford_ok:
+        rec = SmsMessage(
+            user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+            from_number=from_e164, to_number=to_e164, body=rendered,
+            direction="out", status="payment_required", status_reason=afford_err[:240],
+            segments=estimated_segments, cost_charged=0, bundle_used=0,
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return {"ok": False, "status": "payment_required", "sms_message_id": rec.id, "error": afford_err}
+
+    # Send via Telnyx
+    msg_id, segments, err = _telnyx_send_sms(from_e164, to_e164, rendered)
+    if err:
+        rec = SmsMessage(
+            user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+            from_number=from_e164, to_number=to_e164, body=rendered,
+            direction="out", status="failed", status_reason=err[:240],
+            segments=estimated_segments, cost_charged=0, bundle_used=0,
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return {"ok": False, "status": "failed", "sms_message_id": rec.id, "error": err}
+
+    # Bill (segments first from bundle, then overage)
+    bill = _bill_sms(user_id, segments)
+    rec = SmsMessage(
+        user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+        from_number=from_e164, to_number=to_e164, body=rendered,
+        direction="out", status="sent",
+        segments=segments,
+        cost_charged=bill["cost_charged"],
+        bundle_used=bill["bundle_used"],
+        telnyx_id=msg_id,
+        is_first_in_thread=is_first,
+    )
+    db.session.add(rec)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return {"ok": True, "status": "sent", "message_id": msg_id, "segments": segments,
+            "sms_message_id": rec.id, "bundle_used": bill["bundle_used"],
+            "overage_segments": bill["overage_segments"],
+            "cost_charged": float(bill["cost_charged"])}
+
+
+def _send_sms_compliance_reply(user_id, from_number, to_number, body, keyword=None):
+    """Send STOP/HELP/START auto-replies. These bypass opt-out gating because
+    they are the canonical compliance ack the carrier expects, but they DO
+    consume a billed segment (we eat inbound + reply at our cost).
+    """
+    from models import SmsMessage
+    from telnyx_client import send_sms as _telnyx_send_sms, count_sms_segments as _count_segs
+    from_e164 = _normalize_sms_number(from_number)
+    to_e164 = _normalize_sms_number(to_number)
+    if not from_e164 or not to_e164:
+        return None
+    msg_id, segments, err = _telnyx_send_sms(from_e164, to_e164, body)
+    if err:
+        logger.error(f"Compliance reply failed to {to_e164}: {err}")
+        return None
+    bill = _bill_sms(user_id, segments)
+    rec = SmsMessage(
+        user_id=user_id, from_number=from_e164, to_number=to_e164, body=body,
+        direction="out", status="sent", segments=segments,
+        cost_charged=bill["cost_charged"], bundle_used=bill["bundle_used"],
+        telnyx_id=msg_id, is_compliance_reply=True,
+        status_reason=f"compliance:{keyword}" if keyword else "compliance",
+    )
+    db.session.add(rec)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return rec
 
 
 def _set_employee_instances(user_id, count):
@@ -1580,11 +2003,25 @@ def api_demo():
                 "email": request.form.get("email", ""),
                 "phone": request.form.get("phone", ""),
                 "company": request.form.get("company", ""),
+                "sms_consent": request.form.get("sms_consent", ""),
             }
         name_raw = data.get("name", "").strip()
         email_raw = data.get("email", "").strip()
         phone = data.get("phone", "").strip()
         company = data.get("company", "").strip()
+        # SMS consent — TCPA audit trail. Defaults to False so silence ≠ consent.
+        sms_consent_raw = data.get("sms_consent", False)
+        if isinstance(sms_consent_raw, str):
+            sms_consent = sms_consent_raw.lower() in ("1", "true", "on", "yes")
+        else:
+            sms_consent = bool(sms_consent_raw)
+        consent_ts = datetime.utcnow().isoformat() + "Z" if sms_consent else None
+        consent_ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "").split(",")[0].strip()
+        consent_ua = (request.headers.get("User-Agent") or "")[:240]
+        if sms_consent:
+            logger.info(f"[SMS-CONSENT] grant email={email_raw} phone={phone} ts={consent_ts} ip={consent_ip} ua={consent_ua}")
+        else:
+            logger.info(f"[SMS-CONSENT] declined email={email_raw} phone={phone}")
 
         if not name_raw or not email_raw or not phone:
             return jsonify({"success": False, "error": "Name, email, and phone are required"}), 400
@@ -4701,6 +5138,107 @@ def _drop_voicemail_now(call_control_id, audio_url, is_personalized, customer_nu
     if vm_script_text:
         append_transcript(call_control_id, vm_script_text, track="outbound", is_final=True)
 
+    # ---- SMS Voicemail Companion: enqueue follow-up text after the drop ----
+    try:
+        _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id)
+    except Exception as e:
+        logger.warning(f"[SMS HOOK] Failed to enqueue post-voicemail SMS for {call_control_id}: {e}")
+
+
+def _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id):
+    """Called from the voicemail-drop success path. If the user's campaign has
+    SMS enabled and SMS_FEATURE_ENABLED is on, schedules a delayed SMS send
+    using the campaign's template and the same Telnyx number we just called from.
+    """
+    if not _sms_feature_enabled():
+        return
+    if not user_id or not customer_number:
+        return
+    state = get_call_state(call_control_id) or {}
+    contact_data = state.get("contact_data") or {}
+    from_number = state.get("from_number") or os.environ.get("TELNYX_FROM_NUMBER", "")
+
+    # Pull SMS settings from campaign extras
+    sms_settings = _get_campaign_sms_settings(user_id)
+    if not sms_settings.get("enabled"):
+        return
+    template_body = sms_settings.get("body") or ""
+    if not template_body.strip():
+        return
+    delay_secs = max(0, min(int(sms_settings.get("delay_seconds") or 0), 600))
+
+    # Resolve call_record_id for linkage
+    call_record_id = None
+    try:
+        from models import CallRecord
+        rec = CallRecord.query.filter_by(call_control_id=call_control_id).first()
+        if rec:
+            call_record_id = rec.id
+    except Exception:
+        pass
+
+    def _do_send():
+        try:
+            with app.app_context():
+                send_compliant_sms(
+                    user_id=user_id,
+                    from_number=from_number,
+                    to_number=customer_number,
+                    body=template_body,
+                    contact=contact_data,
+                    call_record_id=call_record_id,
+                    agent_name=sms_settings.get("agent_name") or "",
+                    custom_link=sms_settings.get("custom_link") or "",
+                )
+        except Exception as e:
+            logger.error(f"[SMS HOOK] Send failed for {call_control_id}: {e}")
+
+    if delay_secs > 0:
+        t = threading.Timer(delay_secs, _do_send)
+        t.daemon = True
+        t.start()
+    else:
+        threading.Thread(target=_do_send, daemon=True).start()
+    logger.info(f"[SMS HOOK] Post-voicemail SMS enqueued for {call_control_id} → {customer_number} (delay={delay_secs}s)")
+
+
+def _get_campaign_sms_settings(user_id) -> dict:
+    """Read SMS settings stored as a JSON blob in UserAppData under
+    data_key='campaign_sms_settings'. Default is disabled."""
+    try:
+        rec = UserAppData.query.filter_by(user_id=user_id, data_key="campaign_sms_settings").first()
+        if not rec:
+            return {"enabled": False}
+        data = json.loads(rec.data_value or "{}")
+        if not isinstance(data, dict):
+            return {"enabled": False}
+        return {
+            "enabled": bool(data.get("enabled")),
+            "body": data.get("body") or "",
+            "delay_seconds": int(data.get("delay_seconds") or 0),
+            "agent_name": data.get("agent_name") or "",
+            "custom_link": data.get("custom_link") or "",
+        }
+    except Exception:
+        return {"enabled": False}
+
+
+def _save_campaign_sms_settings(user_id, settings: dict):
+    payload = json.dumps({
+        "enabled": bool(settings.get("enabled")),
+        "body": (settings.get("body") or "")[:1000],
+        "delay_seconds": max(0, min(600, int(settings.get("delay_seconds") or 0))),
+        "agent_name": (settings.get("agent_name") or "")[:120],
+        "custom_link": (settings.get("custom_link") or "")[:500],
+    })
+    rec = UserAppData.query.filter_by(user_id=user_id, data_key="campaign_sms_settings").first()
+    if rec:
+        rec.data_value = payload
+    else:
+        rec = UserAppData(user_id=user_id, data_key="campaign_sms_settings", data_value=payload)
+        db.session.add(rec)
+    db.session.commit()
+
 
 # ---- Telnyx Webhook Handler ----
 @app.route("/webhook", methods=["POST"])
@@ -6077,6 +6615,22 @@ def api_numbers_buy():
         if not assign_result.get("success"):
             logger.warning(f"Number purchased but assignment failed: {assign_result.get('error')}")
 
+    # Attach to Telnyx Messaging Profile so the new number is fully SMS-enabled.
+    # Best-effort: voice provisioning succeeded above, so we don't fail the
+    # purchase if the messaging-profile assignment errors out (e.g. when no
+    # profile is configured in the environment).
+    try:
+        msg_profile_id = os.getenv("TELNYX_MESSAGING_PROFILE_ID", "").strip()
+        if msg_profile_id and _sms_feature_enabled():
+            from telnyx_client import attach_number_to_messaging_profile
+            mp_res = attach_number_to_messaging_profile(phone_number, msg_profile_id)
+            if mp_res.get("success"):
+                logger.info(f"[SMS] Attached {phone_number} to messaging profile {msg_profile_id}")
+            else:
+                logger.warning(f"[SMS] Failed to attach {phone_number} to messaging profile: {mp_res.get('error')}")
+    except Exception as e:
+        logger.warning(f"[SMS] Messaging-profile attach raised: {e}")
+
     return jsonify({
         "success": True,
         "order": order_result,
@@ -7451,6 +8005,246 @@ def request_feature_access():
     except Exception as e:
         logger.error(f"Request feature error: {e}")
         return jsonify({"success": False, "error": "Server error"}), 500
+
+
+# ============================================================================
+# SMS Voicemail Companion — webhook + UI APIs
+# ============================================================================
+@app.route("/webhook/sms", methods=["POST"])
+def telnyx_sms_webhook():
+    """Inbound SMS + delivery status updates from Telnyx Messaging API.
+    Verifies the Telnyx Ed25519 signature before processing so spoofed
+    STOP/HELP/START events cannot manipulate opt-out state or trigger
+    billed compliance replies.
+    """
+    raw_body = request.get_data()
+    sig = request.headers.get("Telnyx-Signature-Ed25519", "")
+    ts = request.headers.get("Telnyx-Timestamp", "")
+    ok, reason = _verify_telnyx_signature(raw_body, sig, ts)
+    if not ok:
+        logger.warning(f"[Telnyx SMS] Rejected webhook — {reason}")
+        return "", 200  # always 200 to avoid retry storms on spoofed events
+
+    try:
+        payload = request.get_json(silent=True) or {}
+    except Exception:
+        payload = {}
+    data = (payload.get("data") or {})
+    event_type = data.get("event_type") or ""
+    payload_data = (data.get("payload") or {})
+    telnyx_id = payload_data.get("id") or ""
+    direction = payload_data.get("direction") or ""
+
+    # Delivery status update for an outbound message we sent
+    if event_type in ("message.sent", "message.finalized", "message.delivery_updated"):
+        try:
+            from models import SmsMessage
+            rec = SmsMessage.query.filter_by(telnyx_id=telnyx_id).first()
+            if rec:
+                # Telnyx 'to' is a list of {phone_number, status}
+                to_list = payload_data.get("to") or []
+                if to_list and isinstance(to_list, list):
+                    new_status = (to_list[0].get("status") or "").lower()
+                    if new_status:
+                        rec.status = new_status
+                        rec.status_updated_at = datetime.utcnow()
+                        db.session.commit()
+        except Exception as e:
+            logger.warning(f"[SMS WEBHOOK] status update failed: {e}")
+        return jsonify({"status": "ok"}), 200
+
+    # Inbound message — dedupe ONLY on this branch (Telnyx may resend the same
+    # inbound id, but delivery-status events legitimately reuse the message id).
+    if event_type == "message.received" and direction == "inbound":
+        from storage import claim_sms_inbound
+        if telnyx_id and not claim_sms_inbound(telnyx_id):
+            return jsonify({"status": "duplicate"}), 200
+        from_e164 = (payload_data.get("from") or {}).get("phone_number") or ""
+        to_list = payload_data.get("to") or []
+        to_e164 = (to_list[0].get("phone_number") if to_list else "") or ""
+        body = (payload_data.get("text") or "").strip()
+        body_clean = re.sub(r"\s+", " ", body).strip().lower().rstrip(".!?")
+
+        # Resolve owning user from the destination number
+        user_id = None
+        try:
+            pn = ProvisionedNumber.query.filter_by(phone_number=to_e164).first()
+            if pn:
+                user_id = pn.user_id
+        except Exception:
+            pass
+
+        # Persist the inbound row regardless of owner resolution
+        try:
+            from models import SmsMessage
+            inbound = SmsMessage(
+                user_id=user_id, from_number=from_e164, to_number=to_e164,
+                body=body, direction="in", status="received",
+                segments=0, cost_charged=0, bundle_used=0,
+                telnyx_id=telnyx_id,
+            )
+            db.session.add(inbound)
+            db.session.commit()
+        except Exception as e:
+            logger.warning(f"[SMS WEBHOOK] inbound persist failed: {e}")
+            db.session.rollback()
+
+        # Compliance auto-replies
+        if user_id and body_clean:
+            kw_first = body_clean.split()[0] if body_clean else ""
+            if kw_first in SMS_STOP_KEYWORDS:
+                _record_sms_opt_out(user_id, from_e164, reason="stop_keyword", keyword=kw_first)
+                _send_sms_compliance_reply(user_id, to_e164, from_e164, SMS_STOP_REPLY, keyword=kw_first)
+            elif kw_first in SMS_HELP_KEYWORDS:
+                _send_sms_compliance_reply(user_id, to_e164, from_e164, SMS_HELP_REPLY, keyword=kw_first)
+            elif kw_first in SMS_START_KEYWORDS:
+                _remove_sms_opt_out(user_id, from_e164)
+                _send_sms_compliance_reply(user_id, to_e164, from_e164, SMS_START_REPLY, keyword=kw_first)
+
+        return jsonify({"status": "ok"}), 200
+
+    return jsonify({"status": "ignored"}), 200
+
+
+@app.route("/api/sms/send", methods=["POST"])
+@login_required
+@require_credit
+def api_sms_send():
+    """Manual one-off send from the CRM/Quick-Call UI."""
+    if not _sms_feature_enabled():
+        return jsonify({"success": False, "error": "Messaging is currently disabled"}), 503
+    data = request.get_json(silent=True) or {}
+    to_number = (data.get("to_number") or "").strip()
+    body = (data.get("body") or "").strip()
+    from_number = (data.get("from_number") or "").strip()
+    contact = data.get("contact") or {}
+    if not to_number or not body:
+        return jsonify({"success": False, "error": "to_number and body are required"}), 400
+    if not from_number:
+        # Fall back to the user's first provisioned number
+        pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
+        if pn:
+            from_number = pn.phone_number
+        else:
+            from_number = os.environ.get("TELNYX_FROM_NUMBER", "")
+    result = send_compliant_sms(
+        user_id=current_user.id, from_number=from_number, to_number=to_number,
+        body=body, contact=contact,
+    )
+    if result.get("ok"):
+        return jsonify({"success": True, **result})
+    return jsonify({"success": False, **result}), 400
+
+
+@app.route("/api/sms/templates", methods=["GET", "POST"])
+@login_required
+def api_sms_templates():
+    from models import SmsTemplate
+    if request.method == "GET":
+        rows = SmsTemplate.query.filter_by(user_id=current_user.id).order_by(SmsTemplate.created_at.desc()).all()
+        return jsonify({"success": True, "templates": [r.to_dict() for r in rows]})
+    data = request.get_json(silent=True) or {}
+    name = (data.get("name") or "").strip()
+    body = (data.get("body") or "").strip()
+    if not name or not body:
+        return jsonify({"success": False, "error": "name and body are required"}), 400
+    rec = SmsTemplate(user_id=current_user.id, name=name[:120], body=body[:1000])
+    db.session.add(rec)
+    db.session.commit()
+    return jsonify({"success": True, "template": rec.to_dict()})
+
+
+@app.route("/api/sms/templates/<int:template_id>", methods=["PUT", "DELETE"])
+@login_required
+def api_sms_template_modify(template_id):
+    from models import SmsTemplate
+    rec = SmsTemplate.query.filter_by(id=template_id, user_id=current_user.id).first()
+    if not rec:
+        return jsonify({"success": False, "error": "Template not found"}), 404
+    if request.method == "DELETE":
+        db.session.delete(rec)
+        db.session.commit()
+        return jsonify({"success": True})
+    data = request.get_json(silent=True) or {}
+    if "name" in data:
+        rec.name = (data["name"] or "").strip()[:120]
+    if "body" in data:
+        rec.body = (data["body"] or "").strip()[:1000]
+    db.session.commit()
+    return jsonify({"success": True, "template": rec.to_dict()})
+
+
+@app.route("/api/sms/campaign-settings", methods=["GET", "POST"])
+@login_required
+def api_sms_campaign_settings():
+    if request.method == "GET":
+        return jsonify({"success": True, "settings": _get_campaign_sms_settings(current_user.id)})
+    data = request.get_json(silent=True) or {}
+    _save_campaign_sms_settings(current_user.id, data)
+    return jsonify({"success": True, "settings": _get_campaign_sms_settings(current_user.id)})
+
+
+@app.route("/api/sms/segment-count", methods=["POST"])
+@login_required
+def api_sms_segment_count():
+    from telnyx_client import count_sms_segments
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "")
+    return jsonify({"success": True, "segments": count_sms_segments(body), "characters": len(body)})
+
+
+@app.route("/api/sms/usage", methods=["GET"])
+@login_required
+def api_sms_usage():
+    used, cap, reset_at = _ensure_sms_bundle(current_user.id)
+    return jsonify({
+        "success": True,
+        "feature_enabled": _sms_feature_enabled(),
+        "used": used,
+        "cap": cap,
+        "remaining": max(0, cap - used),
+        "reset_at": reset_at.isoformat() + "Z" if reset_at else None,
+        "overage_cost_per_segment": float(SMS_OVERAGE_COST),
+    })
+
+
+@app.route("/sms-companion", methods=["GET"])
+@login_required
+def sms_companion_page():
+    """Dedicated management UI for the SMS Voicemail Companion feature."""
+    used, cap, reset_at = _ensure_sms_bundle(current_user.id)
+    settings = _get_campaign_sms_settings(current_user.id)
+    pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
+    from_number = pn.phone_number if pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+    return render_template(
+        "sms_companion.html",
+        feature_enabled=_sms_feature_enabled(),
+        bundle_used=used,
+        bundle_cap=cap,
+        bundle_remaining=max(0, cap - used),
+        bundle_reset_at=reset_at,
+        overage_cost=float(SMS_OVERAGE_COST),
+        settings=settings,
+        from_number=from_number,
+    )
+
+
+@app.route("/api/sms/opt-outs", methods=["GET", "POST", "DELETE"])
+@login_required
+def api_sms_opt_outs():
+    from models import SmsOptOut
+    if request.method == "GET":
+        rows = SmsOptOut.query.filter_by(user_id=current_user.id).order_by(SmsOptOut.opted_out_at.desc()).all()
+        return jsonify({"success": True, "opt_outs": [r.to_dict() for r in rows]})
+    data = request.get_json(silent=True) or {}
+    contact = (data.get("contact_number") or "").strip()
+    if not contact:
+        return jsonify({"success": False, "error": "contact_number required"}), 400
+    if request.method == "POST":
+        _record_sms_opt_out(current_user.id, contact, reason=(data.get("reason") or "manual"))
+        return jsonify({"success": True})
+    _remove_sms_opt_out(current_user.id, contact)
+    return jsonify({"success": True})
 
 
 # ---- Startup initialization (runs for both direct and gunicorn) ----

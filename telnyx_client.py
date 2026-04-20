@@ -419,6 +419,128 @@ def fork_stop(call_control_id):
         return False
 
 
+def count_sms_segments(body: str) -> int:
+    """Estimate how many SMS segments a body will use.
+
+    GSM-7 charset: 160 chars per segment for single, 153 chars per segment when
+    concatenated (header overhead). UCS-2 (any non-GSM char including emoji):
+    70 chars single, 67 chars concatenated.
+    """
+    if not body:
+        return 1
+    GSM7_BASE = set(
+        "@\u00a3$\u00a5\u00e8\u00e9\u00f9\u00ec\u00f2\u00c7\n\u00d8\u00f8\r\u00c5\u00e5"
+        "\u0394_\u03a6\u0393\u039b\u03a9\u03a0\u03a8\u03a3\u0398\u039e"
+        " !\"#\u00a4%&'()*+,-./0123456789:;<=>?"
+        "\u00a1ABCDEFGHIJKLMNOPQRSTUVWXYZ\u00c4\u00d6\u00d1\u00dc\u00a7"
+        "\u00bfabcdefghijklmnopqrstuvwxyz\u00e4\u00f6\u00f1\u00fc\u00e0"
+    )
+    GSM7_EXT = set("^{}\\[~]|\u20ac\f")  # each counts as 2 chars
+    is_gsm = all((c in GSM7_BASE or c in GSM7_EXT) for c in body)
+    if is_gsm:
+        length = sum(2 if c in GSM7_EXT else 1 for c in body)
+        if length <= 160:
+            return 1
+        # concatenated
+        import math
+        return max(1, math.ceil(length / 153))
+    # UCS-2 path (emoji, non-GSM)
+    length = len(body)
+    if length <= 70:
+        return 1
+    import math
+    return max(1, math.ceil(length / 67))
+
+
+def send_sms(from_number: str, to_number: str, body: str, media_urls=None,
+             messaging_profile_id: str = None, webhook_url: str = None):
+    """Send an outbound SMS (or MMS if media_urls is provided) via Telnyx.
+
+    Returns (telnyx_message_id, segments, error). On success error is None;
+    on failure telnyx_message_id is None and error is a human-readable string.
+    """
+    api_key = os.environ.get("TELNYX_API_KEY", "")
+    if not api_key:
+        return None, 0, "Messaging API key is not set"
+    if not from_number or not to_number or not body:
+        return None, 0, "Missing required SMS fields"
+
+    profile_id = messaging_profile_id or os.environ.get("TELNYX_MESSAGING_PROFILE_ID", "")
+    callback_url = webhook_url or _get_webhook_url() + "/sms"
+    from_e164 = _normalize_number(from_number)
+    to_e164 = _normalize_number(to_number)
+    segments = count_sms_segments(body)
+
+    payload = {
+        "from": from_e164,
+        "to": to_e164,
+        "text": body,
+        "use_profile_webhooks": False,
+        "webhook_url": callback_url,
+    }
+    if profile_id:
+        payload["messaging_profile_id"] = profile_id
+    if media_urls:
+        payload["media_urls"] = list(media_urls)
+        payload["type"] = "MMS"
+
+    try:
+        resp = requests.post(
+            f"{TELNYX_API_BASE}/messages",
+            json=payload,
+            headers=_headers(),
+            timeout=15,
+        )
+        if resp.status_code not in (200, 202):
+            error_detail = ""
+            try:
+                err_json = resp.json()
+                errors = err_json.get("errors", [])
+                if errors:
+                    error_detail = errors[0].get("detail", "") or errors[0].get("title", "")
+                if not error_detail:
+                    error_detail = resp.text[:300]
+            except Exception:
+                error_detail = resp.text[:300]
+            logger.error(f"SMS send error {resp.status_code}: {resp.text}")
+            return None, segments, f"Messaging error ({resp.status_code}): {error_detail}"
+        data = resp.json().get("data", {})
+        msg_id = data.get("id", "")
+        # Telnyx returns the actual segment count in `parts`; trust it over our estimate.
+        actual_parts = data.get("parts") or segments
+        try:
+            actual_parts = int(actual_parts)
+        except Exception:
+            actual_parts = segments
+        logger.info(f"SMS queued from {from_e164} to {to_e164}: id={msg_id}, segments={actual_parts}")
+        return msg_id, max(1, actual_parts), None
+    except requests.exceptions.Timeout:
+        logger.error(f"SMS send timeout to {to_number}")
+        return None, segments, "Messaging request timed out. Try again."
+    except Exception as e:
+        logger.error(f"SMS send exception: {e}")
+        return None, segments, str(e)
+
+
+def attach_number_to_messaging_profile(phone_number_id: str, messaging_profile_id: str):
+    """Move an owned number into a Messaging Profile so it can send/receive SMS."""
+    if not phone_number_id or not messaging_profile_id:
+        return False, "Missing phone_number_id or messaging_profile_id"
+    try:
+        resp = requests.patch(
+            f"{TELNYX_API_BASE}/phone_numbers/{phone_number_id}",
+            json={"messaging_profile_id": messaging_profile_id},
+            headers=_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        logger.info(f"Number {phone_number_id} attached to messaging_profile {messaging_profile_id}")
+        return True, None
+    except Exception as e:
+        logger.error(f"attach_number_to_messaging_profile failed: {e}")
+        return False, str(e)
+
+
 def hangup_call(call_control_id):
     """Hang up an active call."""
     try:
@@ -437,19 +559,22 @@ def hangup_call(call_control_id):
 
 
 def search_available_numbers(country_code="US", area_code=None, state=None, city=None, number_type="local", limit=20):
-    params = {
-        "filter[country_code]": country_code,
-        "filter[features][]": "voice",
-        "filter[limit]": min(limit, 40),
-    }
+    # Filter for numbers that support BOTH voice AND sms — required so newly
+    # provisioned lines can host SMS for the SMS Voicemail Companion feature.
+    params = [
+        ("filter[country_code]", country_code),
+        ("filter[features][]", "voice"),
+        ("filter[features][]", "sms"),
+        ("filter[limit]", min(limit, 40)),
+    ]
     if area_code:
-        params["filter[national_destination_code]"] = area_code
+        params.append(("filter[national_destination_code]", area_code))
     if state:
-        params["filter[administrative_area]"] = state
+        params.append(("filter[administrative_area]", state))
     if city:
-        params["filter[locality]"] = city
+        params.append(("filter[locality]", city))
     if number_type:
-        params["filter[number_type]"] = number_type
+        params.append(("filter[number_type]", number_type))
 
     try:
         resp = requests.get(
@@ -475,7 +600,7 @@ def search_available_numbers(country_code="US", area_code=None, state=None, city
             })
         if not results:
             return {"success": False, "error": "No phone numbers available for this area code. Please try a different area code."}
-        logger.info(f"Found {len(results)} available numbers")
+        logger.info(f"Found {len(results)} available numbers (voice+sms capable)")
         return {"success": True, "numbers": results}
     except requests.exceptions.HTTPError as e:
         logger.error(f"Number search HTTP error: {e}")

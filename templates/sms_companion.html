@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Companion · Open Humana</title>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#0f172a}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-bottom:1px solid #e2e8f0}
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .topbar-left img{height:30px}
+    .topbar-left a{color:#475569;text-decoration:none;font-size:.88rem;font-weight:600}
+    .topbar-left a:hover{color:#0f172a}
+    .topbar-right{font-size:.85rem;color:#64748b}
+    .container{max-width:1100px;margin:32px auto;padding:0 24px}
+    h1{font-size:1.7rem;margin:0 0 6px}
+    .sub{color:#64748b;font-size:.95rem;margin:0 0 28px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px}
+    .card h2{font-size:1.05rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+    .card .desc{color:#64748b;font-size:.85rem;margin:0 0 16px}
+    .stat{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+    .stat .num{font-size:2.1rem;font-weight:700;color:#0f172a;font-variant-numeric:tabular-nums}
+    .stat .lbl{color:#64748b;font-size:.85rem}
+    .bar{height:8px;border-radius:6px;background:#e2e8f0;overflow:hidden;margin:10px 0 14px}
+    .bar-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#1d4ed8)}
+    .meta{display:flex;justify-content:space-between;font-size:.78rem;color:#64748b}
+    .row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    label{font-size:.82rem;font-weight:600;color:#334155;display:block;margin-bottom:6px}
+    input[type=text],input[type=tel],textarea,select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+    textarea{resize:vertical;min-height:90px;font-family:inherit}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+    .toggle{position:relative;display:inline-block;width:44px;height:24px}
+    .toggle input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:24px;transition:.2s}
+    .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+    .toggle input:checked+.slider{background:#22c55e}
+    .toggle input:checked+.slider:before{transform:translateX(20px)}
+    .btn{padding:10px 18px;border:none;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;transition:.15s}
+    .btn-primary{background:#0f172a;color:#fff}
+    .btn-primary:hover{background:#1e293b}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .btn-secondary{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+    .btn-danger{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+    .footer-disc{margin-top:14px;background:#f1f5f9;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#475569;line-height:1.5}
+    .footer-disc strong{color:#0f172a}
+    .merge-chip{display:inline-block;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:2px 8px;border-radius:6px;font-size:.74rem;font-family:'SF Mono',Menlo,monospace;cursor:pointer;margin:2px}
+    .merge-chip:hover{background:#dbeafe}
+    .seg-info{font-size:.78rem;color:#64748b;margin-top:6px}
+    .seg-info .pill{display:inline-block;background:#f1f5f9;padding:2px 8px;border-radius:8px;margin-right:6px;font-variant-numeric:tabular-nums}
+    .alert{padding:12px 16px;border-radius:10px;font-size:.88rem;margin-bottom:20px}
+    .alert-warn{background:#fef3c7;border:1px solid #fde68a;color:#92400e}
+    .alert-info{background:#dbeafe;border:1px solid #bfdbfe;color:#1e3a8a}
+    table{width:100%;border-collapse:collapse;font-size:.85rem}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #e2e8f0}
+    th{font-weight:600;color:#475569;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+    .empty{color:#94a3b8;font-style:italic;text-align:center;padding:24px}
+    @media(max-width:780px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="/dashboard"><img src="/static/images/logo.png" alt="Open Humana"></a>
+      <a href="/dashboard">← Back to Dashboard</a>
+    </div>
+    <div class="topbar-right">{{ current_user.email }}</div>
+  </header>
+
+  <div class="container">
+    <h1>SMS Companion</h1>
+    <p class="sub">Send a perfectly-timed text after every voicemail drop. Manage templates, opt-outs, usage, and compliance from one place.</p>
+
+    {% if not feature_enabled %}
+    <div class="alert alert-warn">
+      <strong>Messaging is currently disabled on this environment.</strong> Set the <code>SMS_FEATURE_ENABLED=true</code> environment variable and assign a Telnyx Messaging Profile ID to enable the feature.
+    </div>
+    {% endif %}
+
+    <div class="alert alert-info">
+      <strong>Compliance:</strong> Open Humana auto-appends "Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply." to the first message of every conversation. Quiet hours (9pm–8am recipient local) are enforced. STOP / HELP / START keywords are handled automatically.
+    </div>
+
+    <div class="grid">
+
+      <!-- Bundle usage -->
+      <div class="card">
+        <h2>This month's bundle</h2>
+        <p class="desc">Resets every {{ 30 }} days based on your plan's billing cycle.</p>
+        <div class="stat">
+          <span class="num">{{ bundle_used }}</span>
+          <span class="lbl">/ {{ bundle_cap }} segments used</span>
+        </div>
+        <div class="bar">
+          <div class="bar-fill" style="width: {{ (100 if bundle_cap == 0 else (bundle_used * 100 / bundle_cap))|round(1) }}%"></div>
+        </div>
+        <div class="meta">
+          <span>Remaining: <strong>{{ bundle_remaining }}</strong></span>
+          <span>Overage: <strong>${{ '%.2f' % overage_cost }}</strong>/segment</span>
+        </div>
+      </div>
+
+      <!-- One-off send -->
+      <div class="card">
+        <h2>Send a quick text</h2>
+        <p class="desc">For one-off follow-ups outside of campaign automation.</p>
+        <div class="row" style="display:block">
+          <label>Recipient phone</label>
+          <input type="tel" id="qsTo" placeholder="+1 (555) 555-0123">
+        </div>
+        <div class="row" style="display:block">
+          <label>Message</label>
+          <textarea id="qsBody" placeholder="Hey {first_name}, this is {agent_name} following up on the voicemail I just left."></textarea>
+          <div class="seg-info">
+            <span class="pill">Segments: <span id="qsSegs">0</span></span>
+            <span class="pill">Characters: <span id="qsChars">0</span></span>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="qsSendBtn">Send Text</button>
+        <div id="qsStatus" style="margin-top:10px;font-size:.85rem;"></div>
+      </div>
+
+      <!-- Post-voicemail SMS settings -->
+      <div class="card" style="grid-column:1/-1">
+        <h2>Auto-text after every voicemail drop</h2>
+        <p class="desc">When this is on, every successful voicemail drop in your active campaign queues a follow-up text from the same number.</p>
+
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <span style="font-weight:600">Enable post-voicemail follow-up</span>
+          <label class="toggle"><input type="checkbox" id="settingsEnabled" {% if settings.enabled %}checked{% endif %}><span class="slider"></span></label>
+        </div>
+
+        <div class="row" style="display:block">
+          <label>Message template</label>
+          <textarea id="settingsBody" placeholder="Hi {first_name}, just left you a quick voicemail — happy to text instead if that's easier. — {agent_name}">{{ settings.body }}</textarea>
+          <div class="seg-info">
+            <span class="pill">Segments: <span id="setSegs">0</span></span>
+            <span class="pill">Characters: <span id="setChars">0</span></span>
+            <span style="margin-left:6px">Merge fields:</span>
+            <span class="merge-chip" data-mf="{first_name}">{first_name}</span>
+            <span class="merge-chip" data-mf="{last_name}">{last_name}</span>
+            <span class="merge-chip" data-mf="{company}">{company}</span>
+            <span class="merge-chip" data-mf="{agent_name}">{agent_name}</span>
+            <span class="merge-chip" data-mf="{custom_link}">{custom_link}</span>
+          </div>
+        </div>
+
+        <div class="row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+          <div>
+            <label>Delay after drop (seconds)</label>
+            <input type="number" id="settingsDelay" min="0" max="600" step="5" value="{{ settings.delay_seconds }}">
+          </div>
+          <div>
+            <label>Agent name (used in {agent_name})</label>
+            <input type="text" id="settingsAgent" placeholder="Alex" value="{{ settings.agent_name }}">
+          </div>
+          <div>
+            <label>Custom link (used in {custom_link})</label>
+            <input type="text" id="settingsLink" placeholder="https://book.example.com" value="{{ settings.custom_link }}">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:14px">Save settings</button>
+        <span id="settingsStatus" style="margin-left:12px;font-size:.85rem;color:#22c55e"></span>
+
+        <div class="footer-disc">
+          <strong>Compliance footer:</strong> "Reply STOP to opt out, HELP for help. Msg&amp;data rates may apply." is automatically appended to the first text in every conversation. You don't need to include it yourself.
+        </div>
+      </div>
+
+      <!-- Opt-outs -->
+      <div class="card" style="grid-column:1/-1">
+        <h2>Opt-out list</h2>
+        <p class="desc">Recipients who have texted STOP, or that you've manually suppressed. These numbers will never receive an SMS from your account.</p>
+        <div class="row" style="display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1">
+            <label>Manually opt-out a number</label>
+            <input type="tel" id="optOutNum" placeholder="+1 (555) 555-0123">
+          </div>
+          <button class="btn btn-secondary" id="optOutAddBtn">Add to opt-out list</button>
+        </div>
+        <table id="optOutTable" style="margin-top:14px">
+          <thead><tr><th>Number</th><th>Reason</th><th>Date</th><th></th></tr></thead>
+          <tbody id="optOutBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+async function postJSON(url, body, method='POST'){
+  const r = await fetch(url,{method,headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},body:body?JSON.stringify(body):null,credentials:'same-origin'});
+  return r.json();
+}
+async function getJSON(url){
+  const r = await fetch(url,{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'});
+  return r.json();
+}
+
+// Live segment counter
+let segTimer=null;
+function attachSegCounter(srcId, segId, charId){
+  const el=document.getElementById(srcId);
+  const segEl=document.getElementById(segId);
+  const charEl=document.getElementById(charId);
+  function refresh(){
+    const body=el.value||'';
+    charEl.textContent=body.length;
+    clearTimeout(segTimer);
+    segTimer=setTimeout(async()=>{
+      const j=await postJSON('/api/sms/segment-count',{body});
+      if(j&&j.success){segEl.textContent=j.segments;}
+    },220);
+  }
+  el.addEventListener('input',refresh); refresh();
+}
+attachSegCounter('qsBody','qsSegs','qsChars');
+attachSegCounter('settingsBody','setSegs','setChars');
+
+// Merge chip insertion
+document.querySelectorAll('.merge-chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    const ta=document.getElementById('settingsBody');
+    const mf=c.dataset.mf;
+    const start=ta.selectionStart||ta.value.length;
+    const end=ta.selectionEnd||ta.value.length;
+    ta.value=ta.value.slice(0,start)+mf+ta.value.slice(end);
+    ta.focus(); ta.selectionStart=ta.selectionEnd=start+mf.length;
+    ta.dispatchEvent(new Event('input'));
+  });
+});
+
+// Save settings
+document.getElementById('settingsSaveBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('settingsSaveBtn'); btn.disabled=true;
+  const status=document.getElementById('settingsStatus'); status.textContent='Saving…'; status.style.color='#64748b';
+  const j=await postJSON('/api/sms/campaign-settings',{
+    enabled:document.getElementById('settingsEnabled').checked,
+    body:document.getElementById('settingsBody').value,
+    delay_seconds:parseInt(document.getElementById('settingsDelay').value||'0',10),
+    agent_name:document.getElementById('settingsAgent').value,
+    custom_link:document.getElementById('settingsLink').value,
+  });
+  btn.disabled=false;
+  if(j&&j.success){status.textContent='Saved';status.style.color='#22c55e';setTimeout(()=>status.textContent='',2500);}
+  else{status.textContent=(j&&j.error)||'Save failed';status.style.color='#dc2626';}
+});
+
+// Quick send
+document.getElementById('qsSendBtn').addEventListener('click',async()=>{
+  const to=document.getElementById('qsTo').value.trim();
+  const body=document.getElementById('qsBody').value.trim();
+  const status=document.getElementById('qsStatus');
+  if(!to||!body){status.textContent='Phone number and message are required';status.style.color='#dc2626';return;}
+  status.textContent='Sending…'; status.style.color='#64748b';
+  const j=await postJSON('/api/sms/send',{to_number:to,body:body,from_number:{{ from_number|tojson }}});
+  if(j&&j.success){
+    status.textContent='Sent ('+j.segments+' segments)';
+    status.style.color='#22c55e';
+    document.getElementById('qsBody').value=''; document.getElementById('qsTo').value='';
+    document.getElementById('qsBody').dispatchEvent(new Event('input'));
+  }else{
+    status.textContent=(j&&j.error)||'Send failed';
+    status.style.color='#dc2626';
+  }
+});
+
+// Opt-outs
+async function loadOptOuts(){
+  const j=await getJSON('/api/sms/opt-outs');
+  const tb=document.getElementById('optOutBody'); tb.innerHTML='';
+  const rows=(j&&j.opt_outs)||[];
+  if(!rows.length){tb.innerHTML='<tr><td colspan="4" class="empty">No opt-outs yet.</td></tr>';return;}
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td><code>'+r.contact_number+'</code></td><td>'+(r.reason||'')+'</td><td>'+(r.created_at||'').split('T')[0]+'</td><td><button class="btn btn-danger" data-num="'+r.contact_number+'">Remove</button></td>';
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('button.btn-danger').forEach(b=>{
+    b.addEventListener('click',async()=>{
+      if(!confirm('Remove '+b.dataset.num+' from opt-out list? They will be eligible for messages again.'))return;
+      const j=await postJSON('/api/sms/opt-outs',{contact_number:b.dataset.num},'DELETE');
+      if(j&&j.success)loadOptOuts();
+    });
+  });
+}
+document.getElementById('optOutAddBtn').addEventListener('click',async()=>{
+  const num=document.getElementById('optOutNum').value.trim(); if(!num)return;
+  const j=await postJSON('/api/sms/opt-outs',{contact_number:num,reason:'manual'});
+  if(j&&j.success){document.getElementById('optOutNum').value='';loadOptOuts();}
+});
+loadOptOuts();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ Supports per-user data isolation via user_id parameter.
 import os
 import re
 import json
+import time
 import threading
 import logging
 from datetime import datetime, timedelta
@@ -797,6 +798,53 @@ def release_recording_claim(call_control_id):
         if not state:
             return
         state["vm_recording_started"] = False
+
+
+# ---- SMS dedupe / send claims ----
+_sms_seen_telnyx_ids = set()
+_sms_recent_pairs = {}  # (user_id, to_number) -> last-send unix ts
+
+
+def claim_sms_send(user_id, to_number, debounce_secs: int = 3) -> bool:
+    """Atomically claim the right to send an SMS to a recipient. Returns True
+    only once per (user, recipient) within `debounce_secs`. Prevents accidental
+    double-sends from racing voicemail-drop hooks or duplicate UI clicks.
+    """
+    if not user_id or not to_number:
+        return False
+    key = (str(user_id), to_number)
+    now = time.time()
+    with lock:
+        last = _sms_recent_pairs.get(key)
+        if last and (now - last) < debounce_secs:
+            return False
+        _sms_recent_pairs[key] = now
+        # Tiny GC: occasionally prune entries older than 5 min
+        if len(_sms_recent_pairs) > 5000:
+            stale = [k for k, t in _sms_recent_pairs.items() if (now - t) > 300]
+            for k in stale:
+                _sms_recent_pairs.pop(k, None)
+    return True
+
+
+def claim_sms_inbound(telnyx_id: str) -> bool:
+    """Returns True only once per Telnyx inbound message id. Used to dedupe
+    webhook retries of message.received."""
+    if not telnyx_id:
+        return False
+    with lock:
+        if telnyx_id in _sms_seen_telnyx_ids:
+            return False
+        _sms_seen_telnyx_ids.add(telnyx_id)
+        if len(_sms_seen_telnyx_ids) > 10000:
+            # crude rotation: drop oldest by clearing 30%
+            try:
+                drop = list(_sms_seen_telnyx_ids)[:3000]
+                for tid in drop:
+                    _sms_seen_telnyx_ids.discard(tid)
+            except Exception:
+                pass
+    return True
 
 
 def call_states_snapshot():

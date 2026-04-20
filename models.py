@@ -35,7 +35,10 @@ class User(UserMixin, db.Model):
     reset_token_expires = db.Column(db.DateTime, nullable=True)
     navigator_persona = db.Column(db.Text, nullable=True)
     navigator_knowledge_base = db.Column(db.Text, nullable=True)
-    
+    sms_bundle_used = db.Column(db.Integer, default=0, nullable=False)
+    sms_bundle_cap = db.Column(db.Integer, default=0, nullable=False)
+    sms_bundle_reset_at = db.Column(db.DateTime, nullable=True)
+
     app_data = db.relationship('UserAppData', backref='user', lazy=True, cascade='all, delete-orphan')
     instance = db.relationship('UserInstance', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
     provisioned_numbers = db.relationship('ProvisionedNumber', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -347,6 +350,13 @@ def _ensure_schema():
             db.session.execute(text("ALTER TABLE users ADD COLUMN navigator_knowledge_base TEXT"))
             db.session.commit()
 
+        if "sms_bundle_used" not in existing_cols:
+            logger.warning("DB schema missing users.sms_bundle_used; applying ALTER TABLE")
+            db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_used INTEGER DEFAULT 0 NOT NULL"))
+            db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_cap INTEGER DEFAULT 0 NOT NULL"))
+            db.session.execute(text("ALTER TABLE users ADD COLUMN sms_bundle_reset_at TIMESTAMP"))
+            db.session.commit()
+
         if "invitations" in inspector.get_table_names():
             inv_cols = {col["name"] for col in inspector.get_columns("invitations")}
             if "expires_at" not in inv_cols:
@@ -407,6 +417,26 @@ def _ensure_schema():
                 logger.warning("DB schema missing call_records.contact_data; applying ALTER TABLE")
                 db.session.execute(text("ALTER TABLE call_records ADD COLUMN contact_data JSON"))
                 db.session.commit()
+
+        # SMS message log
+        if "sms_messages" not in inspector.get_table_names():
+            logger.info("Creating sms_messages table")
+            db.create_all()
+        else:
+            sm_cols = {col["name"] for col in inspector.get_columns("sms_messages")}
+            if "campaign_id" not in sm_cols:
+                db.session.execute(text("ALTER TABLE sms_messages ADD COLUMN campaign_id INTEGER"))
+                db.session.commit()
+
+        # SMS opt-outs (TCPA / 10DLC compliance)
+        if "sms_opt_outs" not in inspector.get_table_names():
+            logger.info("Creating sms_opt_outs table")
+            db.create_all()
+
+        # SMS templates
+        if "sms_templates" not in inspector.get_table_names():
+            logger.info("Creating sms_templates table")
+            db.create_all()
 
         _seed_max_concurrent_lines()
         _recover_interrupted_campaigns()
@@ -487,3 +517,113 @@ class NewsletterSubscriber(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class SmsMessage(db.Model):
+    """One row per SMS segment-batch sent or received.
+
+    A single send to one recipient produces one row regardless of how many
+    segments it spans (segments column captures the count). Inbound replies
+    create a row with direction='in' and status='received'.
+    """
+    __tablename__ = 'sms_messages'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    call_record_id = db.Column(db.Integer, db.ForeignKey('call_records.id'), nullable=True, index=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=True, index=True)
+    from_number = db.Column(db.String(30), nullable=False)
+    to_number = db.Column(db.String(30), nullable=False, index=True)
+    body = db.Column(Text, nullable=False, default='')
+    direction = db.Column(db.String(8), nullable=False, default='out')  # 'out' | 'in'
+    status = db.Column(db.String(30), nullable=False, default='queued')  # queued|sent|delivered|failed|received|opted_out|skipped|blocked
+    status_reason = db.Column(db.String(255), nullable=True)
+    segments = db.Column(db.Integer, default=1, nullable=False)
+    cost_charged = db.Column(Numeric(10, 4), default=0, nullable=False)
+    bundle_used = db.Column(db.Integer, default=0, nullable=False)
+    telnyx_id = db.Column(db.String(255), nullable=True, unique=True)
+    is_first_in_thread = db.Column(db.Boolean, default=False, nullable=False)
+    is_compliance_reply = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    delivered_at = db.Column(db.DateTime, nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'call_record_id': self.call_record_id,
+            'campaign_id': self.campaign_id,
+            'from_number': self.from_number,
+            'to_number': self.to_number,
+            'body': self.body,
+            'direction': self.direction,
+            'status': self.status,
+            'status_reason': self.status_reason,
+            'segments': self.segments,
+            'cost_charged': float(self.cost_charged or 0),
+            'bundle_used': self.bundle_used,
+            'telnyx_id': self.telnyx_id,
+            'is_first_in_thread': self.is_first_in_thread,
+            'is_compliance_reply': self.is_compliance_reply,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'delivered_at': self.delivered_at.isoformat() if self.delivered_at else None,
+        }
+
+
+class SmsOptOut(db.Model):
+    """Recipients who replied STOP/UNSUBSCRIBE/etc. Single source of truth.
+
+    Keyed on (user_id, contact_number_e164). A row here means we MUST NOT
+    send any further outbound SMS to this contact for this user.
+    """
+    __tablename__ = 'sms_opt_outs'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    contact_number = db.Column(db.String(30), nullable=False)
+    reason = db.Column(db.String(60), default='stop_keyword', nullable=False)  # stop_keyword|manual|admin
+    keyword = db.Column(db.String(40), nullable=True)
+    opted_out_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'contact_number', name='uq_sms_optout_user_number'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'contact_number': self.contact_number,
+            'reason': self.reason,
+            'keyword': self.keyword,
+            'created_at': self.opted_out_at.isoformat() + 'Z' if self.opted_out_at else None,
+            'opted_out_at': self.opted_out_at.isoformat() + 'Z' if self.opted_out_at else None,
+        }
+
+
+class SmsTemplate(db.Model):
+    """Per-user SMS template library used by the Campaign Wizard and manual sends.
+
+    Body supports merge fields {first_name} {last_name} {company} {agent_name} {custom_link}.
+    """
+    __tablename__ = 'sms_templates'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=False, default='Untitled')
+    body = db.Column(Text, nullable=False, default='')
+    is_default = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'name': self.name,
+            'body': self.body,
+            'is_default': self.is_default,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
