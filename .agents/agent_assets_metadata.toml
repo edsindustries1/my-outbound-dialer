@@ -12,3 +12,9 @@ id = "cW7UdsfJwyBOzN7V6YmRl"
 uri = "file://attached_assets/openhumana-brand-fonts.zip"
 type = "unspecified"
 title = "Open Humana Brand Fonts Kit (ZIP)"
+
+[[outputs]]
+id = "4ntHVW5U1cbj8ekV67stX"
+uri = "file://attached_assets/handoff/openhumana-design-handoff.zip"
+type = "unspecified"
+title = "openhumana-design-handoff.zip"
