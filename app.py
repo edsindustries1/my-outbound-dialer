@@ -979,7 +979,27 @@ def send_compliant_sms(user_id, from_number: str, to_number: str, body: str,
         return {"ok": False, "status": "skipped", "sms_message_id": rec.id, "error": "Suppressed by quiet hours"}
 
     # Dedupe racing send hooks
-    from storage import claim_sms_send
+    # Per-from-number carrier throughput cap (e.g. 75/min on unvetted 10DLC).
+    # If the trailing-minute bucket is full we reject *now* rather than queue —
+    # the caller (campaign hook, manual send) can retry. We log a warning so
+    # operators notice if real campaigns start hitting the ceiling and need
+    # the cap raised after vetting.
+    from storage import claim_sms_send, claim_sms_throughput
+    if not claim_sms_throughput(from_e164, SMS_THROUGHPUT_PER_NUMBER_PER_MIN):
+        logger.warning(f"[SMS] throughput cap hit for {from_e164} (>{SMS_THROUGHPUT_PER_NUMBER_PER_MIN}/min), rejecting send to {to_e164}")
+        rec = SmsMessage(
+            user_id=user_id, call_record_id=call_record_id, campaign_id=campaign_id,
+            from_number=from_e164, to_number=to_e164, body=rendered,
+            direction="out", status="skipped", status_reason="throughput_rate_limited",
+            segments=0, cost_charged=0, bundle_used=0,
+        )
+        db.session.add(rec)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        return {"ok": False, "status": "rate_limited", "sms_message_id": rec.id, "error": "Carrier throughput limit reached for sending number"}
+
     if not claim_sms_send(user_id, to_e164, debounce_secs=3):
         return {"ok": False, "status": "skipped", "error": "Duplicate send suppressed"}
 
@@ -1410,10 +1430,20 @@ def _verify_telnyx_signature(raw_body: bytes, sig_header: str, ts_header: str):
     except (ValueError, TypeError):
         return False, "invalid_timestamp"
 
+    # Fail-closed by default. Operators can opt back into fail-open behavior
+    # by setting TELNYX_WEBHOOK_FAILOPEN=true (only useful for local dev where
+    # the public key may be unavailable). The default is the safer choice
+    # because the SMS webhook can mutate opt-out state and trigger billed
+    # compliance replies — accepting unverified events would be exploitable.
+    failopen = os.getenv("TELNYX_WEBHOOK_FAILOPEN", "false").lower() in ("1", "true", "yes", "on")
+
     public_key_b64 = _get_telnyx_public_key()
     if not public_key_b64:
-        logger.warning("[Telnyx] Webhook signature skipped — public key unavailable")
-        return True, "key_unavailable"
+        if failopen:
+            logger.warning("[Telnyx] Webhook signature skipped — public key unavailable (TELNYX_WEBHOOK_FAILOPEN)")
+            return True, "key_unavailable_failopen"
+        logger.warning("[Telnyx] Webhook rejected — public key unavailable and fail-open disabled")
+        return False, "key_unavailable"
 
     try:
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -1427,8 +1457,11 @@ def _verify_telnyx_signature(raw_body: bytes, sig_header: str, ts_header: str):
     except InvalidSignature:
         return False, "invalid_signature"
     except Exception as e:
+        if failopen:
+            logger.warning(f"[Telnyx] Signature verification error (failopen): {e}")
+            return True, f"error_failopen:{e}"
         logger.warning(f"[Telnyx] Signature verification error: {e}")
-        return True, f"error:{e}"  # Fail-open on unexpected errors
+        return False, f"error:{e}"
 
 
 def _verify_webhook(transmission_id, timestamp, webhook_id, event_body, cert_url, auth_algo, transmission_sig):
@@ -5157,9 +5190,16 @@ def _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id)
     state = get_call_state(call_control_id) or {}
     contact_data = state.get("contact_data") or {}
     from_number = state.get("from_number") or os.environ.get("TELNYX_FROM_NUMBER", "")
+    # Resolve which campaign this drop belongs to so per-campaign SMS settings
+    # take precedence over the user-level default.
+    campaign_id = state.get("campaign_id") or state.get("db_campaign_id") or contact_data.get("campaign_id")
+    try:
+        campaign_id = int(campaign_id) if campaign_id else None
+    except (TypeError, ValueError):
+        campaign_id = None
 
-    # Pull SMS settings from campaign extras
-    sms_settings = _get_campaign_sms_settings(user_id)
+    # Pull SMS settings from campaign extras (per-campaign override → user default)
+    sms_settings = _get_campaign_sms_settings(user_id, campaign_id)
     if not sms_settings.get("enabled"):
         return
     template_body = sms_settings.get("body") or ""
@@ -5187,6 +5227,7 @@ def _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id)
                     body=template_body,
                     contact=contact_data,
                     call_record_id=call_record_id,
+                    campaign_id=campaign_id,
                     agent_name=sms_settings.get("agent_name") or "",
                     custom_link=sms_settings.get("custom_link") or "",
                 )
@@ -5202,11 +5243,28 @@ def _maybe_enqueue_post_voicemail_sms(call_control_id, customer_number, user_id)
     logger.info(f"[SMS HOOK] Post-voicemail SMS enqueued for {call_control_id} → {customer_number} (delay={delay_secs}s)")
 
 
-def _get_campaign_sms_settings(user_id) -> dict:
-    """Read SMS settings stored as a JSON blob in UserAppData under
-    data_key='campaign_sms_settings'. Default is disabled."""
+def _campaign_sms_data_key(campaign_id=None) -> str:
+    """data_key for SMS settings — per-campaign when an id is given, otherwise
+    a user-level default that newly created campaigns inherit until overridden."""
+    if campaign_id:
+        return f"campaign_sms_settings:{int(campaign_id)}"
+    return "campaign_sms_settings"
+
+
+def _get_campaign_sms_settings(user_id, campaign_id=None) -> dict:
+    """Read SMS settings stored as a JSON blob in UserAppData. Looks for a
+    per-campaign override first (data_key='campaign_sms_settings:<id>'),
+    falling back to the user-level default. Default is disabled."""
     try:
-        rec = UserAppData.query.filter_by(user_id=user_id, data_key="campaign_sms_settings").first()
+        rec = None
+        if campaign_id:
+            rec = UserAppData.query.filter_by(
+                user_id=user_id, data_key=_campaign_sms_data_key(campaign_id)
+            ).first()
+        if not rec:
+            rec = UserAppData.query.filter_by(
+                user_id=user_id, data_key=_campaign_sms_data_key(None)
+            ).first()
         if not rec:
             return {"enabled": False}
         data = json.loads(rec.data_value or "{}")
@@ -5223,7 +5281,7 @@ def _get_campaign_sms_settings(user_id) -> dict:
         return {"enabled": False}
 
 
-def _save_campaign_sms_settings(user_id, settings: dict):
+def _save_campaign_sms_settings(user_id, settings: dict, campaign_id=None):
     payload = json.dumps({
         "enabled": bool(settings.get("enabled")),
         "body": (settings.get("body") or "")[:1000],
@@ -5231,11 +5289,12 @@ def _save_campaign_sms_settings(user_id, settings: dict):
         "agent_name": (settings.get("agent_name") or "")[:120],
         "custom_link": (settings.get("custom_link") or "")[:500],
     })
-    rec = UserAppData.query.filter_by(user_id=user_id, data_key="campaign_sms_settings").first()
+    data_key = _campaign_sms_data_key(campaign_id)
+    rec = UserAppData.query.filter_by(user_id=user_id, data_key=data_key).first()
     if rec:
         rec.data_value = payload
     else:
-        rec = UserAppData(user_id=user_id, data_key="campaign_sms_settings", data_value=payload)
+        rec = UserAppData(user_id=user_id, data_key=data_key, data_value=payload)
         db.session.add(rec)
     db.session.commit()
 
@@ -8047,7 +8106,11 @@ def telnyx_sms_webhook():
                     new_status = (to_list[0].get("status") or "").lower()
                     if new_status:
                         rec.status = new_status
-                        rec.status_updated_at = datetime.utcnow()
+                        # `updated_at` is auto-maintained via onupdate=. If the
+                        # status reflects a delivery terminal, also stamp delivered_at
+                        # so dashboards can compute deliverability accurately.
+                        if new_status == "delivered" and not rec.delivered_at:
+                            rec.delivered_at = datetime.utcnow()
                         db.session.commit()
         except Exception as e:
             logger.warning(f"[SMS WEBHOOK] status update failed: {e}")
@@ -8177,11 +8240,24 @@ def api_sms_template_modify(template_id):
 @app.route("/api/sms/campaign-settings", methods=["GET", "POST"])
 @login_required
 def api_sms_campaign_settings():
+    """Manage per-campaign SMS settings.
+
+    Pass `?campaign_id=<id>` (GET) or include `campaign_id` in the JSON body
+    (POST) to scope the read/write to that specific campaign. Without it the
+    user-level default is used, which newly created campaigns inherit until
+    they're individually overridden.
+    """
     if request.method == "GET":
-        return jsonify({"success": True, "settings": _get_campaign_sms_settings(current_user.id)})
+        cid = request.args.get("campaign_id", type=int)
+        return jsonify({"success": True, "campaign_id": cid, "settings": _get_campaign_sms_settings(current_user.id, cid)})
     data = request.get_json(silent=True) or {}
-    _save_campaign_sms_settings(current_user.id, data)
-    return jsonify({"success": True, "settings": _get_campaign_sms_settings(current_user.id)})
+    cid = data.get("campaign_id")
+    try:
+        cid = int(cid) if cid is not None else None
+    except (TypeError, ValueError):
+        cid = None
+    _save_campaign_sms_settings(current_user.id, data, campaign_id=cid)
+    return jsonify({"success": True, "campaign_id": cid, "settings": _get_campaign_sms_settings(current_user.id, cid)})
 
 
 @app.route("/api/sms/segment-count", methods=["POST"])

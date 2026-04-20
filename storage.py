@@ -827,6 +827,40 @@ def claim_sms_send(user_id, to_number, debounce_secs: int = 3) -> bool:
     return True
 
 
+_sms_throughput_buckets = {}  # from_number -> deque[unix_ts] (last minute of sends)
+
+
+def claim_sms_throughput(from_number: str, max_per_minute: int) -> bool:
+    """Per-from-number rate limiter. Returns True if a send slot is available
+    inside the trailing 60s window for this Telnyx number, False if the
+    carrier-throughput cap (e.g. 75/min for unvetted 10DLC) would be exceeded.
+
+    The caller is expected to either reject the send or queue/delay it.
+    """
+    if not from_number or max_per_minute <= 0:
+        return True
+    now = time.time()
+    window_start = now - 60.0
+    with lock:
+        from collections import deque
+        bucket = _sms_throughput_buckets.get(from_number)
+        if bucket is None:
+            bucket = deque()
+            _sms_throughput_buckets[from_number] = bucket
+        # drop timestamps outside the trailing 60s window
+        while bucket and bucket[0] < window_start:
+            bucket.popleft()
+        if len(bucket) >= max_per_minute:
+            return False
+        bucket.append(now)
+        # GC: if we've accumulated stale buckets for many numbers, prune
+        if len(_sms_throughput_buckets) > 1000:
+            stale = [n for n, b in _sms_throughput_buckets.items() if not b or b[-1] < now - 300]
+            for n in stale:
+                _sms_throughput_buckets.pop(n, None)
+    return True
+
+
 def claim_sms_inbound(telnyx_id: str) -> bool:
     """Returns True only once per Telnyx inbound message id. Used to dedupe
     webhook retries of message.received."""

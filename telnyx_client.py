@@ -522,23 +522,49 @@ def send_sms(from_number: str, to_number: str, body: str, media_urls=None,
         return None, segments, str(e)
 
 
-def attach_number_to_messaging_profile(phone_number_id: str, messaging_profile_id: str):
-    """Move an owned number into a Messaging Profile so it can send/receive SMS."""
-    if not phone_number_id or not messaging_profile_id:
-        return False, "Missing phone_number_id or messaging_profile_id"
+def attach_number_to_messaging_profile(phone_number_or_id: str, messaging_profile_id: str):
+    """Move an owned number into a Messaging Profile so it can send/receive SMS.
+
+    Accepts either a Telnyx phone_number_id (e.g. "1234567890123") or an E.164
+    phone string (e.g. "+15555550100"). When given an E.164 string, the Telnyx
+    phone_number record is looked up first to obtain its internal id (which is
+    what PATCH /phone_numbers/{id} requires).
+
+    Returns a dict {success: bool, id: str, error: str|None} so the call site
+    can use a single contract.
+    """
+    if not phone_number_or_id or not messaging_profile_id:
+        return {"success": False, "error": "Missing phone_number_or_id or messaging_profile_id"}
     try:
+        target_id = phone_number_or_id
+        # If it looks like an E.164 phone string, resolve to the Telnyx id
+        if str(phone_number_or_id).startswith("+") or not str(phone_number_or_id).isdigit():
+            lookup = requests.get(
+                f"{TELNYX_API_BASE}/phone_numbers",
+                params={"filter[phone_number]": phone_number_or_id, "page[size]": 1},
+                headers=_headers(),
+                timeout=15,
+            )
+            lookup.raise_for_status()
+            rows = (lookup.json() or {}).get("data") or []
+            if not rows:
+                return {"success": False, "error": f"Phone number {phone_number_or_id} not found in Telnyx inventory"}
+            target_id = rows[0].get("id")
+            if not target_id:
+                return {"success": False, "error": "Telnyx record missing id"}
+
         resp = requests.patch(
-            f"{TELNYX_API_BASE}/phone_numbers/{phone_number_id}",
+            f"{TELNYX_API_BASE}/phone_numbers/{target_id}",
             json={"messaging_profile_id": messaging_profile_id},
             headers=_headers(),
             timeout=15,
         )
         resp.raise_for_status()
-        logger.info(f"Number {phone_number_id} attached to messaging_profile {messaging_profile_id}")
-        return True, None
+        logger.info(f"Number {phone_number_or_id} (id={target_id}) attached to messaging_profile {messaging_profile_id}")
+        return {"success": True, "id": target_id, "error": None}
     except Exception as e:
         logger.error(f"attach_number_to_messaging_profile failed: {e}")
-        return False, str(e)
+        return {"success": False, "error": str(e)}
 
 
 def hangup_call(call_control_id):
