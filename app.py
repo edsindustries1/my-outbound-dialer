@@ -7234,6 +7234,31 @@ def api_numbers_quick_swap():
     if not order_result.get("success"):
         return jsonify({"error": f"Failed to purchase replacement: {order_result.get('error')}"}), 400
 
+    # Ensure the user has a messaging profile and attach the new number to it
+    # so SMS keeps working from the swapped line. Best-effort with retries —
+    # voice still works if Telnyx defers the SMS attach.
+    swap_sms_ready = False
+    swap_sms_warning = None
+    try:
+        msg_profile_id, mp_err = _ensure_user_messaging_profile(user_id)
+        if msg_profile_id:
+            from telnyx_client import attach_number_to_messaging_profile
+            import time as _time
+            for attempt in range(2):
+                _time.sleep(2 + attempt * 3)
+                mp_res = attach_number_to_messaging_profile(new_phone, msg_profile_id)
+                if mp_res.get("success"):
+                    swap_sms_ready = True
+                    break
+                swap_sms_warning = mp_res.get("error")
+            if not swap_sms_ready:
+                logger.warning(f"[SMS] quick-swap attach {new_phone} failed: {swap_sms_warning}")
+        else:
+            swap_sms_warning = mp_err
+    except Exception as e:
+        swap_sms_warning = str(e)
+        logger.warning(f"[SMS] quick-swap profile/attach raised: {e}")
+
     # Create DB record for new number, inherit is_included from old
     pn_new = ProvisionedNumber(
         user_id=user_id,
@@ -7289,8 +7314,11 @@ def api_numbers_quick_swap():
         "new_number": new_phone,
         "was_free": is_free,
         "cost": float(cost),
+        "sms_ready": swap_sms_ready,
+        "messaging_warning": swap_sms_warning,
         "message": f"Successfully swapped {old_number} for {new_phone}."
-                   + (" This swap was free." if is_free else f" ${float(cost):.2f} charged to your account."),
+                   + (" This swap was free." if is_free else f" ${float(cost):.2f} charged to your account.")
+                   + ("" if swap_sms_ready else " (SMS attach is still finishing — usually completes within a minute.)"),
     })
 
 
