@@ -18,3 +18,9 @@ id = "4ntHVW5U1cbj8ekV67stX"
 uri = "file://attached_assets/handoff/openhumana-design-handoff.zip"
 type = "unspecified"
 title = "openhumana-design-handoff.zip"
+
+[[outputs]]
+id = "2_gRH8qQ6fCby43qSvK1e"
+uri = "file://attached_assets/handoff/openhumana-design-handoff.pdf"
+type = "pdf"
+title = "openhumana-design-handoff.pdf"
