@@ -414,8 +414,11 @@ function renderMsg(m){
     ? `<span class="sms-status-dot ${statusDotClass(m.status)}"></span>${escapeHtml(m.status||'')}`
     : '';
   const segMeta = m.segments ? `· ${m.segments} seg` : '';
+  const campBadge = (m.sms_campaign_id && m.direction === 'out')
+    ? `<a href="/sms-campaigns/${m.sms_campaign_id}" style="text-decoration:none;display:inline-block;margin-bottom:4px;padding:2px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;border-radius:10px;background:rgba(139,92,246,.15);color:#7C3AED;">From campaign · ${escapeHtml(m.sms_campaign_name || ('#'+m.sms_campaign_id))}</a><br>`
+    : '';
   return `<div class="sms-msg ${cls}${compliance}">
-    <div>${escapeHtml(m.body)}</div>
+    ${campBadge}<div>${escapeHtml(m.body)}</div>
     <div class="meta">${dot} ${fmtTs(m.created_at)} ${segMeta}</div>
   </div>`;
 }

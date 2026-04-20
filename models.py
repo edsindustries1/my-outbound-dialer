@@ -610,6 +610,7 @@ class SmsMessage(db.Model):
             'user_id': self.user_id,
             'call_record_id': self.call_record_id,
             'campaign_id': self.campaign_id,
+            'sms_campaign_id': self.sms_campaign_id,
             'from_number': self.from_number,
             'to_number': self.to_number,
             'body': self.body,

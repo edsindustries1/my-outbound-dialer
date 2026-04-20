@@ -311,7 +311,7 @@ document.getElementById('smsPreflightBtn').addEventListener('click', async () =>
     const j = await r.json();
     if(!j.success){ out.innerHTML = `<span style="color:var(--gads-error);">${escapeHtml(j.error||'Pre-flight failed')}</span>`; return; }
     out.innerHTML = `
-      Audience: <b>${j.audience_size}</b> · Deliverable: <b>${j.deliverable}</b> · Blocked by opt-outs: <b>${j.opt_outs_blocked}</b><br>
+      Audience: <b>${j.audience_size}</b> deliverable · Duplicates removed: <b>${j.duplicates_removed||0}</b> · Opt-outs blocked: <b>${j.opt_outs_blocked}</b> · Final deliverable: <b>${j.deliverable}</b><br>
       Message: <b>${j.segments_per_message}</b> segment${j.segments_per_message===1?'':'s'} per send · Total segments: <b>${j.estimated_total_segments}</b><br>
       Bundle: <b>${j.bundle_used}</b>/${j.bundle_cap} used · Remaining: <b>${j.bundle_remaining}</b><br>
       Est. overage: <b>${j.estimated_overage_segments}</b> segments at <b>$${j.estimated_overage_cost.toFixed(2)}</b><br>

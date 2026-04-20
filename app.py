@@ -8467,12 +8467,31 @@ def api_sms_messages():
     opted_out = SmsOptOut.query.filter_by(user_id=current_user.id, contact_number=n).first() is not None
     pn = ProvisionedNumber.query.filter_by(user_id=current_user.id).first()
     from_number = pn.phone_number if pn else os.environ.get("TELNYX_FROM_NUMBER", "")
+
+    # Look up SMS campaign names for any messages tagged with sms_campaign_id
+    # so the inbox can render a "From SMS Campaign X" badge.
+    camp_ids = {r.sms_campaign_id for r in rows if getattr(r, "sms_campaign_id", None)}
+    camp_names = {}
+    if camp_ids:
+        from models import SmsCampaign
+        for c in SmsCampaign.query.filter(SmsCampaign.id.in_(camp_ids)).all():
+            camp_names[c.id] = c.name
+
+    msg_dicts = []
+    for r in rows:
+        d = r.to_dict()
+        cid = getattr(r, "sms_campaign_id", None)
+        if cid:
+            d["sms_campaign_id"] = cid
+            d["sms_campaign_name"] = camp_names.get(cid)
+        msg_dicts.append(d)
+
     return jsonify({
         "success": True,
         "contact_number": n,
         "from_number": from_number,
         "opted_out": opted_out,
-        "messages": [r.to_dict() for r in rows],
+        "messages": msg_dicts,
     })
 
 
@@ -8767,7 +8786,15 @@ def api_sms_campaigns_preflight():
     body = (request.form.get("body") or (request.get_json(silent=True) or {}).get("body") or "").strip()
     dedupe = (request.form.get("dedupe", "1") != "0")
     csv_storage = request.files.get("csv_file") if request.files else None
+    # Run once with dedupe=False to count duplicates + invalid separately
+    raw_count = len(_parse_sms_audience(raw, csv_storage=None, dedupe=False))
     recipients = _parse_sms_audience(raw, csv_storage=csv_storage, dedupe=dedupe)
+    # Reset stream so csv isn't exhausted on second parse (if we re-read below)
+    try:
+        if csv_storage is not None:
+            csv_storage.stream.seek(0)
+    except Exception:
+        pass
     total = len(recipients)
     numbers = [r["to_number"] for r in recipients]
     # Opt-out pre-check
@@ -8787,9 +8814,11 @@ def api_sms_campaigns_preflight():
     remaining = max(0, cap - used)
     overage = max(0, est_segments - remaining)
     est_cost = float((Decimal(str(overage)) * SMS_OVERAGE_COST).quantize(Decimal("0.01")))
+    duplicates_removed = max(0, raw_count - total) if dedupe else 0
     return jsonify({
         "success": True,
         "audience_size": total,
+        "duplicates_removed": duplicates_removed,
         "opt_outs_blocked": len(opted),
         "deliverable": max(0, total - len(opted)),
         "quiet_hours_now": quiet_now,
