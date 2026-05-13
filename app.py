@@ -1772,6 +1772,57 @@ def api_health():
 
 
 
+@app.route("/api/native/activity", methods=["GET"])
+@login_required
+def api_native_activity():
+    """Lightweight endpoint for the macOS native app.
+    Returns campaign status, active call count, and latest transfer info.
+    Polled every 15–30 seconds by the macOS menu bar and notification system.
+    """
+    uid = current_user.id
+    try:
+        if is_campaign_active(uid):
+            campaign_status = "active"
+        elif is_campaign_paused(uid):
+            campaign_status = "paused"
+        else:
+            campaign_status = "idle"
+
+        active_call_count = count_active_calls(uid)
+
+        snapshot = call_states_snapshot()
+        terminal = {"completed", "hangup", "hungup", "failed", "busy", "no_answer", "error"}
+        pending_transfers = []
+        for cid, state in snapshot.items():
+            if state.get("user_id") != uid:
+                continue
+            if state.get("transferred") and state.get("status", "").lower() not in terminal:
+                contact = state.get("contact_data") or {}
+                name = (
+                    contact.get("first_name", "")
+                    + (" " + contact.get("last_name", "") if contact.get("last_name") else "")
+                ).strip() or state.get("number", "Unknown")
+                pending_transfers.append({
+                    "contact_name": name,
+                    "number": state.get("number", ""),
+                    "time": state.get("created_at", ""),
+                })
+
+        last_transfer = pending_transfers[0] if pending_transfers else None
+
+        return jsonify({
+            "campaign_status": campaign_status,
+            "active_call_count": active_call_count,
+            "pending_transfer_count": len(pending_transfers),
+            "last_transfer": last_transfer,
+            "is_native_client": request.user_agent.string.startswith("OpenHumana-macOS"),
+        }), 200
+    except Exception as e:
+        logger.error(f"native/activity error: {e}")
+        return jsonify({"campaign_status": "idle", "active_call_count": 0,
+                        "pending_transfer_count": 0, "last_transfer": None}), 200
+
+
 @app.route("/api/chat", methods=["POST"])
 @app.route("/api/chat-alex", methods=["POST"])
 def api_chat():

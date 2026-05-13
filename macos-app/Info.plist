@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Open Humana</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Open Humana</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.openhumana.desktop</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleExecutable</key>
+    <string>OpenHumana</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+
+    <key>NSMainStoryboardFile</key>
+    <string></string>
+
+    <key>NSHumanReadableCopyright</key>
+    <string>© 2025 Everyday Digital Solutions. All rights reserved.</string>
+
+    <!-- Suppress the default About box (we use NSAboutPanelOptionKey) -->
+    <key>NSSupportsAutomaticTermination</key>
+    <false/>
+
+    <key>NSSupportsSuddenTermination</key>
+    <false/>
+
+    <!-- Camera / mic not used -->
+    <key>NSCameraUsageDescription</key>
+    <string></string>
+
+    <!-- Allow App Transport Security for local dev if needed -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>openhumana.com</key>
+            <dict>
+                <key>NSIncludesSubdomains</key>
+                <true/>
+                <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                <false/>
+            </dict>
+        </dict>
+    </dict>
+</dict>
+</plist>
