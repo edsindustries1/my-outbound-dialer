@@ -41,6 +41,7 @@ class User(UserMixin, db.Model):
     # Per-tenant Telnyx Messaging Profile id. Auto-provisioned on the user's
     # first number purchase so every customer has their own SMS sender profile.
     telnyx_messaging_profile_id = db.Column(db.String(255), nullable=True)
+    is_demo = db.Column(db.Boolean, default=False, nullable=False)
 
     app_data = db.relationship('UserAppData', backref='user', lazy=True, cascade='all, delete-orphan')
     instance = db.relationship('UserInstance', backref='user', uselist=False, lazy=True, cascade='all, delete-orphan')
@@ -366,6 +367,11 @@ def _ensure_schema():
             db.session.execute(text("ALTER TABLE users ADD COLUMN telnyx_messaging_profile_id VARCHAR(255)"))
             db.session.commit()
 
+        if "is_demo" not in existing_cols:
+            logger.warning("DB schema missing users.is_demo; applying ALTER TABLE")
+            db.session.execute(text("ALTER TABLE users ADD COLUMN is_demo BOOLEAN DEFAULT FALSE NOT NULL"))
+            db.session.commit()
+
         if "invitations" in inspector.get_table_names():
             inv_cols = {col["name"] for col in inspector.get_columns("invitations")}
             if "expires_at" not in inv_cols:
@@ -475,10 +481,117 @@ def _ensure_schema():
         _seed_max_concurrent_lines()
         _recover_interrupted_campaigns()
         _recover_interrupted_sms_campaigns()
+        _seed_demo_account()
 
     except Exception as e:
         logger.exception(f"Schema ensure failed: {e}")
         print(f"Schema ensure failed: {e}")
+
+
+def _seed_demo_account():
+    """Create the demo@openhumana.com account used for Apple App Review.
+
+    Credentials: demo@openhumana.com / Demo1234
+    The account is flagged is_demo=True so it can never be accidentally revoked.
+    A pre-seeded completed campaign and sample call records are added so the
+    reviewer sees a populated dashboard.  This function is idempotent — it is
+    safe to call on every startup.
+    """
+    import json as _json
+    import uuid as _uuid
+    try:
+        DEMO_EMAIL = "demo@openhumana.com"
+        DEMO_PASSWORD = "Demo1234"
+        DEMO_NAME = "Demo User"
+
+        user = User.query.filter_by(email=DEMO_EMAIL).first()
+        if not user:
+            user = User(
+                email=DEMO_EMAIL,
+                profile_name=DEMO_NAME,
+                role="user",
+                is_active_account=True,
+                is_demo=True,
+                credit_balance=25.00,
+            )
+            user.set_password(DEMO_PASSWORD)
+            db.session.add(user)
+            db.session.flush()
+            logger.info(f"Demo account created: {DEMO_EMAIL}")
+        else:
+            if not user.is_demo:
+                user.is_demo = True
+            if not user.is_active_account:
+                user.is_active_account = True
+            user.set_password(DEMO_PASSWORD)
+
+        db.session.commit()
+
+        ensure_user_instance(user.id)
+
+        existing_camp = Campaign.query.filter_by(user_id=user.id).first()
+        if not existing_camp:
+            import json as j
+            numbers = [
+                "+15551001001", "+15551001002", "+15551001003",
+                "+15551001004", "+15551001005", "+15551001006",
+                "+15551001007", "+15551001008", "+15551001009",
+                "+15551001010",
+            ]
+            camp = Campaign(
+                user_id=user.id,
+                name="Sample Outreach Campaign",
+                status="completed",
+                numbers=j.dumps(numbers),
+                dialed_count=10,
+                total_count=10,
+                dial_mode="sequential",
+                batch_size=5,
+                dial_delay=2,
+                transfer_number="+15550000001",
+                from_number="+15559990001",
+                campaign_type="telnyx",
+            )
+            db.session.add(camp)
+            db.session.flush()
+
+            sample_records = [
+                {"status": "completed", "amd_result": "machine_end_beep", "voicemail_dropped": True,  "transferred": False, "phone": "+15551001001", "desc": "Voicemail dropped",    "color": "green"},
+                {"status": "completed", "amd_result": "human",             "voicemail_dropped": False, "transferred": True,  "phone": "+15551001002", "desc": "Live transfer",        "color": "blue"},
+                {"status": "completed", "amd_result": "machine_end_beep", "voicemail_dropped": True,  "transferred": False, "phone": "+15551001003", "desc": "Voicemail dropped",    "color": "green"},
+                {"status": "completed", "amd_result": "machine_end_beep", "voicemail_dropped": True,  "transferred": False, "phone": "+15551001004", "desc": "Voicemail dropped",    "color": "green"},
+                {"status": "completed", "amd_result": "human",             "voicemail_dropped": False, "transferred": True,  "phone": "+15551001005", "desc": "Live transfer",        "color": "blue"},
+                {"status": "failed",    "amd_result": None,                "voicemail_dropped": False, "transferred": False, "phone": "+15551001006", "desc": "No answer",            "color": "gray"},
+                {"status": "completed", "amd_result": "machine_end_beep", "voicemail_dropped": True,  "transferred": False, "phone": "+15551001007", "desc": "Voicemail dropped",    "color": "green"},
+                {"status": "failed",    "amd_result": None,                "voicemail_dropped": False, "transferred": False, "phone": "+15551001008", "desc": "No answer",            "color": "gray"},
+                {"status": "completed", "amd_result": "machine_end_beep", "voicemail_dropped": True,  "transferred": False, "phone": "+15551001009", "desc": "Voicemail dropped",    "color": "green"},
+                {"status": "completed", "amd_result": "human",             "voicemail_dropped": False, "transferred": True,  "phone": "+15551001010", "desc": "Live transfer",        "color": "blue"},
+            ]
+            for r in sample_records:
+                rec = CallRecord(
+                    call_control_id=str(_uuid.uuid4()),
+                    campaign_id=camp.id,
+                    user_id=user.id,
+                    phone_number=r["phone"],
+                    from_number="+15559990001",
+                    status=r["status"],
+                    amd_result=r["amd_result"],
+                    machine_detected=(r["amd_result"] is not None and "machine" in (r["amd_result"] or "")),
+                    transferred=r["transferred"],
+                    voicemail_dropped=r["voicemail_dropped"],
+                    status_description=r["desc"],
+                    status_color=r["color"],
+                    transcript="[]",
+                    source="telnyx",
+                )
+                db.session.add(rec)
+
+            db.session.commit()
+            logger.info(f"Demo campaign and {len(sample_records)} call records seeded for {DEMO_EMAIL}")
+
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Could not seed demo account: {e}")
 
 
 def _seed_max_concurrent_lines():

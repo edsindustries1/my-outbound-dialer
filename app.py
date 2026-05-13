@@ -7554,6 +7554,7 @@ def admin_panel():
             "name": u.profile_name or u.email.split("@")[0],
             "role": u.role or "user",
             "active": getattr(u, 'is_active_account', True),
+            "is_demo": getattr(u, 'is_demo', False),
             "created_at": u.created_at.strftime("%b %d, %Y") if u.created_at else "N/A",
         })
     pending_invites = Invitation.query.filter_by(used=False).order_by(Invitation.created_at.desc()).all()
@@ -7597,6 +7598,8 @@ def admin_revoke():
         return redirect(url_for("admin_panel", error="User not found"))
     if target.role == "admin":
         return redirect(url_for("admin_panel", error="Cannot revoke admin access"))
+    if getattr(target, 'is_demo', False):
+        return redirect(url_for("admin_panel", error="Cannot revoke the demo account — it is required for Apple App Review"))
     target.is_active_account = False
     db.session.commit()
     logger.info(f"Admin revoked access for {target.email}")

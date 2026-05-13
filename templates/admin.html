@@ -41,6 +41,7 @@
     .badge-user{background:#e0f2fe;color:#0284c7}
     .badge-active{background:#f0fdf4;color:#16a34a}
     .badge-revoked{background:#fef2f2;color:#dc2626}
+    .badge-demo{background:#fff7ed;color:#c2410c}
     .badge-pending{background:#fef9c3;color:#a16207}
     .badge-free{background:#f0fdf4;color:#15803d}
     .action-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #d1d5db;background:#fff;color:#374151;transition:all .15s}
@@ -146,12 +147,17 @@
         <tr>
           <td>{{ u.name }}</td>
           <td>{{ u.email }}</td>
-          <td><span class="badge {{ 'badge-admin' if u.role == 'admin' else 'badge-user' }}">{{ u.role }}</span></td>
+          <td>
+            <span class="badge {{ 'badge-admin' if u.role == 'admin' else 'badge-user' }}">{{ u.role }}</span>
+            {% if u.is_demo %}<span class="badge badge-demo" style="margin-left:4px" title="Apple App Review account — cannot be revoked">Demo</span>{% endif %}
+          </td>
           <td><span class="badge {{ 'badge-active' if u.active else 'badge-revoked' }}">{{ 'Active' if u.active else 'Revoked' }}</span></td>
           <td>{{ u.created_at }}</td>
           <td>
             {% if u.role != 'admin' %}
-              {% if u.active %}
+              {% if u.is_demo %}
+              <span style="font-size:11px;color:#9ca3af;font-style:italic">Protected</span>
+              {% elif u.active %}
               <form method="POST" action="/admin/revoke" style="display:inline">
                 <input type="hidden" name="user_id" value="{{ u.id }}">
                 <button type="submit" class="action-btn action-btn-danger" onclick="return confirm('Revoke access for {{ u.email }}?')">Revoke</button>
