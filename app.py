@@ -1808,14 +1808,21 @@ def api_native_activity():
                     "time": state.get("created_at", ""),
                 })
 
+        # Sort by transfer time descending so last_transfer is always the most recent.
+        pending_transfers.sort(key=lambda t: t.get("time") or "", reverse=True)
         last_transfer = pending_transfers[0] if pending_transfers else None
+
+        # live_transfers_since: ISO timestamp of the oldest pending transfer in this snapshot,
+        # useful for clients that want to poll "what changed since X".
+        live_transfers_since = pending_transfers[-1].get("time", "") if pending_transfers else None
 
         return jsonify({
             "campaign_status": campaign_status,
             "active_call_count": active_call_count,
             "pending_transfer_count": len(pending_transfers),
             "last_transfer": last_transfer,
-            "is_native_client": request.user_agent.string.startswith("OpenHumana-macOS"),
+            "live_transfers_since": live_transfers_since,
+            "is_native_client": "OpenHumana-macOS" in request.user_agent.string,
         }), 200
     except Exception as e:
         logger.error(f"native/activity error: {e}")
