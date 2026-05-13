@@ -7,6 +7,7 @@ class MenuBarManager {
     private var statusItem: NSStatusItem?
     private var pollTimer: Timer?
     private var currentStatus: String = "idle"
+    private var activeCallCount: Int = 0
 
     init(delegate: AppDelegate) {
         self.delegate = delegate
@@ -18,8 +19,7 @@ class MenuBarManager {
         guard let button = statusItem?.button else { return }
         button.title = "⬤ OH"
         button.toolTip = "Open Humana"
-        button.action = #selector(statusItemClicked)
-        button.target = self
+        // Do NOT assign button.action when an NSMenu is attached — the menu consumes all clicks.
         updateButtonAppearance(status: "idle")
         buildMenu()
     }
@@ -30,12 +30,16 @@ class MenuBarManager {
         let titleItem = NSMenuItem(title: "Open Humana", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
-        menu.addItem(.separator())
 
         let statusItem = NSMenuItem(title: "Status: Checking…", action: nil, keyEquivalent: "")
         statusItem.tag = 100
         statusItem.isEnabled = false
         menu.addItem(statusItem)
+
+        let callsItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        callsItem.tag = 101
+        callsItem.isEnabled = false
+        menu.addItem(callsItem)
 
         menu.addItem(.separator())
 
@@ -49,9 +53,10 @@ class MenuBarManager {
 
         menu.addItem(.separator())
 
-        let pauseItem = NSMenuItem(title: "Pause Campaign", action: #selector(pauseCampaign), keyEquivalent: "")
+        let pauseItem = NSMenuItem(title: "Pause Campaign", action: #selector(toggleCampaign), keyEquivalent: "")
         pauseItem.tag = 200
         pauseItem.target = self
+        pauseItem.isEnabled = false
         menu.addItem(pauseItem)
 
         menu.addItem(.separator())
@@ -76,23 +81,26 @@ class MenuBarManager {
         var req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         req.setValue("OpenHumana-macOS/1.0", forHTTPHeaderField: "User-Agent")
 
-        URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
+        // Use nativeSession — it carries the mirrored WKWebView session cookies.
+        nativeSession.dataTask(with: req) { [weak self] data, response, _ in
             guard let self = self, let data = data,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
 
             let status = json["campaign_status"] as? String ?? "idle"
-            let transferCount = json["pending_transfer_count"] as? Int ?? 0
+            let calls = json["active_call_count"] as? Int ?? 0
+            let transfers = json["pending_transfer_count"] as? Int ?? 0
 
             DispatchQueue.main.async {
-                self.updateStatus(status: status, transferCount: transferCount)
+                self.updateStatus(status: status, activeCalls: calls, transferCount: transfers)
             }
         }.resume()
     }
 
-    private func updateStatus(status: String, transferCount: Int) {
+    private func updateStatus(status: String, activeCalls: Int, transferCount: Int) {
         currentStatus = status
+        activeCallCount = activeCalls
         updateButtonAppearance(status: status)
-        updateMenuItems(status: status)
+        updateMenuItems(status: status, activeCalls: activeCalls)
         delegate?.updateDockBadge(transferCount)
     }
 
@@ -114,7 +122,7 @@ class MenuBarManager {
         }
     }
 
-    private func updateMenuItems(status: String) {
+    private func updateMenuItems(status: String, activeCalls: Int) {
         guard let menu = statusItem?.menu else { return }
 
         if let statusMenuItem = menu.item(withTag: 100) {
@@ -125,14 +133,16 @@ class MenuBarManager {
             }
         }
 
+        if let callsMenuItem = menu.item(withTag: 101) {
+            callsMenuItem.title = activeCalls > 0
+                ? "   \(activeCalls) call\(activeCalls == 1 ? "" : "s") in progress"
+                : "   No active calls"
+        }
+
         if let pauseItem = menu.item(withTag: 200) {
             pauseItem.title = (status == "active") ? "Pause Campaign" : "Resume Campaign"
             pauseItem.isEnabled = (status == "active" || status == "paused")
         }
-    }
-
-    @objc private func statusItemClicked() {
-        delegate?.showMainWindow()
     }
 
     @objc private func showDashboard() {
@@ -143,13 +153,14 @@ class MenuBarManager {
         delegate?.navigate(to: "/dashboard#live")
     }
 
-    @objc private func pauseCampaign() {
+    @objc private func toggleCampaign() {
         let endpoint = (currentStatus == "active") ? "/pause" : "/resume"
         guard let url = URL(string: "https://app.openhumana.com\(endpoint)") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("OpenHumana-macOS/1.0", forHTTPHeaderField: "User-Agent")
-        URLSession.shared.dataTask(with: req) { [weak self] _, _, _ in
+        // Use authenticated nativeSession for control actions too.
+        nativeSession.dataTask(with: req) { [weak self] _, _, _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 self?.poll()
             }

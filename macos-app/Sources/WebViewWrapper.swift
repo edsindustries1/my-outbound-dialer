@@ -2,7 +2,17 @@ import WebKit
 import AppKit
 import UniformTypeIdentifiers
 
-class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+/// Shared URLSession that mirrors cookies from the WKWebView cookie store.
+/// MenuBarManager and NotificationManager must use this session for authenticated requests.
+let nativeSession: URLSession = {
+    let config = URLSessionConfiguration.default
+    config.httpCookieStorage = HTTPCookieStorage.shared
+    config.httpCookieAcceptPolicy = .always
+    config.httpShouldSetCookies = true
+    return URLSession(configuration: config)
+}()
+
+class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, WKHTTPCookieStoreObserver {
 
     static let shared = WebViewWrapper()
 
@@ -18,8 +28,7 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
 
         config.websiteDataStore = .default()
 
-        let ua = "OpenHumana-macOS/1.0 AppleWebKit/605.1.15"
-        config.applicationNameForUserAgent = ua
+        config.applicationNameForUserAgent = "OpenHumana-macOS/1.0"
 
         let contentController = WKUserContentController()
 
@@ -60,8 +69,34 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
         webView.uiDelegate = self
         contentController.add(self, name: "filePicker")
 
+        // Observe WKWebView cookie changes and mirror them into HTTPCookieStorage.shared
+        // so that nativeSession (used by MenuBarManager / NotificationManager) stays authenticated.
+        config.websiteDataStore.httpCookieStore.add(self)
+
         load(path: "/login")
     }
+
+    // MARK: - Cookie synchronization
+
+    func cookiesDidChange(in cookieStore: WKHTTPCookieStore) {
+        cookieStore.getAllCookies { cookies in
+            for cookie in cookies {
+                HTTPCookieStorage.shared.setCookie(cookie)
+            }
+        }
+    }
+
+    /// Call once on startup to seed HTTPCookieStorage.shared from any persisted WKWebView cookies.
+    func syncCookiesToSharedStorage(completion: (() -> Void)? = nil) {
+        webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+            for cookie in cookies {
+                HTTPCookieStorage.shared.setCookie(cookie)
+            }
+            completion?()
+        }
+    }
+
+    // MARK: - Navigation helpers
 
     func load(path: String) {
         guard let url = URL(string: baseURL + path) else { return }
@@ -82,6 +117,8 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
             load(path: path)
         }
     }
+
+    // MARK: - Native file picker (WKScriptMessageHandler)
 
     func userContentController(_ userContentController: WKUserContentController,
                                 didReceive message: WKScriptMessage) {
@@ -132,7 +169,6 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
             var file = new File([blob], '\(fileName)', {type: '\(mimeType)'});
             var dt = new DataTransfer();
             dt.items.add(file);
-
             var selector = '\(inputId.isEmpty ? "input[type=file]" : "#\(inputId)")';
             var input = document.querySelector(selector);
             if (input) {
@@ -147,6 +183,8 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
         """
         webView.evaluateJavaScript(js, completionHandler: nil)
     }
+
+    // MARK: - WKNavigationDelegate
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                  decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -185,14 +223,15 @@ class WebViewWrapper: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMess
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        if let url = webView.url?.absoluteString, url.contains("/login") {
-            DispatchQueue.main.async { [weak self] in
-                webView.evaluateJavaScript("""
-                document.body.dataset.nativeApp = 'macos';
-                """, completionHandler: nil)
-            }
-        }
+        webView.evaluateJavaScript(
+            "document.body.dataset.nativeApp = 'macos';",
+            completionHandler: nil
+        )
+        // Re-sync cookies on every page load (catches login, logout, session refresh)
+        syncCookiesToSharedStorage()
     }
+
+    // MARK: - WKUIDelegate
 
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
                  initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {

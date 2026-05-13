@@ -2,20 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- App Sandbox — required for Mac App Store distribution -->
+    <!-- App Sandbox required for Mac App Store distribution -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
 
-    <!-- Outbound network access to app.openhumana.com -->
+    <!-- Outbound network: access app.openhumana.com -->
     <key>com.apple.security.network.client</key>
     <true/>
 
     <!-- Read access to user-selected CSV files via NSOpenPanel -->
     <key>com.apple.security.files.user-selected.read-only</key>
-    <true/>
-
-    <!-- Push notifications (UNUserNotificationCenter) -->
-    <key>com.apple.security.app-sandbox.exceptions.outgoing-connections.macos</key>
     <true/>
 </dict>
 </plist>

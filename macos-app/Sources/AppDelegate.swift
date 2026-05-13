@@ -11,6 +11,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarManager = MenuBarManager(delegate: self)
         notificationManager = NotificationManager(delegate: self)
 
+        // Seed URLSession cookie storage from any WKWebView cookies persisted on disk,
+        // then start polling (so the first poll is authenticated if already logged in).
+        WebViewWrapper.shared.syncCookiesToSharedStorage {
+            DispatchQueue.main.async {
+                self.menuBarManager?.startPolling()
+            }
+        }
+
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             if granted {
                 DispatchQueue.main.async {
@@ -19,13 +27,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        menuBarManager?.startPolling()
-
         if let window = NSApplication.shared.windows.first {
             window.title = "Open Humana"
             window.setFrameAutosaveName("MainWindow")
             window.center()
         }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        // Clear dock badge whenever user switches to the app.
+        updateDockBadge(0)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -44,6 +55,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func navigate(to path: String) {
+        NSApplication.shared.activate(ignoringOtherApps: true)
         NSApplication.shared.windows.first?.makeKeyAndOrderFront(nil)
         webViewWrapper?.navigate(to: path)
     }
@@ -55,11 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func updateDockBadge(_ count: Int) {
         DispatchQueue.main.async {
-            if count > 0 {
-                NSApp.dockTile.badgeLabel = "\(count)"
-            } else {
-                NSApp.dockTile.badgeLabel = nil
-            }
+            NSApp.dockTile.badgeLabel = count > 0 ? "\(count)" : nil
         }
     }
 }
